@@ -29,6 +29,10 @@ const Dashboard = () => {
     }
   };
 
+  const startTest = () => {
+    navigate("/test-riasec");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
@@ -52,7 +56,7 @@ const Dashboard = () => {
             <p className="text-gray-600 mb-4">
               Découvrez votre profil professionnel avec notre test d'orientation RIASEC
             </p>
-            <Button className="w-full">Commencer le test</Button>
+            <Button onClick={startTest} className="w-full">Commencer le test</Button>
           </div>
 
           {/* Card pour voir les résultats */}
