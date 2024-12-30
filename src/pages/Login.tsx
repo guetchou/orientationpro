@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,8 +15,14 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     
+    if (!isSupabaseConfigured()) {
+      toast.error("La connexion à Supabase n'est pas configurée");
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase!.auth.signInWithPassword({
         email,
         password,
       });
@@ -39,6 +45,11 @@ const Login = () => {
           <h2 className="mt-6 text-center text-3xl font-heading font-bold text-gray-900">
             Connexion à votre compte
           </h2>
+          {!isSupabaseConfigured() && (
+            <p className="mt-2 text-center text-sm text-red-600">
+              La connexion à Supabase n'est pas configurée. Veuillez configurer l'intégration Supabase.
+            </p>
+          )}
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm space-y-4">
@@ -74,7 +85,7 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || !isSupabaseConfigured()}
             >
               {loading ? "Connexion..." : "Se connecter"}
             </Button>
