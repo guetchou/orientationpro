@@ -4,6 +4,30 @@
 
 **URL**: https://lovable.dev/projects/3c7ee4eb-63ae-4ed8-8d9d-9d1710f7c25f
 
+## Déploiement avec Docker
+
+Pour déployer l'application en local avec Docker, suivez ces étapes :
+
+1. Assurez-vous d'avoir Docker et Docker Compose installés sur votre machine.
+
+2. Créez un fichier `.env` à la racine du projet avec les variables suivantes :
+```env
+VITE_SUPABASE_URL=votre_url_supabase
+VITE_SUPABASE_ANON_KEY=votre_clé_anonyme_supabase
+```
+
+3. Construisez et démarrez les conteneurs :
+```bash
+docker-compose up --build
+```
+
+4. L'application sera accessible à l'adresse : http://localhost:8080
+
+Pour arrêter l'application :
+```bash
+docker-compose down
+```
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
