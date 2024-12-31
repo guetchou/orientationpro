@@ -350,6 +350,33 @@ export type Database = {
         }
         Relationships: []
       }
+      test_results: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          results: Json
+          test_type: string
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          created_at?: string
+          id?: string
+          results: Json
+          test_type: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          results?: Json
+          test_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vicidial_config: {
         Row: {
           api_pass: string

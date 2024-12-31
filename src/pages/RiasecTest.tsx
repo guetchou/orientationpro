@@ -37,20 +37,21 @@ const RiasecTest = () => {
       
       const { error } = await supabase
         .from('test_results')
-        .insert([
-          {
-            user_id: user.id,
-            test_type: 'RIASEC',
-            results: results,
-            answers: finalAnswers,
-          }
-        ]);
+        .insert([{
+          user_id: user.id,
+          test_type: 'RIASEC',
+          results,
+          answers: finalAnswers
+        }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving test results:", error);
+        throw error;
+      }
 
       toast.success("Test complété avec succès !");
       navigate("/dashboard/results");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des résultats:", error);
       toast.error("Erreur lors de la sauvegarde des résultats");
     } finally {
