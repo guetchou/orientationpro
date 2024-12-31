@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import RiasecTest from "./pages/RiasecTest";
 import TestResults from "./pages/TestResults";
+import { DashboardLayout } from "./components/DashboardLayout";
 import "./App.css";
 
 console.info("Application starting...");
@@ -18,9 +19,11 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/results" element={<TestResults />} />
+        </Route>
         <Route path="/test-riasec" element={<RiasecTest />} />
-        <Route path="/dashboard/results" element={<TestResults />} />
       </Routes>
     </Router>
   );
