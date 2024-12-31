@@ -12,13 +12,15 @@ import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types/json";
 
 interface TestResult {
   id: string;
   test_type: string;
-  results: Record<string, number>;
-  answers: number[];
+  results: Json;
+  answers: Json;
   created_at: string;
+  user_id: string;
 }
 
 const TestResults = () => {
@@ -44,6 +46,7 @@ const TestResults = () => {
 
         if (error) throw error;
 
+        console.log("Fetched test results:", data);
         setResults(data || []);
       } catch (error) {
         console.error("Error fetching results:", error);
@@ -64,11 +67,14 @@ const TestResults = () => {
     });
   };
 
-  const prepareChartData = (results: Record<string, number>) => {
-    return Object.entries(results).map(([name, value]) => ({
-      name,
-      value,
-    }));
+  const prepareChartData = (results: Json) => {
+    if (typeof results === "object" && results !== null) {
+      return Object.entries(results as Record<string, number>).map(([name, value]) => ({
+        name,
+        value,
+      }));
+    }
+    return [];
   };
 
   if (loading) {
