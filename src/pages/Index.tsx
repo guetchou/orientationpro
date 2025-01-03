@@ -1,6 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { PartnersSection } from "@/components/home/PartnersSection";
+import { ResourcesSection } from "@/components/home/ResourcesSection";
+import { EventsSection } from "@/components/home/EventsSection";
+import { BlogSection } from "@/components/home/BlogSection";
+import { ContactSection } from "@/components/home/ContactSection";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const Index = () => {
@@ -70,6 +75,13 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* New Sections */}
+        <PartnersSection />
+        <ResourcesSection />
+        <EventsSection />
+        <BlogSection />
+        <ContactSection />
 
         {/* Statistics Section */}
         <section className="py-20 bg-primary text-white">
