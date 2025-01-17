@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
+import { AuthError } from "@supabase/supabase-js";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -57,6 +58,9 @@ const Register = () => {
         // Gestion spécifique des erreurs
         if (signUpError.message === "User already registered") {
           setError("Un compte existe déjà avec cet email. Veuillez vous connecter.");
+          setTimeout(() => {
+            navigate("/login", { state: { email } });
+          }, 2000);
         } else {
           setError(signUpError.message);
         }
