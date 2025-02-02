@@ -415,6 +415,59 @@ export type Database = {
         }
         Relationships: []
       }
+      lease_contracts: {
+        Row: {
+          created_at: string | null
+          deposit_amount: number
+          end_date: string
+          id: string
+          monthly_rent: number
+          owner_id: string | null
+          property_id: string | null
+          start_date: string
+          status: string | null
+          tenant_id: string | null
+          terms: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deposit_amount: number
+          end_date: string
+          id?: string
+          monthly_rent: number
+          owner_id?: string | null
+          property_id?: string | null
+          start_date: string
+          status?: string | null
+          tenant_id?: string | null
+          terms?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deposit_amount?: number
+          end_date?: string
+          id?: string
+          monthly_rent?: number
+          owner_id?: string | null
+          property_id?: string | null
+          start_date?: string
+          status?: string | null
+          tenant_id?: string | null
+          terms?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lease_contracts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media: {
         Row: {
           content_type: string
@@ -591,11 +644,13 @@ export type Database = {
           address: string
           bathrooms: number | null
           bedrooms: number | null
+          category_id: string | null
           city: string
           country: string | null
           created_at: string | null
           description: string | null
           id: string
+          image_url: string | null
           latitude: number | null
           location_point: unknown | null
           longitude: number | null
@@ -611,11 +666,13 @@ export type Database = {
           address: string
           bathrooms?: number | null
           bedrooms?: number | null
+          category_id?: string | null
           city: string
           country?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           latitude?: number | null
           location_point?: unknown | null
           longitude?: number | null
@@ -631,11 +688,13 @@ export type Database = {
           address?: string
           bathrooms?: number | null
           bedrooms?: number | null
+          category_id?: string | null
           city?: string
           country?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           latitude?: number | null
           location_point?: unknown | null
           longitude?: number | null
@@ -649,6 +708,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "properties_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "property_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "properties_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
@@ -660,6 +726,41 @@ export type Database = {
             columns: ["type_id"]
             isOneToOne: false
             referencedRelation: "property_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "property_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -766,6 +867,50 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      rent_payments: {
+        Row: {
+          amount: number
+          contract_id: string | null
+          created_at: string | null
+          id: string
+          payment_date: string
+          payment_method: string | null
+          reference: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string
+          payment_date: string
+          payment_method?: string | null
+          reference?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string
+          payment_date?: string
+          payment_method?: string | null
+          reference?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "lease_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
