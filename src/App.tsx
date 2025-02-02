@@ -4,6 +4,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import RiasecTest from "./pages/RiasecTest";
+import EmotionalTest from "./pages/EmotionalTest";
+import MultipleIntelligenceTest from "./pages/MultipleIntelligenceTest";
+import LearningStyleTest from "./pages/LearningStyleTest";
 import TestResults from "./pages/TestResults";
 import { DashboardLayout } from "./components/DashboardLayout";
 import "./App.css";
@@ -24,6 +27,9 @@ function App() {
           <Route path="/dashboard/results" element={<TestResults />} />
         </Route>
         <Route path="/test-riasec" element={<RiasecTest />} />
+        <Route path="/test-emotional" element={<EmotionalTest />} />
+        <Route path="/test-multiple" element={<MultipleIntelligenceTest />} />
+        <Route path="/test-learning" element={<LearningStyleTest />} />
       </Routes>
     </Router>
   );
