@@ -7,6 +7,7 @@ import { EventsSection } from "@/components/home/EventsSection";
 import { BlogSection } from "@/components/home/BlogSection";
 import { ContactSection } from "@/components/home/ContactSection";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
   return (
@@ -32,6 +33,30 @@ const Index = () => {
                   <Button variant="outline" size="lg">En savoir plus</Button>
                 </Link>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Tests Section */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="font-heading text-3xl font-bold text-center mb-12">
+              Nos Tests d'Orientation
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {tests.map((test) => (
+                <Card key={test.title} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle>{test.title}</CardTitle>
+                    <CardDescription>{test.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Link to={test.link}>
+                      <Button className="w-full">Commencer le test</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
@@ -76,7 +101,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* New Sections */}
+        {/* Other Sections */}
         <PartnersSection />
         <ResourcesSection />
         <EventsSection />
@@ -186,6 +211,29 @@ const Index = () => {
     </div>
   );
 };
+
+const tests = [
+  {
+    title: "Test RIASEC",
+    description: "Découvrez vos intérêts professionnels et les métiers qui vous correspondent",
+    link: "/test-riasec"
+  },
+  {
+    title: "Intelligence Émotionnelle",
+    description: "Évaluez votre capacité à comprendre et gérer les émotions",
+    link: "/test-emotional"
+  },
+  {
+    title: "Intelligences Multiples",
+    description: "Identifiez vos différents types d'intelligence selon la théorie de Gardner",
+    link: "/test-multiple"
+  },
+  {
+    title: "Style d'Apprentissage",
+    description: "Découvrez votre façon préférée d'apprendre et de traiter l'information",
+    link: "/test-learning"
+  }
+];
 
 const services = [
   {
