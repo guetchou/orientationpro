@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types/json";
 
@@ -21,6 +21,8 @@ interface TestResult {
   answers: Json;
   created_at: string;
   user_id: string;
+  detailed_analysis?: Json;
+  recommendations?: Json;
 }
 
 const TestResults = () => {
@@ -77,6 +79,63 @@ const TestResults = () => {
     return [];
   };
 
+  const getTestTitle = (testType: string) => {
+    switch (testType) {
+      case 'RIASEC':
+        return 'Test RIASEC - Orientation Professionnelle';
+      case 'EMOTIONAL_INTELLIGENCE':
+        return 'Test d\'Intelligence Émotionnelle';
+      case 'MULTIPLE_INTELLIGENCE':
+        return 'Test des Intelligences Multiples';
+      case 'LEARNING_STYLE':
+        return 'Test de Style d\'Apprentissage';
+      default:
+        return testType;
+    }
+  };
+
+  const renderChart = (result: TestResult) => {
+    const chartData = prepareChartData(result.results);
+
+    switch (result.test_type) {
+      case 'RIASEC':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Bar dataKey="value" fill="var(--color-primary)" />
+              <ChartTooltip />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      case 'MULTIPLE_INTELLIGENCE':
+      case 'EMOTIONAL_INTELLIGENCE':
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <RadarChart data={chartData}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="name" />
+              <PolarRadiusAxis />
+              <Radar dataKey="value" fill="var(--color-primary)" fillOpacity={0.6} />
+              <ChartTooltip />
+            </RadarChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Bar dataKey="value" fill="var(--color-primary)" />
+              <ChartTooltip />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -89,9 +148,17 @@ const TestResults = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Mes Résultats</h1>
-        <Button onClick={() => navigate("/test-riasec")}>
-          Passer un nouveau test
-        </Button>
+        <div className="space-x-4">
+          <Button onClick={() => navigate("/test-riasec")}>
+            Test RIASEC
+          </Button>
+          <Button onClick={() => navigate("/test-emotional")}>
+            Test Intelligence Émotionnelle
+          </Button>
+          <Button onClick={() => navigate("/test-multiple")}>
+            Test Intelligences Multiples
+          </Button>
+        </div>
       </div>
 
       {results.length === 0 ? (
@@ -110,31 +177,36 @@ const TestResults = () => {
           {results.map((result) => (
             <Card key={result.id}>
               <CardHeader>
-                <CardTitle>Test RIASEC</CardTitle>
+                <CardTitle>{getTestTitle(result.test_type)}</CardTitle>
                 <CardDescription>
                   Passé le {formatDate(result.created_at)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
-                  <ChartContainer
-                    className="w-full"
-                    config={{
-                      R: { label: "Réaliste" },
-                      I: { label: "Investigateur" },
-                      A: { label: "Artistique" },
-                      S: { label: "Social" },
-                      E: { label: "Entreprenant" },
-                      C: { label: "Conventionnel" },
-                    }}
-                  >
-                    <BarChart data={prepareChartData(result.results)}>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Bar dataKey="value" fill="var(--color-primary)" />
-                      <ChartTooltip />
-                    </BarChart>
-                  </ChartContainer>
+                <div className="space-y-6">
+                  {renderChart(result)}
+                  
+                  {result.detailed_analysis && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-2">Analyse Détaillée</h3>
+                      <div className="prose">
+                        {typeof result.detailed_analysis === 'string' 
+                          ? result.detailed_analysis
+                          : JSON.stringify(result.detailed_analysis, null, 2)}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {result.recommendations && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-2">Recommandations</h3>
+                      <div className="prose">
+                        {typeof result.recommendations === 'string'
+                          ? result.recommendations
+                          : JSON.stringify(result.recommendations, null, 2)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

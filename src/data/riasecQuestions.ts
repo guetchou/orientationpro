@@ -41,3 +41,30 @@ export const questions = [
   { question: "J'aime les tâches détaillées", category: "C" },
   { question: "J'aime travailler dans un environnement structuré", category: "C" },
 ];
+
+export const emotionalIntelligenceQuestions = [
+  { question: "Je peux facilement reconnaître mes émotions", category: "SELF_AWARENESS" },
+  { question: "Je gère bien mes émotions négatives", category: "SELF_MANAGEMENT" },
+  { question: "Je comprends facilement les émotions des autres", category: "SOCIAL_AWARENESS" },
+  { question: "Je m'adapte facilement aux changements", category: "ADAPTABILITY" },
+  { question: "Je reste calme sous pression", category: "STRESS_MANAGEMENT" },
+];
+
+export const multipleIntelligenceQuestions = [
+  { question: "J'aime résoudre des énigmes et des problèmes logiques", category: "LOGICAL" },
+  { question: "J'ai une bonne mémoire des sons et de la musique", category: "MUSICAL" },
+  { question: "Je comprends facilement les cartes et les directions", category: "SPATIAL" },
+  { question: "J'aime les activités physiques et sportives", category: "BODILY" },
+  { question: "Je communique facilement avec les autres", category: "INTERPERSONAL" },
+  { question: "Je connais bien mes forces et mes faiblesses", category: "INTRAPERSONAL" },
+  { question: "J'aime observer et étudier la nature", category: "NATURALIST" },
+  { question: "J'aime lire et écrire", category: "LINGUISTIC" },
+];
+
+export const learningStyleQuestions = [
+  { question: "Je préfère apprendre en regardant des vidéos", category: "VISUAL" },
+  { question: "Je retiens mieux en écoutant des explications", category: "AUDITORY" },
+  { question: "J'apprends mieux en pratiquant", category: "KINESTHETIC" },
+  { question: "Je préfère lire pour apprendre", category: "READING" },
+  { question: "J'aime apprendre en groupe", category: "SOCIAL" },
+];

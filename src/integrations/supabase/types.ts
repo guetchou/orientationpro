@@ -980,11 +980,48 @@ export type Database = {
         }
         Relationships: []
       }
+      test_questions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          options: Json | null
+          question: string
+          test_type_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          options?: Json | null
+          question: string
+          test_type_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          options?: Json | null
+          question?: string
+          test_type_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_questions_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_results: {
         Row: {
           answers: Json
           created_at: string
+          detailed_analysis: Json | null
           id: string
+          recommendations: Json | null
           results: Json
           test_type: string
           user_id: string
@@ -992,7 +1029,9 @@ export type Database = {
         Insert: {
           answers: Json
           created_at?: string
+          detailed_analysis?: Json | null
           id?: string
+          recommendations?: Json | null
           results: Json
           test_type: string
           user_id: string
@@ -1000,10 +1039,36 @@ export type Database = {
         Update: {
           answers?: Json
           created_at?: string
+          detailed_analysis?: Json | null
           id?: string
+          recommendations?: Json | null
           results?: Json
           test_type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      test_types: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
