@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Download } from "lucide-react";
 
+interface TestResults {
+  [key: string]: number;
+}
+
+interface LocationState {
+  results: TestResults;
+  testType: string;
+}
+
 export default function TestResults() {
   const location = useLocation();
-  const { results, testType } = location.state || {};
+  const { results, testType } = (location.state as LocationState) || { results: {}, testType: '' };
 
   const getTestTitle = () => {
     switch (testType) {
@@ -63,10 +72,10 @@ export default function TestResults() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
-        <Link to="/">
+        <Link to="/dashboard">
           <Button variant="ghost" className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à l'accueil
+            Retour au tableau de bord
           </Button>
         </Link>
 

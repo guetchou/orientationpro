@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const intelligenceQuestions = [
   {
@@ -49,12 +50,10 @@ export default function MultipleIntelligenceTest() {
     if (currentQuestion < intelligenceQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Calculate results
       const results = analyzeIntelligenceResults(newAnswers);
       
-      // Save results to database
       try {
-        const { data: user } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           await supabase.from('test_results').insert({
             user_id: user.id,
@@ -62,16 +61,19 @@ export default function MultipleIntelligenceTest() {
             results: results,
             answers: newAnswers
           });
+          toast.success("Test complété avec succès !");
+        } else {
+          toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/test-results', { state: { results, testType: 'multiple_intelligence' } });
+        navigate('/dashboard/results', { state: { results, testType: 'multiple_intelligence' } });
       } catch (error) {
         console.error('Error saving results:', error);
+        toast.error("Erreur lors de la sauvegarde des résultats");
       }
     }
   };
 
   const analyzeIntelligenceResults = (answers: string[]) => {
-    // Initialize intelligence types
     const intelligenceTypes = {
       linguistic: 0,
       logical: 0,
@@ -81,7 +83,6 @@ export default function MultipleIntelligenceTest() {
       interpersonal: 0
     };
 
-    // Analyze each answer
     answers.forEach((answer, index) => {
       switch (index) {
         case 0:

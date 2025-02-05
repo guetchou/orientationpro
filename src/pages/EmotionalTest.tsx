@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const emotionalQuestions = [
   {
@@ -49,12 +50,10 @@ export default function EmotionalTest() {
     if (currentQuestion < emotionalQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Calculate results
       const results = analyzeEmotionalResults(newAnswers);
       
-      // Save results to database
       try {
-        const { data: user } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           await supabase.from('test_results').insert({
             user_id: user.id,
@@ -62,37 +61,39 @@ export default function EmotionalTest() {
             results: results,
             answers: newAnswers
           });
+          toast.success("Test complété avec succès !");
+        } else {
+          toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/test-results', { state: { results, testType: 'emotional' } });
+        navigate('/dashboard/results', { state: { results, testType: 'emotional' } });
       } catch (error) {
         console.error('Error saving results:', error);
+        toast.error("Erreur lors de la sauvegarde des résultats");
       }
     }
   };
 
   const analyzeEmotionalResults = (answers: string[]) => {
-    // Simple analysis based on answers
     const categories = {
       selfAwareness: 0,
       selfRegulation: 0,
       empathy: 0
     };
 
-    // Analyze each answer
     answers.forEach((answer, index) => {
       switch (index) {
-        case 0: // Question about stress
+        case 0:
           if (answer.includes("calme")) categories.selfRegulation += 3;
           if (answer.includes("anxieux")) categories.selfRegulation += 2;
           if (answer.includes("sang-froid")) categories.selfRegulation += 1;
           if (answer.includes("aide")) categories.empathy += 2;
           break;
-        case 1: // Question about work emotions
+        case 1:
           if (answer.includes("constructive")) categories.selfAwareness += 3;
           if (answer.includes("garde")) categories.selfRegulation += 2;
           if (answer.includes("partage")) categories.empathy += 3;
           break;
-        case 2: // Question about others' emotions
+        case 2:
           if (answer.includes("empathique")) categories.empathy += 3;
           if (answer.includes("attentif")) categories.empathy += 2;
           if (answer.includes("distant")) categories.selfAwareness += 1;
