@@ -1,220 +1,93 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useLocation } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
-import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types/json";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Download } from "lucide-react";
 
-interface TestResult {
-  id: string;
-  test_type: string;
-  results: Json;
-  answers: Json;
-  created_at: string;
-  user_id: string;
-  detailed_analysis?: Json;
-  recommendations?: Json;
-}
+export default function TestResults() {
+  const location = useLocation();
+  const { results, testType } = location.state || {};
 
-const TestResults = () => {
-  const navigate = useNavigate();
-  const [results, setResults] = useState<TestResult[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuthAndFetchResults = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("test_results")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        console.log("Fetched test results:", data);
-        setResults(data || []);
-      } catch (error) {
-        console.error("Error fetching results:", error);
-        toast.error("Erreur lors de la récupération des résultats");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuthAndFetchResults();
-  }, [navigate]);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const prepareChartData = (results: Json) => {
-    if (typeof results === "object" && results !== null) {
-      return Object.entries(results as Record<string, number>).map(([name, value]) => ({
-        name,
-        value,
-      }));
-    }
-    return [];
-  };
-
-  const getTestTitle = (testType: string) => {
+  const getTestTitle = () => {
     switch (testType) {
-      case 'RIASEC':
-        return 'Test RIASEC - Orientation Professionnelle';
-      case 'EMOTIONAL_INTELLIGENCE':
-        return 'Test d\'Intelligence Émotionnelle';
-      case 'MULTIPLE_INTELLIGENCE':
-        return 'Test des Intelligences Multiples';
-      case 'LEARNING_STYLE':
-        return 'Test de Style d\'Apprentissage';
+      case 'riasec':
+        return "Résultats du Test RIASEC";
+      case 'emotional':
+        return "Résultats du Test d'Intelligence Émotionnelle";
+      case 'multiple_intelligence':
+        return "Résultats du Test des Intelligences Multiples";
+      case 'learning_style':
+        return "Résultats du Test de Style d'Apprentissage";
       default:
-        return testType;
+        return "Résultats du Test";
     }
   };
 
-  const renderChart = (result: TestResult) => {
-    const chartData = prepareChartData(result.results);
+  const renderResults = () => {
+    if (!results) return null;
 
-    switch (result.test_type) {
-      case 'RIASEC':
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Bar dataKey="value" fill="var(--color-primary)" />
-              <ChartTooltip />
-            </BarChart>
-          </ResponsiveContainer>
-        );
-      case 'MULTIPLE_INTELLIGENCE':
-      case 'EMOTIONAL_INTELLIGENCE':
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={chartData}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="name" />
-              <PolarRadiusAxis />
-              <Radar dataKey="value" fill="var(--color-primary)" fillOpacity={0.6} />
-              <ChartTooltip />
-            </RadarChart>
-          </ResponsiveContainer>
-        );
-      default:
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Bar dataKey="value" fill="var(--color-primary)" />
-              <ChartTooltip />
-            </BarChart>
-          </ResponsiveContainer>
-        );
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    return Object.entries(results).map(([key, value]) => (
+      <div key={key} className="mb-4">
+        <h3 className="text-lg font-semibold capitalize mb-2">
+          {key.replace(/_/g, ' ')}
+        </h3>
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div
+            className="bg-primary h-2.5 rounded-full"
+            style={{ width: `${(Number(value) / 3) * 100}%` }}
+          ></div>
+        </div>
+        <p className="text-sm text-gray-600 mt-1">
+          Score: {value}
+        </p>
       </div>
-    );
-  }
+    ));
+  };
+
+  const handleDownload = () => {
+    const resultsText = Object.entries(results)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n');
+    
+    const blob = new Blob([resultsText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${testType}_results.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Mes Résultats</h1>
-        <div className="space-x-4">
-          <Button onClick={() => navigate("/test-riasec")}>
-            Test RIASEC
+      <div className="max-w-3xl mx-auto">
+        <Link to="/">
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour à l'accueil
           </Button>
-          <Button onClick={() => navigate("/test-emotional")}>
-            Test Intelligence Émotionnelle
-          </Button>
-          <Button onClick={() => navigate("/test-multiple")}>
-            Test Intelligences Multiples
-          </Button>
-        </div>
-      </div>
+        </Link>
 
-      {results.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-lg text-muted-foreground mb-4">
-              Vous n'avez pas encore passé de test
-            </p>
-            <Button onClick={() => navigate("/test-riasec")}>
-              Passer mon premier test
-            </Button>
+          <CardHeader>
+            <CardTitle className="text-2xl">{getTestTitle()}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {renderResults()}
+              
+              <div className="flex justify-end mt-6">
+                <Button onClick={handleDownload}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Télécharger les résultats
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-6">
-          {results.map((result) => (
-            <Card key={result.id}>
-              <CardHeader>
-                <CardTitle>{getTestTitle(result.test_type)}</CardTitle>
-                <CardDescription>
-                  Passé le {formatDate(result.created_at)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {renderChart(result)}
-                  
-                  {result.detailed_analysis && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold mb-2">Analyse Détaillée</h3>
-                      <div className="prose">
-                        {typeof result.detailed_analysis === 'string' 
-                          ? result.detailed_analysis
-                          : JSON.stringify(result.detailed_analysis, null, 2)}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {result.recommendations && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold mb-2">Recommandations</h3>
-                      <div className="prose">
-                        {typeof result.recommendations === 'string'
-                          ? result.recommendations
-                          : JSON.stringify(result.recommendations, null, 2)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
-};
-
-export default TestResults;
+}
