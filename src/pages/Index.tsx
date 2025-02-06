@@ -9,6 +9,7 @@ import { BlogSection } from "@/components/home/BlogSection";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { PartnersSection } from "@/components/home/PartnersSection";
 import { ContactSection } from "@/components/home/ContactSection";
+import { EstablishmentsMapSection } from "@/components/home/EstablishmentsMapSection";
 import { Button } from "@/components/ui/button";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -34,12 +35,10 @@ const Index = () => {
       <Navbar />
       
       <main className="relative overflow-hidden">
-        {/* Hero Section avec animation d'entrée */}
         <div className="animate-fade-in [--animate-delay:200ms]">
           <HeroSection />
         </div>
 
-        {/* Tests Section avec effet de parallaxe */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
           <div className="animate-fade-in [--animate-delay:400ms]">
@@ -47,15 +46,17 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Steps Section avec animation au défilement */}
         <div className="animate-fade-in [--animate-delay:600ms]">
           <StepsSection />
         </div>
 
-        {/* Statistics Section avec effet de glassmorphisme */}
+        <div className="animate-fade-in [--animate-delay:800ms]">
+          <EstablishmentsMapSection />
+        </div>
+
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 pointer-events-none" />
-          <div className="animate-fade-in [--animate-delay:800ms]">
+          <div className="animate-fade-in [--animate-delay:1000ms]">
             <StatisticsSection />
           </div>
         </div>
