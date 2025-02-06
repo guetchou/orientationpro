@@ -53,7 +53,7 @@ export const EstablishmentsMapSection = () => {
     const center: LngLatLike = [15.2832, -4.2699];
 
     // Use the MAPBOX_PUBLIC_TOKEN from Supabase secrets
-    mapboxgl.accessToken = process.env.MAPBOX_PUBLIC_TOKEN || "";
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2Vzc25ndWllIiwiYSI6ImNscnlwbWVzZjE2dDQya3BjOGxqZnJtbXIifQ.2pKV0_5V6KhqHPUY-rMYBw';
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
