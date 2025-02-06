@@ -16,7 +16,7 @@ export const EstablishmentsMapSection = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
-  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("all");
 
   console.log("EstablishmentsMapSection rendered");
 
@@ -144,7 +144,7 @@ export const EstablishmentsMapSection = () => {
                 <SelectValue placeholder="Sélectionnez une ville" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les villes</SelectItem>
+                <SelectItem value="all">Toutes les villes</SelectItem>
                 {uniqueCities.map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
@@ -161,7 +161,7 @@ export const EstablishmentsMapSection = () => {
 
         <div className="mt-8 grid md:grid-cols-3 gap-6">
           {neighborhoods
-            .filter((n) => !selectedCity || n.city === selectedCity)
+            .filter((n) => selectedCity === "all" || n.city === selectedCity)
             .map((neighborhood) => (
               <div
                 key={neighborhood.id}
