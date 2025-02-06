@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
+import mapboxgl, { LngLatLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,7 +50,7 @@ export const EstablishmentsMapSection = () => {
     console.log("Initializing map...");
     
     // Congo coordinates (centered on Brazzaville)
-    const center = [15.2832, -4.2699];
+    const center: LngLatLike = [15.2832, -4.2699];
 
     // Use the MAPBOX_PUBLIC_TOKEN from Supabase secrets
     mapboxgl.accessToken = process.env.MAPBOX_PUBLIC_TOKEN || "";
@@ -90,7 +90,7 @@ export const EstablishmentsMapSection = () => {
 
       // Add marker to map
       new mapboxgl.Marker(marker)
-        .setLngLat([15.2832, -4.2699]) // You would need actual coordinates for each neighborhood
+        .setLngLat([15.2832, -4.2699] as LngLatLike) // You would need actual coordinates for each neighborhood
         .setPopup(popup)
         .addTo(map.current);
     });
@@ -107,7 +107,7 @@ export const EstablishmentsMapSection = () => {
     if (!map.current) return;
 
     // Update map view based on selected city
-    const cityCoordinates: { [key: string]: [number, number] } = {
+    const cityCoordinates: { [key: string]: LngLatLike } = {
       "Brazzaville": [15.2832, -4.2699],
       "Pointe-Noire": [11.8635, -4.7761],
       "Dolisie": [12.6666, -4.2],
