@@ -1,14 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin } from "lucide-react";
 
@@ -59,7 +52,8 @@ export const EstablishmentsMapSection = () => {
     // Congo coordinates (centered on Brazzaville)
     const center = [15.2832, -4.2699];
 
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+    // Use the MAPBOX_PUBLIC_TOKEN from Supabase secrets
+    mapboxgl.accessToken = process.env.MAPBOX_PUBLIC_TOKEN || "";
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
