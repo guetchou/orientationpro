@@ -589,23 +589,32 @@ export type Database = {
       neighborhoods: {
         Row: {
           city: string
+          coordinates: unknown | null
           created_at: string | null
+          description: string | null
           id: string
           name: string
+          type: Database["public"]["Enums"]["establishment_type"] | null
           updated_at: string | null
         }
         Insert: {
           city: string
+          coordinates?: unknown | null
           created_at?: string | null
+          description?: string | null
           id?: string
           name: string
+          type?: Database["public"]["Enums"]["establishment_type"] | null
           updated_at?: string | null
         }
         Update: {
           city?: string
+          coordinates?: unknown | null
           created_at?: string | null
+          description?: string | null
           id?: string
           name?: string
+          type?: Database["public"]["Enums"]["establishment_type"] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1135,6 +1144,7 @@ export type Database = {
     Enums: {
       contract_type: "employment" | "service" | "lease" | "software" | "other"
       document_status: "draft" | "active" | "archived" | "expired"
+      establishment_type: "university" | "school" | "institute"
       evaluation_status: "draft" | "in_progress" | "completed"
       skill_level: "beginner" | "intermediate" | "advanced" | "expert"
       user_role: "admin" | "agent" | "comptable" | "rh" | "user"

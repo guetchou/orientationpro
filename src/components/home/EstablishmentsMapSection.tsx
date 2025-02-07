@@ -12,9 +12,11 @@ interface Neighborhood {
   id: string;
   name: string;
   city: string;
-  description: string;
-  type?: 'university' | 'school' | 'institute';
-  coordinates?: [number, number];
+  description: string | null;
+  type: 'university' | 'school' | 'institute' | null;
+  coordinates: [number, number] | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export const EstablishmentsMapSection = () => {
@@ -167,7 +169,7 @@ export const EstablishmentsMapSection = () => {
     const matchesCity = selectedCity === "all" || n.city === selectedCity;
     const matchesType = selectedType === "all" || n.type === selectedType;
     const matchesSearch = n.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         n.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         n.description?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCity && matchesType && matchesSearch;
   });
 

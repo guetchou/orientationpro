@@ -152,4 +152,37 @@ export interface OtherTypes {
     }
     Relationships: []
   }
+  neighborhoods: {
+    Row: {
+      city: string
+      created_at: string | null
+      id: string
+      name: string
+      updated_at: string | null
+      description: string | null
+      type: 'university' | 'school' | 'institute' | null
+      coordinates: [number, number] | null
+    }
+    Insert: {
+      city: string
+      created_at?: string | null
+      id?: string
+      name: string
+      updated_at?: string | null
+      description?: string | null
+      type?: 'university' | 'school' | 'institute' | null
+      coordinates?: [number, number] | null
+    }
+    Update: {
+      city?: string
+      created_at?: string | null
+      id?: string
+      name?: string
+      updated_at?: string | null
+      description?: string | null
+      type?: 'university' | 'school' | 'institute' | null
+      coordinates?: [number, number] | null
+    }
+    Relationships: []
+  }
 }
