@@ -586,6 +586,30 @@ export type Database = {
           },
         ]
       }
+      neighborhoods: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -863,6 +887,33 @@ export type Database = {
           priority?: string
           status?: string
           title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          created_at: string | null
+          id: string
+          results: Json
+          test_type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          results: Json
+          test_type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          results?: Json
+          test_type?: string
           updated_at?: string | null
           user_id?: string | null
         }
