@@ -50,8 +50,14 @@ export const EstablishmentsMapSection = () => {
           return;
         }
 
-        console.log("Neighborhoods fetched:", data);
-        setNeighborhoods(data || []);
+        // Transform the data to ensure coordinates are of the correct type
+        const transformedData = data.map(item => ({
+          ...item,
+          coordinates: item.coordinates ? [item.coordinates[0], item.coordinates[1]] as [number, number] : null
+        }));
+
+        console.log("Neighborhoods fetched:", transformedData);
+        setNeighborhoods(transformedData);
       } catch (error) {
         console.error("Error in fetchNeighborhoods:", error);
       }
