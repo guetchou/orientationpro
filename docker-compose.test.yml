@@ -1,0 +1,13 @@
+
+version: '3.8'
+
+services:
+  web:
+    environment:
+      - NODE_ENV=test
+      - FEATURE_CHATBOT=true
+      - FEATURE_ANALYTICS=false
+  
+  db:
+    environment:
+      MYSQL_DATABASE: test_db

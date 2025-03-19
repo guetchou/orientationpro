@@ -1,3 +1,4 @@
+
 version: '3.8'
 
 services:
@@ -8,7 +9,29 @@ services:
     environment:
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - NODE_ENV=${NODE_ENV:-production}
+      - FEATURE_CHATBOT=${FEATURE_CHATBOT:-true}
+      - FEATURE_ANALYTICS=${FEATURE_ANALYTICS:-true}
     restart: unless-stopped
+    depends_on:
+      - db
+  
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-app_db}
+      MYSQL_USER: ${MYSQL_USER:-user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
 
 networks:
   default:

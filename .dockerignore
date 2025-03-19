@@ -1,3 +1,4 @@
+
 node_modules
 dist
 .git
@@ -9,3 +10,4 @@ dist
 README.md
 Dockerfile
 docker-compose.yml
+backend/node_modules
