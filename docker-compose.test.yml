@@ -8,6 +8,17 @@ services:
       - FEATURE_CHATBOT=true
       - FEATURE_ANALYTICS=false
   
+  api:
+    environment:
+      - NODE_ENV=test
+      - FEATURE_CHATBOT=true
+      - FEATURE_ANALYTICS=false
+      - MYSQL_DATABASE=test_db
+  
+  directus:
+    environment:
+      - DB_DATABASE=test_db
+  
   db:
     environment:
       MYSQL_DATABASE: test_db

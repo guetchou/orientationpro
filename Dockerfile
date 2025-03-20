@@ -16,10 +16,13 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 
 # Installation des dépendances de production uniquement
-RUN npm ci --only=production
+RUN npm ci
 
 # Copie du code source backend
 COPY backend .
+
+# Build du backend
+RUN npm run build
 
 # Étape de production avec Nginx et Node
 FROM nginx:alpine
@@ -38,7 +41,9 @@ WORKDIR /app
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 
 # Copier les fichiers backend
-COPY --from=backend-builder /app/backend /app/backend
+COPY --from=backend-builder /app/backend/dist /app/backend/dist
+COPY --from=backend-builder /app/backend/node_modules /app/backend/node_modules
+COPY --from=backend-builder /app/backend/package.json /app/backend/package.json
 
 # Copier le script de démarrage
 COPY ./start.sh /app/start.sh

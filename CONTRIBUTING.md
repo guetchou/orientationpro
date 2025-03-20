@@ -1,6 +1,15 @@
 
 # Guide de Contribution
 
+## Architecture
+
+Ce projet utilise les technologies suivantes:
+- **Frontend**: React avec Vite
+- **Backend**: NestJS (API REST)
+- **CMS**: Directus pour la gestion de contenu
+- **Base de données**: MySQL
+- **Déploiement**: Docker et GitHub Actions
+
 ## Branches
 
 Nous utilisons une structure de branches comme suit:
@@ -36,6 +45,25 @@ Nous utilisons une structure de branches comme suit:
 
 6. Une fois toutes les fonctionnalités nécessaires fusionnées, `develop` sera fusionné dans `main` pour le déploiement.
 
+## Structure du Backend NestJS
+
+Le backend NestJS est organisé comme suit:
+- `src/`: Code source principal
+  - `main.ts`: Point d'entrée de l'application
+  - `app.module.ts`: Module principal
+  - `auth/`: Module d'authentification
+  - `user/`: Module de gestion des utilisateurs
+  - `feature-flags/`: Module de gestion des fonctionnalités
+  - `health/`: Module de surveillance de l'application
+
+Pour ajouter un nouveau module:
+```
+cd backend
+npm run nest generate module mon-module
+npm run nest generate controller mon-module
+npm run nest generate service mon-module
+```
+
 ## Feature Flags
 
 Pour le développement de fonctionnalités susceptibles d'être activées/désactivées en production:
@@ -46,17 +74,32 @@ Pour le développement de fonctionnalités susceptibles d'être activées/désac
    FEATURE_ANALYTICS=true
    ```
 
-2. Dans le code, vérifiez l'état du feature flag avant d'activer la fonctionnalité:
-   ```javascript
-   if (process.env.FEATURE_CHATBOT === 'true') {
-     // Code pour le chatbot
+2. Dans le code NestJS, accédez aux feature flags via ConfigService:
+   ```typescript
+   constructor(private configService: ConfigService) {}
+   
+   someMethod() {
+     if (this.configService.get('FEATURE_CHATBOT') === 'true') {
+       // Code pour le chatbot
+     }
    }
    ```
 
+3. Vous pouvez également utiliser l'API REST `/feature-flags` pour récupérer l'état des fonctionnalités.
+
+## Directus CMS
+
+Directus est notre système de gestion de contenu headless:
+
+1. Accédez à l'interface d'administration à `http://localhost:8055`
+2. Les schémas et collections sont disponibles dans l'onglet "Schéma"
+3. Pour récupérer des données depuis NestJS, utilisez le client HTTP NestJS
+
 ## Tests
 
-- Assurez-vous que tous les tests passent avant de soumettre une PR.
-- Écrivez des tests pour toute nouvelle fonctionnalité.
+- Assurez-vous que tous les tests passent avant de soumettre une PR
+- Écrivez des tests pour toute nouvelle fonctionnalité
+- Les tests peuvent être exécutés avec: `npm test` (frontend) et `cd backend && npm test` (backend)
 
 ## Déploiement
 
@@ -69,3 +112,4 @@ Le déploiement est automatisé via GitHub Actions:
 - Utilisez ESLint pour le linting du code
 - Suivez les conventions de nommage existantes
 - Documentez les nouvelles fonctionnalités et API
+- Utilisez les décorateurs NestJS pour définir clairement les rôles de chaque composant
