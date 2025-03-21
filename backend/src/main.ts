@@ -9,10 +9,17 @@ async function bootstrap() {
   
   // Middleware
   app.use(cors());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
 
   // Configuration du port
   const PORT = process.env.PORT || 3000;
+  
+  // Préfixe global des API
+  app.setGlobalPrefix('api');
   
   // Démarrage du serveur
   await app.listen(PORT);
@@ -20,4 +27,7 @@ async function bootstrap() {
   console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔍 Features activées: chatbot=${process.env.FEATURE_CHATBOT}, analytics=${process.env.FEATURE_ANALYTICS}`);
 }
-bootstrap();
+bootstrap().catch(err => {
+  console.error('❌ Erreur lors du démarrage du serveur:', err);
+  process.exit(1);
+});
