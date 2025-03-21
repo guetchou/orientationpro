@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { questions } from "@/data/riasecQuestions";
+import { analyzeRiasecSmartly } from "@/utils/smartAnalysis";
 
 const RiasecTest = () => {
   const navigate = useNavigate();
@@ -36,7 +37,8 @@ const RiasecTest = () => {
         return;
       }
 
-      const results = calculateRiasecResults(finalAnswers);
+      // Utiliser notre nouvelle analyse intelligente
+      const results = analyzeRiasecSmartly(finalAnswers);
       
       const { data, error } = await supabase
         .from('test_results')
@@ -44,7 +46,9 @@ const RiasecTest = () => {
           user_id: user.id,
           test_type: 'RIASEC',
           results,
-          answers: finalAnswers
+          answers: finalAnswers,
+          confidence_score: results.confidenceScore,
+          personality_code: results.personalityCode
         }])
         .select()
         .single();
@@ -65,21 +69,18 @@ const RiasecTest = () => {
     }
   };
 
-  const calculateRiasecResults = (finalAnswers: number[]) => {
-    const categories = ['R', 'I', 'A', 'S', 'E', 'C'];
-    const results: Record<string, number> = {};
-    
-    categories.forEach((category, index) => {
-      const categoryScores = finalAnswers.filter((_, i) => i % 6 === index);
-      results[category] = categoryScores.reduce((sum, score) => sum + score, 0);
-    });
-
-    return results;
-  };
-
   const showPartialResults = () => {
     navigate(`/dashboard/results`);
   };
+
+  // Fonction pour afficher une question adaptative (exemple simple)
+  const getAdaptiveQuestion = () => {
+    // La logique simple d'adaptation - dans une version avancée, 
+    // on adapterait les questions en fonction des réponses précédentes
+    return questions[currentQuestion];
+  };
+
+  const currentAdaptiveQuestion = getAdaptiveQuestion();
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -105,7 +106,7 @@ const RiasecTest = () => {
 
             <div className="space-y-6">
               <p className="text-lg text-center mb-8">
-                {questions[currentQuestion].question}
+                {currentAdaptiveQuestion.question}
               </p>
 
               <div className="grid gap-3">

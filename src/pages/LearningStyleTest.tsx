@@ -1,47 +1,49 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const learningQuestions = [
-  {
-    id: 1,
-    question: "Comment préférez-vous recevoir des instructions ?",
-    options: [
-      "Par écrit avec des explications détaillées",
-      "À travers une démonstration visuelle",
-      "En écoutant quelqu'un expliquer",
-      "En essayant par vous-même"
-    ]
-  },
-  {
-    id: 2,
-    question: "Lors de l'apprentissage d'une nouvelle compétence, vous préférez :",
-    options: [
-      "Lire le manuel d'instructions",
-      "Regarder une vidéo tutorielle",
-      "Écouter un expert expliquer",
-      "Expérimenter directement"
-    ]
-  },
-  {
-    id: 3,
-    question: "Comment mémorisez-vous le mieux l'information ?",
-    options: [
-      "En prenant des notes",
-      "En créant des schémas ou des diagrammes",
-      "En répétant à voix haute",
-      "En mettant en pratique"
-    ]
-  }
-];
+import { analyzeLearningStyleSmartly } from "@/utils/smartAnalysis";
 
 export default function LearningStyleTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const navigate = useNavigate();
+
+  const learningQuestions = [
+    {
+      id: 1,
+      question: "Comment préférez-vous recevoir des instructions ?",
+      options: [
+        "Par écrit avec des explications détaillées",
+        "À travers une démonstration visuelle",
+        "En écoutant quelqu'un expliquer",
+        "En essayant par vous-même"
+      ]
+    },
+    {
+      id: 2,
+      question: "Lors de l'apprentissage d'une nouvelle compétence, vous préférez :",
+      options: [
+        "Lire le manuel d'instructions",
+        "Regarder une vidéo tutorielle",
+        "Écouter un expert expliquer",
+        "Expérimenter directement"
+      ]
+    },
+    {
+      id: 3,
+      question: "Comment mémorisez-vous le mieux l'information ?",
+      options: [
+        "En prenant des notes",
+        "En créant des schémas ou des diagrammes",
+        "En répétant à voix haute",
+        "En mettant en pratique"
+      ]
+    }
+  ];
 
   const handleAnswer = async (answer: string) => {
     const newAnswers = [...answers, answer];
@@ -50,7 +52,8 @@ export default function LearningStyleTest() {
     if (currentQuestion < learningQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      const results = analyzeLearningResults(newAnswers);
+      // Utiliser notre nouvelle analyse intelligente
+      const results = analyzeLearningStyleSmartly(newAnswers);
       
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -59,7 +62,8 @@ export default function LearningStyleTest() {
             user_id: user.id,
             test_type: 'learning_style',
             results: results,
-            answers: newAnswers
+            answers: newAnswers,
+            confidence_score: results.confidenceScore
           });
           toast.success("Test complété avec succès !");
         } else {
@@ -73,40 +77,6 @@ export default function LearningStyleTest() {
     }
   };
 
-  const analyzeLearningResults = (answers: string[]) => {
-    const learningStyles = {
-      visual: 0,
-      auditory: 0,
-      reading: 0,
-      kinesthetic: 0
-    };
-
-    answers.forEach((answer, index) => {
-      switch (index) {
-        case 0:
-          if (answer.includes("écrit")) learningStyles.reading += 3;
-          if (answer.includes("visuelle")) learningStyles.visual += 3;
-          if (answer.includes("écoutant")) learningStyles.auditory += 3;
-          if (answer.includes("essayant")) learningStyles.kinesthetic += 3;
-          break;
-        case 1:
-          if (answer.includes("manuel")) learningStyles.reading += 3;
-          if (answer.includes("vidéo")) learningStyles.visual += 3;
-          if (answer.includes("écouter")) learningStyles.auditory += 3;
-          if (answer.includes("expérimenter")) learningStyles.kinesthetic += 3;
-          break;
-        case 2:
-          if (answer.includes("notes")) learningStyles.reading += 3;
-          if (answer.includes("schémas")) learningStyles.visual += 3;
-          if (answer.includes("voix")) learningStyles.auditory += 3;
-          if (answer.includes("pratique")) learningStyles.kinesthetic += 3;
-          break;
-      }
-    });
-
-    return learningStyles;
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-center mb-8">Test de Style d'Apprentissage</h1>
@@ -118,6 +88,15 @@ export default function LearningStyleTest() {
               Question {currentQuestion + 1} sur {learningQuestions.length}
             </h2>
             <p className="text-lg mb-4">{learningQuestions[currentQuestion].question}</p>
+            
+            <div className="w-full bg-gray-200 h-2 rounded-full mt-4 mb-6">
+              <div
+                className="bg-secondary h-2 rounded-full transition-all"
+                style={{
+                  width: `${((currentQuestion + 1) / learningQuestions.length) * 100}%`,
+                }}
+              />
+            </div>
           </div>
 
           <div className="space-y-4">

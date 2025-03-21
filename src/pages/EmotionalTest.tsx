@@ -1,56 +1,60 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const emotionalQuestions = [
-  {
-    id: 1,
-    question: "Comment réagissez-vous face à une situation stressante ?",
-    options: [
-      "Je reste calme et analyse la situation",
-      "Je deviens anxieux(se) mais je gère",
-      "Je perds facilement mon sang-froid",
-      "Je cherche de l'aide auprès des autres"
-    ]
-  },
-  {
-    id: 2,
-    question: "Comment gérez-vous vos émotions au travail/à l'école ?",
-    options: [
-      "Je les exprime de manière constructive",
-      "Je les garde pour moi",
-      "Je les partage avec mes collègues/camarades",
-      "J'ai du mal à les contrôler"
-    ]
-  },
-  {
-    id: 3,
-    question: "Comment percevez-vous les émotions des autres ?",
-    options: [
-      "Je suis très empathique",
-      "J'ai parfois du mal à les comprendre",
-      "Je suis attentif(ve) mais objectif(ve)",
-      "Je préfère rester distant(e)"
-    ]
-  }
-];
+import { analyzeEmotionalSmartly } from "@/utils/smartAnalysis";
+import { emotionalIntelligenceQuestions } from "@/data/riasecQuestions";
 
 export default function EmotionalTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<number[]>([]);
   const navigate = useNavigate();
 
-  const handleAnswer = async (answer: string) => {
+  const emotionalQuestions = [
+    {
+      id: 1,
+      question: "Comment réagissez-vous face à une situation stressante ?",
+      options: [
+        { text: "Je reste calme et analyse la situation", value: 5 },
+        { text: "Je deviens anxieux(se) mais je gère", value: 3 },
+        { text: "Je perds facilement mon sang-froid", value: 1 },
+        { text: "Je cherche de l'aide auprès des autres", value: 4 }
+      ]
+    },
+    {
+      id: 2,
+      question: "Comment gérez-vous vos émotions au travail/à l'école ?",
+      options: [
+        { text: "Je les exprime de manière constructive", value: 5 },
+        { text: "Je les garde pour moi", value: 2 },
+        { text: "Je les partage avec mes collègues/camarades", value: 4 },
+        { text: "J'ai du mal à les contrôler", value: 1 }
+      ]
+    },
+    {
+      id: 3,
+      question: "Comment percevez-vous les émotions des autres ?",
+      options: [
+        { text: "Je suis très empathique", value: 5 },
+        { text: "J'ai parfois du mal à les comprendre", value: 2 },
+        { text: "Je suis attentif(ve) mais objectif(ve)", value: 4 },
+        { text: "Je préfère rester distant(e)", value: 1 }
+      ]
+    }
+  ];
+
+  const handleAnswer = async (answer: number) => {
     const newAnswers = [...answers, answer];
     setAnswers(newAnswers);
 
     if (currentQuestion < emotionalQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      const results = analyzeEmotionalResults(newAnswers);
+      // Utiliser notre nouvelle analyse intelligente
+      const results = analyzeEmotionalSmartly(newAnswers);
       
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -59,7 +63,8 @@ export default function EmotionalTest() {
             user_id: user.id,
             test_type: 'emotional',
             results: results,
-            answers: newAnswers
+            answers: newAnswers,
+            confidence_score: results.confidenceScore
           });
           toast.success("Test complété avec succès !");
         } else {
@@ -73,37 +78,6 @@ export default function EmotionalTest() {
     }
   };
 
-  const analyzeEmotionalResults = (answers: string[]) => {
-    const categories = {
-      selfAwareness: 0,
-      selfRegulation: 0,
-      empathy: 0
-    };
-
-    answers.forEach((answer, index) => {
-      switch (index) {
-        case 0:
-          if (answer.includes("calme")) categories.selfRegulation += 3;
-          if (answer.includes("anxieux")) categories.selfRegulation += 2;
-          if (answer.includes("sang-froid")) categories.selfRegulation += 1;
-          if (answer.includes("aide")) categories.empathy += 2;
-          break;
-        case 1:
-          if (answer.includes("constructive")) categories.selfAwareness += 3;
-          if (answer.includes("garde")) categories.selfRegulation += 2;
-          if (answer.includes("partage")) categories.empathy += 3;
-          break;
-        case 2:
-          if (answer.includes("empathique")) categories.empathy += 3;
-          if (answer.includes("attentif")) categories.empathy += 2;
-          if (answer.includes("distant")) categories.selfAwareness += 1;
-          break;
-      }
-    });
-
-    return categories;
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-center mb-8">Test d'Intelligence Émotionnelle</h1>
@@ -115,17 +89,26 @@ export default function EmotionalTest() {
               Question {currentQuestion + 1} sur {emotionalQuestions.length}
             </h2>
             <p className="text-lg mb-4">{emotionalQuestions[currentQuestion].question}</p>
+            
+            <div className="w-full bg-gray-200 h-2 rounded-full mt-4 mb-6">
+              <div
+                className="bg-pink-500 h-2 rounded-full transition-all"
+                style={{
+                  width: `${((currentQuestion + 1) / emotionalQuestions.length) * 100}%`,
+                }}
+              />
+            </div>
           </div>
 
           <div className="space-y-4">
             {emotionalQuestions[currentQuestion].options.map((option, index) => (
               <Button
                 key={index}
-                onClick={() => handleAnswer(option)}
+                onClick={() => handleAnswer(option.value)}
                 variant="outline"
                 className="w-full text-left justify-start h-auto py-4 px-6"
               >
-                {option}
+                {option.text}
               </Button>
             ))}
           </div>
