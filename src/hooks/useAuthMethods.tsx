@@ -9,12 +9,17 @@ export function useAuthMethods() {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log("Attempting to sign in with:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur de connexion:', error);
+        throw error;
+      }
       
       if (data.user) {
         toast.success('Connexion réussie !');
@@ -23,34 +28,51 @@ export function useAuthMethods() {
       return data;
     } catch (err) {
       console.error('Erreur de connexion:', err);
-      toast.error("Erreur lors de la connexion");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, userData = {}) => {
     try {
       setLoading(true);
+      console.log("Attempting to sign up:", email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          data: userData,
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur d'inscription:", error);
+        throw error;
+      }
       
       if (data.user) {
         toast.success('Inscription réussie ! Veuillez vérifier votre email.');
+        
+        // Create or update profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: email,
+            ...userData
+          });
+          
+        if (profileError) {
+          console.error('Erreur de création de profil:', profileError);
+        }
       }
       
       return data;
     } catch (err) {
       console.error("Erreur d'inscription:", err);
-      toast.error("Erreur lors de l'inscription");
       throw err;
     } finally {
       setLoading(false);
@@ -76,7 +98,7 @@ export function useAuthMethods() {
     try {
       setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/update-password`,
       });
 
       if (error) throw error;

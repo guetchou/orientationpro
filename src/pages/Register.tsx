@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -14,6 +14,18 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +58,8 @@ const Register = () => {
     }
     
     try {
-      const { error: signUpError } = await supabase!.auth.signUp({
+      console.log("Attempting to register:", { email });
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -55,7 +68,7 @@ const Register = () => {
       });
 
       if (signUpError) {
-        console.error("Erreur d'inscription:", signUpError);
+        console.error("Registration error:", signUpError);
         
         if (signUpError.message === "User already registered") {
           setError("Un compte existe déjà avec cet email. Veuillez vous connecter.");
@@ -68,10 +81,29 @@ const Register = () => {
         return;
       }
 
-      toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
-      navigate("/login");
+      if (data.user) {
+        // Create profile record for the new user
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: email,
+            department: 'admin',
+            is_super_admin: true,
+            first_name: 'Admin',
+            last_name: 'User',
+            status: 'active'
+          });
+
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+        }
+
+        toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
+        navigate("/login");
+      }
     } catch (error: any) {
-      console.error("Erreur inattendue:", error);
+      console.error("Unexpected error:", error);
       setError("Une erreur inattendue s'est produite");
     } finally {
       setLoading(false);

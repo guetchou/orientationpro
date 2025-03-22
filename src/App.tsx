@@ -11,28 +11,33 @@ import CMS from './pages/admin/CMS';
 import { UserManagement } from './components/admin/UserManagement';
 import SuperAdmin from './pages/admin/SuperAdmin';
 import UserCredentials from "./pages/admin/UserCredentials";
+import { AuthProvider } from './hooks/useAuth';
+import { Toaster } from './components/ui/toaster';
 
 function App() {
   return (
-    <Router>
-      <div>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/update-password" element={<UpdatePassword />} />
-          
-          {/* Routes administrateurs */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/cms" element={<CMS />} />
-          <Route path="/admin/user-management" element={<UserManagement />} />
-          <Route path="/admin/super-admin" element={<SuperAdmin />} />
-          <Route path="/admin/user-credentials" element={<UserCredentials />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Toaster />
+        <div>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
+            
+            {/* Routes administrateurs */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/cms" element={<CMS />} />
+            <Route path="/admin/user-management" element={<UserManagement />} />
+            <Route path="/admin/super-admin" element={<SuperAdmin />} />
+            <Route path="/admin/user-credentials" element={<UserCredentials />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

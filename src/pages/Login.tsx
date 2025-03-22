@@ -1,39 +1,72 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
 
+  // Use signIn directly from supabase client to troubleshoot
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      const result = await signIn(email, password);
+      console.log("Attempting login with:", { email });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.error("Sign in error:", signInError);
+        if (signInError.message === "Invalid login credentials") {
+          setError("Email ou mot de passe incorrect");
+        } else if (signInError.message.includes("Email not confirmed")) {
+          setError("Veuillez confirmer votre email avant de vous connecter");
+        } else {
+          setError(signInError.message);
+        }
+        return;
+      }
       
-      if (result && result.user) {
+      if (data.user) {
+        console.log("Login successful:", data.user);
+        toast.success("Connexion réussie !");
         navigate("/dashboard");
       }
     } catch (error: any) {
-      console.error("Erreur de connexion:", error);
+      console.error("Unexpected error:", error);
+      setError("Une erreur inattendue s'est produite. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-4">
@@ -48,6 +81,14 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="bg-red-50 p-3 rounded-md mb-4">
+              <p className="text-sm text-red-700 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {error}
+              </p>
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
               <div className="grid gap-2">
@@ -99,7 +140,14 @@ export default function Login() {
                 </div>
               </div>
               <Button className="w-full" type="submit" disabled={loading}>
-                {loading ? "Connexion en cours..." : "Se connecter"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connexion en cours...
+                  </>
+                ) : (
+                  "Se connecter"
+                )}
               </Button>
             </div>
           </form>
