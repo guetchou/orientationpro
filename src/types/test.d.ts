@@ -1,118 +1,135 @@
 
-// Extending the TestResults type
-export type TestResults = 
-  | RiasecResults 
-  | EmotionalTestResults 
-  | MultipleIntelligenceResults 
-  | LearningStyleResults
-  | CareerTransitionResults
-  | RetirementReadinessResults
-  | SeniorEmploymentResults
-  | NoDiplomaCareerResults;
-
-// AI Enhanced Analysis Type
-export interface AIEnhancedAnalysis {
-  personalityInsights: string[];
-  careerRecommendations: string[];
-  learningPathways: string[];
-  strengthWeaknessAnalysis: string[];
-  developmentSuggestions: string[];
-  confidenceScore: number;
+// Base interfaces
+export interface TestResult {
+  id: string;
+  userId: string;
+  testType: string;
+  createdAt: string;
+  score?: number;
+  isPremium?: boolean;
 }
 
-// RIASEC Test Results
-export interface RiasecResults {
-  realistic: number;
-  investigative: number;
-  artistic: number;
-  social: number;
-  enterprising: number;
-  conventional: number;
-  primaryType: string;
-  secondaryType: string;
-  confidenceScore?: number;
+export interface TestHistoryItem extends TestResult {
+  testName: string;
+  completedDate: string;
+  scoreDescription?: string;
 }
 
-// Emotional Intelligence Test Results
-export interface EmotionalTestResults {
-  selfAwareness: number;
-  selfRegulation: number;
-  motivation: number;
-  empathy: number;
-  socialSkills: number;
+// Different test result types
+export interface RiasecResults extends TestResult {
+  dominant: string[];
+  scores: {
+    realistic: number;
+    investigative: number;
+    artistic: number;
+    social: number;
+    enterprising: number;
+    conventional: number;
+  };
+  recommendations?: string[];
+  jobMatches?: string[];
+}
+
+export interface EmotionalResults extends TestResult {
+  emotionalAwareness: number;
+  emotionalRegulation: number;
+  socialAwareness: number;
+  relationshipManagement: number;
   overallScore: number;
-  dominantArea: string;
-  confidenceScore?: number;
 }
 
-// Multiple Intelligence Test Results
-export interface MultipleIntelligenceResults {
+export interface LearningStyleResults extends TestResult {
+  visual: number;
+  auditory: number;
+  kinesthetic: number;
+  reading: number;
+  primary: string;
+  secondary: string;
+}
+
+export interface MultipleIntelligenceResults extends TestResult {
   linguistic: number;
-  logicalMathematical: number;
+  logical: number;
   spatial: number;
   musical: number;
   bodily: number;
   interpersonal: number;
   intrapersonal: number;
   naturalistic: number;
-  dominantIntelligences: string[];
-  confidenceScore?: number;
+  dominant: string[];
 }
 
-// Learning Style Test Results
-export interface LearningStyleResults {
-  visual: number;
-  auditory: number;
-  kinesthetic: number;
-  dominantStyle: string;
-  secondaryStyle: string;
-  confidenceScore?: number;
-}
-
-// Career Transition Test Results
-export interface CareerTransitionResults {
-  readiness: number;
-  skillTransferability: number;
+export interface CareerTransitionResults extends TestResult {
+  transferableSkills: number;
   adaptability: number;
-  motivationLevel: number;
   riskTolerance: number;
-  overallScore: number;
-  recommendedApproach: string;
-  confidenceScore?: number;
-}
-
-// Retirement Readiness Test Results
-export interface RetirementReadinessResults {
-  financialPreparation: number;
-  emotionalReadiness: number;
-  socialPlanning: number;
-  healthConsiderations: number;
-  purposeAndIdentity: number;
+  networkStrength: number;
+  learningCapacity: number;
   overallReadiness: number;
-  primaryConcern: string;
-  confidenceScore?: number;
 }
 
-// Senior Employment Test Results
-export interface SeniorEmploymentResults {
-  techProficiency: number;
-  adaptability: number;
-  workLifeBalanceNeeds: number;
-  skillRelevance: number;
-  confidenceLevel: number;
-  overallScore: number;
-  recommendedSectors: string[];
-  confidenceScore?: number;
-}
-
-// No Diploma Career Test Results
-export interface NoDiplomaCareerResults {
-  technicalSkills: number;
-  softSkills: number;
-  entrepreneurialSpirit: number;
-  experienceLevel: number;
-  learningAgility: number;
+export interface NoDiplomaCareerResults extends TestResult {
+  skillAssessment: number;
+  workEthic: number;
+  problemSolving: number;
+  communication: number;
+  experiencePortfolio: number;
   overallPotential: number;
-  recommendedPaths: string[];
-  confidenceScore?: number;
+}
+
+export interface RetirementReadinessResults extends TestResult {
+  financialPreparedness: number;
+  healthStatus: number;
+  socialConnections: number;
+  purposeClarity: number;
+  readinessScore: number;
+  recommendedActions: string[];
+}
+
+export interface SeniorEmploymentResults extends TestResult {
+  techCompetency: number;
+  physicalCapability: number;
+  adaptability: number;
+  experienceValue: number;
+  flexibilityNeeds: number;
+  employmentPotential: number;
+}
+
+// AI Analysis types
+export interface AIEnhancedAnalysis {
+  dominantTraits: string[];
+  traitStrengths: Record<string, number>;
+  traitCombinations: string[];
+  rawScores: any;
+  analysisVersion: string;
+  testType: string;
+  error?: string;
+}
+
+// Recommendation types
+export interface CareerRecommendation {
+  title: string;
+  match: number;
+  description: string;
+  skills: string[];
+  education: string[];
+  outlook: string;
+}
+
+export interface EducationRecommendation {
+  institution: string;
+  program: string;
+  match: number;
+  description: string;
+  duration: string;
+  cost: string;
+  location: string;
+}
+
+export interface SkillRecommendation {
+  skill: string;
+  relevance: number;
+  description: string;
+  resources: string[];
+  timeToAcquire: string;
 }

@@ -10,6 +10,7 @@ export const useToast = () => {
     warning: (message: string, options?: any) => toast.warning(message, options),
     custom: (content: React.ReactNode, options?: any) => toast(content, options),
     dismiss: (toastId?: string) => toast.dismiss(toastId),
-    // Add more toast methods as needed
+    // Added toasts property to fix type error
+    toasts: [],
   };
 };
