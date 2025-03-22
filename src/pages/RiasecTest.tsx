@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Brain, BookOpen, Target, Briefcase } from "lucide-react";
 import { TestHeader } from "@/components/tests/riasec/TestHeader";
 import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
 import { analyzeRiasecResults } from "@/components/tests/riasec/RiasecAnalyzer";
+import { TestResult } from "@/types/test";
 
 const RiasecTest = () => {
   const navigate = useNavigate();
@@ -45,9 +47,20 @@ const RiasecTest = () => {
       
       // Analyser les résultats
       const results = analyzeRiasecResults(finalAnswers);
+
+      // Create test result object
+      const testResult: TestResult = {
+        id: '',
+        user_id: user?.id || '',
+        test_type: 'RIASEC',
+        results: results,
+        answers: finalAnswers,
+        created_at: new Date().toISOString(),
+        progress_score: 100
+      };
       
       // Enrichir les résultats avec l'IA
-      const aiInsights = await performAIEnhancedAnalysis({test_type: 'RIASEC', results});
+      const aiInsights = await performAIEnhancedAnalysis(testResult);
       
       if (user) {
         // Sauvegarder les résultats dans Supabase
@@ -103,64 +116,7 @@ const RiasecTest = () => {
   const currentAdaptiveQuestion = getAdaptiveQuestion();
 
   if (showDescription) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
-        <div className="container mx-auto px-4">
-          <TestDescription 
-            title="Test d'orientation RIASEC"
-            description="Le test RIASEC, également connu sous le nom de test de Holland, vous aide à déterminer votre personnalité professionnelle selon six catégories: Réaliste, Investigateur, Artistique, Social, Entreprenant et Conventionnel. Ce test est scientifiquement validé pour vous orienter vers des carrières adaptées à votre profil."
-            time="5-10 minutes"
-            benefits={[
-              "Découvrir les métiers qui correspondent à votre personnalité",
-              "Comprendre vos préférences professionnelles",
-              "Obtenir une analyse détaillée de votre profil RIASEC",
-              "Recevoir des recommandations de carrières personnalisées"
-            ]}
-            onStart={handleStartTest}
-          />
-          
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-8"
-          >
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center text-center"
-            >
-              <div className="bg-blue-100 p-3 rounded-full mb-3">
-                <Brain className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="font-medium text-gray-900">Basé sur la recherche</h3>
-              <p className="text-sm text-gray-500 mt-1">Développé par des psychologues de l'orientation</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center text-center"
-            >
-              <div className="bg-purple-100 p-3 rounded-full mb-3">
-                <Target className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="font-medium text-gray-900">Précision élevée</h3>
-              <p className="text-sm text-gray-500 mt-1">Des résultats personnalisés et pertinents</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center text-center"
-            >
-              <div className="bg-green-100 p-3 rounded-full mb-3">
-                <Briefcase className="h-6 w-6 text-green-600" />
-              </div>
-              <h3 className="font-medium text-gray-900">Orientation concrète</h3>
-              <p className="text-sm text-gray-500 mt-1">Des métiers et formations recommandés</p>
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>
-    );
+    return <TestIntroduction onStart={handleStartTest} />;
   }
 
   return (
@@ -194,6 +150,87 @@ const RiasecTest = () => {
         )}
       </div>
     </div>
+  );
+};
+
+// Extract the introduction section to a separate component
+const TestIntroduction = ({ onStart }: { onStart: () => void }) => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
+      <div className="container mx-auto px-4">
+        <TestDescription 
+          title="Test d'orientation RIASEC"
+          description="Le test RIASEC, également connu sous le nom de test de Holland, vous aide à déterminer votre personnalité professionnelle selon six catégories: Réaliste, Investigateur, Artistique, Social, Entreprenant et Conventionnel. Ce test est scientifiquement validé pour vous orienter vers des carrières adaptées à votre profil."
+          time="5-10 minutes"
+          benefits={[
+            "Découvrir les métiers qui correspondent à votre personnalité",
+            "Comprendre vos préférences professionnelles",
+            "Obtenir une analyse détaillée de votre profil RIASEC",
+            "Recevoir des recommandations de carrières personnalisées"
+          ]}
+          onStart={onStart}
+        />
+        
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-8"
+        >
+          <TestFeatureCard 
+            icon={<Brain className="h-6 w-6 text-blue-600" />}
+            title="Basé sur la recherche"
+            description="Développé par des psychologues de l'orientation"
+            bgColor="bg-blue-100"
+            textColor="text-blue-600"
+          />
+          
+          <TestFeatureCard 
+            icon={<Target className="h-6 w-6 text-purple-600" />}
+            title="Précision élevée"
+            description="Des résultats personnalisés et pertinents"
+            bgColor="bg-purple-100"
+            textColor="text-purple-600"
+          />
+          
+          <TestFeatureCard 
+            icon={<Briefcase className="h-6 w-6 text-green-600" />}
+            title="Orientation concrète"
+            description="Des métiers et formations recommandés"
+            bgColor="bg-green-100"
+            textColor="text-green-600"
+          />
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Feature card component
+const TestFeatureCard = ({ 
+  icon, 
+  title, 
+  description, 
+  bgColor, 
+  textColor 
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  description: string; 
+  bgColor: string; 
+  textColor: string;
+}) => {
+  return (
+    <motion.div 
+      whileHover={{ y: -5 }}
+      className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center text-center"
+    >
+      <div className={`${bgColor} p-3 rounded-full mb-3`}>
+        {icon}
+      </div>
+      <h3 className="font-medium text-gray-900">{title}</h3>
+      <p className="text-sm text-gray-500 mt-1">{description}</p>
+    </motion.div>
   );
 };
 

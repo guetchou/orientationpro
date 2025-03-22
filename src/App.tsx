@@ -1,10 +1,6 @@
+
 import React from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Route,
-  createRoutesFromElements,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Index from "@/pages/Index";
 import Tests from "@/pages/Tests";
 import TestResults from "@/pages/TestResults";
@@ -23,78 +19,32 @@ import OrientationGuide from "@/pages/OrientationGuide";
 import NotFound from "@/pages/NotFound";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
-  },
-  {
-    path: "/tests",
-    element: <Tests />
-  },
-  {
-    path: "/test-results",
-    element: <RequireAuth><TestResults /></RequireAuth>
-  },
-  {
-    path: "/payment/success",
-    element: <PaymentSuccess />
-  },
-  {
-    path: "/payment/cancel",
-    element: <PaymentCancel />
-  },
-  {
-    path: "/profile",
-    element:  <RequireAuth><Profile /></RequireAuth>
-  },
-  {
-    path: "/login",
-    element: <Login />
-  },
-  {
-    path: "/register",
-    element: <Register />
-  },
-  {
-    path: "/dashboard",
-    element:  <RequireAuth><Dashboard /></RequireAuth>
-  },
-  {
-    path: "/riasec-test",
-    element:  <RequireAuth><RiasecTest /></RequireAuth>
-  },
-  {
-    path: "/establishments",
-    element: <Establishments />
-  },
-  {
-    path: "/contact",
-    element: <Contact />
-  },
-  {
-    path: "/impressum",
-    element: <Impressum />
-  },
-  {
-    path: "/data-protection",
-    element: <DataProtection />
-  },
-  {
-    path: "/orientation-guide",
-    element: <OrientationGuide />
-  },
-  {
-    path: "*",
-    element: <NotFound />
-  }
-]);
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/tests" element={<Tests />} />
+          <Route path="/test-results" element={<RequireAuth><TestResults /></RequireAuth>} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/riasec-test" element={<RiasecTest />} />
+          <Route path="/establishments" element={<Establishments />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/impressum" element={<Impressum />} />
+          <Route path="/data-protection" element={<DataProtection />} />
+          <Route path="/orientation-guide" element={<OrientationGuide />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster position="top-right" />
+      </Router>
     </AuthProvider>
   );
 }
