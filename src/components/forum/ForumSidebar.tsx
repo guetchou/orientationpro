@@ -37,8 +37,8 @@ export const ForumSidebar = ({
             <div className="space-y-1">
               {domains.map((domain) => (
                 <Button
-                  key={domain.id}
-                  variant={selectedDomain === domain.id ? "secondary" : "ghost"}
+                  key={domain.id?.toString()}
+                  variant={selectedDomain === domain.id?.toString() ? "secondary" : "ghost"}
                   className="w-full justify-start text-left font-normal"
                   onClick={() => onDomainSelect(String(domain.id))}
                 >

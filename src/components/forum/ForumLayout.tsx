@@ -58,10 +58,6 @@ export const ForumLayout = ({ children }: { children: React.ReactNode }) => {
     navigate(`/forum/domain/${domainId}`);
   };
 
-  // Convert number to string if needed
-  const someNumberValue = 123; // This is an example, replace with actual value
-  const someStringValue: string = String(someNumberValue); // Convert number to string
-
   return (
     <div className="flex min-h-screen bg-gray-50">
       <ForumSidebar 
