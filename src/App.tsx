@@ -14,23 +14,25 @@ import UserCredentials from "./pages/admin/UserCredentials";
 
 function App() {
   return (
-    <div>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/update-password" element={<UpdatePassword />} />
-        
-        {/* Routes administrateurs */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/cms" element={<CMS />} />
-        <Route path="/admin/user-management" element={<UserManagement />} />
-        <Route path="/admin/super-admin" element={<SuperAdmin />} />
-        <Route path="/admin/user-credentials" element={<UserCredentials />} />
-      </Routes>
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
+          
+          {/* Routes administrateurs */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/cms" element={<CMS />} />
+          <Route path="/admin/user-management" element={<UserManagement />} />
+          <Route path="/admin/super-admin" element={<SuperAdmin />} />
+          <Route path="/admin/user-credentials" element={<UserCredentials />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

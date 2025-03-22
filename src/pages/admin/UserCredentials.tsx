@@ -3,22 +3,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Search, UserPlus, Save, Eye, EyeOff } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { UserPlus, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { UserTable } from "@/components/admin/UserTable";
+import { CreateUserForm } from "@/components/admin/CreateUserForm";
 
 interface User {
   id: string;
@@ -36,7 +28,6 @@ export default function UserCredentials() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -183,7 +174,6 @@ export default function UserCredentials() {
       last_name: "",
       department: "etudiant",
     });
-    setShowPassword(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,10 +184,12 @@ export default function UserCredentials() {
     }));
   };
 
-  const filteredUsers = users.filter(user => 
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDepartmentChange = (value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      department: value 
+    }));
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -227,80 +219,14 @@ export default function UserCredentials() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center p-4">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Rôle</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.first_name && user.last_name 
-                          ? `${user.first_name} ${user.last_name}`
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          defaultValue={user.department} 
-                          onValueChange={(value) => handleChangeUserRole(user.id, value)}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Sélectionner un rôle" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="etudiant">Étudiant</SelectItem>
-                            <SelectItem value="conseiller">Conseiller</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            {isMasterAdmin && (
-                              <SelectItem value="master_admin">Master Admin</SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          user.status === 'active' ? 'bg-green-100 text-green-800' : 
-                          user.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {user.status === 'active' ? 'Actif' : 
-                           user.status === 'pending' ? 'En attente' : 'Inactif'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => resetUserPassword(user.id, user.email)}
-                        >
-                          Réinitialiser mot de passe
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4">
-                      Aucun utilisateur trouvé
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
+          <UserTable 
+            users={users}
+            loading={loading}
+            searchTerm={searchTerm}
+            isMasterAdmin={isMasterAdmin}
+            onResetPassword={resetUserPassword}
+            onChangeRole={handleChangeUserRole}
+          />
         </CardContent>
       </Card>
 
@@ -310,104 +236,15 @@ export default function UserCredentials() {
           <DialogHeader>
             <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreateUser}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Prénom</Label>
-                  <Input
-                    id="first_name"
-                    name="first_name"
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Nom</Label>
-                  <Input
-                    id="last_name"
-                    name="last_name"
-                    value={formData.last_name}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe *</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-2"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Rôle *</Label>
-                <Select 
-                  value={formData.department}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un rôle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="etudiant">Étudiant</SelectItem>
-                    <SelectItem value="conseiller">Conseiller</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    {isMasterAdmin && (
-                      <SelectItem value="master_admin">Master Admin</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
-                </Button>
-              </DialogClose>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Création...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Créer
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
+          <CreateUserForm 
+            loading={loading}
+            isMasterAdmin={isMasterAdmin}
+            formData={formData}
+            onInputChange={handleInputChange}
+            onDepartmentChange={handleDepartmentChange}
+            onSubmit={handleCreateUser}
+            onCancel={resetForm}
+          />
         </DialogContent>
       </Dialog>
     </div>
