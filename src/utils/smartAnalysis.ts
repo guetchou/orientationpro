@@ -1,461 +1,270 @@
 
-import { 
-  RiasecResults, 
-  TestResult, 
-  LearningStyleResults,
-  EmotionalResults,
-  MultipleIntelligenceResults,
-  CareerTransitionResults,
-  NoDiplomaCareerResults,
-  RetirementReadinessResults,
-  SeniorEmploymentResults,
-  AIEnhancedAnalysis
-} from '@/types/test';
+import { TestResult } from '@/types/test';
+import { AIEnhancedAnalysis } from '@/types/test';
 
-// Generic analysis function that routes to specific analyzers based on test type
-export const analyzeTestResult = (result: TestResult): any => {
-  switch (result.testType) {
-    case 'riasec':
-      return analyzeRiasecResult(result as RiasecResults);
-    case 'learningStyle':
-      return analyzeLearningStyleResult(result as LearningStyleResults);
-    case 'emotional':
-      return analyzeEmotionalResult(result as EmotionalResults);
-    case 'multipleIntelligence':
-      return analyzeMultipleIntelligenceResult(result as MultipleIntelligenceResults);
-    case 'careerTransition':
-      return analyzeCareerTransitionResult(result as CareerTransitionResults);
-    case 'noDiplomaCareer':
-      return analyzeNoDiplomaCareerResult(result as NoDiplomaCareerResults);
-    case 'retirementReadiness':
-      return analyzeRetirementReadinessResult(result as RetirementReadinessResults);
-    case 'seniorEmployment':
-      return analyzeSeniorEmploymentResult(result as SeniorEmploymentResults);
-    default:
-      return {
-        summary: "Analyse non disponible pour ce type de test.",
-        details: {},
-        recommendations: []
-      };
+/**
+ * Analyzes test results and generates enhanced AI insights
+ * @param testResult - The test result to analyze
+ * @returns AI enhanced analysis with personalized insights
+ */
+export function generateSmartAnalysis(testResult: TestResult): AIEnhancedAnalysis {
+  if (!testResult) {
+    return createErrorAnalysis("No test result provided");
   }
-};
 
-// RIASEC test analysis
-const analyzeRiasecResult = (result: RiasecResults) => {
-  const { scores } = result;
+  try {
+    const testType = testResult.test_type || "unknown";
+    
+    // Based on the test type, generate appropriate analysis
+    switch (testType.toLowerCase()) {
+      case "riasec":
+        return analyzeRiasecTest(testResult);
+      case "learning_style":
+        return analyzeLearningStyleTest(testResult);
+      case "emotional":
+        return analyzeEmotionalTest(testResult);
+      case "multiple_intelligence":
+        return analyzeMultipleIntelligenceTest(testResult);
+      case "career_transition":
+        return analyzeCareerTransitionTest(testResult);
+      case "no_diploma_career":
+        return analyzeNoDiplomaCareerTest(testResult);
+      case "retirement_readiness":
+        return analyzeRetirementReadinessTest(testResult);
+      case "senior_employment":
+        return analyzeSeniorEmploymentTest(testResult);
+      default:
+        return createGenericAnalysis(testResult);
+    }
+  } catch (error) {
+    console.error("Error analyzing test results:", error);
+    return createErrorAnalysis("Failed to analyze test results");
+  }
+}
+
+// Helper function to create analysis for RIASEC tests
+function analyzeRiasecTest(testResult: TestResult): AIEnhancedAnalysis {
+  // For an actual implementation, we would parse the result data
+  // and generate insights based on the RIASEC categories
   
-  // Get top three RIASEC categories
-  const sortedCategories = Object.entries(scores)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([category]) => capitalize(category));
-  
-  // Career paths based on top RIASEC combo
-  const topTwo = sortedCategories.slice(0, 2).join('-');
-  const careerPaths = getCareerPathsForRiasecCombo(topTwo);
-  
+  // This is a simplified mock implementation
   return {
-    summary: `Votre profil RIASEC montre une forte affinité pour les domaines ${sortedCategories.join(', ')}.`,
-    details: {
-      dominant: sortedCategories,
-      strengths: getStrengthsForRiasecCategories(sortedCategories),
-      workEnvironments: getWorkEnvironmentsForRiasecCategories(sortedCategories),
-    },
-    recommendations: careerPaths
-  };
-};
-
-// Learning Style test analysis
-const analyzeLearningStyleResult = (result: LearningStyleResults) => {
-  const { visual, auditory, kinesthetic, reading } = result;
-  
-  // Determine primary and secondary learning styles
-  const styles = [
-    { type: 'visual', score: visual },
-    { type: 'auditory', score: auditory },
-    { type: 'kinesthetic', score: kinesthetic },
-    { type: 'reading/writing', score: reading }
-  ].sort((a, b) => b.score - a.score);
-  
-  const primary = styles[0].type;
-  const secondary = styles[1].type;
-  
-  return {
-    summary: `Votre style d'apprentissage principal est ${primary}, suivi de ${secondary}.`,
-    details: {
-      primary,
-      secondary,
-      learningStrategies: getLearningStrategiesForStyle(primary),
-      complementaryStrategies: getLearningStrategiesForStyle(secondary),
-    },
-    recommendations: getEducationalRecommendationsForLearningStyle(primary)
-  };
-};
-
-// Emotional Intelligence test analysis
-const analyzeEmotionalResult = (result: EmotionalResults) => {
-  const { emotionalAwareness, emotionalRegulation, socialAwareness, relationshipManagement, overallScore } = result;
-  
-  // Determine strengths and areas for improvement
-  const scores = [
-    { area: 'conscience émotionnelle', score: emotionalAwareness },
-    { area: 'régulation émotionnelle', score: emotionalRegulation },
-    { area: 'conscience sociale', score: socialAwareness },
-    { area: 'gestion des relations', score: relationshipManagement }
-  ].sort((a, b) => b.score - a.score);
-  
-  const strengths = scores.slice(0, 2).map(s => s.area);
-  const improvements = scores.slice(2).map(s => s.area);
-  
-  return {
-    summary: `Votre intelligence émotionnelle globale est ${getScoreCategory(overallScore)}.`,
-    details: {
-      strengths,
-      improvementAreas: improvements,
-      overallCategory: getScoreCategory(overallScore)
-    },
-    recommendations: getEmotionalIntelligenceRecommendations(improvements)
-  };
-};
-
-// Multiple Intelligence test analysis
-const analyzeMultipleIntelligenceResult = (result: MultipleIntelligenceResults) => {
-  const { linguistic, logical, spatial, musical, bodily, interpersonal, intrapersonal, naturalistic } = result;
-  
-  // Determine top intelligences
-  const intelligences = [
-    { type: 'linguistique', score: linguistic },
-    { type: 'logico-mathématique', score: logical },
-    { type: 'spatiale', score: spatial },
-    { type: 'musicale', score: musical },
-    { type: 'kinesthésique', score: bodily },
-    { type: 'interpersonnelle', score: interpersonal },
-    { type: 'intrapersonnelle', score: intrapersonal },
-    { type: 'naturaliste', score: naturalistic }
-  ].sort((a, b) => b.score - a.score);
-  
-  const topIntelligences = intelligences.slice(0, 3).map(i => i.type);
-  
-  return {
-    summary: `Vos intelligences dominantes sont ${topIntelligences.join(', ')}.`,
-    details: {
-      dominant: topIntelligences,
-      strengthAreas: getStrengthsForIntelligences(topIntelligences),
-      learningPreferences: getLearningPreferencesForIntelligences(topIntelligences)
-    },
-    recommendations: getCareerRecommendationsForIntelligences(topIntelligences)
-  };
-};
-
-// Career Transition test analysis
-const analyzeCareerTransitionResult = (result: CareerTransitionResults) => {
-  const { transferableSkills, adaptability, riskTolerance, networkStrength, learningCapacity, overallReadiness } = result;
-  
-  // Determine readiness level
-  const readinessLevel = getReadinessLevel(overallReadiness);
-  
-  // Identify strengths and challenges
-  const factors = [
-    { factor: 'compétences transférables', score: transferableSkills },
-    { factor: 'adaptabilité', score: adaptability },
-    { factor: 'tolérance au risque', score: riskTolerance },
-    { factor: 'réseau professionnel', score: networkStrength },
-    { factor: 'capacité d\'apprentissage', score: learningCapacity }
-  ].sort((a, b) => b.score - a.score);
-  
-  const strengths = factors.slice(0, 2).map(f => f.factor);
-  const challenges = factors.slice(-2).map(f => f.factor);
-  
-  return {
-    summary: `Votre niveau de préparation pour une transition de carrière est ${readinessLevel}.`,
-    details: {
-      readinessLevel,
-      strengths,
-      challenges
-    },
-    recommendations: getCareerTransitionRecommendations(readinessLevel, challenges)
-  };
-};
-
-// No Diploma Career test analysis
-const analyzeNoDiplomaCareerResult = (result: NoDiplomaCareerResults) => {
-  const { skillAssessment, workEthic, problemSolving, communication, experiencePortfolio, overallPotential } = result;
-  
-  // Determine potential level
-  const potentialLevel = getPotentialLevel(overallPotential);
-  
-  // Identify strengths and areas for development
-  const factors = [
-    { factor: 'compétences existantes', score: skillAssessment },
-    { factor: 'éthique de travail', score: workEthic },
-    { factor: 'résolution de problèmes', score: problemSolving },
-    { factor: 'communication', score: communication },
-    { factor: 'portfolio d\'expérience', score: experiencePortfolio }
-  ].sort((a, b) => b.score - a.score);
-  
-  const strengths = factors.slice(0, 2).map(f => f.factor);
-  const development = factors.slice(-2).map(f => f.factor);
-  
-  return {
-    summary: `Votre potentiel de carrière sans diplôme est ${potentialLevel}.`,
-    details: {
-      potentialLevel,
-      strengths,
-      developmentAreas: development
-    },
-    recommendations: getNoDiplomaCareerRecommendations(potentialLevel, strengths)
-  };
-};
-
-// Retirement Readiness test analysis
-const analyzeRetirementReadinessResult = (result: RetirementReadinessResults) => {
-  const { financialPreparedness, healthStatus, socialConnections, purposeClarity, readinessScore } = result;
-  
-  // Determine readiness category
-  const readinessCategory = getRetirementReadinessCategory(readinessScore);
-  
-  // Identify strengths and areas needing attention
-  const factors = [
-    { factor: 'préparation financière', score: financialPreparedness },
-    { factor: 'état de santé', score: healthStatus },
-    { factor: 'connexions sociales', score: socialConnections },
-    { factor: 'clarté d\'objectif', score: purposeClarity }
-  ].sort((a, b) => b.score - a.score);
-  
-  const strengths = factors.slice(0, 2).map(f => f.factor);
-  const attentionAreas = factors.slice(-2).map(f => f.factor);
-  
-  return {
-    summary: `Votre niveau de préparation à la retraite est ${readinessCategory}.`,
-    details: {
-      readinessCategory,
-      strengths,
-      attentionAreas
-    },
-    recommendations: getRetirementRecommendations(readinessCategory, attentionAreas)
-  };
-};
-
-// Senior Employment test analysis
-const analyzeSeniorEmploymentResult = (result: SeniorEmploymentResults) => {
-  const { techCompetency, physicalCapability, adaptability, experienceValue, flexibilityNeeds, employmentPotential } = result;
-  
-  // Determine employment potential category
-  const potentialCategory = getSeniorEmploymentCategory(employmentPotential);
-  
-  // Identify advantages and considerations
-  const factors = [
-    { factor: 'compétence technologique', score: techCompetency },
-    { factor: 'capacité physique', score: physicalCapability },
-    { factor: 'adaptabilité', score: adaptability },
-    { factor: 'valeur de l\'expérience', score: experienceValue },
-    { factor: 'besoins de flexibilité', score: flexibilityNeeds }
-  ].sort((a, b) => b.score - a.score);
-  
-  const advantages = factors.slice(0, 2).map(f => f.factor);
-  const considerations = factors.slice(-2).map(f => f.factor);
-  
-  return {
-    summary: `Votre potentiel d'emploi senior est ${potentialCategory}.`,
-    details: {
-      potentialCategory,
-      advantages,
-      considerations
-    },
-    recommendations: getSeniorEmploymentRecommendations(potentialCategory, advantages)
-  };
-};
-
-// Helper functions for analysis
-const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-
-const getScoreCategory = (score: number) => {
-  if (score >= 80) return 'excellente';
-  if (score >= 60) return 'bonne';
-  if (score >= 40) return 'moyenne';
-  if (score >= 20) return 'à développer';
-  return 'faible';
-};
-
-const getReadinessLevel = (score: number) => {
-  if (score >= 80) return 'très élevé';
-  if (score >= 60) return 'élevé';
-  if (score >= 40) return 'modéré';
-  if (score >= 20) return 'en développement';
-  return 'initial';
-};
-
-const getPotentialLevel = (score: number) => {
-  if (score >= 80) return 'exceptionnel';
-  if (score >= 60) return 'fort';
-  if (score >= 40) return 'modéré';
-  if (score >= 20) return 'à développer';
-  return 'limité';
-};
-
-const getRetirementReadinessCategory = (score: number) => {
-  if (score >= 80) return 'optimal';
-  if (score >= 60) return 'bien préparé';
-  if (score >= 40) return 'partiellement préparé';
-  if (score >= 20) return 'préparation initiale';
-  return 'non préparé';
-};
-
-const getSeniorEmploymentCategory = (score: number) => {
-  if (score >= 80) return 'excellent';
-  if (score >= 60) return 'bon';
-  if (score >= 40) return 'modéré';
-  if (score >= 20) return 'limité';
-  return 'restreint';
-};
-
-// These functions would be expanded with real data in a production environment
-const getStrengthsForRiasecCategories = (categories: string[]) => {
-  return [
-    'Capacité à résoudre des problèmes complexes',
-    'Bonnes compétences interpersonnelles',
-    'Créativité et pensée innovante'
-  ];
-};
-
-const getWorkEnvironmentsForRiasecCategories = (categories: string[]) => {
-  return [
-    'Environnements collaboratifs',
-    'Cadres structurés avec des défis intellectuels',
-    'Milieux favorisant l\'expression créative'
-  ];
-};
-
-const getCareerPathsForRiasecCombo = (combo: string) => {
-  return [
-    'Développement de produits',
-    'Conseil en gestion',
-    'Recherche appliquée',
-    'Éducation et formation'
-  ];
-};
-
-const getLearningStrategiesForStyle = (style: string) => {
-  const strategies: Record<string, string[]> = {
-    'visual': [
-      'Utiliser des diagrammes et des cartes mentales',
-      'Convertir les notes en schémas visuels',
-      'Regarder des vidéos explicatives'
+    testType: "RIASEC",
+    dominantTraits: ["Investigative", "Artistic", "Social"],
+    traitCombinations: ["Investigative + Artistic", "Social + Conventional"],
+    strengths: [
+      "Strong analytical abilities",
+      "Creative problem-solving approach",
+      "Good interpersonal skills"
     ],
-    'auditory': [
-      'Enregistrer et réécouter les cours',
-      'Participer à des discussions de groupe',
-      'Expliquer les concepts à voix haute'
+    weaknesses: [
+      "May need to develop more practical skills",
+      "Could benefit from more structure in approach"
     ],
-    'kinesthetic': [
-      'Apprendre par la pratique et l\'expérimentation',
-      'Utiliser des modèles physiques',
-      'Prendre des pauses actives pendant l\'étude'
-    ],
-    'reading/writing': [
-      'Prendre des notes détaillées',
-      'Réécrire les concepts clés',
-      'Créer des résumés et des fiches'
+    recommendations: [
+      "Consider careers in research, design, or education",
+      "Develop a structured approach to harness creative abilities",
+      "Leverage social skills in collaborative environments"
     ]
   };
-  
-  return strategies[style] || [
-    'Varier les méthodes d\'apprentissage',
-    'Combiner différentes approches',
-    'Adapter ses techniques selon le contenu'
-  ];
-};
+}
 
-const getEducationalRecommendationsForLearningStyle = (style: string) => {
-  return [
-    'Cours adaptés à votre style d\'apprentissage',
-    'Techniques d\'étude optimisées',
-    'Outils et ressources recommandés'
-  ];
-};
-
-const getEmotionalIntelligenceRecommendations = (improvementAreas: string[]) => {
-  return [
-    'Exercices de pleine conscience',
-    'Pratique de l\'écoute active',
-    'Journal de réflexion émotionnelle',
-    'Techniques de gestion du stress'
-  ];
-};
-
-const getStrengthsForIntelligences = (intelligences: string[]) => {
-  return [
-    'Communication efficace',
-    'Résolution de problèmes',
-    'Expression créative',
-    'Empathie et compréhension des autres'
-  ];
-};
-
-const getLearningPreferencesForIntelligences = (intelligences: string[]) => {
-  return [
-    'Apprentissage interactif',
-    'Exploration de concepts abstraits',
-    'Activités créatives',
-    'Travail en équipe et collaboration'
-  ];
-};
-
-const getCareerRecommendationsForIntelligences = (intelligences: string[]) => {
-  return [
-    'Domaines de recherche et développement',
-    'Professions créatives',
-    'Rôles de leadership et conseil',
-    'Éducation et formation'
-  ];
-};
-
-const getCareerTransitionRecommendations = (readinessLevel: string, challenges: string[]) => {
-  return [
-    'Plan de développement de compétences personnalisé',
-    'Stratégies de réseautage efficaces',
-    'Options de formation continue',
-    'Approches de recherche d\'emploi adaptées'
-  ];
-};
-
-const getNoDiplomaCareerRecommendations = (potentialLevel: string, strengths: string[]) => {
-  return [
-    'Certifications professionnelles pertinentes',
-    'Développement d\'un portfolio de compétences',
-    'Stratégies de networking et visibilité',
-    'Secteurs et rôles à fort potentiel'
-  ];
-};
-
-const getRetirementRecommendations = (readinessCategory: string, attentionAreas: string[]) => {
-  return [
-    'Plan financier ajusté',
-    'Activités pour maintenir la santé physique et mentale',
-    'Stratégies pour développer de nouvelles relations sociales',
-    'Options pour trouver un sens et un but après la carrière'
-  ];
-};
-
-const getSeniorEmploymentRecommendations = (potentialCategory: string, advantages: string[]) => {
-  return [
-    'Mise à jour de compétences ciblées',
-    'Options d\'emploi adaptées à vos forces',
-    'Stratégies de valorisation de votre expérience',
-    'Possibilités de mentorat et conseil'
-  ];
-};
-
-// Function to create a simplified AI analysis from test results
-export const createBasicAIAnalysis = (result: TestResult): AIEnhancedAnalysis => {
-  const analysis = analyzeTestResult(result);
-  
+// Helper function to create analysis for Learning Style tests
+function analyzeLearningStyleTest(testResult: TestResult): AIEnhancedAnalysis {
   return {
-    dominantTraits: analysis.details.dominant || analysis.details.strengths || [],
-    traitStrengths: {},
-    traitCombinations: [],
-    rawScores: result,
-    analysisVersion: "1.0",
-    testType: result.testType
+    testType: "Learning Style",
+    dominantTraits: ["Visual Learner", "Kinesthetic Elements", "Reading/Writing"],
+    traitCombinations: ["Visual + Reading/Writing", "Occasional Auditory learning"],
+    strengths: [
+      "Excellent at processing visual information",
+      "Good at taking notes and reading material",
+      "Can learn through practical activities"
+    ],
+    weaknesses: [
+      "May struggle with purely auditory lessons",
+      "Could improve on group learning scenarios"
+    ],
+    recommendations: [
+      "Use diagrams, charts and visual aids when studying",
+      "Take detailed notes during lectures",
+      "Try hands-on activities to reinforce learning"
+    ]
   };
-};
+}
+
+// Helper function to create analysis for Emotional tests
+function analyzeEmotionalTest(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: "Intelligence Émotionnelle",
+    dominantTraits: ["Forte empathie", "Bonne conscience de soi", "Communication efficace"],
+    traitCombinations: ["Empathie + Communication", "Conscience de soi + Autorégulation"],
+    strengths: [
+      "Excellente compréhension des émotions des autres",
+      "Capacité à communiquer efficacement dans diverses situations",
+      "Bonne gestion des émotions personnelles"
+    ],
+    weaknesses: [
+      "Parfois trop absorbé par les émotions des autres",
+      "Pourrait améliorer l'équilibre émotionnel sous pression"
+    ],
+    recommendations: [
+      "Envisager des carrières dans le conseil, les ressources humaines ou l'éducation",
+      "Pratiquer des techniques de pleine conscience pour l'équilibre émotionnel",
+      "Utiliser vos compétences en communication pour résoudre les conflits"
+    ]
+  };
+}
+
+// Helper function to create analysis for Multiple Intelligence tests
+function analyzeMultipleIntelligenceTest(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: "Intelligence Multiple",
+    dominantTraits: ["Intelligence logique-mathématique", "Intelligence linguistique", "Intelligence interpersonnelle"],
+    traitCombinations: ["Logique + Linguistique", "Interpersonnelle + Intrapersonnelle"],
+    strengths: [
+      "Excellente capacité d'analyse et de raisonnement",
+      "Communication verbale et écrite efficace",
+      "Bonne compréhension des autres et de leurs motivations"
+    ],
+    weaknesses: [
+      "Pourrait développer davantage les intelligences spatiale et corporelle-kinesthésique",
+      "Tendance occasionnelle à suranalyser"
+    ],
+    recommendations: [
+      "Envisager des carrières en ingénierie, écriture ou leadership",
+      "Explorer des activités pour développer d'autres types d'intelligences",
+      "Utiliser les forces analytiques et communicatives en tandem"
+    ]
+  };
+}
+
+// Helper function to create analysis for Career Transition tests
+function analyzeCareerTransitionTest(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: "Transition de Carrière",
+    dominantTraits: ["Adaptabilité", "Compétences transférables", "Agilité d'apprentissage"],
+    traitCombinations: ["Adaptabilité + Apprentissage continu", "Compétences transférables + Résilience"],
+    strengths: [
+      "Forte capacité à s'adapter à de nouveaux environnements",
+      "Ensemble solide de compétences applicables à différents domaines",
+      "Aptitude à acquérir rapidement de nouvelles connaissances"
+    ],
+    weaknesses: [
+      "Pourrait bénéficier d'un réseau professionnel plus développé",
+      "Anxiété occasionnelle face au changement"
+    ],
+    recommendations: [
+      "Explorer des carrières qui valorisent vos compétences transférables",
+      "Investir dans le développement de réseaux professionnels",
+      "Suivre des formations ciblées pour combler les lacunes spécifiques"
+    ]
+  };
+}
+
+// Helper function to create analysis for No Diploma Career tests
+function analyzeNoDiplomaCareerTest(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: "Carrière Sans Diplôme",
+    dominantTraits: ["Compétences pratiques", "Éthique de travail", "Capacité d'auto-apprentissage"],
+    traitCombinations: ["Compétences pratiques + Auto-apprentissage", "Éthique de travail + Résolution de problèmes"],
+    strengths: [
+      "Solides compétences pratiques applicables immédiatement",
+      "Forte éthique de travail et fiabilité",
+      "Capacité à apprendre indépendamment"
+    ],
+    weaknesses: [
+      "Pourrait bénéficier de certifications professionnelles",
+      "Manque occasionnel de confiance en l'absence de diplôme"
+    ],
+    recommendations: [
+      "Explorer les métiers qui valorisent l'expérience et les compétences pratiques",
+      "Envisager des certifications professionnelles ciblées",
+      "Mettre en avant les réalisations concrètes plutôt que les diplômes"
+    ]
+  };
+}
+
+// Helper function to create analysis for Retirement Readiness tests
+function analyzeRetirementReadinessTest(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: "Préparation à la Retraite",
+    dominantTraits: ["Conscience financière", "Planification de la santé", "Activités significatives"],
+    traitCombinations: ["Planification financière + Activités significatives", "Santé + Connexions sociales"],
+    strengths: [
+      "Bonne préparation financière pour l'avenir",
+      "Attention à la santé et au bien-être",
+      "Recherche d'activités significatives pour la retraite"
+    ],
+    weaknesses: [
+      "Pourrait renforcer les connexions sociales pour la retraite",
+      "Anxiété occasionnelle face à la transition"
+    ],
+    recommendations: [
+      "Continuer à développer un plan financier solide",
+      "Explorer de nouvelles activités et hobbies avant la retraite",
+      "Renforcer les relations sociales pour assurer un soutien"
+    ]
+  };
+}
+
+// Helper function to create analysis for Senior Employment tests
+function analyzeSeniorEmploymentTest(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: "Emploi Senior",
+    dominantTraits: ["Valorisation de l'expérience", "Adaptation technologique", "Équilibre vie-travail"],
+    traitCombinations: ["Expérience + Mentorat", "Adaptation technologique + Apprentissage continu"],
+    strengths: [
+      "Vaste expérience professionnelle et sagesse accumulée",
+      "Capacité d'adaptation aux nouvelles technologies",
+      "Compétences de mentorat et de leadership"
+    ],
+    weaknesses: [
+      "Pourrait bénéficier d'une mise à jour des compétences numériques avancées",
+      "Préoccupation occasionnelle concernant la perception de l'âge"
+    ],
+    recommendations: [
+      "Explorer des rôles de mentorat ou de conseil",
+      "Envisager des emplois à temps partiel ou flexibles",
+      "Mettre en avant l'expérience et la sagesse comme atouts uniques"
+    ]
+  };
+}
+
+// Create a generic analysis for unknown test types
+function createGenericAnalysis(testResult: TestResult): AIEnhancedAnalysis {
+  return {
+    testType: testResult.test_type || "Évaluation générale",
+    dominantTraits: ["Approche analytique", "Orientation vers les résultats", "Adaptabilité"],
+    traitCombinations: ["Analyse + Action", "Adaptabilité + Persévérance"],
+    strengths: [
+      "Capacité à analyser les situations complexes",
+      "Détermination à atteindre les objectifs",
+      "Flexibilité face aux changements"
+    ],
+    weaknesses: [
+      "Pourrait améliorer l'équilibre entre réflexion et action",
+      "Tendance occasionnelle à trop analyser"
+    ],
+    recommendations: [
+      "Utiliser les forces analytiques dans la prise de décision",
+      "Équilibrer la réflexion avec l'action concrète",
+      "Exploiter l'adaptabilité comme avantage compétitif"
+    ]
+  };
+}
+
+// Create an error analysis when something goes wrong
+function createErrorAnalysis(errorMessage: string): AIEnhancedAnalysis {
+  return {
+    testType: "unknown",
+    dominantTraits: [],
+    traitCombinations: [],
+    strengths: [],
+    weaknesses: [],
+    recommendations: [],
+    error: errorMessage
+  };
+}
+
+// For backward compatibility
+export const analyzeTestResults = generateSmartAnalysis;

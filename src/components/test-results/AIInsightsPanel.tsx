@@ -81,3 +81,5 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, load
     </Card>
   );
 };
+
+export default AIInsightsPanel;

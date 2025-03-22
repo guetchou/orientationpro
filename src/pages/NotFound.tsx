@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { FileQuestion, ArrowLeft, MessageCircleHelp } from 'lucide-react';
+import { FileQuestion, ArrowLeft, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const NotFound = () => {
@@ -57,7 +57,7 @@ const NotFound = () => {
           <div>
             <Button variant="outline" asChild className="w-full sm:w-auto gap-2">
               <Link to="/contact" className="text-primary">
-                <MessageCircleHelp size={18} />
+                <MessageCircle size={18} />
                 Contactez-nous si vous avez besoin d'aide
               </Link>
             </Button>

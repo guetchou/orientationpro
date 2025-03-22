@@ -1,134 +1,223 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  AuthChangeEvent,
+  Session,
+  User,
+} from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import { toast } from 'sonner';
-import { useProfileData } from './useProfileData';
-import { useAuthMethods } from './useAuthMethods';
-import { useAdminMethods } from './useAdminMethods';
+interface AuthContextProps {
+  user: User | null;
+  loading: boolean;
+  logout: () => Promise<{ success: boolean; error?: any }>;
+  profileData: ProfileData;
+  session: Session | null;
+  updateProfile: (data: Partial<ProfileData>) => Promise<void>;
+  signInWithGoogle: () => Promise<any>;
+  signInWithGithub: () => Promise<any>;
+}
 
-// Types for authentication
-export interface User {
-  id: string; // Changed from number to string to match MySQL UUID format
+interface ProfileData {
+  id: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  created_at: string;
+  phone: string;
+  address: string;
   role: string;
 }
 
-export interface Session {
-  token: string;
-  user: User;
-}
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-// Create auth context
-const AuthContext = createContext<ReturnType<typeof useAuthProvider> | undefined>(undefined);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-// Provider hook that creates auth object and handles state
-function useAuthProvider() {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Get profile data
-  const { profileData, isSuperAdmin, isMasterAdmin, loading: profileLoading } = useProfileData(user);
-  
-  // Standard auth methods
-  const authMethods = useAuthMethods();
-  
-  // Admin methods
-  const adminMethods = useAdminMethods();
+  const [profileData, setProfileData] = useState<ProfileData>({
+    id: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    created_at: '',
+    phone: '',
+    address: '',
+    role: 'user'
+  });
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    console.log("Auth provider initialized");
-    
-    // Check if token exists in localStorage
-    const checkAuth = async () => {
+    const getSession = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        const userData = localStorage.getItem('userData');
-        
-        if (token && userData) {
-          try {
-            const user = JSON.parse(userData);
-            setUser(user);
-            setSession({ token, user });
-          } catch (parseError) {
-            console.error('Error parsing user data:', parseError);
-            // Don't throw the error, just clear the invalid data
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
-          }
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user || null);
+        if (session?.user) {
+          await fetchProfileData(session.user.id);
         }
-      } catch (err) {
-        console.error('Error checking auth:', err);
-        setError(err as Error);
+      } catch (error) {
+        console.error("Error fetching session:", error);
       } finally {
-        // Make sure we always set loading to false, even if there's an error
         setLoading(false);
       }
     };
 
-    checkAuth();
+    getSession();
+
+    supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      setUser(session?.user || null);
+      setSession(session || null);
+      if (session?.user) {
+        await fetchProfileData(session.user.id);
+      } else {
+        setProfileData({
+          id: '',
+          first_name: '',
+          last_name: '',
+          email: '',
+          created_at: '',
+          phone: '',
+          address: '',
+          role: 'user'
+        });
+      }
+    });
   }, []);
 
-  return {
-    user,
-    session,
-    loading: loading || authMethods.loading || adminMethods.loading || profileLoading,
-    error,
-    isSuperAdmin,
-    isMasterAdmin,
-    profileData,
-    ...authMethods,
-    ...adminMethods
-  };
-}
+  const fetchProfileData = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-// Context provider component
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const auth = useAuthProvider();
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
-};
-
-// Hook for child components to get the auth object and re-render when it changes
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    // Instead of throwing an error, return a default value
-    return {
-      user: null,
-      session: null,
-      loading: false,
-      error: null,
-      isSuperAdmin: false,
-      isMasterAdmin: false,
-      profileData: null,
-      signIn: async () => { 
-        console.error('Auth context not available');
-        return null;
-      },
-      signUp: async () => {
-        console.error('Auth context not available');
-        return null;
-      },
-      signOut: async () => {
-        console.error('Auth context not available');
-      },
-      resetPassword: async () => {
-        console.error('Auth context not available');
-      },
-      updatePassword: async () => {
-        console.error('Auth context not available');
-      },
-      createSuperAdmin: async () => {
-        console.error('Auth context not available');
-        return null;
-      },
-      createMasterAdmin: async () => {
-        console.error('Auth context not available');
-        return null;
+      if (error) {
+        console.error("Error fetching profile data:", error);
+      } else if (data) {
+        setProfileData({
+          id: data.id,
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          email: data.email || '',
+          created_at: data.created_at || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          role: data.role || 'user'
+        });
       }
-    };
-  }
-  return context;
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+    }
+  };
+
+  const updateProfile = async (data: Partial<ProfileData>) => {
+    try {
+      setLoading(true);
+      const updates = {
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('profiles').upsert(updates, {
+        returning: 'minimal', // Do not return the value after inserting
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Optimistically update state
+      setProfileData((prevData) => ({
+        ...prevData,
+        ...data,
+      }));
+    } catch (error) {
+      console.error("Error updating the profile!", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const logout = async () => {
+    try {
+      // Add your logout logic here
+      // For example, using Supabase:
+      await supabase.auth.signOut();
+      setUser(null);
+      setProfileData({
+        id: '',
+        first_name: '',
+        last_name: '',
+        email: '',
+        created_at: '',
+        phone: '',
+        address: '',
+        role: 'user'
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Logout error:", error);
+      return { success: false, error };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+        },
+      });
+      if (error) {
+        console.error("Error signing in with Google:", error);
+        return { success: false, error };
+      }
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+      return { success: false, error };
+    }
+  };
+
+  const signInWithGithub = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+        },
+      });
+      if (error) {
+        console.error("Error signing in with Github:", error);
+        return { success: false, error };
+      }
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error signing in with Github:", error);
+      return { success: false, error };
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    logout,
+    profileData,
+    session,
+    updateProfile,
+    signInWithGoogle,
+    signInWithGithub,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
