@@ -1,28 +1,32 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  Settings,
+  Key,
+} from "lucide-react";
 
-export const DashboardNav = () => {
+import { MainNavItem } from "@/types";
+import { NavItem, NavList } from "@/components/ui/nav";
+import { useAuth } from "@/hooks/useAuth";
+
+interface DashboardNavProps {
+  items?: MainNavItem[];
+}
+
+export function DashboardNav() {
+  const { isSuperAdmin } = useAuth();
+
   return (
-    <nav className="flex flex-col gap-2 p-4">
-      <Link to="/dashboard">
-        <Button variant="ghost" className="w-full justify-start">
-          <LayoutDashboard className="mr-2 h-4 w-4" />
-          Tableau de bord
-        </Button>
-      </Link>
-      <Link to="/dashboard/results">
-        <Button variant="ghost" className="w-full justify-start">
-          <ClipboardList className="mr-2 h-4 w-4" />
-          Mes résultats
-        </Button>
-      </Link>
-      <Link to="/login">
-        <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600">
-          <LogOut className="mr-2 h-4 w-4" />
-          Déconnexion
-        </Button>
-      </Link>
-    </nav>
+    <NavList>
+      {isSuperAdmin && (
+        <>
+          <NavItem href="/admin/dashboard" label="Tableau de bord" icon={<LayoutDashboard size={16} />} />
+          <NavItem href="/admin/cms" label="Gestion de contenu" icon={<FileText size={16} />} />
+          <NavItem href="/admin/user-management" label="Gestion des utilisateurs" icon={<Users size={16} />} />
+          <NavItem href="/admin/user-credentials" label="Identifiants & Rôles" icon={<Key size={16} />} />
+        </>
+      )}
+    </NavList>
   );
-};
+}
