@@ -12,7 +12,7 @@ import { PartnersSection } from "@/components/home/PartnersSection";
 import { FaqSection } from "@/components/home/FaqSection";
 import { ContactSection } from "@/components/home/ContactSection";
 import { ChatBot } from "@/components/chat/ChatBot";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Users, ArrowUp } from "lucide-react";
 import { useState, useEffect } from "react";

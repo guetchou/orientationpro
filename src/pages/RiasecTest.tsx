@@ -1,17 +1,17 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { questions } from "@/data/riasecQuestions";
-import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
-import { RiasecResults } from "@/types/test";
-import { motion, AnimatePresence } from "framer-motion";
+import { performAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
+import { motion } from "framer-motion";
 import { TestDescription } from "@/components/tests/TestDescription";
 import { TestCompletion } from "@/components/tests/TestCompletion";
-import { Brain, BookOpen, Target, TrendingUp, Briefcase } from "lucide-react";
+import { Brain, BookOpen, Target, Briefcase } from "lucide-react";
+import { TestHeader } from "@/components/tests/riasec/TestHeader";
+import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
+import { analyzeRiasecResults } from "@/components/tests/riasec/RiasecAnalyzer";
 
 const RiasecTest = () => {
   const navigate = useNavigate();
@@ -44,10 +44,10 @@ const RiasecTest = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       // Analyser les résultats
-      const results: RiasecResults = analyzeRiasecResults(finalAnswers);
+      const results = analyzeRiasecResults(finalAnswers);
       
       // Enrichir les résultats avec l'IA
-      const aiInsights = await getAIEnhancedAnalysis('RIASEC', results);
+      const aiInsights = await performAIEnhancedAnalysis({test_type: 'RIASEC', results});
       
       if (user) {
         // Sauvegarder les résultats dans Supabase
@@ -87,77 +87,6 @@ const RiasecTest = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const analyzeRiasecResults = (responses: number[]): RiasecResults => {
-    // Initialiser les scores RIASEC
-    let realistic = 0;
-    let investigative = 0;
-    let artistic = 0;
-    let social = 0;
-    let enterprising = 0;
-    let conventional = 0;
-    
-    // Attribuer les réponses aux différentes catégories
-    responses.forEach((response, index) => {
-      const category = questions[index].category;
-      
-      switch (category) {
-        case 'R':
-          realistic += response;
-          break;
-        case 'I':
-          investigative += response;
-          break;
-        case 'A':
-          artistic += response;
-          break;
-        case 'S':
-          social += response;
-          break;
-        case 'E':
-          enterprising += response;
-          break;
-        case 'C':
-          conventional += response;
-          break;
-      }
-    });
-    
-    // Normaliser les scores sur 100
-    const totalResponses = questions.filter(q => q.category === 'R').length;
-    realistic = Math.round((realistic / (totalResponses * 5)) * 100);
-    investigative = Math.round((investigative / (totalResponses * 5)) * 100);
-    artistic = Math.round((artistic / (totalResponses * 5)) * 100);
-    social = Math.round((social / (totalResponses * 5)) * 100);
-    enterprising = Math.round((enterprising / (totalResponses * 5)) * 100);
-    conventional = Math.round((conventional / (totalResponses * 5)) * 100);
-    
-    // Déterminer les types dominants
-    const types = [
-      { code: 'R', value: realistic },
-      { code: 'I', value: investigative },
-      { code: 'A', value: artistic },
-      { code: 'S', value: social },
-      { code: 'E', value: enterprising },
-      { code: 'C', value: conventional }
-    ];
-    
-    types.sort((a, b) => b.value - a.value);
-    const dominantTypes = types.slice(0, 3).map(t => t.code);
-    const personalityCode = dominantTypes.join('');
-    
-    return {
-      realistic,
-      investigative,
-      artistic,
-      social,
-      enterprising,
-      conventional,
-      dominantTypes,
-      personalityCode,
-      confidenceScore: 85
-    };
   };
 
   const showPartialResults = () => {
@@ -244,92 +173,17 @@ const RiasecTest = () => {
             transition={{ duration: 0.5 }}
           >
             <Card className="max-w-2xl mx-auto p-6 border-2 border-primary/10 bg-white">
-              <div className="mb-8">
-                <h1 className="font-heading text-2xl font-bold text-center mb-2 text-primary">
-                  Test d'orientation RIASEC
-                </h1>
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <BookOpen className="h-5 w-5 text-primary/60" />
-                  <p className="text-gray-600 text-center">
-                    Question {currentQuestion + 1} sur {questions.length}
-                  </p>
-                </div>
-                
-                <motion.div 
-                  className="w-full bg-gray-200 h-2 rounded-full mt-4"
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <motion.div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{
-                      width: `${((currentQuestion + 1) / questions.length) * 100}%`,
-                    }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </motion.div>
-              </div>
+              <TestHeader 
+                currentQuestion={currentQuestion}
+                totalQuestions={questions.length}
+              />
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentQuestion}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
-                >
-                  <p className="text-lg text-center mb-8 font-medium text-gray-800">
-                    {currentAdaptiveQuestion.question}
-                  </p>
-
-                  <div className="grid gap-3">
-                    {[
-                      { score: 1, label: "Pas du tout" },
-                      { score: 2, label: "Un peu" },
-                      { score: 3, label: "Moyennement" },
-                      { score: 4, label: "Beaucoup" },
-                      { score: 5, label: "Passionnément" }
-                    ].map((option) => (
-                      <motion.div
-                        key={option.score}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: option.score * 0.1 }}
-                        whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.05)" }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          onClick={() => handleAnswer(option.score)}
-                          variant={option.score === 5 ? "default" : "outline"}
-                          className={`w-full py-6 justify-start px-6 ${
-                            option.score === 5 
-                              ? "bg-primary hover:bg-primary/90" 
-                              : "hover:border-primary/30 hover:text-primary"
-                          }`}
-                          disabled={loading}
-                        >
-                          <div className="flex items-center">
-                            <div className={`h-6 w-6 flex items-center justify-center rounded-full mr-3 border-2 ${
-                              option.score === 5
-                                ? "border-white/30 text-white"
-                                : "border-gray-300 text-gray-400"
-                            }`}>
-                              {option.score}
-                            </div>
-                            <span className={option.score === 5 ? "text-white" : ""}>
-                              {option.label}
-                            </span>
-                          </div>
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+              <QuestionDisplay
+                currentQuestion={currentQuestion}
+                question={currentAdaptiveQuestion}
+                onAnswer={handleAnswer}
+                loading={loading}
+              />
             </Card>
           </motion.div>
         ) : (

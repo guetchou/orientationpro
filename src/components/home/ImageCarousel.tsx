@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CarouselControls } from "./carousel/CarouselControls";
+import { CarouselSlide } from "./carousel/CarouselSlide";
 
 const images = [
   {
@@ -81,6 +81,12 @@ export const ImageCarousel = () => {
     setTimeout(() => setIsPaused(false), 10000); // Auto-resume after 10 seconds
   };
 
+  const selectSlide = (index: number) => {
+    setDirection(index > currentIndex ? 1 : -1);
+    setCurrentIndex(index);
+    pauseCarousel();
+  };
+
   return (
     <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden rounded-xl">
       <AnimatePresence initial={false} custom={direction}>
@@ -98,92 +104,20 @@ export const ImageCarousel = () => {
           }}
           className="absolute inset-0"
         >
-          <div className="relative h-full w-full">
-            {/* Image background with overlay */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center transform transition-transform duration-10000 hover:scale-110"
-              style={{ backgroundImage: `url(${images[currentIndex].url})` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
-            </div>
-            
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 z-10">
-              {images[currentIndex].video && (
-                <motion.div 
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mb-6"
-                >
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="w-16 h-16 rounded-full bg-white/20 border-white backdrop-blur-sm hover:bg-white/30 hover:scale-110 transition-all duration-300"
-                    onClick={pauseCarousel}
-                  >
-                    <Play size={24} className="text-white ml-1" />
-                  </Button>
-                </motion.div>
-              )}
-              
-              <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-4xl md:text-5xl font-heading font-bold text-center mb-4"
-              >
-                {images[currentIndex].title}
-              </motion.h2>
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-xl text-center max-w-md"
-              >
-                {images[currentIndex].description}
-              </motion.p>
-            </div>
-          </div>
+          <CarouselSlide 
+            slide={images[currentIndex]} 
+            onPlayVideo={pauseCarousel}
+          />
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation buttons */}
-      <div className="absolute inset-0 flex items-center justify-between p-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-sm"
-          onClick={prevSlide}
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-sm"
-          onClick={nextSlide}
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
-      </div>
-
-      {/* Indicators */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-20">
-        {images.map((_, index) => (
-          <button
-            key={index}
-            className={`w-2.5 h-2.5 rounded-full transition-all ${
-              index === currentIndex ? "bg-white w-8" : "bg-white/50"
-            }`}
-            onClick={() => {
-              setDirection(index > currentIndex ? 1 : -1);
-              setCurrentIndex(index);
-              pauseCarousel();
-            }}
-          />
-        ))}
-      </div>
+      <CarouselControls
+        images={images}
+        currentIndex={currentIndex}
+        onPrevious={prevSlide}
+        onNext={nextSlide}
+        onSelect={selectSlide}
+      />
     </div>
   );
 };

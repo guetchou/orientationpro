@@ -1,144 +1,100 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth';
-import { Toaster } from 'sonner';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Route,
+  createRoutesFromElements,
+} from "react-router-dom";
+import Index from "@/pages/Index";
+import Tests from "@/pages/Tests";
+import TestResults from "@/pages/TestResults";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import PaymentCancel from "@/pages/PaymentCancel";
+import Profile from "@/pages/Profile";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import RiasecTest from "@/pages/RiasecTest";
+import Establishments from "@/pages/Establishments";
+import Contact from "@/pages/Contact";
+import Impressum from "@/pages/Impressum";
+import DataProtection from "@/pages/DataProtection";
+import OrientationGuide from "@/pages/OrientationGuide";
+import NotFound from "@/pages/NotFound";
+import RequireAuth from "@/components/auth/RequireAuth";
+import { AuthProvider } from "@/hooks/useAuth";
 
-// Pages publiques
-import Index from './pages/Index';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ResetPassword from './pages/ResetPassword';
-import UpdatePassword from './pages/UpdatePassword';
-import Tests from './pages/Tests';
-import TestResults from './pages/TestResults';
-import { ForumLayout } from './components/forum/ForumLayout';
-import Blog from './pages/Blog';
-import Actualites from './pages/Actualites';
-
-// Pages protégées
-import Dashboard from './pages/Dashboard';
-import Onboarding from './pages/Onboarding';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import CMS from './pages/admin/CMS';
-import { UserManagement } from './components/admin/UserManagement';
-import SuperAdmin from './pages/admin/SuperAdmin';
-import UserCredentials from "./pages/admin/UserCredentials";
-import { DashboardLayout } from './components/DashboardLayout';
-
-// Test pages
-import RiasecTest from './pages/RiasecTest';
-import EmotionalTest from './pages/EmotionalTest';
-import MultipleIntelligenceTest from './pages/MultipleIntelligenceTest';
-import NoDiplomaCareerTest from './pages/NoDiplomaCareerTest';
-import SeniorEmploymentTest from './pages/SeniorEmploymentTest';
-import CareerTransitionTest from './pages/CareerTransitionTest';
-import LearningStyleTest from './pages/LearningStyleTest';
-import RetirementReadinessTest from './pages/RetirementReadinessTest';
-
-// Composants pour le forum
-const ForumGeneral = () => <div>Forum général</div>;
-const ForumDomain = () => <div>Forum par domaine</div>;
-const ForumCreate = () => <div>Créer un post</div>;
-
-// Route protégée qui vérifie l'authentification
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('authToken') !== null;
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/tests",
+    element: <Tests />
+  },
+  {
+    path: "/test-results",
+    element: <RequireAuth><TestResults /></RequireAuth>
+  },
+  {
+    path: "/payment/success",
+    element: <PaymentSuccess />
+  },
+  {
+    path: "/payment/cancel",
+    element: <PaymentCancel />
+  },
+  {
+    path: "/profile",
+    element:  <RequireAuth><Profile /></RequireAuth>
+  },
+  {
+    path: "/login",
+    element: <Login />
+  },
+  {
+    path: "/register",
+    element: <Register />
+  },
+  {
+    path: "/dashboard",
+    element:  <RequireAuth><Dashboard /></RequireAuth>
+  },
+  {
+    path: "/riasec-test",
+    element:  <RequireAuth><RiasecTest /></RequireAuth>
+  },
+  {
+    path: "/establishments",
+    element: <Establishments />
+  },
+  {
+    path: "/contact",
+    element: <Contact />
+  },
+  {
+    path: "/impressum",
+    element: <Impressum />
+  },
+  {
+    path: "/data-protection",
+    element: <DataProtection />
+  },
+  {
+    path: "/orientation-guide",
+    element: <OrientationGuide />
+  },
+  {
+    path: "*",
+    element: <NotFound />
+  }
+]);
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Toaster position="top-right" richColors />
-        <div>
-          <Routes>
-            {/* Routes publiques */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/tests" element={<Tests />} />
-            <Route path="/test-results" element={<TestResults />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/actualites" element={<Actualites />} />
-            
-            {/* Routes de tests */}
-            <Route path="/test-riasec" element={<RiasecTest />} />
-            <Route path="/test-emotional" element={<EmotionalTest />} />
-            <Route path="/test-multiple-intelligence" element={<MultipleIntelligenceTest />} />
-            <Route path="/test-no-diploma" element={<NoDiplomaCareerTest />} />
-            <Route path="/test-senior-employment" element={<SeniorEmploymentTest />} />
-            <Route path="/test-career-transition" element={<CareerTransitionTest />} />
-            <Route path="/test-learning-style" element={<LearningStyleTest />} />
-            <Route path="/test-retirement" element={<RetirementReadinessTest />} />
-            
-            {/* Routes forum */}
-            <Route path="/forum" element={
-              <ForumLayout>
-                <ForumGeneral />
-              </ForumLayout>
-            } />
-            <Route path="/forum/domain/:id" element={
-              <ForumLayout>
-                <ForumDomain />
-              </ForumLayout>
-            } />
-            <Route path="/forum/create" element={
-              <ProtectedRoute>
-                <ForumLayout>
-                  <ForumCreate />
-                </ForumLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Routes protégées */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/onboarding" element={
-              <ProtectedRoute>
-                <Onboarding />
-              </ProtectedRoute>
-            } />
-            
-            {/* Routes administration */}
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <AdminDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/cms" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <CMS />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/user-management" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <UserManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/super-admin" element={<SuperAdmin />} />
-            <Route path="/admin/user-credentials" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <UserCredentials />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </div>
-      </Router>
+      <RouterProvider router={router} />
     </AuthProvider>
   );
 }

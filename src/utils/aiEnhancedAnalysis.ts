@@ -27,3 +27,6 @@ export const performAIEnhancedAnalysis = async (results: TestResult) => {
     };
   }
 };
+
+// Add alias for compatibility with existing code
+export const getAIEnhancedAnalysis = performAIEnhancedAnalysis;
