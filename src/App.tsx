@@ -26,6 +26,16 @@ import SuperAdmin from './pages/admin/SuperAdmin';
 import UserCredentials from "./pages/admin/UserCredentials";
 import { DashboardLayout } from './components/DashboardLayout';
 
+// Test pages
+import RiasecTest from './pages/RiasecTest';
+import EmotionalTest from './pages/EmotionalTest';
+import MultipleIntelligenceTest from './pages/MultipleIntelligenceTest';
+import NoDiplomaCareerTest from './pages/NoDiplomaCareerTest';
+import SeniorEmploymentTest from './pages/SeniorEmploymentTest';
+import CareerTransitionTest from './pages/CareerTransitionTest';
+import LearningStyleTest from './pages/LearningStyleTest';
+import RetirementReadinessTest from './pages/RetirementReadinessTest';
+
 // Route protégée qui vérifie l'authentification
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('authToken') !== null;
@@ -54,6 +64,16 @@ function App() {
             <Route path="/test-results" element={<TestResults />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/actualites" element={<Actualites />} />
+            
+            {/* Routes de tests */}
+            <Route path="/test-riasec" element={<RiasecTest />} />
+            <Route path="/test-emotional" element={<EmotionalTest />} />
+            <Route path="/test-multiple-intelligence" element={<MultipleIntelligenceTest />} />
+            <Route path="/test-no-diploma" element={<NoDiplomaCareerTest />} />
+            <Route path="/test-senior-employment" element={<SeniorEmploymentTest />} />
+            <Route path="/test-career-transition" element={<CareerTransitionTest />} />
+            <Route path="/test-learning-style" element={<LearningStyleTest />} />
+            <Route path="/test-retirement" element={<RetirementReadinessTest />} />
             
             {/* Routes forum */}
             <Route path="/forum" element={
