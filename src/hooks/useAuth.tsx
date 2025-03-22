@@ -31,7 +31,9 @@ export function useAuth() {
             .eq('id', currentUser.id)
             .single();
             
-          if (profileData) {
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+          } else if (profileData) {
             setIsSuperAdmin(profileData.is_super_admin || false);
             setIsMasterAdmin(profileData.is_master_admin || false);
           }
@@ -58,7 +60,11 @@ export function useAuth() {
           .eq('id', session.user.id)
           .single();
           
-        if (profileData) {
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          setIsSuperAdmin(false);
+          setIsMasterAdmin(false);
+        } else if (profileData) {
           setIsSuperAdmin(profileData.is_super_admin || false);
           setIsMasterAdmin(profileData.is_master_admin || false);
         } else {
