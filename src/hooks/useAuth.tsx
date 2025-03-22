@@ -1,11 +1,23 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { useProfileData } from './useProfileData';
 import { useAuthMethods } from './useAuthMethods';
 import { useAdminMethods } from './useAdminMethods';
+
+// Types for authentication
+export interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
+export interface Session {
+  token: string;
+  user: User;
+}
 
 // Create auth context
 const AuthContext = createContext<ReturnType<typeof useAuthProvider> | undefined>(undefined);
@@ -29,27 +41,19 @@ function useAuthProvider() {
   useEffect(() => {
     console.log("Auth provider initialized");
     
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      setUser(session?.user ?? null);
-      setSession(session);
-      setLoading(false);
-    });
-
-    // THEN check for existing session
+    // Check if token exists in localStorage
     const checkAuth = async () => {
       try {
-        const { data, error: sessionError } = await supabase.auth.getSession();
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('userData');
         
-        if (sessionError) {
-          throw sessionError;
+        if (token && userData) {
+          const user = JSON.parse(userData);
+          setUser(user);
+          setSession({ token, user });
         }
-
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
       } catch (err) {
-        console.error('Erreur de vérification auth:', err);
+        console.error('Error checking auth:', err);
         setError(err as Error);
       } finally {
         setLoading(false);
@@ -57,11 +61,6 @@ function useAuthProvider() {
     };
 
     checkAuth();
-
-    // Cleanup subscription
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   return {

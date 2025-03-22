@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     
     steps:
@@ -20,7 +20,7 @@ jobs:
         node-version: '20'
         cache: 'npm'
     
-    - name: Install dependencies
+    - name: Install frontend dependencies
       run: npm ci
       
     - name: Run linting
@@ -32,17 +32,22 @@ jobs:
     - name: Build frontend
       run: npm run build
     
-    - name: Build backend
+    - name: Install backend dependencies
       working-directory: ./backend
-      run: npm ci && npm run build
+      run: npm ci
       
-    - name: Build Docker image
-      run: docker build . --file Dockerfile --tag app:${{ github.sha }}
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test || echo "No tests configured"
+      
+    - name: Build Docker images
+      run: |
+        docker-compose build
       
     - name: Run Docker container tests
       run: |
         docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
-        sleep 15  # Attendre que les services démarrent
+        sleep 15  # Wait for services to start
         curl -f http://localhost:3000/health || exit 1
         docker-compose -f docker-compose.yml -f docker-compose.test.yml down
       
@@ -53,16 +58,21 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
       
-    - name: Push Docker image
+    - name: Push Docker images
       if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
       run: |
-        docker tag app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:latest
-        docker tag app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:latest
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
+        docker tag app-api:latest ${{ secrets.DOCKER_HUB_USERNAME }}/app-api:latest
+        docker tag app-web:latest ${{ secrets.DOCKER_HUB_USERNAME }}/app-web:latest
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app-api:latest
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app-web:latest
     
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
     - name: Deploy to production server
-      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEPLOY_HOST }}

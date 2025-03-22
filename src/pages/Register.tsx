@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { RegisterForm } from "@/components/auth/RegisterForm";
@@ -20,8 +19,8 @@ const Register = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
+      const token = localStorage.getItem('authToken');
+      if (token) {
         navigate("/dashboard");
       }
     };
@@ -34,13 +33,7 @@ const Register = () => {
     setLoading(true);
     setError(null);
     
-    if (!isSupabaseConfigured()) {
-      toast.error("La connexion à Supabase n'est pas configurée");
-      setLoading(false);
-      return;
-    }
-
-    // Validation basique
+    // Basic validation
     if (!email || !password) {
       setError("Veuillez remplir tous les champs");
       setLoading(false);
@@ -68,12 +61,12 @@ const Register = () => {
       
       await signUp(email, password, userData);
       
-      toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
-      navigate("/login");
+      toast.success("Inscription réussie !");
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Registration error:", error);
       
-      if (error.message === "User already registered") {
+      if (error.response?.data?.message === "Email already registered") {
         setError("Un compte existe déjà avec cet email. Veuillez vous connecter.");
         setTimeout(() => {
           navigate("/login", { state: { email } });
@@ -117,14 +110,6 @@ const Register = () => {
             <p className="mt-2 text-center text-amber-600 font-medium">
               Identifiants par défaut: {email} / {password}
             </p>
-            {!isSupabaseConfigured() && (
-              <div className="mt-4 p-4 bg-red-50 rounded-md">
-                <p className="text-sm text-red-600 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  La connexion à Supabase n'est pas configurée. Veuillez configurer l'intégration Supabase.
-                </p>
-              </div>
-            )}
           </div>
 
           <RegisterForm
@@ -132,7 +117,7 @@ const Register = () => {
             password={password}
             loading={loading}
             error={error}
-            isSupabaseConfigured={isSupabaseConfigured()}
+            isSupabaseConfigured={true}
             handleEmailChange={(e) => setEmail(e.target.value)}
             handlePasswordChange={(e) => setPassword(e.target.value)}
             handleSubmit={handleRegister}
@@ -141,6 +126,6 @@ const Register = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Register;

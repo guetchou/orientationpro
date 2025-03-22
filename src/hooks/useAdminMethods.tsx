@@ -1,7 +1,9 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export function useAdminMethods() {
   const [loading, setLoading] = useState(false);
@@ -10,36 +12,24 @@ export function useAdminMethods() {
     try {
       setLoading(true);
       
-      // Créer un nouvel utilisateur
-      const { data, error } = await supabase.auth.signUp({
+      const response = await axios.post(`${API_URL}/auth/create-super-admin`, {
         email,
         password,
+        firstName,
+        lastName
       });
 
-      if (error) throw error;
-      
-      if (data.user) {
-        // Mettre à jour le profil pour indiquer qu'il s'agit d'un super admin
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            department: 'admin',
-            is_super_admin: true,
-            first_name: firstName,
-            last_name: lastName,
-            status: 'active',
-          })
-          .eq('id', data.user.id);
-
-        if (profileError) throw profileError;
-        
-        toast.success('Compte super admin créé avec succès !');
+      if (response.status !== 201) {
+        throw new Error(response.data.message || 'Super admin creation failed');
       }
       
-      return data;
-    } catch (err) {
+      toast.success('Compte super admin créé avec succès !');
+      
+      return response.data;
+    } catch (err: any) {
       console.error("Erreur lors de la création du super admin:", err);
-      toast.error("Erreur lors de la création du super admin");
+      const errorMessage = err.response?.data?.message || err.message;
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -50,37 +40,27 @@ export function useAdminMethods() {
     try {
       setLoading(true);
       
-      // Créer un nouvel utilisateur
-      const { data, error } = await supabase.auth.signUp({
+      // For this implementation, we'll use the same endpoint but with a different role
+      // In a real app, you might want a separate endpoint
+      const response = await axios.post(`${API_URL}/auth/create-super-admin`, {
         email,
         password,
+        firstName,
+        lastName,
+        isMasterAdmin: true
       });
 
-      if (error) throw error;
-      
-      if (data.user) {
-        // Mettre à jour le profil pour indiquer qu'il s'agit d'un master admin
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            department: 'admin',
-            is_super_admin: true,
-            is_master_admin: true,
-            first_name: firstName,
-            last_name: lastName,
-            status: 'active',
-          })
-          .eq('id', data.user.id);
-
-        if (profileError) throw profileError;
-        
-        toast.success('Compte master admin créé avec succès !');
+      if (response.status !== 201) {
+        throw new Error(response.data.message || 'Master admin creation failed');
       }
       
-      return data;
-    } catch (err) {
+      toast.success('Compte master admin créé avec succès !');
+      
+      return response.data;
+    } catch (err: any) {
       console.error("Erreur lors de la création du master admin:", err);
-      toast.error("Erreur lors de la création du master admin");
+      const errorMessage = err.response?.data?.message || err.message;
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);

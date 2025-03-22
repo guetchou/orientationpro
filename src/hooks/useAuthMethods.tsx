@@ -1,7 +1,10 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { User } from './useAuth';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export function useAuthMethods() {
   const [loading, setLoading] = useState(false);
@@ -11,26 +14,30 @@ export function useAuthMethods() {
       setLoading(true);
       console.log("Attempting to sign in with:", email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password,
       });
 
-      if (error) {
-        console.error('Erreur de connexion:', error);
-        toast.error(error.message === "Invalid login credentials" 
-          ? "Email ou mot de passe incorrect" 
-          : error.message);
-        throw error;
+      if (response.status !== 200) {
+        throw new Error(response.data.message || 'Login failed');
       }
       
-      if (data.user) {
-        toast.success('Connexion réussie !');
-      }
+      const { token, user } = response.data;
       
-      return data;
-    } catch (err) {
+      // Store token and user data in localStorage
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userData', JSON.stringify(user));
+      
+      toast.success('Connexion réussie !');
+      
+      return { user, token };
+    } catch (err: any) {
       console.error('Erreur de connexion:', err);
+      const errorMessage = err.response?.data?.message || err.message;
+      toast.error(errorMessage === "Invalid login credentials" 
+        ? "Email ou mot de passe incorrect" 
+        : errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -42,40 +49,31 @@ export function useAuthMethods() {
       setLoading(true);
       console.log("Attempting to sign up:", email);
       
-      const { data, error } = await supabase.auth.signUp({
+      const response = await axios.post(`${API_URL}/auth/register`, {
         email,
         password,
-        options: {
-          data: userData,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        firstName: userData.first_name || 'New',
+        lastName: userData.last_name || 'User',
+        ...userData
       });
 
-      if (error) {
-        console.error("Erreur d'inscription:", error);
-        throw error;
+      if (response.status !== 201) {
+        throw new Error(response.data.message || 'Registration failed');
       }
       
-      if (data.user) {
-        toast.success('Inscription réussie ! Veuillez vérifier votre email.');
-        
-        // Create or update profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: email,
-            ...userData
-          });
-          
-        if (profileError) {
-          console.error('Erreur de création de profil:', profileError);
-        }
-      }
+      const { token, user } = response.data;
       
-      return data;
-    } catch (err) {
+      // Store token and user data in localStorage
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userData', JSON.stringify(user));
+      
+      toast.success('Inscription réussie !');
+      
+      return { user, token };
+    } catch (err: any) {
       console.error("Erreur d'inscription:", err);
+      const errorMessage = err.response?.data?.message || err.message;
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -85,10 +83,17 @@ export function useAuthMethods() {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      // Clear localStorage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      
       toast.success('Déconnexion réussie');
-    } catch (err) {
+      
+      // Force page reload to clear any in-memory state
+      window.location.href = '/';
+      
+    } catch (err: any) {
       console.error('Erreur de déconnexion:', err);
       toast.error('Erreur lors de la déconnexion');
       throw err;
@@ -100,13 +105,16 @@ export function useAuthMethods() {
   const resetPassword = async (email: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
+      
+      const response = await axios.post(`${API_URL}/auth/reset-password`, { email });
 
-      if (error) throw error;
+      if (response.status !== 200) {
+        throw new Error(response.data.message || 'Password reset failed');
+      }
+      
       toast.success('Email de réinitialisation envoyé !');
-    } catch (err) {
+      
+    } catch (err: any) {
       console.error('Erreur de réinitialisation du mot de passe:', err);
       toast.error('Erreur lors de la réinitialisation du mot de passe');
       throw err;
@@ -115,16 +123,22 @@ export function useAuthMethods() {
     }
   };
 
-  const updatePassword = async (newPassword: string) => {
+  const updatePassword = async (newPassword: string, resetToken: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
+      
+      const response = await axios.post(`${API_URL}/auth/update-password`, {
+        newPassword,
+        resetToken
       });
 
-      if (error) throw error;
+      if (response.status !== 200) {
+        throw new Error(response.data.message || 'Password update failed');
+      }
+      
       toast.success('Mot de passe mis à jour avec succès');
-    } catch (err) {
+      
+    } catch (err: any) {
       console.error('Erreur de mise à jour du mot de passe:', err);
       toast.error('Erreur lors de la mise à jour du mot de passe');
       throw err;

@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const UpdatePassword = () => {
   const [password, setPassword] = useState("");
@@ -14,19 +14,20 @@ const UpdatePassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  
+  // Get reset token from URL params
+  const searchParams = new URLSearchParams(location.search);
+  const resetToken = searchParams.get('token');
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est en session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Session expirée ou invalide");
-        navigate("/login");
-      }
-    };
-
-    checkSession();
-  }, [navigate]);
+    // Verify token exists in URL
+    if (!resetToken) {
+      toast.error("Token de réinitialisation manquant");
+      navigate("/login");
+    }
+  }, [resetToken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,16 +46,21 @@ const UpdatePassword = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const response = await axios.post(`${API_URL}/auth/update-password`, {
+        resetToken,
+        newPassword: password
+      });
 
-      if (error) throw error;
+      if (response.status !== 200) {
+        throw new Error(response.data.message || 'Password update failed');
+      }
       
       toast.success("Mot de passe mis à jour avec succès");
       navigate("/login");
     } catch (error: any) {
       console.error("Erreur:", error);
-      setError(error.message || "Erreur lors de la mise à jour du mot de passe");
-      toast.error(error.message || "Erreur lors de la mise à jour du mot de passe");
+      setError(error.response?.data?.message || error.message || "Erreur lors de la mise à jour du mot de passe");
+      toast.error(error.response?.data?.message || error.message || "Erreur lors de la mise à jour du mot de passe");
     } finally {
       setLoading(false);
     }

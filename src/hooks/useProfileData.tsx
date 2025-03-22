@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import axios from 'axios';
+import { User } from './useAuth';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 interface ProfileData {
   department?: string;
@@ -29,26 +31,18 @@ export function useProfileData(user: User | null) {
       }
 
       try {
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .select('department, is_super_admin, is_master_admin, first_name, last_name')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          setIsSuperAdmin(false);
-          setIsMasterAdmin(false);
-          setProfileData(null);
-        } else if (data) {
-          setIsSuperAdmin(data.is_super_admin || false);
-          setIsMasterAdmin(data.is_master_admin || false);
-          setProfileData(data);
-        } else {
-          setIsSuperAdmin(false);
-          setIsMasterAdmin(false);
-          setProfileData(null);
-        }
+        // In our new system, role information is already part of the user object from login
+        // but we could still fetch additional profile data from a profile endpoint if needed
+        setIsSuperAdmin(user.role === 'superadmin');
+        setIsMasterAdmin(user.role === 'admin'); // Simplified for this example
+        
+        setProfileData({
+          department: 'default',
+          is_super_admin: user.role === 'superadmin',
+          is_master_admin: user.role === 'admin',
+          first_name: user.firstName,
+          last_name: user.lastName
+        });
       } catch (err) {
         console.error('Error in profile data fetching:', err);
         setError(err as Error);

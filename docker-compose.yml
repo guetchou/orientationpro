@@ -2,24 +2,8 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
-    ports:
-      - "8080:80"
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
-      - FEATURE_CHATBOT=${FEATURE_CHATBOT:-true}
-      - FEATURE_ANALYTICS=${FEATURE_ANALYTICS:-true}
-    restart: unless-stopped
-    depends_on:
-      - db
-      - api
-      - directus
-  
   api:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     ports:
       - "3000:3000"
     environment:
@@ -28,55 +12,67 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-password}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-app_db}
       - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key}
-      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_ENV=${NODE_ENV:-development}
       - FEATURE_CHATBOT=${FEATURE_CHATBOT:-true}
       - FEATURE_ANALYTICS=${FEATURE_ANALYTICS:-true}
       - APP_VERSION=${APP_VERSION:-1.0.0}
-      - DIRECTUS_URL=http://directus:8055
-      - DIRECTUS_TOKEN=${DIRECTUS_TOKEN:-your_directus_token}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     restart: always
     depends_on:
       - db
-  
-  directus:
-    image: directus/directus:latest
-    ports:
-      - "8055:8055"
-    environment:
-      KEY: '${DIRECTUS_KEY:-directus-key}'
-      SECRET: '${DIRECTUS_SECRET:-directus-secret}'
-      DB_CLIENT: 'mysql'
-      DB_HOST: 'db'
-      DB_PORT: '3306'
-      DB_DATABASE: '${MYSQL_DATABASE:-app_db}'
-      DB_USER: '${MYSQL_USER:-user}'
-      DB_PASSWORD: '${MYSQL_PASSWORD:-password}'
-      ADMIN_EMAIL: '${DIRECTUS_ADMIN_EMAIL:-admin@example.com}'
-      ADMIN_PASSWORD: '${DIRECTUS_ADMIN_PASSWORD:-admin_password}'
-      PUBLIC_URL: 'http://localhost:8055'
-    volumes:
-      - directus_uploads:/directus/uploads
-    depends_on:
-      - db
-  
+    networks:
+      - app-network
+
   db:
     image: mysql:8.0
     command: --default-authentication-plugin=mysql_native_password
     restart: always
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-app_db}
       MYSQL_USER: ${MYSQL_USER:-user}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+      - NODE_ENV=${NODE_ENV:-production}
+    restart: unless-stopped
+    depends_on:
+      - api
+    networks:
+      - app-network
 
 volumes:
   mysql_data:
-  directus_uploads:
 
 networks:
-  default:
+  app-network:
     driver: bridge

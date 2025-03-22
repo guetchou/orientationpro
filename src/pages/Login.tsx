@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("admin@example.com"); // Default email for testing
@@ -31,7 +32,7 @@ export default function Login() {
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Sign in error:", error);
-      if (error.message === "Invalid login credentials") {
+      if (error.response?.data?.message === "Invalid login credentials") {
         setError("Email ou mot de passe incorrect");
       } else if (error.message.includes("Email not confirmed")) {
         setError("Veuillez confirmer votre email avant de vous connecter");
@@ -46,8 +47,8 @@ export default function Login() {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
+      const token = localStorage.getItem('authToken');
+      if (token) {
         navigate("/dashboard");
       }
     };
