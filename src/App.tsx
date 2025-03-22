@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
@@ -7,7 +8,7 @@ import ResetPassword from './pages/ResetPassword';
 import UpdatePassword from './pages/UpdatePassword';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CMS from './pages/admin/CMS';
-import UserManagement from './components/admin/UserManagement';
+import { UserManagement } from './components/admin/UserManagement';
 import SuperAdmin from './pages/admin/SuperAdmin';
 import UserCredentials from "./pages/admin/UserCredentials";
 
