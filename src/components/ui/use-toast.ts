@@ -1,6 +1,8 @@
 
 import * as React from "react";
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast, ToastT } from "sonner";
+
+type ToastProps = React.ComponentProps<typeof ToastT>;
 
 export const useToast = () => {
   return {

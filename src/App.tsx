@@ -32,6 +32,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+// Composants pour le forum
+const ForumGeneral = () => <div>Forum général</div>;
+const ForumDomain = () => <div>Forum par domaine</div>;
+const ForumCreate = () => <div>Créer un post</div>;
+
 function App() {
   return (
     <AuthProvider>
@@ -51,11 +56,11 @@ function App() {
             <Route path="/actualites" element={<Actualites />} />
             
             {/* Routes forum */}
-            <Route path="/forum" element={<ForumLayout>{<div>Forum général</div>}</ForumLayout>} />
-            <Route path="/forum/domain/:id" element={<ForumLayout>{<div>Forum par domaine</div>}</ForumLayout>} />
+            <Route path="/forum" element={<ForumLayout><ForumGeneral /></ForumLayout>} />
+            <Route path="/forum/domain/:id" element={<ForumLayout><ForumDomain /></ForumLayout>} />
             <Route path="/forum/create" element={
               <ProtectedRoute>
-                <ForumLayout>{<div>Créer un post</div>}</ForumLayout>
+                <ForumLayout><ForumCreate /></ForumLayout>
               </ProtectedRoute>
             } />
             

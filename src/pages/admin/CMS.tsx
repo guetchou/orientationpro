@@ -1,33 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ContentList } from "@/components/admin/cms/ContentList";
+import { ContentEditor } from "@/components/admin/cms/ContentEditor";
+import { ContentSearch } from "@/components/admin/cms/ContentSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { PlusCircle, Edit, Trash2, Search } from "lucide-react";
 
 interface ContentItem {
   id: string;
@@ -37,6 +15,8 @@ interface ContentItem {
   type: string;
   created_at: string;
   updated_at: string;
+  image_url?: string;
+  category?: string;
 }
 
 const CMS = () => {
@@ -52,7 +32,9 @@ const CMS = () => {
     title: "",
     description: "",
     content: "",
-    type: "articles"
+    type: "articles",
+    image_url: "",
+    category: "Général"
   });
 
   useEffect(() => {
@@ -79,22 +61,15 @@ const CMS = () => {
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const filteredContents = contents.filter(
-    item => item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-           item.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const handleEdit = (item: ContentItem) => {
     setCurrentItem(item);
     setFormData({
       title: item.title,
       description: item.description,
       content: item.content,
-      type: item.type
+      type: item.type,
+      image_url: item.image_url || "",
+      category: item.category || "Général"
     });
     setEditMode(true);
   };
@@ -118,17 +93,7 @@ const CMS = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleFormSubmit = async (formData: any) => {
     try {
       if (editMode && currentItem) {
         // Mode édition
@@ -138,6 +103,8 @@ const CMS = () => {
             title: formData.title,
             description: formData.description,
             content: formData.content,
+            image_url: formData.image_url,
+            category: formData.category,
             updated_at: new Date().toISOString()
           })
           .eq('id', currentItem.id);
@@ -152,7 +119,9 @@ const CMS = () => {
             title: formData.title,
             description: formData.description,
             content: formData.content,
-            type: currentTab
+            type: currentTab,
+            image_url: formData.image_url,
+            category: formData.category
           });
 
         if (error) throw error;
@@ -173,11 +142,18 @@ const CMS = () => {
       title: "",
       description: "",
       content: "",
-      type: currentTab
+      type: currentTab,
+      image_url: "",
+      category: "Général"
     });
     setEditMode(false);
     setCurrentItem(null);
   };
+
+  const filteredContents = contents.filter(
+    item => item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            item.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="container mx-auto py-6">
@@ -187,128 +163,31 @@ const CMS = () => {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="articles">Articles</TabsTrigger>
           <TabsTrigger value="resources">Ressources</TabsTrigger>
-          <TabsTrigger value="faq">FAQ</TabsTrigger>
+          <TabsTrigger value="actualites">Actualités</TabsTrigger>
           <TabsTrigger value="pages">Pages</TabsTrigger>
         </TabsList>
 
-        <div className="flex justify-between items-center my-6">
-          <div className="relative w-1/3">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Rechercher..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
-          <Button onClick={() => setEditMode(false)}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Nouveau
-          </Button>
-        </div>
+        <ContentSearch 
+          searchTerm={searchTerm} 
+          onSearchChange={setSearchTerm} 
+          onNewClick={() => setEditMode(false)} 
+        />
 
         <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Liste des contenus</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <p className="text-center py-4">Chargement...</p>
-                ) : filteredContents.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Titre</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Date de création</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredContents.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.title}</TableCell>
-                          <TableCell>{item.description.substring(0, 50)}...</TableCell>
-                          <TableCell>{new Date(item.created_at).toLocaleDateString('fr-FR')}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-center py-4">Aucun contenu trouvé</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>{editMode ? "Modifier le contenu" : "Ajouter un contenu"}</CardTitle>
-                <CardDescription>
-                  {editMode 
-                    ? "Modifiez les détails du contenu sélectionné" 
-                    : "Remplissez les informations pour créer un nouveau contenu"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Titre</Label>
-                    <Input
-                      id="title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows={3}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="content">Contenu</Label>
-                    <Textarea
-                      id="content"
-                      name="content"
-                      value={formData.content}
-                      onChange={handleInputChange}
-                      rows={10}
-                      required
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1">
-                      {editMode ? "Mettre à jour" : "Créer"}
-                    </Button>
-                    {editMode && (
-                      <Button type="button" variant="outline" onClick={resetForm}>
-                        Annuler
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+          <ContentList 
+            contents={filteredContents} 
+            loading={loading} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+          />
+          
+          <ContentEditor 
+            editMode={editMode} 
+            formData={formData} 
+            setFormData={setFormData} 
+            onSubmit={handleFormSubmit} 
+            onCancel={resetForm} 
+          />
         </div>
       </Tabs>
     </div>

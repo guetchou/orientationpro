@@ -2,6 +2,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TestsSection } from "@/components/home/TestsSection";
+import { ChatBot } from "@/components/chat/ChatBot";
 
 export default function Tests() {
   return (
@@ -18,6 +19,7 @@ export default function Tests() {
         </div>
         <TestsSection />
       </main>
+      <ChatBot />
       <Footer />
     </div>
   );
