@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { analyzeEmotionalSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
+import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
+import { EmotionalTestResults } from "@/types/test";
 import { emotionalIntelligenceQuestions } from "@/data/riasecQuestions";
 
 export default function EmotionalTest() {
@@ -53,32 +54,51 @@ export default function EmotionalTest() {
     if (currentQuestion < emotionalQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Utiliser notre nouvelle analyse intelligente
-      const results = analyzeEmotionalSmartly(newAnswers);
-      // Enrichir les résultats avec l'IA
-      const aiEnhancedResults = enhanceResultsWithAI('emotional', results);
-      
-      // Combiner les résultats standards et ceux enrichis par l'IA
-      const combinedResults = {
-        ...results,
-        aiInsights: aiEnhancedResults
+      // Analyser les résultats
+      const results: EmotionalTestResults = {
+        selfAwareness: Math.round((newAnswers[0] / 5) * 100),
+        selfRegulation: Math.round((newAnswers[1] / 5) * 100),
+        motivation: 70, // valeur par défaut
+        empathy: Math.round((newAnswers[2] / 5) * 100),
+        socialSkills: 65, // valeur par défaut
+        overallScore: Math.round((newAnswers.reduce((sum, val) => sum + val, 0) / (newAnswers.length * 5)) * 100),
+        strengths: ['Conscience de soi', 'Gestion des émotions'],
+        areasToImprove: ['Communication émotionnelle'],
+        confidenceScore: 85
       };
       
       try {
+        // Enrichir les résultats avec l'IA
+        const aiInsights = await getAIEnhancedAnalysis('emotional', results);
+        
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
+          // Sauvegarder les résultats dans Supabase
           await supabase.from('test_results').insert({
             user_id: user.id,
             test_type: 'emotional',
-            results: combinedResults,
+            results: JSON.stringify({
+              ...results,
+              aiInsights
+            }),
             answers: newAnswers,
-            confidence_score: results.confidenceScore
+            confidence_score: results.confidenceScore || 85
           });
+          
           toast.success("Test complété avec succès !");
         } else {
           toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/dashboard/results', { state: { results: combinedResults, testType: 'emotional' } });
+        
+        navigate('/dashboard/results', { 
+          state: { 
+            results: {
+              ...results,
+              aiInsights
+            }, 
+            testType: 'emotional' 
+          } 
+        });
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error("Erreur lors de la sauvegarde des résultats");

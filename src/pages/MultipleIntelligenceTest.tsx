@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { analyzeMultipleIntelligenceSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
+import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
+import { MultipleIntelligenceResults } from "@/types/test";
 
 export default function MultipleIntelligenceTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -52,37 +53,109 @@ export default function MultipleIntelligenceTest() {
     if (currentQuestion < intelligenceQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Utiliser notre nouvelle analyse intelligente
-      const results = analyzeMultipleIntelligenceSmartly(newAnswers);
-      // Enrichir les résultats avec l'IA
-      const aiEnhancedResults = enhanceResultsWithAI('multiple_intelligence', results);
-      
-      // Combiner les résultats standards et ceux enrichis par l'IA
-      const combinedResults = {
-        ...results,
-        aiInsights: aiEnhancedResults
-      };
+      // Analyser les résultats
+      const results: MultipleIntelligenceResults = analyzeMultipleIntelligence(newAnswers);
       
       try {
+        // Enrichir les résultats avec l'IA
+        const aiInsights = await getAIEnhancedAnalysis('multiple_intelligence', results);
+        
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
+          // Sauvegarder les résultats dans Supabase
           await supabase.from('test_results').insert({
             user_id: user.id,
             test_type: 'multiple_intelligence',
-            results: combinedResults,
+            results: JSON.stringify({
+              ...results,
+              aiInsights
+            }),
             answers: newAnswers,
-            confidence_score: results.confidenceScore
+            confidence_score: results.confidenceScore || 80
           });
+          
           toast.success("Test complété avec succès !");
         } else {
           toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/dashboard/results', { state: { results: combinedResults, testType: 'multiple_intelligence' } });
+        
+        navigate('/dashboard/results', { 
+          state: { 
+            results: {
+              ...results,
+              aiInsights
+            }, 
+            testType: 'multiple_intelligence'
+          } 
+        });
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error("Erreur lors de la sauvegarde des résultats");
       }
     }
+  };
+
+  const analyzeMultipleIntelligence = (responses: string[]): MultipleIntelligenceResults => {
+    // Initialiser tous les scores à un niveau de base
+    let linguistic = 30;
+    let logical = 30;
+    let spatial = 30;
+    let musical = 30;
+    let bodily = 30;
+    let interpersonal = 30;
+    let intrapersonal = 30;
+    let naturalist = 30;
+
+    // Analyser les réponses pour ajuster les scores
+    responses.forEach((response, index) => {
+      if (index === 0) {
+        // Question 1: Comment préférez-vous apprendre ?
+        if (response.includes("lisant")) linguistic += 20;
+        else if (response.includes("écoutant")) musical += 20;
+        else if (response.includes("manipulant")) bodily += 20;
+        else if (response.includes("observant")) spatial += 20;
+      } else if (index === 1) {
+        // Question 2: Quelle activité vous attire ?
+        if (response.includes("énigmes")) logical += 20;
+        else if (response.includes("instrument")) musical += 20;
+        else if (response.includes("sport")) bodily += 20;
+        else if (response.includes("dessiner")) spatial += 20;
+      } else if (index === 2) {
+        // Question 3: Organisation des idées
+        if (response.includes("listes")) logical += 20;
+        else if (response.includes("cartes mentales")) intrapersonal += 20;
+        else if (response.includes("discutant")) interpersonal += 20;
+        else if (response.includes("croquis")) spatial += 20;
+      }
+    });
+
+    // Trouver les intelligences dominantes
+    const intelligences = [
+      { name: "Linguistique", score: linguistic },
+      { name: "Logico-mathématique", score: logical },
+      { name: "Spatiale", score: spatial },
+      { name: "Musicale", score: musical },
+      { name: "Corporelle-kinesthésique", score: bodily },
+      { name: "Interpersonnelle", score: interpersonal },
+      { name: "Intrapersonnelle", score: intrapersonal },
+      { name: "Naturaliste", score: naturalist }
+    ];
+    
+    intelligences.sort((a, b) => b.score - a.score);
+    const dominantIntelligences = intelligences.slice(0, 3).map(i => i.name);
+
+    return {
+      linguistic,
+      logical,
+      spatial,
+      musical,
+      bodily,
+      interpersonal,
+      intrapersonal,
+      naturalist,
+      dominantIntelligences,
+      confidenceScore: 80
+    };
   };
 
   return (

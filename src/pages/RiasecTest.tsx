@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { questions } from "@/data/riasecQuestions";
-import { analyzeRiasecSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
+import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
+import { RiasecResults } from "@/types/test";
 
 const RiasecTest = () => {
   const navigate = useNavigate();
@@ -37,25 +38,24 @@ const RiasecTest = () => {
         return;
       }
 
-      // Utiliser notre nouvelle analyse intelligente
-      const results = analyzeRiasecSmartly(finalAnswers);
+      // Analyser les résultats
+      const results: RiasecResults = analyzeRiasecResults(finalAnswers);
+      
       // Enrichir les résultats avec l'IA
-      const aiEnhancedResults = enhanceResultsWithAI('RIASEC', results);
+      const aiInsights = await getAIEnhancedAnalysis('RIASEC', results);
       
-      // Combiner les résultats standards et ceux enrichis par l'IA
-      const combinedResults = {
-        ...results,
-        aiInsights: aiEnhancedResults
-      };
-      
+      // Sauvegarder les résultats dans Supabase
       const { data, error } = await supabase
         .from('test_results')
         .insert({
           user_id: user.id,
           test_type: 'RIASEC',
-          results: combinedResults,
+          results: JSON.stringify({
+            ...results,
+            aiInsights
+          }),
           answers: finalAnswers,
-          confidence_score: results.confidenceScore,
+          confidence_score: results.confidenceScore || 85,
           personality_code: results.personalityCode
         })
         .select()
@@ -75,6 +75,77 @@ const RiasecTest = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const analyzeRiasecResults = (responses: number[]): RiasecResults => {
+    // Initialiser les scores RIASEC
+    let realistic = 0;
+    let investigative = 0;
+    let artistic = 0;
+    let social = 0;
+    let enterprising = 0;
+    let conventional = 0;
+    
+    // Attribuer les réponses aux différentes catégories
+    responses.forEach((response, index) => {
+      const category = questions[index].category;
+      
+      switch (category) {
+        case 'R':
+          realistic += response;
+          break;
+        case 'I':
+          investigative += response;
+          break;
+        case 'A':
+          artistic += response;
+          break;
+        case 'S':
+          social += response;
+          break;
+        case 'E':
+          enterprising += response;
+          break;
+        case 'C':
+          conventional += response;
+          break;
+      }
+    });
+    
+    // Normaliser les scores sur 100
+    const totalResponses = questions.filter(q => q.category === 'R').length;
+    realistic = Math.round((realistic / (totalResponses * 5)) * 100);
+    investigative = Math.round((investigative / (totalResponses * 5)) * 100);
+    artistic = Math.round((artistic / (totalResponses * 5)) * 100);
+    social = Math.round((social / (totalResponses * 5)) * 100);
+    enterprising = Math.round((enterprising / (totalResponses * 5)) * 100);
+    conventional = Math.round((conventional / (totalResponses * 5)) * 100);
+    
+    // Déterminer les types dominants
+    const types = [
+      { code: 'R', value: realistic },
+      { code: 'I', value: investigative },
+      { code: 'A', value: artistic },
+      { code: 'S', value: social },
+      { code: 'E', value: enterprising },
+      { code: 'C', value: conventional }
+    ];
+    
+    types.sort((a, b) => b.value - a.value);
+    const dominantTypes = types.slice(0, 3).map(t => t.code);
+    const personalityCode = dominantTypes.join('');
+    
+    return {
+      realistic,
+      investigative,
+      artistic,
+      social,
+      enterprising,
+      conventional,
+      dominantTypes,
+      personalityCode,
+      confidenceScore: 85
+    };
   };
 
   const showPartialResults = () => {

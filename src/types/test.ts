@@ -69,3 +69,51 @@ export interface AIEnhancedAnalysis {
   developmentSuggestions: string[];
   confidenceScore: number;
 }
+
+// Career transition test results
+export interface CareerTransitionResults {
+  currentSatisfaction: number;
+  skillTransferability: number;
+  adaptability: number;
+  riskTolerance: number;
+  learningCapacity: number;
+  recommendedSectors?: string[];
+  transitionReadiness?: number;
+  confidenceScore?: number;
+}
+
+// Retirement readiness test results
+export interface RetirementReadinessResults {
+  financialPreparation: number;
+  healthPlanning: number;
+  socialConnections: number;
+  purposeClarity: number;
+  leisureInterests: number;
+  readinessScore?: number;
+  actionPriorities?: string[];
+  confidenceScore?: number;
+}
+
+// Senior employment test results
+export interface SeniorEmploymentResults {
+  experienceValue: number;
+  technologyAdaptation: number;
+  workLifeBalance: number;
+  mentorshipPotential: number;
+  flexibilityNeeds: number;
+  employabilityScore?: number;
+  recommendedRoles?: string[];
+  confidenceScore?: number;
+}
+
+// No diploma career test results
+export interface NoDiplomaCareerResults {
+  practicalSkills: number;
+  entrepreneurialAptitude: number;
+  tradeInterest: number;
+  selfLearningCapacity: number;
+  experiencePortfolio: number;
+  careerPotential?: number;
+  recommendedPaths?: string[];
+  confidenceScore?: number;
+}

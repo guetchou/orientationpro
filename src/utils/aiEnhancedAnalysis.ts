@@ -1,14 +1,25 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { RiasecResults, EmotionalTestResults, MultipleIntelligenceResults, LearningStyleResults } from "@/types/test";
+import { 
+  RiasecResults, 
+  EmotionalTestResults, 
+  MultipleIntelligenceResults, 
+  LearningStyleResults,
+  CareerTransitionResults,
+  RetirementReadinessResults,
+  SeniorEmploymentResults,
+  NoDiplomaCareerResults,
+  AIEnhancedAnalysis
+} from "@/types/test";
 
 // Cette fonction appelle une fonction Edge Supabase pour analyser les résultats de test avec l'IA
 export const getAIEnhancedAnalysis = async (
   testType: string, 
-  results: RiasecResults | EmotionalTestResults | MultipleIntelligenceResults | LearningStyleResults
-): Promise<any> => {
+  results: RiasecResults | EmotionalTestResults | MultipleIntelligenceResults | LearningStyleResults | 
+          CareerTransitionResults | RetirementReadinessResults | SeniorEmploymentResults | NoDiplomaCareerResults
+): Promise<AIEnhancedAnalysis> => {
   try {
-    // Appel de l'edge function Supabase (à implémenter)
+    // Appel de la fonction edge Supabase
     const { data, error } = await supabase.functions.invoke('analyze-test-results', {
       body: {
         testType,
@@ -27,6 +38,9 @@ export const getAIEnhancedAnalysis = async (
         "Vous pouvez toujours consulter vos résultats standards qui sont fiables."
       ],
       careerRecommendations: [],
+      learningPathways: [],
+      strengthWeaknessAnalysis: [],
+      developmentSuggestions: [],
       confidenceScore: (results as any).confidenceScore || 75
     };
   }
@@ -56,21 +70,24 @@ export const suggestImprovements = async (userId: string): Promise<string[]> => 
     const testTypes = testHistory.map(test => test.test_type);
     const suggestions = [];
     
-    if (!testTypes.includes('RIASEC')) {
-      suggestions.push("Passez le test RIASEC pour découvrir vos intérêts professionnels");
-    }
+    // Suggestions de base pour les tests manquants
+    const testsMissing = {
+      'RIASEC': "Passez le test RIASEC pour découvrir vos intérêts professionnels",
+      'emotional': "Essayez le test d'intelligence émotionnelle pour mieux comprendre vos émotions",
+      'multiple_intelligence': "Le test des intelligences multiples vous aiderait à identifier vos forces cognitives",
+      'learning_style': "Découvrez votre style d'apprentissage pour optimiser vos méthodes d'étude",
+      'career_transition': "Le test de reconversion professionnelle vous aidera à évaluer votre potentiel de changement",
+      'retirement_readiness': "Évaluez votre préparation à la retraite avec notre test dédié",
+      'senior_employment': "Découvrez les opportunités d'emploi adaptées à votre expérience avec le test senior",
+      'no_diploma_career': "Explorez vos possibilités professionnelles sans diplôme avec notre test spécialisé"
+    };
     
-    if (!testTypes.includes('emotional')) {
-      suggestions.push("Essayez le test d'intelligence émotionnelle pour mieux comprendre vos émotions");
-    }
-    
-    if (!testTypes.includes('multiple_intelligence')) {
-      suggestions.push("Le test des intelligences multiples vous aiderait à identifier vos forces cognitives");
-    }
-    
-    if (!testTypes.includes('learning_style')) {
-      suggestions.push("Découvrez votre style d'apprentissage pour optimiser vos méthodes d'étude");
-    }
+    // Ajouter des suggestions pour les tests non effectués
+    Object.entries(testsMissing).forEach(([type, suggestion]) => {
+      if (!testTypes.includes(type)) {
+        suggestions.push(suggestion);
+      }
+    });
     
     // Suggestions pour les tests déjà passés
     if (testHistory.length > 0) {
