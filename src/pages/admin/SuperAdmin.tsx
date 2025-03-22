@@ -8,8 +8,10 @@ import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SuperAdmin() {
+  const { createSuperAdmin } = useAuth();
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("admin123");
   const [firstName, setFirstName] = useState("Super");
@@ -65,50 +67,19 @@ export default function SuperAdmin() {
     try {
       console.log("Creating super admin:", email);
       
-      // Create the user in Supabase Auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      // Use the createSuperAdmin method from useAuth
+      await createSuperAdmin(email, password, firstName, lastName);
       
-      if (signUpError) {
-        console.error("Erreur lors de la création du compte:", signUpError);
-        setError(signUpError.message);
-        return;
-      }
+      toast.success("Compte super administrateur créé avec succès !");
       
-      if (data && data.user) {
-        // Create the profile with super admin rights
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            department: 'admin',
-            is_super_admin: true,
-            is_master_admin: true,
-            status: 'active'
-          });
-          
-        if (profileError) {
-          console.error("Erreur lors de la création du profil:", profileError);
-          setError("Erreur lors de la création du profil admin");
-          return;
-        }
-        
-        toast.success("Compte super administrateur créé avec succès !");
-        
-        // Store the credentials in localStorage for easy reference
-        localStorage.setItem('defaultAdminEmail', email);
-        localStorage.setItem('defaultAdminPassword', password);
-        
-        // Redirect to login
-        setTimeout(() => {
-          navigate("/login");
-        }, 1500);
-      }
+      // Store the credentials in localStorage for easy reference
+      localStorage.setItem('defaultAdminEmail', email);
+      localStorage.setItem('defaultAdminPassword', password);
+      
+      // Redirect to login
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err: any) {
       console.error("Erreur inattendue:", err);
       setError(err.message || "Une erreur est survenue");
@@ -134,6 +105,9 @@ export default function SuperAdmin() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-xl">Création du compte super administrateur</CardTitle>
+            <p className="text-amber-600 font-medium mt-1">
+              Identifiants par défaut: {email} / {password}
+            </p>
           </CardHeader>
           <CardContent>
             {error && (
@@ -210,8 +184,7 @@ export default function SuperAdmin() {
           </CardContent>
           <CardFooter>
             <p className="text-xs text-center w-full text-gray-500">
-              Ce compte aura tous les droits d'administration sur la plateforme. 
-              Ces identifiants sont: email=<strong>{email}</strong>, password=<strong>{password}</strong>
+              Ce compte aura tous les droits d'administration sur la plateforme.
             </p>
           </CardFooter>
         </Card>

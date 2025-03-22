@@ -17,13 +17,13 @@ function useAuthProvider() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  // Récupération des données de profil
+  // Get profile data
   const { profileData, isSuperAdmin, isMasterAdmin, loading: profileLoading } = useProfileData(user);
   
-  // Méthodes d'authentification standard
+  // Standard auth methods
   const authMethods = useAuthMethods();
   
-  // Méthodes d'administration
+  // Admin methods
   const adminMethods = useAdminMethods();
 
   useEffect(() => {
@@ -91,67 +91,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// For backwards compatibility
-export function useAuthStandalone() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Récupération des données de profil
-  const { isSuperAdmin, isMasterAdmin } = useProfileData(user);
-  
-  // Méthodes d'authentification standard
-  const authMethods = useAuthMethods();
-  
-  // Méthodes d'administration
-  const adminMethods = useAdminMethods();
-
-  useEffect(() => {
-    // Vérifier l'état de l'authentification actuelle
-    const checkAuth = async () => {
-      try {
-        const { data, error: authError } = await supabase.auth.getSession();
-        
-        if (authError) {
-          throw authError;
-        }
-
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-      } catch (err) {
-        console.error('Erreur de vérification auth:', err);
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      setUser(session?.user ?? null);
-      setSession(session);
-      setLoading(false);
-    });
-
-    checkAuth();
-
-    // Nettoyer la souscription
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  return {
-    user,
-    session,
-    loading: loading || authMethods.loading || adminMethods.loading,
-    error,
-    isSuperAdmin,
-    isMasterAdmin,
-    ...authMethods,
-    ...adminMethods
-  };
-}

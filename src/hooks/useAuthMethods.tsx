@@ -18,6 +18,9 @@ export function useAuthMethods() {
 
       if (error) {
         console.error('Erreur de connexion:', error);
+        toast.error(error.message === "Invalid login credentials" 
+          ? "Email ou mot de passe incorrect" 
+          : error.message);
         throw error;
       }
       

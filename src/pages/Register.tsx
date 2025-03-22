@@ -7,11 +7,13 @@ import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { useAuth } from "@/hooks/useAuth";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { signUp } = useAuth();
+  const [email, setEmail] = useState("newuser@example.com");
+  const [password, setPassword] = useState("password123");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,52 +61,26 @@ const Register = () => {
     
     try {
       console.log("Attempting to register:", { email });
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (signUpError) {
-        console.error("Registration error:", signUpError);
-        
-        if (signUpError.message === "User already registered") {
-          setError("Un compte existe déjà avec cet email. Veuillez vous connecter.");
-          setTimeout(() => {
-            navigate("/login", { state: { email } });
-          }, 2000);
-        } else {
-          setError(signUpError.message);
-        }
-        return;
-      }
-
-      if (data.user) {
-        // Create profile record for the new user
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: email,
-            department: 'admin',
-            is_super_admin: true,
-            first_name: 'Admin',
-            last_name: 'User',
-            status: 'active'
-          });
-
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-        }
-
-        toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
-        navigate("/login");
-      }
+      const userData = {
+        first_name: 'Utilisateur',
+        last_name: 'Test'
+      };
+      
+      await signUp(email, password, userData);
+      
+      toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
+      navigate("/login");
     } catch (error: any) {
-      console.error("Unexpected error:", error);
-      setError("Une erreur inattendue s'est produite");
+      console.error("Registration error:", error);
+      
+      if (error.message === "User already registered") {
+        setError("Un compte existe déjà avec cet email. Veuillez vous connecter.");
+        setTimeout(() => {
+          navigate("/login", { state: { email } });
+        }, 2000);
+      } else {
+        setError(error.message || "Une erreur inattendue s'est produite");
+      }
     } finally {
       setLoading(false);
     }
@@ -137,6 +113,9 @@ const Register = () => {
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
               Rejoignez-nous pour accéder à tous nos services d'orientation
+            </p>
+            <p className="mt-2 text-center text-amber-600 font-medium">
+              Identifiants par défaut: {email} / {password}
             </p>
             {!isSupabaseConfigured() && (
               <div className="mt-4 p-4 bg-red-50 rounded-md">

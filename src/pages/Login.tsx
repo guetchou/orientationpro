@@ -8,17 +8,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@example.com"); // Default email for testing
+  const [password, setPassword] = useState("admin123"); // Default password for testing
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
-  // Use signIn directly from supabase client to troubleshoot
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -26,31 +25,19 @@ export default function Login() {
 
     try {
       console.log("Attempting login with:", { email });
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        console.error("Sign in error:", signInError);
-        if (signInError.message === "Invalid login credentials") {
-          setError("Email ou mot de passe incorrect");
-        } else if (signInError.message.includes("Email not confirmed")) {
-          setError("Veuillez confirmer votre email avant de vous connecter");
-        } else {
-          setError(signInError.message);
-        }
-        return;
-      }
+      await signIn(email, password);
       
-      if (data.user) {
-        console.log("Login successful:", data.user);
-        toast.success("Connexion réussie !");
-        navigate("/dashboard");
-      }
+      // If successful, navigate to dashboard
+      navigate("/dashboard");
     } catch (error: any) {
-      console.error("Unexpected error:", error);
-      setError("Une erreur inattendue s'est produite. Veuillez réessayer.");
+      console.error("Sign in error:", error);
+      if (error.message === "Invalid login credentials") {
+        setError("Email ou mot de passe incorrect");
+      } else if (error.message.includes("Email not confirmed")) {
+        setError("Veuillez confirmer votre email avant de vous connecter");
+      } else {
+        setError(error.message || "Une erreur inattendue s'est produite");
+      }
     } finally {
       setLoading(false);
     }
@@ -78,6 +65,9 @@ export default function Login() {
           <CardTitle className="text-2xl text-center font-heading">Connexion</CardTitle>
           <CardDescription className="text-center">
             Entrez vos identifiants pour vous connecter
+          </CardDescription>
+          <CardDescription className="text-center text-amber-600 font-medium">
+            Identifiants par défaut: {email} / {password}
           </CardDescription>
         </CardHeader>
         <CardContent>
