@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { analyzeLearningStyleSmartly } from "@/utils/smartAnalysis";
+import { analyzeLearningStyleSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
 
 export default function LearningStyleTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -54,6 +54,14 @@ export default function LearningStyleTest() {
     } else {
       // Utiliser notre nouvelle analyse intelligente
       const results = analyzeLearningStyleSmartly(newAnswers);
+      // Enrichir les résultats avec l'IA
+      const aiEnhancedResults = enhanceResultsWithAI('learning_style', results);
+      
+      // Combiner les résultats standards et ceux enrichis par l'IA
+      const combinedResults = {
+        ...results,
+        aiInsights: aiEnhancedResults
+      };
       
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -61,7 +69,7 @@ export default function LearningStyleTest() {
           await supabase.from('test_results').insert({
             user_id: user.id,
             test_type: 'learning_style',
-            results: results,
+            results: combinedResults,
             answers: newAnswers,
             confidence_score: results.confidenceScore
           });
@@ -69,7 +77,7 @@ export default function LearningStyleTest() {
         } else {
           toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/dashboard/results', { state: { results, testType: 'learning_style' } });
+        navigate('/dashboard/results', { state: { results: combinedResults, testType: 'learning_style' } });
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error("Erreur lors de la sauvegarde des résultats");

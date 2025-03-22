@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { analyzeMultipleIntelligenceSmartly } from "@/utils/smartAnalysis";
+import { analyzeMultipleIntelligenceSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
 
 export default function MultipleIntelligenceTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -54,6 +54,14 @@ export default function MultipleIntelligenceTest() {
     } else {
       // Utiliser notre nouvelle analyse intelligente
       const results = analyzeMultipleIntelligenceSmartly(newAnswers);
+      // Enrichir les résultats avec l'IA
+      const aiEnhancedResults = enhanceResultsWithAI('multiple_intelligence', results);
+      
+      // Combiner les résultats standards et ceux enrichis par l'IA
+      const combinedResults = {
+        ...results,
+        aiInsights: aiEnhancedResults
+      };
       
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -61,7 +69,7 @@ export default function MultipleIntelligenceTest() {
           await supabase.from('test_results').insert({
             user_id: user.id,
             test_type: 'multiple_intelligence',
-            results: results,
+            results: combinedResults,
             answers: newAnswers,
             confidence_score: results.confidenceScore
           });
@@ -69,7 +77,7 @@ export default function MultipleIntelligenceTest() {
         } else {
           toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/dashboard/results', { state: { results, testType: 'multiple_intelligence' } });
+        navigate('/dashboard/results', { state: { results: combinedResults, testType: 'multiple_intelligence' } });
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error("Erreur lors de la sauvegarde des résultats");

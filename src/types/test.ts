@@ -1,3 +1,4 @@
+
 export interface TestResult {
   id: string;
   user_id: string;
@@ -56,4 +57,15 @@ export interface MultipleIntelligenceResults {
   naturalist: number;
   dominantIntelligences?: string[];
   confidenceScore?: number;
+}
+
+// IA-Enhanced test analysis types
+export interface AIEnhancedAnalysis {
+  personalityInsights: string[];
+  careerRecommendations: string[];
+  learningPathways: string[];
+  strengthWeaknessAnalysis: string[];
+  compatibilityMatrix?: {[key: string]: number};
+  developmentSuggestions: string[];
+  confidenceScore: number;
 }

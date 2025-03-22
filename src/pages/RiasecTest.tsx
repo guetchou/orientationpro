@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { questions } from "@/data/riasecQuestions";
-import { analyzeRiasecSmartly } from "@/utils/smartAnalysis";
+import { analyzeRiasecSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
 
 const RiasecTest = () => {
   const navigate = useNavigate();
@@ -39,17 +39,25 @@ const RiasecTest = () => {
 
       // Utiliser notre nouvelle analyse intelligente
       const results = analyzeRiasecSmartly(finalAnswers);
+      // Enrichir les résultats avec l'IA
+      const aiEnhancedResults = enhanceResultsWithAI('RIASEC', results);
+      
+      // Combiner les résultats standards et ceux enrichis par l'IA
+      const combinedResults = {
+        ...results,
+        aiInsights: aiEnhancedResults
+      };
       
       const { data, error } = await supabase
         .from('test_results')
-        .insert([{
+        .insert({
           user_id: user.id,
           test_type: 'RIASEC',
-          results,
+          results: combinedResults,
           answers: finalAnswers,
           confidence_score: results.confidenceScore,
           personality_code: results.personalityCode
-        }])
+        })
         .select()
         .single();
 
@@ -140,7 +148,7 @@ const RiasecTest = () => {
                 Test RIASEC complété avec succès !
               </h1>
               <p className="text-gray-600 mb-8">
-                Votre profil d'orientation a été analysé. Vous pouvez maintenant consulter vos résultats.
+                Votre profil d'orientation a été analysé par notre IA avancée. Vous pouvez maintenant consulter vos résultats détaillés.
               </p>
               <Button 
                 size="lg" 

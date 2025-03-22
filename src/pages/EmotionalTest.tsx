@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { analyzeEmotionalSmartly } from "@/utils/smartAnalysis";
+import { analyzeEmotionalSmartly, enhanceResultsWithAI } from "@/utils/smartAnalysis";
 import { emotionalIntelligenceQuestions } from "@/data/riasecQuestions";
 
 export default function EmotionalTest() {
@@ -55,6 +55,14 @@ export default function EmotionalTest() {
     } else {
       // Utiliser notre nouvelle analyse intelligente
       const results = analyzeEmotionalSmartly(newAnswers);
+      // Enrichir les résultats avec l'IA
+      const aiEnhancedResults = enhanceResultsWithAI('emotional', results);
+      
+      // Combiner les résultats standards et ceux enrichis par l'IA
+      const combinedResults = {
+        ...results,
+        aiInsights: aiEnhancedResults
+      };
       
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -62,7 +70,7 @@ export default function EmotionalTest() {
           await supabase.from('test_results').insert({
             user_id: user.id,
             test_type: 'emotional',
-            results: results,
+            results: combinedResults,
             answers: newAnswers,
             confidence_score: results.confidenceScore
           });
@@ -70,7 +78,7 @@ export default function EmotionalTest() {
         } else {
           toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        navigate('/dashboard/results', { state: { results, testType: 'emotional' } });
+        navigate('/dashboard/results', { state: { results: combinedResults, testType: 'emotional' } });
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error("Erreur lors de la sauvegarde des résultats");
