@@ -48,14 +48,23 @@ function useAuthProvider() {
         const userData = localStorage.getItem('userData');
         
         if (token && userData) {
-          const user = JSON.parse(userData);
-          setUser(user);
-          setSession({ token, user });
+          try {
+            const user = JSON.parse(userData);
+            setUser(user);
+            setSession({ token, user });
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+            // Don't throw the error, just clear the invalid data
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+          }
         }
       } catch (err) {
         console.error('Error checking auth:', err);
         setError(err as Error);
+        // Don't block the app, just log the error
       } finally {
+        // Make sure we always set loading to false, even if there's an error
         setLoading(false);
       }
     };

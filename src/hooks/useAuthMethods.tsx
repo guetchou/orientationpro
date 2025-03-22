@@ -49,12 +49,19 @@ export function useAuthMethods() {
       setLoading(true);
       console.log("Attempting to sign up:", email);
       
+      // Ensure userData has firstName and lastName properties
+      const userDataWithDefaults = {
+        firstName: userData.firstName || userData.first_name || 'New',
+        lastName: userData.lastName || userData.last_name || 'User',
+        ...userData
+      };
+
       const response = await axios.post(`${API_URL}/auth/register`, {
         email,
         password,
-        firstName: userData.firstName || 'New',
-        lastName: userData.lastName || 'User',
-        ...userData
+        firstName: userDataWithDefaults.firstName,
+        lastName: userDataWithDefaults.lastName,
+        ...userDataWithDefaults
       });
 
       if (response.status !== 201) {

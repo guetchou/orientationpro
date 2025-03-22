@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -57,8 +58,8 @@ export const ForumLayout = ({ children }: { children: React.ReactNode }) => {
     navigate(`/forum/domain/${domainId}`);
   };
 
-  // Fix for line 67 - converting number to string
-  const someNumberValue: number = 123; // This is an example, replace with actual value
+  // Convert number to string if needed
+  const someNumberValue = 123; // This is an example, replace with actual value
   const someStringValue: string = String(someNumberValue); // Convert number to string
 
   return (
