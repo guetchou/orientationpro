@@ -3,11 +3,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
 import { EmotionalTestResults } from "@/types/test";
 import { emotionalIntelligenceQuestions } from "@/data/riasecQuestions";
+import axios from "axios";
+
+// Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 export default function EmotionalTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -71,18 +74,25 @@ export default function EmotionalTest() {
         // Enrichir les résultats avec l'IA
         const aiInsights = await getAIEnhancedAnalysis('emotional', results);
         
-        const { data: { user } } = await supabase.auth.getUser();
+        // Récupération de l'utilisateur connecté depuis le service d'authentification local
+        const userResponse = await axios.get(`${backendUrl}/api/users/current`, {
+          withCredentials: true  // Important pour envoyer les cookies d'authentification
+        });
+        const user = userResponse.data;
+        
         if (user?.id) {
-          // Sauvegarder les résultats dans Supabase
-          await supabase.from('test_results').insert({
+          // Sauvegarder les résultats dans votre backend
+          await axios.post(`${backendUrl}/api/test-results`, {
             user_id: user.id,
             test_type: 'emotional',
-            results: JSON.stringify({
+            results: {
               ...results,
               aiInsights
-            }),
+            },
             answers: newAnswers,
             confidence_score: results.confidenceScore || 85
+          }, {
+            withCredentials: true
           });
           
           toast.success("Test complété avec succès !");

@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import axios from 'axios';
 import { 
   RiasecResults, 
   EmotionalTestResults, 
@@ -12,23 +12,23 @@ import {
   AIEnhancedAnalysis
 } from "@/types/test";
 
-// Cette fonction appelle une fonction Edge Supabase pour analyser les résultats de test avec l'IA
+// Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
+// Cette fonction appelle le backend pour analyser les résultats de test avec l'IA
 export const getAIEnhancedAnalysis = async (
   testType: string, 
   results: RiasecResults | EmotionalTestResults | MultipleIntelligenceResults | LearningStyleResults | 
           CareerTransitionResults | RetirementReadinessResults | SeniorEmploymentResults | NoDiplomaCareerResults
 ): Promise<AIEnhancedAnalysis> => {
   try {
-    // Appel de la fonction edge Supabase
-    const { data, error } = await supabase.functions.invoke('analyze-test-results', {
-      body: {
-        testType,
-        results
-      }
+    // Appel de l'API backend
+    const response = await axios.post(`${backendUrl}/api/analyze-test-results`, {
+      testType,
+      results
     });
 
-    if (error) throw error;
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Erreur lors de l'analyse IA:", error);
     // Fallback en cas d'erreur - fournir une analyse de base
@@ -49,14 +49,9 @@ export const getAIEnhancedAnalysis = async (
 // Suggère des améliorations basées sur un profil d'utilisateur
 export const suggestImprovements = async (userId: string): Promise<string[]> => {
   try {
-    // Récupérer l'historique des tests de l'utilisateur
-    const { data: testHistory, error } = await supabase
-      .from('test_results')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
+    // Récupérer l'historique des tests de l'utilisateur depuis le backend
+    const response = await axios.get(`${backendUrl}/api/users/${userId}/test-history`);
+    const testHistory = response.data;
     
     // Si pas de tests, retourner suggestions génériques
     if (!testHistory || testHistory.length === 0) {
