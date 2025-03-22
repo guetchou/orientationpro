@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -54,6 +55,17 @@ export const Navbar = () => {
               Tests
             </Link>
             <Link 
+              to="/actualites" 
+              className={`transition-colors hover:text-primary relative
+                ${isActive("/actualites") 
+                  ? "text-primary font-medium after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-primary after:bottom-[-8px] after:left-0" 
+                  : isScrolled ? "text-gray-700" : "text-gray-800"
+                }
+              `}
+            >
+              Actualités
+            </Link>
+            <Link 
               to="/conseillers" 
               className={`transition-colors hover:text-primary relative
                 ${isActive("/conseillers") 
@@ -76,15 +88,15 @@ export const Navbar = () => {
               Ressources
             </Link>
             <Link 
-              to="/contact" 
+              to="/forum" 
               className={`transition-colors hover:text-primary relative
-                ${isActive("/contact") 
+                ${isActive("/forum") 
                   ? "text-primary font-medium after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-primary after:bottom-[-8px] after:left-0" 
                   : isScrolled ? "text-gray-700" : "text-gray-800"
                 }
               `}
             >
-              Contact
+              Forum
             </Link>
             <Link 
               to="/blog" 
@@ -98,15 +110,15 @@ export const Navbar = () => {
               Blog
             </Link>
             <Link 
-              to="/recrutement" 
+              to="/contact" 
               className={`transition-colors hover:text-primary relative
-                ${isActive("/recrutement") 
+                ${isActive("/contact") 
                   ? "text-primary font-medium after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-primary after:bottom-[-8px] after:left-0" 
                   : isScrolled ? "text-gray-700" : "text-gray-800"
                 }
               `}
             >
-              Recrutement
+              Contact
             </Link>
           </div>
 
@@ -146,6 +158,13 @@ export const Navbar = () => {
               Tests
             </Link>
             <Link 
+              to="/actualites" 
+              className={`block py-2 hover:text-primary transition-colors ${isActive("/actualites") ? "text-primary font-medium" : ""}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Actualités
+            </Link>
+            <Link 
               to="/conseillers" 
               className={`block py-2 hover:text-primary transition-colors ${isActive("/conseillers") ? "text-primary font-medium" : ""}`}
               onClick={() => setIsMobileMenuOpen(false)}
@@ -160,11 +179,11 @@ export const Navbar = () => {
               Ressources
             </Link>
             <Link 
-              to="/contact" 
-              className={`block py-2 hover:text-primary transition-colors ${isActive("/contact") ? "text-primary font-medium" : ""}`}
+              to="/forum" 
+              className={`block py-2 hover:text-primary transition-colors ${isActive("/forum") ? "text-primary font-medium" : ""}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Contact
+              Forum
             </Link>
             <Link 
               to="/blog" 
@@ -174,11 +193,11 @@ export const Navbar = () => {
               Blog
             </Link>
             <Link 
-              to="/recrutement" 
-              className={`block py-2 hover:text-primary transition-colors ${isActive("/recrutement") ? "text-primary font-medium" : ""}`}
+              to="/contact" 
+              className={`block py-2 hover:text-primary transition-colors ${isActive("/contact") ? "text-primary font-medium" : ""}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Recrutement
+              Contact
             </Link>
             <div className="space-y-2 pt-4 border-t">
               <Link to="/login" className="block">

@@ -13,6 +13,8 @@ import UpdatePassword from './pages/UpdatePassword';
 import Tests from './pages/Tests';
 import TestResults from './pages/TestResults';
 import { ForumLayout } from './components/forum/ForumLayout';
+import Blog from './pages/Blog';
+import Actualites from './pages/Actualites';
 
 // Pages protégées
 import Dashboard from './pages/Dashboard';
@@ -45,13 +47,15 @@ function App() {
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/tests" element={<Tests />} />
             <Route path="/test-results" element={<TestResults />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/actualites" element={<Actualites />} />
             
             {/* Routes forum */}
-            <Route path="/forum" element={<ForumLayout><div>Forum général</div></ForumLayout>} />
-            <Route path="/forum/domain/:id" element={<ForumLayout><div>Forum par domaine</div></ForumLayout>} />
+            <Route path="/forum" element={<ForumLayout>{<div>Forum général</div>}</ForumLayout>} />
+            <Route path="/forum/domain/:id" element={<ForumLayout>{<div>Forum par domaine</div>}</ForumLayout>} />
             <Route path="/forum/create" element={
               <ProtectedRoute>
-                <ForumLayout><div>Créer un post</div></ForumLayout>
+                <ForumLayout>{<div>Créer un post</div>}</ForumLayout>
               </ProtectedRoute>
             } />
             
