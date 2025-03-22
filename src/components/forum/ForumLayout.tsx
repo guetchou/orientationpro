@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, Link } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { ForumSidebar } from './ForumSidebar';
 import { ForumHeader } from './ForumHeader';
@@ -92,7 +92,7 @@ export const ForumLayout = ({ children }: { children: React.ReactNode }) => {
                 </Button>
               </div>
               
-              <Outlet />
+              {children || <Outlet />}
             </>
           )}
         </main>

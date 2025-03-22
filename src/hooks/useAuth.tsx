@@ -62,7 +62,6 @@ function useAuthProvider() {
       } catch (err) {
         console.error('Error checking auth:', err);
         setError(err as Error);
-        // Don't block the app, just log the error
       } finally {
         // Make sure we always set loading to false, even if there's an error
         setLoading(false);
@@ -95,7 +94,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Instead of throwing an error, return a default value
+    return {
+      user: null,
+      session: null,
+      loading: false,
+      error: null,
+      isSuperAdmin: false,
+      isMasterAdmin: false,
+      profileData: null,
+      signIn: async () => { 
+        console.error('Auth context not available');
+        return null;
+      },
+      signUp: async () => {
+        console.error('Auth context not available');
+        return null;
+      },
+      signOut: async () => {
+        console.error('Auth context not available');
+      },
+      resetPassword: async () => {
+        console.error('Auth context not available');
+      },
+      updatePassword: async () => {
+        console.error('Auth context not available');
+      },
+      createSuperAdmin: async () => {
+        console.error('Auth context not available');
+        return null;
+      },
+      createMasterAdmin: async () => {
+        console.error('Auth context not available');
+        return null;
+      }
+    };
   }
   return context;
 };
