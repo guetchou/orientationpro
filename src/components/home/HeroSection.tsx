@@ -1,9 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { GraduationCap, ArrowRight, PlayCircle } from "lucide-react";
+import { GraduationCap, ArrowRight, PlayCircle, ChevronRight, Check } from "lucide-react";
 import { ImageCarousel } from "./ImageCarousel";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 export const HeroSection = () => {
   const container = {
@@ -23,7 +24,7 @@ export const HeroSection = () => {
   };
 
   return (
-    <section className="relative py-16 md:py-24 lg:py-28 overflow-hidden">
+    <section className="relative py-20 md:py-28 lg:py-32 overflow-hidden">
       {/* Gradient orbs in background */}
       <div className="absolute top-40 left-10 w-72 h-72 bg-primary/20 rounded-full filter blur-[100px] opacity-70 animate-pulse-slow" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full filter blur-[100px] opacity-70 animate-pulse-slow animation-delay-2000" />
@@ -38,13 +39,18 @@ export const HeroSection = () => {
             animate="show"
             className="space-y-8"
           >
-            <motion.div variants={item} className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-secondary/20 backdrop-blur-sm text-primary font-medium px-4 py-2 rounded-full">
-              <GraduationCap className="w-5 h-5" />
-              <span className="text-sm font-medium">Plateforme d'orientation professionnelle</span>
+            <motion.div variants={item} className="flex items-center gap-2">
+              <Badge variant="outline" className="py-2 px-4 bg-white/80 backdrop-blur-sm border-primary/20 flex items-center gap-2 font-medium text-primary">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                </span>
+                Plateforme d'orientation professionnelle
+              </Badge>
             </motion.div>
             
             <motion.h1 variants={item} className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-blue-600 to-secondary bg-clip-text text-transparent drop-shadow-sm">
+              <span className="bg-gradient-to-r from-primary via-blue-600 to-secondary bg-clip-text text-transparent drop-shadow-sm animate-gradient">
                 Construisez votre avenir professionnel
               </span>
             </motion.h1>
@@ -67,14 +73,61 @@ export const HeroSection = () => {
               </Button>
             </motion.div>
 
-            <motion.div variants={item} className="flex items-center gap-8 text-sm text-gray-700">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span>Plus de 5000 utilisateurs</span>
+            <motion.div variants={item} className="space-y-4">
+              <p className="text-sm font-medium text-gray-600">Des milliers d'étudiants nous font confiance</p>
+              
+              <div className="flex flex-wrap gap-3">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1 }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-100"
+                >
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-sm">Plus de 5000 utilisateurs</span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.2 }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-100"
+                >
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  <span className="text-sm">95% de satisfaction</span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.4 }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-100"
+                >
+                  <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                  <span className="text-sm">Résultats immédiats</span>
+                </motion.div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span>95% de satisfaction</span>
+            </motion.div>
+            
+            <motion.div 
+              variants={item}
+              className="pt-6 border-t border-gray-100"
+            >
+              <h3 className="text-sm font-medium mb-3 text-gray-700">Avantages exclusifs</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {[
+                  "Tests d'orientation complets",
+                  "Accompagnement personnalisé",
+                  "Suggestions de formations adaptées",
+                  "Ressources pédagogiques gratuites"
+                ].map((advantage, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="mt-0.5 bg-green-100 p-1 rounded-full text-green-600">
+                      <Check size={12} />
+                    </div>
+                    <span className="text-sm text-gray-600">{advantage}</span>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </motion.div>
@@ -86,14 +139,52 @@ export const HeroSection = () => {
             className="lg:block relative"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 to-secondary/30 rounded-2xl transform rotate-6 scale-95 blur-xl opacity-30 animate-pulse-slow" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 border border-white/20">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 border border-white/20 group hover:scale-[1.01] transition-all duration-500">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/10 backdrop-blur-sm z-10"></div>
               <ImageCarousel />
+              
+              {/* Featured call-to-action */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+                className="absolute bottom-4 left-4 right-4 z-20 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-full">
+                    <GraduationCap className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm">Débutez votre parcours</h3>
+                    <p className="text-xs text-gray-500 mb-2">Passez votre premier test d'orientation</p>
+                    <Link to="/tests" className="inline-flex items-center text-xs font-medium text-primary hover:underline">
+                      Commencer maintenant
+                      <ChevronRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
             </div>
             
             {/* Decorative elements */}
             <div className="absolute -top-6 -right-6 w-20 h-20 bg-secondary/30 rounded-full blur-xl" />
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/20 rounded-full blur-xl" />
+            
+            {/* Floating badges */}
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 2, duration: 0.5 }}
+              className="absolute -top-4 right-20 z-20"
+            >
+              <div className="bg-white rounded-full px-3 py-1 shadow-lg flex items-center gap-2 text-sm font-medium text-primary border border-primary/20">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                Tests validés scientifiquement
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
