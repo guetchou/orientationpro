@@ -1,16 +1,16 @@
 
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserResponseDto } from './user.dto';
 
-@Controller('profile')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get()
-  async getProfile(@Request() req): Promise<UserResponseDto> {
+  @Get('current')
+  async getCurrentUser(@Request() req): Promise<UserResponseDto> {
     const user = await this.userService.findById(req.user.userId);
     return {
       id: user.id,
@@ -19,5 +19,11 @@ export class UserController {
       lastName: user.lastName,
       role: user.role,
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/test-history')
+  async getUserTestHistory(@Param('id') id: string) {
+    return this.userService.getUserTestHistory(+id);
   }
 }

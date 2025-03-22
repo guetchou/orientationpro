@@ -58,4 +58,10 @@ export class UserService {
     
     return user;
   }
+
+  async getUserTestHistory(userId: number) {
+    // Cette méthode sera implémentée quand le module TestResults sera disponible
+    // Pour l'instant, nous retournons un tableau vide
+    return [];
+  }
 }

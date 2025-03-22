@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { HealthModule } from './health/health.module';
+import { TestResultsModule } from './test-results/test-results.module';
+import { AIAnalysisModule } from './ai-analysis/ai-analysis.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { HealthModule } from './health/health.module';
     UserModule,
     FeatureFlagsModule,
     HealthModule,
+    TestResultsModule,
+    AIAnalysisModule,
   ],
 })
 export class AppModule {}
