@@ -56,11 +56,21 @@ function App() {
             <Route path="/actualites" element={<Actualites />} />
             
             {/* Routes forum */}
-            <Route path="/forum" element={<ForumLayout><ForumGeneral /></ForumLayout>} />
-            <Route path="/forum/domain/:id" element={<ForumLayout><ForumDomain /></ForumLayout>} />
+            <Route path="/forum" element={
+              <ForumLayout>
+                <ForumGeneral />
+              </ForumLayout>
+            } />
+            <Route path="/forum/domain/:id" element={
+              <ForumLayout>
+                <ForumDomain />
+              </ForumLayout>
+            } />
             <Route path="/forum/create" element={
               <ProtectedRoute>
-                <ForumLayout><ForumCreate /></ForumLayout>
+                <ForumLayout>
+                  <ForumCreate />
+                </ForumLayout>
               </ProtectedRoute>
             } />
             

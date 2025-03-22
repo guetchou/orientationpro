@@ -1,9 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Newspaper, Calendar, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-export const ActualitesHeader = () => {
+interface ActualitesHeaderProps {
+  onSearch: (term: string) => void;
+}
+
+export const ActualitesHeader = ({ onSearch }: ActualitesHeaderProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(searchTerm);
+  };
+
   return (
     <div className="text-center mb-12">
       <div className="inline-flex items-center mb-4">
@@ -15,13 +27,22 @@ export const ActualitesHeader = () => {
         Restez informé des dernières nouvelles et événements concernant l'orientation professionnelle au Congo
       </p>
       
-      <div className="relative max-w-md mx-auto mt-8">
+      <form onSubmit={handleSearch} className="relative max-w-md mx-auto mt-8 flex items-center">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher une actualité..."
-          className="pl-10"
+          className="pl-10 pr-20"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
-      </div>
+        <Button 
+          type="submit" 
+          size="sm" 
+          className="absolute right-1 top-1 h-8"
+        >
+          Rechercher
+        </Button>
+      </form>
     </div>
   );
 };

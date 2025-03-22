@@ -8,6 +8,8 @@ import { ActualitesList } from "@/components/actualites/ActualitesList";
 import { ActualitesHeader } from "@/components/actualites/ActualitesHeader";
 import { ActualitesFeatured } from "@/components/actualites/ActualitesFeatured";
 import { ActualitesCategories } from "@/components/actualites/ActualitesCategories";
+import { ActualitesStats } from "@/components/actualites/ActualitesStats";
+import { toast } from "sonner";
 
 export interface Actualite {
   id: string;
@@ -24,6 +26,7 @@ export default function Actualites() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [featuredActualite, setFeaturedActualite] = useState<Actualite | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchActualites();
@@ -59,18 +62,28 @@ export default function Actualites() {
       }
     } catch (error) {
       console.error("Erreur lors du chargement des actualités:", error);
+      toast.error("Erreur lors du chargement des actualités");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   const filterByCategory = (category: string | null) => {
     setSelectedCategory(category);
   };
 
-  const filteredActualites = selectedCategory 
-    ? actualites.filter(item => item.category === selectedCategory)
-    : actualites;
+  // Filtrer par catégorie et terme de recherche
+  const filteredActualites = actualites
+    .filter(item => !selectedCategory || item.category === selectedCategory)
+    .filter(item => 
+      searchTerm === '' || 
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   // Exclure l'actualité mise en avant de la liste principale
   const regularActualites = featuredActualite 
@@ -79,6 +92,12 @@ export default function Actualites() {
 
   // Extraire les catégories uniques
   const categories = [...new Set(actualites.map(item => item.category))];
+  
+  // Compter les actualités par catégorie
+  const categoriesCount = actualites.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/10 via-background to-secondary/10">
@@ -88,7 +107,7 @@ export default function Actualites() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-20">
-        <ActualitesHeader />
+        <ActualitesHeader onSearch={handleSearch} />
         
         {loading ? (
           <div className="text-center py-12">
@@ -100,6 +119,11 @@ export default function Actualites() {
         ) : (
           <>
             {featuredActualite && <ActualitesFeatured actualite={featuredActualite} />}
+            
+            <ActualitesStats 
+              categoriesCount={categoriesCount} 
+              totalArticles={actualites.length} 
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12">
               <div className="md:col-span-1">
