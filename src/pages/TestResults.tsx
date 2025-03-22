@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,12 +33,15 @@ const TestResults = () => {
           return;
         }
 
+        // Convert user.id to string if it's a number
+        const userId = typeof user.id === 'number' ? String(user.id) : user.id;
+
         // Check if the user has paid for this test result
         if (testId) {
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
             .select('*')
-            .eq('user_id', user?.id)
+            .eq('user_id', userId)
             .eq('item_id', testId)
             .eq('status', 'COMPLETED')
             .single();
@@ -57,7 +59,7 @@ const TestResults = () => {
         const { data, error } = await supabase
           .from('test_results')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('id', testId)
           .single();
 

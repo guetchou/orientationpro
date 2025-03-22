@@ -7,7 +7,7 @@ import { useAdminMethods } from './useAdminMethods';
 
 // Types for authentication
 export interface User {
-  id: number;
+  id: string; // Changed from number to string to match MySQL UUID format
   email: string;
   firstName: string;
   lastName: string;

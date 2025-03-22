@@ -44,7 +44,7 @@ export function useAuthMethods() {
     }
   };
 
-  const signUp = async (email: string, password: string, userData = {}) => {
+  const signUp = async (email: string, password: string, userData: Record<string, any> = {}) => {
     try {
       setLoading(true);
       console.log("Attempting to sign up:", email);
@@ -52,8 +52,8 @@ export function useAuthMethods() {
       const response = await axios.post(`${API_URL}/auth/register`, {
         email,
         password,
-        firstName: userData.first_name || 'New',
-        lastName: userData.last_name || 'User',
+        firstName: userData.firstName || 'New',
+        lastName: userData.lastName || 'User',
         ...userData
       });
 

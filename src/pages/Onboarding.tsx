@@ -36,10 +36,12 @@ const Onboarding = () => {
       if (!user) return;
 
       try {
+        const userId = typeof user.id === 'number' ? String(user.id) : user.id;
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
 
         if (error) throw error;
@@ -100,10 +102,12 @@ const Onboarding = () => {
     setLoading(true);
 
     try {
+      const userId = typeof user.id === 'number' ? String(user.id) : user.id;
+      
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
+          id: userId,
           department: formData.role || 'etudiant',
           status: 'active',
           first_name: formData.firstName,

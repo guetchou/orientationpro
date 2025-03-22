@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
@@ -35,11 +34,13 @@ export default function Dashboard() {
       }
 
       try {
-        // Récupérer le profil
+        // Récupérer le profil - make sure to convert id to string if it's a number
+        const userId = typeof user.id === 'number' ? String(user.id) : user.id;
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
 
         if (error) {
@@ -70,12 +71,12 @@ export default function Dashboard() {
         const { data: testsData } = await supabase
           .from('test_results')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
 
         const { data: appointmentsData } = await supabase
           .from('appointments')
           .select('*')
-          .eq('student_id', user.id);
+          .eq('student_id', userId);
 
         setStats({
           total_students: 1, // L'étudiant lui-même
