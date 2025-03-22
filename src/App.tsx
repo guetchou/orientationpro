@@ -36,16 +36,16 @@ import CareerTransitionTest from './pages/CareerTransitionTest';
 import LearningStyleTest from './pages/LearningStyleTest';
 import RetirementReadinessTest from './pages/RetirementReadinessTest';
 
+// Composants pour le forum
+const ForumGeneral = () => <div>Forum général</div>;
+const ForumDomain = () => <div>Forum par domaine</div>;
+const ForumCreate = () => <div>Créer un post</div>;
+
 // Route protégée qui vérifie l'authentification
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('authToken') !== null;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
-
-// Composants pour le forum
-const ForumGeneral = () => <div>Forum général</div>;
-const ForumDomain = () => <div>Forum par domaine</div>;
-const ForumCreate = () => <div>Créer un post</div>;
 
 function App() {
   return (

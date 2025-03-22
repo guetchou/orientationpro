@@ -1,16 +1,16 @@
 
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback } from "react";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { AppointmentManagement } from "@/components/conseiller/AppointmentManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConseillerStats } from "@/hooks/useConseillerStats";
 import { handleError } from "@/utils/errorHandler";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useUser } from "@supabase/auth-helpers-react";
-import { StatisticsReport } from "./StatisticsReport";
-import { AvailabilityManager } from "./AvailabilityManager";
-import { ConseillerStats } from "@/types/dashboard";
+import { AppointmentManagementTab } from "./tabs/AppointmentManagementTab";
+import { StudentsTab } from "./tabs/StudentsTab";
+import { ReportsTab } from "./tabs/ReportsTab";
+import { AvailabilityTab } from "./tabs/AvailabilityTab";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +31,7 @@ export const ConseillerDashboard = () => {
     handleError(error);
   }, []);
 
-  const [fallbackStats] = useState<ConseillerStats>({
+  const [fallbackStats] = useState({
     total_students: 35,
     tests_completed: 87,
     appointments_scheduled: 24,
@@ -61,28 +61,19 @@ export const ConseillerDashboard = () => {
           </TabsList>
 
           <TabsContent value="appointments">
-            <AppointmentManagement />
+            <AppointmentManagementTab />
           </TabsContent>
 
           <TabsContent value="students">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mes Étudiants</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500">
-                  Liste des étudiants à venir...
-                </p>
-              </CardContent>
-            </Card>
+            <StudentsTab />
           </TabsContent>
 
           <TabsContent value="reports">
-            <StatisticsReport />
+            <ReportsTab />
           </TabsContent>
 
           <TabsContent value="availability">
-            <AvailabilityManager />
+            <AvailabilityTab />
           </TabsContent>
         </Tabs>
       </div>

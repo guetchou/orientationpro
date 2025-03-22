@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapDisplay } from "./map/MapDisplay";
 import { EstablishmentFilters } from "./map/EstablishmentFilters";
 import { EstablishmentList } from "./map/EstablishmentList";
@@ -8,52 +7,21 @@ import { Establishment } from "@/types/establishments";
 import { fetchEstablishments } from "./map/mapUtils";
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useEstablishmentData } from './map/useEstablishmentData';
+import { MobileToggleList } from './map/MobileToggleList';
 
 export const EstablishmentsMapSection = () => {
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
-  const [filteredEstablishments, setFilteredEstablishments] = useState<Establishment[]>([]);
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const {
+    establishments, 
+    filteredEstablishments, 
+    selectedType, 
+    setSelectedType,
+    searchQuery, 
+    setSearchQuery
+  } = useEstablishmentData();
+  
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [isMobileListOpen, setIsMobileListOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchedEstablishments = fetchEstablishments();
-    setEstablishments(fetchedEstablishments);
-    setFilteredEstablishments(fetchedEstablishments);
-  }, []);
-
-  useEffect(() => {
-    let filtered = establishments;
-
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(est => est.type === selectedType);
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(est => 
-        est.name.toLowerCase().includes(query) || 
-        est.description.toLowerCase().includes(query) ||
-        (est.neighborhood && est.neighborhood.toLowerCase().includes(query))
-      );
-    }
-
-    setFilteredEstablishments(filtered);
-  }, [selectedType, searchQuery, establishments]);
-
-  const getMarkerIcon = (type: string) => {
-    switch (type) {
-      case 'university':
-        return '🎓';
-      case 'vocational':
-        return '🔧';
-      case 'highschool':
-        return '🏫';
-      default:
-        return '📍';
-    }
-  };
 
   return (
     <section className="py-12 bg-white">
@@ -87,14 +55,7 @@ export const EstablishmentsMapSection = () => {
                 uniqueTypes={['university', 'vocational', 'highschool']}
               />
               
-              <div className="block lg:hidden">
-                <Button 
-                  onClick={() => setIsMobileListOpen(!isMobileListOpen)}
-                  className="w-full"
-                >
-                  {isMobileListOpen ? 'Masquer la liste' : 'Afficher la liste d\'établissements'}
-                </Button>
-              </div>
+              <MobileToggleList isMobileListOpen={isMobileListOpen} setIsMobileListOpen={setIsMobileListOpen} />
               
               <div className={`lg:block ${isMobileListOpen ? 'block' : 'hidden'}`}>
                 <EstablishmentList 
