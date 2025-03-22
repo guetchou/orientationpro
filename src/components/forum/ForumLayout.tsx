@@ -31,7 +31,13 @@ export const ForumLayout = ({ children }: { children: React.ReactNode }) => {
           throw new Error(error.message);
         }
 
-        setDomains(data || []);
+        // Ensure data has the correct shape with string IDs
+        const formattedDomains: ForumDomain[] = data?.map(domain => ({
+          ...domain,
+          id: String(domain.id)
+        })) || [];
+
+        setDomains(formattedDomains);
       } catch (err: any) {
         console.error('Error fetching forum domains:', err);
         setError(err.message);
