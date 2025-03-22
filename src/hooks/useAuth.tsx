@@ -9,6 +9,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
 
   useEffect(() => {
     // Vérifier l'état de l'authentification actuelle
@@ -22,16 +23,17 @@ export function useAuth() {
 
         setUser(currentUser);
         
-        // Vérifier si l'utilisateur est un super admin
+        // Vérifier si l'utilisateur est un super admin ou master admin
         if (currentUser) {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('department, is_super_admin')
+            .select('department, is_super_admin, is_master_admin')
             .eq('id', currentUser.id)
             .single();
             
-          if (profileData && profileData.is_super_admin) {
-            setIsSuperAdmin(true);
+          if (profileData) {
+            setIsSuperAdmin(profileData.is_super_admin || false);
+            setIsMasterAdmin(profileData.is_master_admin || false);
           }
         }
       } catch (err) {
@@ -48,17 +50,24 @@ export function useAuth() {
       console.log('Auth state changed:', event, session?.user?.id);
       setUser(session?.user ?? null);
       
-      // Vérifier si l'utilisateur est un super admin lors des changements d'état d'authentification
+      // Vérifier si l'utilisateur est un super admin ou master admin lors des changements d'état d'authentification
       if (session?.user) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('department, is_super_admin')
+          .select('department, is_super_admin, is_master_admin')
           .eq('id', session.user.id)
           .single();
           
-        setIsSuperAdmin(profileData?.is_super_admin || false);
+        if (profileData) {
+          setIsSuperAdmin(profileData.is_super_admin || false);
+          setIsMasterAdmin(profileData.is_master_admin || false);
+        } else {
+          setIsSuperAdmin(false);
+          setIsMasterAdmin(false);
+        }
       } else {
         setIsSuperAdmin(false);
+        setIsMasterAdmin(false);
       }
       
       setLoading(false);
@@ -213,6 +222,47 @@ export function useAuth() {
       setLoading(false);
     }
   };
+  
+  const createMasterAdmin = async (email: string, password: string, firstName: string, lastName: string) => {
+    try {
+      setLoading(true);
+      
+      // Créer un nouvel utilisateur
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      if (data.user) {
+        // Mettre à jour le profil pour indiquer qu'il s'agit d'un master admin
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            department: 'admin',
+            is_super_admin: true,
+            is_master_admin: true,
+            first_name: firstName,
+            last_name: lastName,
+            status: 'active',
+          })
+          .eq('id', data.user.id);
+
+        if (profileError) throw profileError;
+        
+        toast.success('Compte master admin créé avec succès !');
+      }
+      
+      return data;
+    } catch (err) {
+      console.error("Erreur lors de la création du master admin:", err);
+      toast.error("Erreur lors de la création du master admin");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
     user,
@@ -224,6 +274,8 @@ export function useAuth() {
     resetPassword,
     updatePassword,
     isSuperAdmin,
+    isMasterAdmin,
     createSuperAdmin,
+    createMasterAdmin,
   };
 }

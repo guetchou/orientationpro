@@ -9,10 +9,11 @@ import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from "
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SuperAdmin() {
   const navigate = useNavigate();
-  const { createSuperAdmin } = useAuth();
+  const { createSuperAdmin, createMasterAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +24,7 @@ export default function SuperAdmin() {
     firstName: "",
     lastName: ""
   });
+  const [activeTab, setActiveTab] = useState("super");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,7 +67,7 @@ export default function SuperAdmin() {
     setError(null);
 
     try {
-      if (createSuperAdmin) {
+      if (activeTab === "super" && createSuperAdmin) {
         await createSuperAdmin(
           formData.email,
           formData.password,
@@ -74,12 +76,22 @@ export default function SuperAdmin() {
         );
         
         toast.success("Compte super administrateur créé avec succès !");
-        navigate("/login");
+      } else if (activeTab === "master" && createMasterAdmin) {
+        await createMasterAdmin(
+          formData.email,
+          formData.password,
+          formData.firstName,
+          formData.lastName
+        );
+        
+        toast.success("Compte master administrateur créé avec succès !");
       } else {
-        throw new Error("La fonction createSuperAdmin n'est pas disponible");
+        throw new Error("La fonction de création d'administrateur n'est pas disponible");
       }
+      
+      navigate("/login");
     } catch (error: any) {
-      console.error("Erreur lors de la création du super admin:", error);
+      console.error("Erreur lors de la création de l'administrateur:", error);
       setError(error.message || "Une erreur s'est produite lors de la création du compte");
     } finally {
       setLoading(false);
@@ -111,12 +123,31 @@ export default function SuperAdmin() {
         >
           <Card className="border-0 shadow-lg bg-white/90 backdrop-blur">
             <CardHeader>
-              <CardTitle className="text-2xl text-center font-heading">Créer un Super Administrateur</CardTitle>
+              <CardTitle className="text-2xl text-center font-heading">Créer un Administrateur</CardTitle>
               <CardDescription className="text-center">
-                Créez un compte avec des privilèges complets sur la plateforme
+                Créez un compte avec des privilèges administratifs sur la plateforme
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <Tabs defaultValue="super" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-2 mb-4">
+                  <TabsTrigger value="super">Super Admin</TabsTrigger>
+                  <TabsTrigger value="master">Master Admin</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="super">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Les Super Admins ont accès à toutes les fonctionnalités administratives de base.
+                  </p>
+                </TabsContent>
+                
+                <TabsContent value="master">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Les Master Admins ont accès à toutes les fonctionnalités, y compris les privilèges avancés et les configurations système.
+                  </p>
+                </TabsContent>
+              </Tabs>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <motion.div
@@ -237,7 +268,7 @@ export default function SuperAdmin() {
                       Création en cours...
                     </>
                   ) : (
-                    "Créer le compte super admin"
+                    activeTab === "super" ? "Créer le compte super admin" : "Créer le compte master admin"
                   )}
                 </Button>
               </form>
