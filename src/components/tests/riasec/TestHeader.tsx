@@ -4,26 +4,55 @@ import { motion } from "framer-motion";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { TestHeaderProps } from "./types";
 
+// Animation variants
+const headerAnimations = {
+  title: {
+    initial: { opacity: 0, y: -10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 }
+  },
+  subtitle: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { duration: 0.5, delay: 0.2 }
+  },
+  progressBar: {
+    initial: { width: 0 },
+    animate: (progress: number) => ({ width: `${progress}%` }),
+    transition: { duration: 0.5, ease: "easeInOut" }
+  },
+  progressGlow: {
+    animate: (progress: number) => ({ 
+      width: [`${progress}%`, `${progress + 10}%`, `${progress}%`],
+      x: [0, 10, 0]
+    }),
+    transition: { 
+      duration: 1.5, 
+      ease: "easeInOut", 
+      repeat: Infinity,
+      repeatType: "mirror"
+    }
+  }
+};
+
 export const TestHeader = ({ currentQuestion, totalQuestions }: TestHeaderProps) => {
   // Calculate progress percentage
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   
   return (
     <div className="mb-12">
+      {/* Test Title */}
       <motion.h1 
         className="font-heading text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        {...headerAnimations.title}
       >
         Test d'orientation RIASEC
       </motion.h1>
       
+      {/* Question Counter */}
       <motion.div 
         className="flex items-center justify-center gap-2 mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        {...headerAnimations.subtitle}
       >
         <BookOpen className="h-5 w-5 text-primary/60" />
         <p className="text-gray-600 text-center flex items-center">
@@ -32,27 +61,27 @@ export const TestHeader = ({ currentQuestion, totalQuestions }: TestHeaderProps)
         </p>
       </motion.div>
       
+      {/* Progress Bar */}
+      <ProgressBar progress={progress} />
+    </div>
+  );
+};
+
+// Separate progress bar component
+const ProgressBar = ({ progress }: { progress: number }) => {
+  return (
+    <>
       <div className="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden mt-4 shadow-inner">
         <motion.div
           className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          custom={progress}
+          {...headerAnimations.progressBar}
         />
         
         <motion.div
           className="absolute top-0 left-0 h-full bg-white/30 rounded-full"
-          initial={{ width: 0 }}
-          animate={{ 
-            width: [`${progress}%`, `${progress + 10}%`, `${progress}%`],
-            x: [0, 10, 0]
-          }}
-          transition={{ 
-            duration: 1.5, 
-            ease: "easeInOut", 
-            repeat: Infinity,
-            repeatType: "mirror"
-          }}
+          custom={progress}
+          {...headerAnimations.progressGlow}
           style={{ width: `${progress/3}%` }}
         />
       </div>
@@ -62,6 +91,6 @@ export const TestHeader = ({ currentQuestion, totalQuestions }: TestHeaderProps)
         <span>Progression: {Math.round(progress)}%</span>
         <span>Fin</span>
       </div>
-    </div>
+    </>
   );
 };
