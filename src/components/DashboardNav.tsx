@@ -7,16 +7,12 @@ import {
   Key,
 } from "lucide-react";
 
-import { MainNavItem } from "@/types";
 import { NavItem, NavList } from "@/components/ui/nav";
 import { useAuth } from "@/hooks/useAuth";
 
-interface DashboardNavProps {
-  items?: MainNavItem[];
-}
-
 export function DashboardNav() {
-  const { isSuperAdmin } = useAuth();
+  const { user, profileData } = useAuth();
+  const isSuperAdmin = profileData?.role === 'super_admin';
 
   return (
     <NavList>

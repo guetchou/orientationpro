@@ -11,6 +11,11 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import RiasecTest from "@/pages/RiasecTest";
+import EmotionalTest from "@/pages/EmotionalTest";
+import LearningStyleTest from "@/pages/LearningStyleTest";
+import MultipleIntelligenceTest from "@/pages/MultipleIntelligenceTest";
+import CareerTransitionTest from "@/pages/CareerTransitionTest";
+import NoDiplomaCareerTest from "@/pages/NoDiplomaCareerTest";
 import Establishments from "@/pages/Establishments";
 import Contact from "@/pages/Contact";
 import Impressum from "@/pages/Impressum";
@@ -35,7 +40,15 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/riasec-test" element={<RiasecTest />} />
+          
+          {/* Test Routes */}
+          <Route path="/test-riasec" element={<RiasecTest />} />
+          <Route path="/test-emotional" element={<EmotionalTest />} />
+          <Route path="/test-learning" element={<LearningStyleTest />} />
+          <Route path="/test-multiple" element={<MultipleIntelligenceTest />} />
+          <Route path="/test-career-transition" element={<CareerTransitionTest />} />
+          <Route path="/test-no-diploma" element={<NoDiplomaCareerTest />} />
+          
           <Route path="/establishments" element={<Establishments />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/impressum" element={<Impressum />} />

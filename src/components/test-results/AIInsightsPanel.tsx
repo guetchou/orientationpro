@@ -1,43 +1,39 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AIEnhancedAnalysis } from "@/types/test";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AIEnhancedAnalysis } from '@/types/test';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-interface AIInsightsPanelProps {
-  analysis: AIEnhancedAnalysis | null;
-  loading: boolean;
+export interface AIInsightsPanelProps {
+  analysis: AIEnhancedAnalysis;
+  testType: string;
 }
 
-export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, loading }) => {
-  if (loading) {
+export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, testType }) => {
+  if (!analysis) {
     return (
-      <Card className="w-full">
+      <Card className="mb-6">
         <CardHeader>
-          <Skeleton className="h-8 w-3/4 mb-2" />
-          <Skeleton className="h-4 w-1/2" />
+          <CardTitle className="text-xl font-semibold">Analyse IA en cours de génération</CardTitle>
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-4 w-full mb-3" />
-          <Skeleton className="h-4 w-full mb-3" />
-          <Skeleton className="h-4 w-3/4" />
+          <p className="text-muted-foreground">
+            Nos algorithmes sont en train d'analyser vos résultats pour générer des insights personnalisés.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
-  if (!analysis || analysis.error) {
+  if (analysis.error) {
     return (
-      <Card className="w-full">
+      <Card className="mb-6 border-red-200">
         <CardHeader>
-          <CardTitle>Analyse IA</CardTitle>
-          <CardDescription>
-            {analysis?.error || "Aucune analyse IA disponible pour ce test."}
-          </CardDescription>
+          <CardTitle className="text-xl font-semibold text-red-600">Analyse IA indisponible</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Veuillez compléter le test pour recevoir une analyse approfondie.
+          <p className="text-muted-foreground">
+            Nous n'avons pas pu générer une analyse pour ce test. Veuillez réessayer ultérieurement.
           </p>
         </CardContent>
       </Card>
@@ -45,38 +41,56 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, load
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Analyse IA avancée</CardTitle>
-        <CardDescription>Basée sur vos réponses et notre modèle d'intelligence artificielle</CardDescription>
+    <Card className="mb-6 border-primary/20">
+      <CardHeader className="bg-primary/5">
+        <CardTitle className="text-xl font-semibold">Analyse IA de votre profil {testType}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Traits dominants</h3>
-            <ul className="list-disc pl-5 space-y-1">
+      <CardContent className="pt-6">
+        {analysis.dominantTraits && analysis.dominantTraits.length > 0 && (
+          <div className="mb-5">
+            <h4 className="font-medium text-lg mb-2">Traits dominants</h4>
+            <div className="flex flex-wrap gap-2">
               {analysis.dominantTraits.map((trait, index) => (
-                <li key={index} className="text-sm">{trait}</li>
+                <Badge key={index} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                  {trait}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {analysis.strengths && analysis.strengths.length > 0 && (
+          <div className="mb-5">
+            <h4 className="font-medium text-lg mb-2">Vos forces</h4>
+            <ul className="space-y-1 list-disc pl-5">
+              {analysis.strengths.map((strength, index) => (
+                <li key={index}>{strength}</li>
               ))}
             </ul>
           </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Combinaisons de traits significatives</h3>
-            <p className="text-sm text-muted-foreground">
-              {analysis.traitCombinations.length > 0 
-                ? analysis.traitCombinations.join(', ') 
-                : "Aucune combinaison significative détectée."}
-            </p>
+        )}
+
+        {analysis.weaknesses && analysis.weaknesses.length > 0 && (
+          <div className="mb-5">
+            <h4 className="font-medium text-lg mb-2">Axes d'amélioration</h4>
+            <ul className="space-y-1 list-disc pl-5">
+              {analysis.weaknesses.map((weakness, index) => (
+                <li key={index}>{weakness}</li>
+              ))}
+            </ul>
           </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Recommandations personnalisées</h3>
-            <p className="text-sm text-muted-foreground">
-              Basées sur votre profil {analysis.testType}, nous vous recommandons d'explorer les domaines où vos traits dominants peuvent s'épanouir.
-            </p>
+        )}
+
+        {analysis.recommendations && analysis.recommendations.length > 0 && (
+          <div className="mb-0">
+            <h4 className="font-medium text-lg mb-2">Recommandations personnalisées</h4>
+            <ul className="space-y-1 list-disc pl-5">
+              {analysis.recommendations.map((recommendation, index) => (
+                <li key={index}>{recommendation}</li>
+              ))}
+            </ul>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

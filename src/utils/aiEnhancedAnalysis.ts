@@ -1,61 +1,82 @@
 
-import { TestResult } from "@/types/test";
-import { AIEnhancedAnalysis } from "@/types/test";
+import { TestResult, AIEnhancedAnalysis } from '@/types/test';
+import { supabase } from '@/lib/supabaseClient';
 
-// Function to generate AI enhanced analysis from test results
-export const generateAIEnhancedAnalysis = async (testResult: TestResult): Promise<AIEnhancedAnalysis> => {
+/**
+ * Fetch AI enhanced analysis for a test result
+ * @param testResult The test result to analyze
+ * @returns Promise with AI enhanced analysis
+ */
+export async function performAIEnhancedAnalysis(testResult: TestResult): Promise<AIEnhancedAnalysis> {
   try {
-    // This would typically be an API call to a backend service
-    // For now, we'll mock a response based on the test type
-    const testType = testResult.test_type || "unknown";
-    
-    // Mock response with basic analysis
-    return {
-      testType: testType,
-      dominantTraits: mockDominantTraits(testType, testResult),
-      traitCombinations: ["Analytical thinking + Problem solving", "Creative approach + Practical implementation"],
-      strengths: ["Ability to analyze complex information", "Finding innovative solutions", "Adapting to new situations"],
-      weaknesses: ["May overthink simple problems", "Occasional difficulty with time management"],
-      recommendations: ["Focus on projects requiring analytical thinking", "Consider roles that balance creativity and structure"]
-    };
+    // Call the AI analysis endpoint through Supabase Edge Functions
+    const { data, error } = await supabase.functions.invoke('analyze-test-results', {
+      body: { testResult }
+    });
+
+    if (error) {
+      console.error('Error calling AI analysis:', error);
+      return createErrorAnalysis(`Failed to analyze test: ${error.message}`);
+    }
+
+    return data.analysis || createGenericAnalysis(testResult.test_type);
   } catch (error) {
-    console.error("Error generating AI enhanced analysis:", error);
-    return {
-      testType: "unknown",
-      dominantTraits: [],
-      traitCombinations: [],
-      strengths: [],
-      weaknesses: [],
-      recommendations: [],
-      error: "Failed to generate analysis"
+    console.error('Error in AI analysis:', error);
+    return createErrorAnalysis('An unexpected error occurred during analysis');
+  }
+}
+
+// For compatibility with existing code
+export async function getAIEnhancedAnalysis(testType: string, results: any): Promise<AIEnhancedAnalysis> {
+  try {
+    // Create a mock test result to pass to the analysis function
+    const mockTestResult: TestResult = {
+      id: 'temp-' + Date.now(),
+      created_at: new Date().toISOString(),
+      user_id: 'temp-user',
+      test_type: testType,
+      result_data: results
     };
-  }
-};
 
-// Helper function to generate mock dominant traits based on test type
-const mockDominantTraits = (testType: string, testResult: any): string[] => {
-  switch (testType.toLowerCase()) {
-    case "riasec":
-      return ["Investigative", "Artistic", "Social"];
-    case "learning_style":
-      return ["Visual learner", "Hands-on approach", "Analytical thinking"];
-    case "emotional":
-      return ["High empathy", "Good self-awareness", "Effective communication"];
-    case "multiple_intelligence":
-      return ["Logical-mathematical intelligence", "Linguistic intelligence", "Interpersonal intelligence"];
-    case "career_transition":
-      return ["Adaptability", "Transferable skills expertise", "Learning agility"];
-    case "no_diploma_career":
-      return ["Practical skills oriented", "Problem-solving ability", "Self-learning capacity"];
-    case "retirement_readiness":
-      return ["Financial awareness", "Health consciousness", "Social connection"];
-    case "senior_employment":
-      return ["Experience leveraging", "Mentorship potential", "Work-life balance oriented"];
-    default:
-      return ["Analytical thinking", "Proactive approach", "Detail-oriented"];
+    return await performAIEnhancedAnalysis(mockTestResult);
+  } catch (error) {
+    console.error('Error in getAIEnhancedAnalysis:', error);
+    return createErrorAnalysis('Failed to generate analysis');
   }
-};
+}
 
-// For backwards compatibility 
-export const performAIEnhancedAnalysis = generateAIEnhancedAnalysis;
-export const getAIEnhancedAnalysis = generateAIEnhancedAnalysis;
+// Helper function to create an error analysis
+function createErrorAnalysis(errorMessage: string): AIEnhancedAnalysis {
+  return {
+    testType: "unknown",
+    dominantTraits: [],
+    traitCombinations: [],
+    strengths: [],
+    weaknesses: [],
+    recommendations: [],
+    error: errorMessage
+  };
+}
+
+// Helper function to create a generic analysis
+function createGenericAnalysis(testType: string): AIEnhancedAnalysis {
+  return {
+    testType: testType || "general",
+    dominantTraits: ["Analytical thinking", "Problem solving", "Adaptability"],
+    traitCombinations: ["Analysis + Creativity", "Adaptability + Resilience"],
+    strengths: [
+      "Capacity to analyze complex situations",
+      "Determination to achieve goals",
+      "Flexibility in the face of change"
+    ],
+    weaknesses: [
+      "Could improve balance between reflection and action",
+      "Occasional tendency to over-analyze"
+    ],
+    recommendations: [
+      "Use analytical strengths in decision making",
+      "Balance reflection with concrete action",
+      "Leverage adaptability as a competitive advantage"
+    ]
+  };
+}
