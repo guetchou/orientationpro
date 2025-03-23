@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,58 +9,8 @@ import { TestCompletion } from "@/components/tests/TestCompletion";
 import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
 import { useRiasecTest } from "@/hooks/useRiasecTest";
 import { RiasecQuestionData } from "@/components/tests/riasec/types";
-
-// Import the RIASEC questions
-const riasecQuestions: RiasecQuestionData[] = [
-  {
-    question: "J'aime résoudre des problèmes mathématiques ou scientifiques.",
-    category: "investigative"
-  },
-  {
-    question: "J'aime construire ou réparer des objets.",
-    category: "realistic"
-  },
-  {
-    question: "J'aime travailler en équipe.",
-    category: "social"
-  },
-  {
-    question: "J'aime être organisé et suivre une routine.",
-    category: "conventional"
-  },
-  {
-    question: "J'aime dessiner, peindre ou jouer d'un instrument de musique.",
-    category: "artistic"
-  },
-  {
-    question: "J'aime persuader ou influencer les autres.",
-    category: "enterprising"
-  },
-  {
-    question: "J'aime faire des expériences et des recherches.",
-    category: "investigative"
-  },
-  {
-    question: "J'aime travailler avec des outils et des machines.",
-    category: "realistic"
-  },
-  {
-    question: "J'aime aider les autres à résoudre leurs problèmes.",
-    category: "social"
-  },
-  {
-    question: "J'aime suivre des instructions détaillées.",
-    category: "conventional"
-  },
-  {
-    question: "J'aime exprimer ma créativité.",
-    category: "artistic"
-  },
-  {
-    question: "J'aime diriger et prendre des décisions.",
-    category: "enterprising"
-  }
-];
+import { riasecQuestions } from "@/data/questions";
+import { pageTransitions } from "@/animations/transitions";
 
 export default function RiasecTest() {
   const {
@@ -76,27 +25,13 @@ export default function RiasecTest() {
     viewResults
   } = useRiasecTest();
 
-  // Page transitions
-  const pageTransitions = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-    transition: { duration: 0.4 }
-  };
-
-  // Handle question answer with current question data
-  const onAnswerQuestion = (score: number) => {
-    handleAnswer(score, riasecQuestions);
-  };
+  const onAnswerQuestion = (score: number) => handleAnswer(score, riasecQuestions);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-900 dark:to-gray-700 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
-          {!started && !completed && (
-            <RiasecTestIntro startTest={startTest} />
-          )}
-
+          {!started && !completed && <RiasecTestIntro startTest={startTest} />}
           {started && !completed && (
             <RiasecTestQuestions
               currentQuestion={currentQuestion}
@@ -108,13 +43,9 @@ export default function RiasecTest() {
               loading={loading}
             />
           )}
-
           {completed && (
             <motion.div key="completion" {...pageTransitions}>
-              <TestCompletion
-                title="RIASEC"
-                onViewResults={viewResults}
-              />
+              <TestCompletion title="RIASEC" onViewResults={viewResults} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -123,33 +54,18 @@ export default function RiasecTest() {
   );
 }
 
-// Test Introduction Component
-const RiasecTestIntro = ({ startTest }: { startTest: () => void }) => {
-  return (
-    <motion.div 
-      key="intro" 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4 }}
-    >
-      <TestDescription
-        title="Test d'Orientation RIASEC"
-        description="Découvrez vos intérêts professionnels dominants à travers ce test basé sur la théorie des types de personnalité RIASEC de John Holland. Ce test vous aidera à identifier les domaines professionnels qui correspondent le mieux à votre personnalité."
-        time="5-10 minutes"
-        benefits={[
-          "Identifiez vos intérêts professionnels dominants",
-          "Découvrez des métiers alignés avec votre personnalité",
-          "Obtenez des conseils personnalisés pour votre orientation",
-          "Recevez une analyse approfondie de votre profil RIASEC"
-        ]}
-        onStart={startTest}
-      />
-    </motion.div>
-  );
-};
+const RiasecTestIntro = ({ startTest }: { startTest: () => void }) => (
+  <motion.div key="intro" {...pageTransitions}>
+    <TestDescription
+      title="Test d'Orientation RIASEC"
+      description="Découvrez vos intérêts professionnels dominants à travers ce test basé sur la théorie des types de personnalité RIASEC de John Holland."
+      time="5-10 minutes"
+      benefits={["Identifiez vos intérêts professionnels", "Découvrez des métiers alignés avec votre personnalité"]}
+      onStart={startTest}
+    />
+  </motion.div>
+);
 
-// Test Questions Component
 interface RiasecTestQuestionsProps {
   currentQuestion: number;
   totalQuestions: number;
@@ -168,61 +84,28 @@ const RiasecTestQuestions = ({
   handlePrevious,
   resetTest,
   loading
-}: RiasecTestQuestionsProps) => {
-  return (
-    <motion.div
-      key="test"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="bg-white/70 backdrop-blur shadow-xl border-primary/10">
-        <CardContent className="pt-6 pb-8">
-          <TestHeader 
-            currentQuestion={currentQuestion}
-            totalQuestions={totalQuestions} 
-          />
-          
-          <AnimatePresence mode="wait">
-            <QuestionDisplay
-              currentQuestion={currentQuestion}
-              question={question}
-              onAnswer={onAnswer}
-              loading={loading}
-            />
-          </AnimatePresence>
-          
-          <div className="flex justify-between mt-8 pt-4 border-t border-gray-100">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentQuestion === 0 || loading}
-              className="gap-2"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Précédent
+}: RiasecTestQuestionsProps) => (
+  <motion.div key="test" {...pageTransitions}>
+    <Card className="bg-white/70 dark:bg-gray-800 backdrop-blur-xl shadow-xl border-gray-200 dark:border-gray-600">
+      <CardContent className="pt-6 pb-8">
+        <TestHeader currentQuestion={currentQuestion} totalQuestions={totalQuestions} />
+        <AnimatePresence mode="wait">
+          <QuestionDisplay currentQuestion={currentQuestion} question={question} onAnswer={onAnswer} loading={loading} />
+        </AnimatePresence>
+        <div className="flex justify-between mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0 || loading} className="gap-2">
+            <ChevronLeft className="h-4 w-4" /> Précédent
+          </Button>
+          <Button variant="outline" onClick={resetTest} disabled={loading} className="gap-2">
+            <RotateCcw className="h-4 w-4" /> Recommencer
+          </Button>
+          {loading && (
+            <Button disabled className="gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
             </Button>
-            
-            <Button
-              variant="outline"
-              onClick={resetTest}
-              disabled={loading}
-              className="gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Recommencer
-            </Button>
-            
-            {loading && (
-              <Button disabled className="gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Chargement...
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  </motion.div>
+);
