@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,7 @@ export default function RiasecTest() {
   const onAnswerQuestion = (score: number) => handleAnswer(score, riasecQuestions);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-900 dark:to-gray-700 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-purple-900 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           {!started && !completed && <RiasecTestIntro startTest={startTest} />}
@@ -86,17 +87,19 @@ const RiasecTestQuestions = ({
   loading
 }: RiasecTestQuestionsProps) => (
   <motion.div key="test" {...pageTransitions}>
-    <Card className="bg-white/70 dark:bg-gray-800 backdrop-blur-xl shadow-xl border-gray-200 dark:border-gray-600">
-      <CardContent className="pt-6 pb-8">
+    <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-2xl border-0 overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 via-transparent to-indigo-500/5"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+      <CardContent className="pt-8 pb-8 relative z-10">
         <TestHeader currentQuestion={currentQuestion} totalQuestions={totalQuestions} />
         <AnimatePresence mode="wait">
           <QuestionDisplay currentQuestion={currentQuestion} question={question} onAnswer={onAnswer} loading={loading} />
         </AnimatePresence>
         <div className="flex justify-between mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
-          <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0 || loading} className="gap-2">
+          <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0 || loading} className="gap-2 hover:bg-purple-50 dark:hover:bg-purple-900/30">
             <ChevronLeft className="h-4 w-4" /> Précédent
           </Button>
-          <Button variant="outline" onClick={resetTest} disabled={loading} className="gap-2">
+          <Button variant="outline" onClick={resetTest} disabled={loading} className="gap-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
             <RotateCcw className="h-4 w-4" /> Recommencer
           </Button>
           {loading && (
