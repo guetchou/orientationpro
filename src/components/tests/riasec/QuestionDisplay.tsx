@@ -2,16 +2,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-
-interface QuestionDisplayProps {
-  currentQuestion: number;
-  question: {
-    question: string;
-    category: string;
-  };
-  onAnswer: (score: number) => void;
-  loading: boolean;
-}
+import { QuestionDisplayProps } from "./types";
 
 export const QuestionDisplay = ({ 
   currentQuestion, 

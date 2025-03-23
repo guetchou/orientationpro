@@ -2,11 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ChevronRight } from "lucide-react";
-
-interface TestHeaderProps {
-  currentQuestion: number;
-  totalQuestions: number;
-}
+import { TestHeaderProps } from "./types";
 
 export const TestHeader = ({ currentQuestion, totalQuestions }: TestHeaderProps) => {
   // Calculate progress percentage

@@ -86,6 +86,16 @@ export interface SeniorEmploymentResults {
   recommendedSectors: string[];
 }
 
+// AIEnhancedAnalysis interface for test analysis
+export interface AIEnhancedAnalysis {
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  careerSuggestions?: string[];
+  analysis: string;
+  confidenceScore: number;
+}
+
 // Generic types for all tests
 export interface TestResult {
   id: string;
@@ -95,13 +105,4 @@ export interface TestResult {
   answers: any[];
   progress_score: number;
   results: any;
-}
-
-export interface AIEnhancedAnalysis {
-  strengths: string[];
-  weaknesses: string[];
-  recommendations: string[];
-  careerSuggestions?: string[];
-  analysis: string;
-  confidenceScore: number;
 }

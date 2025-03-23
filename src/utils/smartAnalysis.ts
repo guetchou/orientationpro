@@ -1,136 +1,139 @@
 
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabaseClient';
-import { AIEnhancedAnalysis } from '@/types/test';
+import { supabase } from "@/lib/supabaseClient";
+import { TestResult, AIEnhancedAnalysis } from "@/types/test";
 
 /**
- * Extracts the most relevant keywords from test results
+ * Analyze test results with AI to generate enhanced insights
+ * @param testResults The test results to analyze
  */
-export const extractKeywords = (testResults: any): string[] => {
-  // This is a simplified implementation
-  const keywords = [];
-  
-  if (testResults.personalityCode) {
-    keywords.push(testResults.personalityCode);
-  }
-  
-  if (testResults.dominantTypes) {
-    keywords.push(...testResults.dominantTypes);
-  }
-  
-  return keywords;
-};
-
-/**
- * Generates career suggestions based on test results
- */
-export const generateCareerSuggestions = async (testType: string, testResults: any): Promise<string[]> => {
+export async function analyzeWithAI(testResults: TestResult): Promise<AIEnhancedAnalysis> {
   try {
-    // This would call an API in production
-    // For now, we'll return mock data
-    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log("Analyzing test results with AI:", testResults.test_type);
     
-    const suggestions = [
-      "Développeur web",
-      "Analyste de données",
-      "Gestionnaire de projet",
-      "Consultant en marketing",
-      "Chercheur en IA"
-    ];
+    // In a production environment, you would call an AI service here
+    // For this demo, we'll return mock data
     
-    return suggestions;
-  } catch (error) {
-    console.error("Error generating career suggestions:", error);
-    toast.error("Impossible de générer des suggestions de carrière");
-    return [];
-  }
-};
-
-/**
- * Compares test results with previous tests to show progress
- */
-export const compareWithPreviousTests = async (userId: string, testType: string, currentResults: any): Promise<any> => {
-  try {
-    if (!userId) return null;
+    const strengths = generateStrengths(testResults);
+    const weaknesses = generateWeaknesses(testResults);
+    const recommendations = generateRecommendations(testResults);
+    const careerSuggestions = testResults.test_type === 'riasec' 
+      ? generateCareerSuggestions(testResults) 
+      : undefined;
     
-    const { data: previousTests, error } = await supabase
-      .from('test_results')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('test_type', testType)
-      .order('created_at', { ascending: false })
-      .limit(2);
+    const analysis = `Analyse basée sur vos résultats du test ${testResults.test_type.toUpperCase()}. 
+    Cette analyse a identifié ${strengths.length} points forts et ${weaknesses.length} points à améliorer, 
+    avec ${recommendations.length} recommandations personnalisées.`;
     
-    if (error) throw error;
-    
-    // If there's only one test (the current one), no comparison possible
-    if (!previousTests || previousTests.length <= 1) {
-      return null;
-    }
-    
-    // The current test should be the most recent, so compare with the second result
-    const previousTest = previousTests[1]; 
-    const previousResults = previousTest.results;
-    
-    // Calculate differences based on test type
-    const comparison = {
-      improvements: [],
-      declines: []
-    };
-    
-    // This is a simplified implementation
-    // In a real app, we'd have more sophisticated comparison logic
-    
-    return comparison;
-  } catch (error) {
-    console.error("Error comparing with previous tests:", error);
-    return null;
-  }
-};
-
-/**
- * Generates AI enhanced insights for the test results
- */
-export const getInsights = async (testType: string, testResults: any): Promise<AIEnhancedAnalysis> => {
-  try {
-    // In production, this would call an API endpoint
-    // For now, we generate mock insights
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    let insights: AIEnhancedAnalysis = {
-      strengths: [
-        "Capacité d'adaptation",
-        "Résolution de problèmes"
-      ],
-      weaknesses: [
-        "Gestion du temps",
-        "Communication écrite"
-      ],
-      recommendations: [
-        "Suivre une formation en gestion du temps",
-        "Pratiquer l'écriture régulièrement"
-      ],
-      analysis: "Vos résultats indiquent que vous avez une bonne capacité d'adaptation et de résolution de problèmes. Cependant, vous pourriez améliorer votre gestion du temps et votre communication écrite.",
+    const aiAnalysis: AIEnhancedAnalysis = {
+      strengths,
+      weaknesses,
+      recommendations,
+      careerSuggestions,
+      analysis,
       confidenceScore: 85
     };
     
-    // Add career suggestions for certain test types
-    if (['riasec', 'career_transition', 'no_diploma'].includes(testType)) {
-      insights.careerSuggestions = await generateCareerSuggestions(testType, testResults);
-    }
+    // Save the analysis to the database
+    await saveAnalysisToDatabase(testResults, aiAnalysis);
     
-    return insights;
+    return aiAnalysis;
   } catch (error) {
-    console.error("Error generating insights:", error);
-    toast.error("Impossible de générer des insights");
-    
-    // Return basic insights as fallback
+    console.error("Error in AI analysis:", error);
     return {
-      strengths: ["Adaptabilité"],
-      weaknesses: ["Analyse à compléter"],
-      recommendations: ["Réessayer l'analyse plus tard"],
-      analysis: "Nous n'avons pas pu compléter l'analyse approfondie de vos résultats. Veuillez réessayer ultérieurement.",
-      confidenceScore: 60
+      strengths: ["Analyse non disponible"],
+      weaknesses: ["Analyse non disponible"],
+      recommendations: ["Veuillez réessayer ultérieurement"],
+      analysis: "Une erreur s'est produite lors de l'analyse des résultats du test.",
+      confidenceScore: 0
     };
   }
-};
+}
+
+// Helper function to save analysis to database
+async function saveAnalysisToDatabase(testResults: TestResult, analysis: AIEnhancedAnalysis) {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    
+    if (!userId) return;
+    
+    await supabase.from('ai_analyses').insert({
+      user_id: userId,
+      test_id: testResults.id,
+      test_type: testResults.test_type,
+      analysis_data: analysis,
+      created_at: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error saving AI analysis to database:", error);
+  }
+}
+
+// Mock functions to generate analysis data
+function generateStrengths(testResults: TestResult): string[] {
+  switch (testResults.test_type) {
+    case 'riasec':
+      return [
+        "Capacité d'analyse et de résolution de problèmes",
+        "Aptitude à travailler de manière autonome",
+        "Persévérance et détermination"
+      ];
+    case 'emotional':
+      return [
+        "Bonne gestion du stress",
+        "Capacité d'empathie développée",
+        "Communication efficace"
+      ];
+    default:
+      return ["Points forts à déterminer"];
+  }
+}
+
+function generateWeaknesses(testResults: TestResult): string[] {
+  switch (testResults.test_type) {
+    case 'riasec':
+      return [
+        "Pourrait développer davantage ses compétences en leadership",
+        "Tendance à être perfectionniste"
+      ];
+    case 'emotional':
+      return [
+        "Pourrait améliorer sa gestion des émotions négatives",
+        "Tendance à éviter les conflits"
+      ];
+    default:
+      return ["Points à améliorer à déterminer"];
+  }
+}
+
+function generateRecommendations(testResults: TestResult): string[] {
+  switch (testResults.test_type) {
+    case 'riasec':
+      return [
+        "Explorer des formations en lien avec vos intérêts dominants",
+        "Rencontrer des professionnels dans les domaines qui vous intéressent",
+        "Participer à des ateliers de développement personnel"
+      ];
+    case 'emotional':
+      return [
+        "Pratiquer la pleine conscience pour améliorer votre conscience émotionnelle",
+        "Suivre des formations en communication interpersonnelle",
+        "Tenir un journal de vos émotions"
+      ];
+    default:
+      return ["Recommandations personnalisées non disponibles"];
+  }
+}
+
+function generateCareerSuggestions(testResults: TestResult): string[] {
+  if (testResults.test_type === 'riasec') {
+    return [
+      "Ingénieur en développement logiciel",
+      "Analyste de données",
+      "Chercheur scientifique",
+      "Consultant en management"
+    ];
+  }
+  
+  return [];
+}
