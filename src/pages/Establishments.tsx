@@ -12,6 +12,7 @@ const Establishments = () => {
   const [filteredEstablishments, setFilteredEstablishments] = useState<Establishment[]>([]);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [showList, setShowList] = useState(true);
+  const [selectedCity, setSelectedCity] = useState('all');
 
   useEffect(() => {
     if (!loading) {
@@ -29,17 +30,35 @@ const Establishments = () => {
     setShowList(!showList);
   };
 
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    handleFilterChange({ type: selectedType, query: searchQuery, city });
+  };
+
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type);
+    handleFilterChange({ type, query: searchQuery, city: selectedCity });
+  };
+
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search);
+    handleFilterChange({ type: selectedType, query: search, city: selectedCity });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">Établissements d'enseignement</h1>
         
         <EstablishmentFilters 
-          onFilterChange={handleFilterChange} 
+          selectedCity={selectedCity}
           selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          searchTerm={searchQuery}
+          uniqueCities={establishments.map(e => e.city).filter((v, i, a) => a.indexOf(v) === i)}
+          uniqueTypes={['university', 'high_school', 'vocational', 'specialized']}
+          onCityChange={handleCityChange}
+          onTypeChange={handleTypeChange}
+          onSearchChange={handleSearchChange}
         />
         
         <MobileToggleList 

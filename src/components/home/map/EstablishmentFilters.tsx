@@ -1,81 +1,129 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
+import { Check, ChevronDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Search, Filter } from 'lucide-react';
-
-export interface EstablishmentFiltersProps {
-  onFilterChange?: (filters: any) => void;
-  selectedType?: string;
-  setSelectedType?: (type: string) => void;
-  searchQuery?: string;
-  setSearchQuery?: (query: string) => void;
-}
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { EstablishmentFiltersProps } from '@/types/establishments';
 
 export const EstablishmentFilters: React.FC<EstablishmentFiltersProps> = ({
-  onFilterChange = () => {},
-  selectedType = '',
-  setSelectedType = () => {},
-  searchQuery = '',
-  setSearchQuery = () => {}
+  selectedCity,
+  selectedType,
+  searchTerm,
+  uniqueCities,
+  uniqueTypes,
+  onCityChange,
+  onTypeChange,
+  onSearchChange,
+  // Pour compatibilité avec l'implémentation existante
+  setSelectedType
 }) => {
-  const handleTypeChange = (value: string) => {
-    setSelectedType(value);
-    onFilterChange({ type: value, query: searchQuery });
+  const handleTypeChange = (type: string) => {
+    if (onTypeChange) {
+      onTypeChange(type);
+    } else if (setSelectedType) {
+      setSelectedType(type);
+    }
   };
-
+  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    onFilterChange({ type: selectedType, query: e.target.value });
+    onSearchChange(e.target.value);
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              type="search"
-              placeholder="Rechercher un établissement..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="pl-10"
-            />
-          </div>
+    <div className="bg-white p-4 rounded-lg shadow-md space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          type="text"
+          placeholder="Rechercher un établissement..."
+          className="pl-10"
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Ville
+          </label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                {selectedCity === 'all' ? 'Toutes' : selectedCity}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => onCityChange('all')}>
+                <span className="flex items-center">
+                  {selectedCity === 'all' && (
+                    <Check className="h-4 w-4 mr-2" />
+                  )}
+                  Toutes
+                </span>
+              </DropdownMenuItem>
+              {uniqueCities.map((city) => (
+                <DropdownMenuItem key={city} onClick={() => onCityChange(city)}>
+                  <span className="flex items-center">
+                    {selectedCity === city && (
+                      <Check className="h-4 w-4 mr-2" />
+                    )}
+                    {city}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        
-        <div className="w-full md:w-64">
-          <Select value={selectedType} onValueChange={handleTypeChange}>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Filter className="mr-2 h-4 w-4 text-gray-400" />
-                <SelectValue placeholder="Type d'établissement" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Tous les types</SelectItem>
-              <SelectItem value="university">Université</SelectItem>
-              <SelectItem value="high_school">Lycée</SelectItem>
-              <SelectItem value="college">Collège</SelectItem>
-              <SelectItem value="professional">Formation professionnelle</SelectItem>
-              <SelectItem value="specialized">École spécialisée</SelectItem>
-            </SelectContent>
-          </Select>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Type
+          </label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                {selectedType === '' ? 'Tous' : 
+                  selectedType === 'university' ? 'Université' :
+                  selectedType === 'high_school' ? 'Lycée' :
+                  selectedType === 'vocational' ? 'Formation Pro' : 
+                  selectedType === 'specialized' ? 'École Spécialisée' : 
+                  selectedType}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleTypeChange('')}>
+                <span className="flex items-center">
+                  {selectedType === '' && <Check className="h-4 w-4 mr-2" />}
+                  Tous
+                </span>
+              </DropdownMenuItem>
+              {uniqueTypes.map((type) => (
+                <DropdownMenuItem
+                  key={type}
+                  onClick={() => handleTypeChange(type)}
+                >
+                  <span className="flex items-center">
+                    {selectedType === type && <Check className="h-4 w-4 mr-2" />}
+                    {type === 'university' ? 'Université' :
+                     type === 'high_school' ? 'Lycée' :
+                     type === 'vocational' ? 'Formation Pro' : 
+                     type === 'specialized' ? 'École Spécialisée' : 
+                     type}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        
-        <Button 
-          variant="outline" 
-          onClick={() => {
-            setSelectedType('');
-            setSearchQuery('');
-            onFilterChange({ type: '', query: '' });
-          }}
-          className="md:self-end"
-        >
-          Réinitialiser
-        </Button>
       </div>
     </div>
   );

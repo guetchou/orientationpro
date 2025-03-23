@@ -1,14 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { MapDisplay } from "./map/MapDisplay";
 import { EstablishmentFilters } from "./map/EstablishmentFilters";
 import { EstablishmentList } from "./map/EstablishmentList";
 import { Establishment } from "@/types/establishments";
-import { fetchEstablishments } from "./map/mapUtils";
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useEstablishmentData } from './map/useEstablishmentData';
 import { MobileToggleList } from './map/MobileToggleList';
+import { Link } from 'react-router-dom';
 
 export const EstablishmentsMapSection = () => {
   const {
@@ -17,11 +17,28 @@ export const EstablishmentsMapSection = () => {
     selectedType, 
     setSelectedType,
     searchQuery, 
-    setSearchQuery
+    setSearchQuery,
+    filterEstablishments
   } = useEstablishmentData();
   
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
-  const [isMobileListOpen, setIsMobileListOpen] = useState(false);
+  const [isMobileListOpen, setIsMobileListOpen] = useState(true);
+  const [selectedCity, setSelectedCity] = useState('all');
+
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    filterEstablishments({ type: selectedType, query: searchQuery, city });
+  };
+
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type);
+    filterEstablishments({ type, query: searchQuery, city: selectedCity });
+  };
+
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search);
+    filterEstablishments({ type: selectedType, query: search, city: selectedCity });
+  };
 
   return (
     <section className="py-12 bg-white">
@@ -46,16 +63,19 @@ export const EstablishmentsMapSection = () => {
             <div className="sticky top-24 space-y-6">
               <EstablishmentFilters 
                 selectedType={selectedType}
-                onTypeChange={setSelectedType}
+                onTypeChange={handleTypeChange}
                 searchTerm={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedCity="all"
-                onCityChange={() => {}}
-                uniqueCities={[]}
-                uniqueTypes={['university', 'vocational', 'highschool']}
+                onSearchChange={handleSearchChange}
+                selectedCity={selectedCity}
+                onCityChange={handleCityChange}
+                uniqueCities={establishments.map(e => e.city).filter((v, i, a) => a.indexOf(v) === i)}
+                uniqueTypes={['university', 'vocational', 'high_school', 'specialized']}
               />
               
-              <MobileToggleList isMobileListOpen={isMobileListOpen} setIsMobileListOpen={setIsMobileListOpen} />
+              <MobileToggleList 
+                showList={isMobileListOpen} 
+                toggleView={() => setIsMobileListOpen(!isMobileListOpen)} 
+              />
               
               <div className={`lg:block ${isMobileListOpen ? 'block' : 'hidden'}`}>
                 <EstablishmentList 
@@ -76,9 +96,11 @@ export const EstablishmentsMapSection = () => {
         </div>
         
         <div className="text-center mt-10">
-          <Button variant="outline" className="gap-2">
-            Voir tous les établissements
-          </Button>
+          <Link to="/establishments">
+            <Button variant="outline" className="gap-2">
+              Voir tous les établissements
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

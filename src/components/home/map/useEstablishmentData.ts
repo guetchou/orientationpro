@@ -12,11 +12,16 @@ const mockEstablishments: Establishment[] = [
     website: 'https://u-paris.fr',
     phone: '+33 1 57 27 57 27',
     email: 'contact@u-paris.fr',
-    coordinates: [2.3522, 48.8566],
+    coordinates: {
+      lat: 2.3522,
+      lng: 48.8566
+    },
     ratings: 4.5,
     reviewCount: 120,
     programs: ['Science', 'Arts', 'Medicine'],
     image: '/images/establishments/university-paris.jpg',
+    city: 'Paris',
+    description: 'L\'Université de Paris est une institution d\'enseignement supérieur de premier plan.'
   },
   {
     id: '2',
@@ -26,11 +31,16 @@ const mockEstablishments: Establishment[] = [
     website: 'https://lycee-henri4.com',
     phone: '+33 1 44 41 21 21',
     email: 'contact@henri4.fr',
-    coordinates: [2.3469, 48.8461],
+    coordinates: {
+      lat: 2.3469,
+      lng: 48.8461
+    },
     ratings: 4.8,
     reviewCount: 95,
     programs: ['Science', 'Literature', 'Economics'],
     image: '/images/establishments/lycee-henri4.jpg',
+    city: 'Paris',
+    description: 'Le Lycée Henri-IV est l\'un des lycées les plus prestigieux de France.'
   },
   {
     id: '3',
@@ -40,11 +50,16 @@ const mockEstablishments: Establishment[] = [
     website: 'https://www.polytechnique.edu',
     phone: '+33 1 69 33 33 33',
     email: 'contact@polytechnique.fr',
-    coordinates: [2.2137, 48.7147],
+    coordinates: {
+      lat: 2.2137,
+      lng: 48.7147
+    },
     ratings: 4.9,
     reviewCount: 150,
     programs: ['Engineering', 'Computer Science', 'Physics'],
     image: '/images/establishments/polytechnique.jpg',
+    city: 'Palaiseau',
+    description: 'L\'École Polytechnique est une école d\'ingénieurs de renommée mondiale.'
   },
 ];
 
@@ -65,16 +80,17 @@ export const useEstablishmentData = () => {
     }, 500);
   }, []);
 
-  const filterEstablishments = (filters: { type?: string; query?: string }) => {
-    const { type, query } = filters;
+  const filterEstablishments = (filters: { type?: string; query?: string; city?: string }) => {
+    const { type, query, city } = filters;
     
     return establishments.filter(establishment => {
       const matchesType = !type || establishment.type === type;
+      const matchesCity = !city || city === 'all' || establishment.city === city;
       const matchesQuery = !query || 
         establishment.name.toLowerCase().includes(query.toLowerCase()) ||
         establishment.address.toLowerCase().includes(query.toLowerCase());
       
-      return matchesType && matchesQuery;
+      return matchesType && matchesQuery && matchesCity;
     });
   };
 

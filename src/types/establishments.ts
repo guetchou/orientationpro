@@ -10,15 +10,13 @@ export interface Establishment {
     lng: number;
   };
   description: string;
-  neighborhood?: string;
   website?: string;
   phone?: string;
   email?: string;
+  ratings?: number;
+  reviewCount?: number;
   programs?: string[];
-  fees?: string;
-  admissionProcess?: string;
-  facilities?: string[];
-  images?: string[];
+  image?: string;
 }
 
 export interface EstablishmentFiltersProps {
@@ -28,21 +26,7 @@ export interface EstablishmentFiltersProps {
   uniqueCities: string[];
   uniqueTypes: string[];
   onCityChange: (city: string) => void;
-  onTypeChange: (type: string) => void;
+  onTypeChange?: (type: string) => void;
   onSearchChange: (search: string) => void;
-  searchQuery?: string;
-  onSearchQueryChange?: (query: string) => void;
-}
-
-export interface EstablishmentListProps {
-  establishments: Establishment[];
-  selectedEstablishment: Establishment | null;
-  onSelectEstablishment?: (establishment: Establishment) => void;
-}
-
-export interface MapDisplayProps {
-  establishments: Establishment[];
-  selectedEstablishment: Establishment | null;
-  onSelectEstablishment?: (establishment: Establishment) => void;
-  getMarkerIcon?: (type: string) => string;
+  setSelectedType?: React.Dispatch<React.SetStateAction<string>>;
 }

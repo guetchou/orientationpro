@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
@@ -169,6 +170,7 @@ export default function RiasecTest() {
     ];
     scores.sort((a, b) => b.score - a.score);
     const personalityCode = `${scores[0].code}${scores[1].code}${scores[2].code}`;
+    const dominantTypes = scores.slice(0, 3).map(item => item.code);
 
     // Create the results object
     const testResults: RiasecResults = {
@@ -180,7 +182,7 @@ export default function RiasecTest() {
       conventional,
       personalityCode,
       confidenceScore: 90,
-      dominantTypes: scores.slice(0, 3).map(item => item.code)
+      dominantTypes
     };
 
     // Set the results
