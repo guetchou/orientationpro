@@ -1,21 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import {
-  AuthChangeEvent,
-  Session,
-  User,
-} from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
 
-interface AuthContextProps {
-  user: User | null;
-  loading: boolean;
-  logout: () => Promise<{ success: boolean; error?: any }>;
-  profileData: ProfileData;
-  session: Session | null;
-  updateProfile: (data: Partial<ProfileData>) => Promise<void>;
-  signInWithGoogle: () => Promise<any>;
-  signInWithGithub: () => Promise<any>;
-}
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { Session, User } from '@supabase/supabase-js';
 
 interface ProfileData {
   id: string;
@@ -28,6 +14,17 @@ interface ProfileData {
   role: string;
 }
 
+interface AuthContextProps {
+  user: User | null;
+  loading: boolean;
+  session: Session | null;
+  profileData: ProfileData;
+  updateProfile: (data: Partial<ProfileData>) => Promise<void>;
+  logout: () => Promise<{ success: boolean; error?: any }>;
+  signInWithGoogle: () => Promise<{ success: boolean; data?: any; error?: any }>;
+  signInWithGithub: () => Promise<{ success: boolean; data?: any; error?: any }>;
+}
+
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const useAuth = () => {
@@ -38,7 +35,7 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -72,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     getSession();
 
-    supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user || null);
       setSession(session || null);
       if (session?.user) {
@@ -94,12 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchProfileData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (error) {
         console.error("Error fetching profile data:", error);
       } else if (data) {
@@ -124,21 +116,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const updates = {
         ...data,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
-
-      const { error } = await supabase.from('profiles').upsert(updates, {
-        returning: 'minimal', // Do not return the value after inserting
-      });
-
+      const { error } = await supabase.from('profiles').upsert(updates);
       if (error) {
         throw error;
       }
-
       // Optimistically update state
       setProfileData((prevData) => ({
         ...prevData,
-        ...data,
+        ...data
       }));
     } catch (error) {
       console.error("Error updating the profile!", error);
@@ -146,11 +133,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     }
   };
-  
+
   const logout = async () => {
     try {
-      // Add your logout logic here
-      // For example, using Supabase:
       await supabase.auth.signOut();
       setUser(null);
       setProfileData({
@@ -175,8 +160,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/profile`,
-        },
+          redirectTo: `${window.location.origin}/profile`
+        }
       });
       if (error) {
         console.error("Error signing in with Google:", error);
@@ -194,8 +179,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/profile`,
-        },
+          redirectTo: `${window.location.origin}/profile`
+        }
       });
       if (error) {
         console.error("Error signing in with Github:", error);
@@ -216,8 +201,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     updateProfile,
     signInWithGoogle,
-    signInWithGithub,
+    signInWithGithub
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// Export the User type for other components that need it
+export type { User, ProfileData, AuthContextProps };

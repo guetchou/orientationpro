@@ -11,7 +11,7 @@ import { NavItem, NavList } from "@/components/ui/nav";
 import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardNav() {
-  const { user, profileData } = useAuth();
+  const { profileData } = useAuth();
   const isSuperAdmin = profileData?.role === 'super_admin';
 
   return (

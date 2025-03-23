@@ -1,237 +1,330 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { questions } from "@/data/riasecQuestions";
-import { performAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
+import { TestHeader } from "@/components/tests/riasec/TestHeader";
 import { TestDescription } from "@/components/tests/TestDescription";
 import { TestCompletion } from "@/components/tests/TestCompletion";
-import { Brain, BookOpen, Target, Briefcase } from "lucide-react";
-import { TestHeader } from "@/components/tests/riasec/TestHeader";
-import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
-import { analyzeRiasecResults } from "@/components/tests/riasec/RiasecAnalyzer";
-import { TestResult } from "@/types/test";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
+import { RiasecResults } from "@/types/test";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseClient";
 
-const RiasecTest = () => {
-  const navigate = useNavigate();
-  const [showDescription, setShowDescription] = useState(true);
+// Import the RIASEC questions
+const riasecQuestions = [
+  {
+    question: "J'aime résoudre des problèmes mathématiques ou scientifiques.",
+    category: "investigative"
+  },
+  {
+    question: "J'aime construire ou réparer des objets.",
+    category: "realistic"
+  },
+  {
+    question: "J'aime travailler en équipe.",
+    category: "social"
+  },
+  {
+    question: "J'aime être organisé et suivre une routine.",
+    category: "conventional"
+  },
+  {
+    question: "J'aime dessiner, peindre ou jouer d'un instrument de musique.",
+    category: "artistic"
+  },
+  {
+    question: "J'aime persuader ou influencer les autres.",
+    category: "enterprising"
+  },
+  {
+    question: "J'aime faire des expériences et des recherches.",
+    category: "investigative"
+  },
+  {
+    question: "J'aime travailler avec des outils et des machines.",
+    category: "realistic"
+  },
+  {
+    question: "J'aime aider les autres à résoudre leurs problèmes.",
+    category: "social"
+  },
+  {
+    question: "J'aime suivre des instructions détaillées.",
+    category: "conventional"
+  },
+  {
+    question: "J'aime exprimer ma créativité.",
+    category: "artistic"
+  },
+  {
+    question: "J'aime diriger et prendre des décisions.",
+    category: "enterprising"
+  }
+];
+
+export default function RiasecTest() {
+  const [started, setStarted] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
-  const [testCompleted, setTestCompleted] = useState(false);
-  const [testId, setTestId] = useState<string | null>(null);
+  const [results, setResults] = useState<RiasecResults | null>(null);
+  const navigate = useNavigate();
 
-  const handleStartTest = () => {
-    setShowDescription(false);
+  // Reset the test if the user goes back to the start
+  const resetTest = () => {
+    setStarted(false);
+    setCompleted(false);
+    setCurrentQuestion(0);
+    setAnswers([]);
+    setResults(null);
   };
 
-  const handleAnswer = (score: number) => {
-    // Animation de transition pour la réponse
+  // Start the test
+  const startTest = () => {
+    setStarted(true);
+  };
+
+  // Handle the user's answer
+  const handleAnswer = async (score: number) => {
+    setLoading(true);
+    // Add the answer to the array
     const newAnswers = [...answers, score];
     setAnswers(newAnswers);
-
-    if (currentQuestion + 1 < questions.length) {
+    
+    // Move to the next question or complete the test
+    if (currentQuestion < riasecQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      setLoading(false);
     } else {
-      handleTestCompletion(newAnswers);
+      // Test completed, calculate the results
+      await completeTest(newAnswers);
     }
   };
 
-  const handleTestCompletion = async (finalAnswers: number[]) => {
-    setLoading(true);
+  // Navigate to the previous question
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+      // Remove the last answer
+      setAnswers(answers.slice(0, -1));
+    }
+  };
+
+  // Calculate the RIASEC results
+  const completeTest = async (finalAnswers: number[]) => {
+    // Calculate the scores for each category
+    let realistic = 0;
+    let investigative = 0;
+    let artistic = 0;
+    let social = 0;
+    let enterprising = 0;
+    let conventional = 0;
+
+    // Map each answer to its category
+    finalAnswers.forEach((answer, index) => {
+      const category = riasecQuestions[index].category;
+      switch (category) {
+        case "realistic":
+          realistic += answer;
+          break;
+        case "investigative":
+          investigative += answer;
+          break;
+        case "artistic":
+          artistic += answer;
+          break;
+        case "social":
+          social += answer;
+          break;
+        case "enterprising":
+          enterprising += answer;
+          break;
+        case "conventional":
+          conventional += answer;
+          break;
+      }
+    });
+
+    // Normalize the scores to be out of 100
+    const maxPossibleScore = 5 * (riasecQuestions.filter(q => q.category === "realistic").length);
+    realistic = Math.round((realistic / maxPossibleScore) * 100);
+    investigative = Math.round((investigative / maxPossibleScore) * 100);
+    artistic = Math.round((artistic / maxPossibleScore) * 100);
+    social = Math.round((social / maxPossibleScore) * 100);
+    enterprising = Math.round((enterprising / maxPossibleScore) * 100);
+    conventional = Math.round((conventional / maxPossibleScore) * 100);
+
+    // Calculate the personality code (top 3 scores)
+    const scores = [
+      { code: "R", score: realistic },
+      { code: "I", score: investigative },
+      { code: "A", score: artistic },
+      { code: "S", score: social },
+      { code: "E", score: enterprising },
+      { code: "C", score: conventional }
+    ];
+    scores.sort((a, b) => b.score - a.score);
+    const personalityCode = `${scores[0].code}${scores[1].code}${scores[2].code}`;
+
+    // Create the results object
+    const testResults: RiasecResults = {
+      realistic,
+      investigative,
+      artistic,
+      social,
+      enterprising,
+      conventional,
+      personalityCode,
+      confidenceScore: 90
+    };
+
+    // Set the results
+    setResults(testResults);
+    
     try {
+      // Get AI enhanced analysis
+      const aiInsights = await getAIEnhancedAnalysis('riasec', testResults);
+      
+      // Check if user is logged in before saving
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Analyser les résultats
-      const results = analyzeRiasecResults(finalAnswers);
-
-      // Create test result object
-      const testResult: TestResult = {
-        id: '',
-        user_id: user?.id || '',
-        test_type: 'RIASEC',
-        results: results,
-        answers: finalAnswers,
-        created_at: new Date().toISOString(),
-        progress_score: 100
-      };
-      
-      // Enrichir les résultats avec l'IA
-      const aiInsights = await performAIEnhancedAnalysis(testResult);
-      
-      if (user) {
-        // Sauvegarder les résultats dans Supabase
-        const { data, error } = await supabase
-          .from('test_results')
-          .insert({
-            user_id: user.id,
-            test_type: 'RIASEC',
-            results: JSON.stringify({
-              ...results,
-              aiInsights
-            }),
-            answers: finalAnswers,
-            confidence_score: results.confidenceScore || 85,
-            personality_code: results.personalityCode
-          })
-          .select()
-          .single();
-
+      if (user?.id) {
+        // Save results to database if user is logged in
+        const { error } = await supabase.from('test_results').insert({
+          user_id: user.id,
+          test_type: 'riasec',
+          result_data: {
+            ...testResults,
+            aiInsights
+          }
+        });
+        
         if (error) {
-          console.error("Error saving test results:", error);
-          throw error;
+          console.error('Error saving results:', error);
+          toast.error("Impossible d'enregistrer vos résultats.");
+        } else {
+          toast.success("Test complété avec succès !");
         }
-
-        toast.success("Test complété avec succès !");
-        setTestCompleted(true);
-        setTestId(data.id);
-      } else {
-        // Si l'utilisateur n'est pas connecté, on ne sauvegarde pas les résultats
-        // mais on affiche quand même l'écran de complétion
-        toast.info("Pour sauvegarder vos résultats, vous devez vous connecter");
-        setTestCompleted(true);
       }
-    } catch (error: any) {
-      console.error("Erreur lors de la sauvegarde des résultats:", error);
-      toast.error("Erreur lors de la sauvegarde des résultats");
-    } finally {
+      
+      // Mark test as completed and stop loading
+      setCompleted(true);
+      setLoading(false);
+      
+    } catch (error) {
+      console.error('Error finalizing test:', error);
+      toast.error("Une erreur s'est produite lors de l'analyse de vos résultats.");
       setLoading(false);
     }
   };
 
-  const showPartialResults = () => {
-    navigate(`/dashboard/results`);
+  // View the test results
+  const viewResults = () => {
+    if (results) {
+      navigate('/test-results', { 
+        state: { 
+          results,
+          testType: 'riasec'
+        }
+      });
+    }
   };
 
-  // Fonction pour afficher une question adaptative (exemple simple)
-  const getAdaptiveQuestion = () => {
-    // La logique simple d'adaptation - dans une version avancée, 
-    // on adapterait les questions en fonction des réponses précédentes
-    return questions[currentQuestion];
+  // Page transitions
+  const pageTransitions = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.4 }
   };
-
-  const currentAdaptiveQuestion = getAdaptiveQuestion();
-
-  if (showDescription) {
-    return <TestIntroduction onStart={handleStartTest} />;
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
-      <div className="container mx-auto px-4">
-        {!testCompleted ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="max-w-2xl mx-auto p-6 border-2 border-primary/10 bg-white">
-              <TestHeader 
-                currentQuestion={currentQuestion}
-                totalQuestions={questions.length}
+    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50 py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        <AnimatePresence mode="wait">
+          {!started && !completed && (
+            <motion.div key="intro" {...pageTransitions}>
+              <TestDescription
+                title="Test d'Orientation RIASEC"
+                description="Découvrez vos intérêts professionnels dominants à travers ce test basé sur la théorie des types de personnalité RIASEC de John Holland. Ce test vous aidera à identifier les domaines professionnels qui correspondent le mieux à votre personnalité."
+                time="5-10 minutes"
+                benefits={[
+                  "Identifiez vos intérêts professionnels dominants",
+                  "Découvrez des métiers alignés avec votre personnalité",
+                  "Obtenez des conseils personnalisés pour votre orientation",
+                  "Recevez une analyse approfondie de votre profil RIASEC"
+                ]}
+                onStart={startTest}
               />
+            </motion.div>
+          )}
 
-              <QuestionDisplay
-                currentQuestion={currentQuestion}
-                question={currentAdaptiveQuestion}
-                onAnswer={handleAnswer}
-                loading={loading}
+          {started && !completed && (
+            <motion.div key="test" {...pageTransitions}>
+              <Card className="bg-white/70 backdrop-blur shadow-xl border-primary/10">
+                <CardContent className="pt-6 pb-8">
+                  <TestHeader 
+                    currentQuestion={currentQuestion}
+                    totalQuestions={riasecQuestions.length} 
+                  />
+                  
+                  <AnimatePresence mode="wait">
+                    <QuestionDisplay
+                      currentQuestion={currentQuestion}
+                      question={riasecQuestions[currentQuestion]}
+                      onAnswer={handleAnswer}
+                      loading={loading}
+                    />
+                  </AnimatePresence>
+                  
+                  <div className="flex justify-between mt-8 pt-4 border-t border-gray-100">
+                    <Button
+                      variant="outline"
+                      onClick={handlePrevious}
+                      disabled={currentQuestion === 0 || loading}
+                      className="gap-2"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Précédent
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={resetTest}
+                      disabled={loading}
+                      className="gap-2"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Recommencer
+                    </Button>
+                    
+                    {loading && (
+                      <Button disabled className="gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Chargement...
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {completed && (
+            <motion.div key="completion" {...pageTransitions}>
+              <TestCompletion
+                title="RIASEC"
+                onViewResults={viewResults}
               />
-            </Card>
-          </motion.div>
-        ) : (
-          <TestCompletion 
-            title="RIASEC" 
-            onViewResults={showPartialResults} 
-          />
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
-};
-
-// Extract the introduction section to a separate component
-const TestIntroduction = ({ onStart }: { onStart: () => void }) => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
-      <div className="container mx-auto px-4">
-        <TestDescription 
-          title="Test d'orientation RIASEC"
-          description="Le test RIASEC, également connu sous le nom de test de Holland, vous aide à déterminer votre personnalité professionnelle selon six catégories: Réaliste, Investigateur, Artistique, Social, Entreprenant et Conventionnel. Ce test est scientifiquement validé pour vous orienter vers des carrières adaptées à votre profil."
-          time="5-10 minutes"
-          benefits={[
-            "Découvrir les métiers qui correspondent à votre personnalité",
-            "Comprendre vos préférences professionnelles",
-            "Obtenir une analyse détaillée de votre profil RIASEC",
-            "Recevoir des recommandations de carrières personnalisées"
-          ]}
-          onStart={onStart}
-        />
-        
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-8"
-        >
-          <TestFeatureCard 
-            icon={<Brain className="h-6 w-6 text-blue-600" />}
-            title="Basé sur la recherche"
-            description="Développé par des psychologues de l'orientation"
-            bgColor="bg-blue-100"
-            textColor="text-blue-600"
-          />
-          
-          <TestFeatureCard 
-            icon={<Target className="h-6 w-6 text-purple-600" />}
-            title="Précision élevée"
-            description="Des résultats personnalisés et pertinents"
-            bgColor="bg-purple-100"
-            textColor="text-purple-600"
-          />
-          
-          <TestFeatureCard 
-            icon={<Briefcase className="h-6 w-6 text-green-600" />}
-            title="Orientation concrète"
-            description="Des métiers et formations recommandés"
-            bgColor="bg-green-100"
-            textColor="text-green-600"
-          />
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-// Feature card component
-const TestFeatureCard = ({ 
-  icon, 
-  title, 
-  description, 
-  bgColor, 
-  textColor 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string; 
-  bgColor: string; 
-  textColor: string;
-}) => {
-  return (
-    <motion.div 
-      whileHover={{ y: -5 }}
-      className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center text-center"
-    >
-      <div className={`${bgColor} p-3 rounded-full mb-3`}>
-        {icon}
-      </div>
-      <h3 className="font-medium text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-500 mt-1">{description}</p>
-    </motion.div>
-  );
-};
-
-export default RiasecTest;
+}

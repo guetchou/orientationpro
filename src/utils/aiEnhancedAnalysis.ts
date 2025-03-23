@@ -11,7 +11,16 @@ export async function performAIEnhancedAnalysis(testResult: TestResult): Promise
   try {
     // Call the AI analysis endpoint through Supabase Edge Functions
     const { data, error } = await supabase.functions.invoke('analyze-test-results', {
-      body: { testResult }
+      body: { 
+        testResult: {
+          id: testResult.id,
+          created_at: testResult.created_at,
+          user_id: testResult.user_id,
+          test_type: testResult.test_type,
+          result_data: testResult.result_data,
+          score: testResult.score
+        }
+      }
     });
 
     if (error) {

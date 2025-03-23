@@ -39,6 +39,9 @@ export interface EmotionalResults {
   strengths?: string[];
   areasToImprove?: string[];
   confidenceScore?: number;
+  // Add these to match usage in pages
+  emotional_awareness?: number;
+  emotional_regulation?: number;
 }
 
 export interface LearningStyleResults {

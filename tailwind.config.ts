@@ -122,6 +122,7 @@ export default {
         "float": "float 3s ease-in-out infinite",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "spin-slow": "spin 8s linear infinite",
+        "gradient-xy": "gradient-xy 15s ease infinite",
       },
       keyframes: {
         float: {
@@ -136,13 +137,29 @@ export default {
           from: { transform: "translateY(20px)", opacity: "0" },
           to: { transform: "translateY(0)", opacity: "1" }
         },
-      },
-      backdropBlur: {
-        xs: "2px",
+        pulseGlow: {
+          "0%, 100%": { boxShadow: "0 0 10px 0px rgba(59, 130, 246, 0.5)" },
+          "50%": { boxShadow: "0 0 20px 5px rgba(59, 130, 246, 0.8)" }
+        },
+        "gradient-xy": {
+          "0%, 100%": {
+            "background-size": "400% 400%",
+            "background-position": "0% 0%"
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "100% 100%"
+          }
+        }
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "gradient-spotlight": "radial-gradient(circle at center, var(--tw-gradient-stops))",
+        "text-gradient": "linear-gradient(to right, var(--tw-gradient-stops))",
+      },
+      backdropBlur: {
+        xs: "2px",
       },
       transitionProperty: {
         'height': 'height',
