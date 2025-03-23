@@ -21,6 +21,12 @@ export interface EmotionalResults {
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
+  selfRegulation?: number;
+  motivation?: number;
+  empathy?: number;
+  socialSkills?: number;
+  areasToImprove?: string[];
+  confidenceScore?: number;
 }
 
 export interface LearningStyleResults {
@@ -31,6 +37,9 @@ export interface LearningStyleResults {
   primary: string;
   secondary: string;
   recommendations: string[];
+  dominantStyle?: string;
+  recommendedStrategies?: string[];
+  confidenceScore?: number;
 }
 
 export interface MultipleIntelligenceResults {
@@ -54,6 +63,10 @@ export interface CareerTransitionResults {
   skillTransferability: number;
   learningCapacity: number;
   recommendedPaths: string[];
+  currentSatisfaction?: number;
+  recommendedSectors?: string[];
+  transitionReadiness?: number;
+  confidenceScore?: number;
 }
 
 export interface NoDiplomaCareerResults {
@@ -65,6 +78,11 @@ export interface NoDiplomaCareerResults {
   experiencePortfolio: number;
   careerPotential: number;
   recommendedFields: string[];
+  entrepreneurialAptitude?: number;
+  tradeInterest?: number;
+  selfLearningCapacity?: number;
+  recommendedPaths?: string[];
+  confidenceScore?: number;
 }
 
 export interface RetirementReadinessResults {
@@ -74,6 +92,12 @@ export interface RetirementReadinessResults {
   activityPlanning: number;
   readinessScore: number;
   recommendedSteps: string[];
+  healthPlanning?: number;
+  socialConnections?: number;
+  purposeClarity?: number;
+  leisureInterests?: number;
+  readinessLevel?: string;
+  confidenceScore?: number;
 }
 
 export interface SeniorEmploymentResults {
@@ -84,6 +108,12 @@ export interface SeniorEmploymentResults {
   motivationLevel: number;
   flexibilityNeeds: number;
   recommendedSectors: string[];
+  experienceValue?: number;
+  technologyAdaptation?: number;
+  workLifeBalance?: number;
+  mentorshipPotential?: number;
+  recommendedRoles?: string[];
+  confidenceScore?: number;
 }
 
 // AIEnhancedAnalysis interface for test analysis

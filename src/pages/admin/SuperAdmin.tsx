@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -67,7 +67,7 @@ export default function SuperAdmin() {
     try {
       console.log("Creating super admin:", email);
       
-      // Use the createSuperAdmin method from useAuth
+      // Use the createSuperAdmin method from useAuth with the correct arguments
       await createSuperAdmin(email, password, firstName, lastName);
       
       toast.success("Compte super administrateur créé avec succès !");

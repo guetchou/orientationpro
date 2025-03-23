@@ -10,13 +10,9 @@ export interface Establishment {
     lng: number;
   };
   description: string;
-  website?: string;
-  phone?: string;
-  email?: string;
-  ratings?: number;
-  reviewCount?: number;
+  neighborhood?: string;
   programs?: string[];
-  image?: string;
+  website?: string;
 }
 
 export interface EstablishmentFiltersProps {
@@ -26,7 +22,6 @@ export interface EstablishmentFiltersProps {
   uniqueCities: string[];
   uniqueTypes: string[];
   onCityChange: (city: string) => void;
-  onTypeChange?: (type: string) => void;
+  onTypeChange: (type: string) => void;
   onSearchChange: (search: string) => void;
-  setSelectedType?: React.Dispatch<React.SetStateAction<string>>;
 }

@@ -1,9 +1,8 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Session } from '@supabase/supabase-js';
 
-export interface User {
+interface User {
   id: string;
   email?: string;
   firstName?: string;
@@ -37,7 +36,7 @@ interface AuthContextProps {
   signInWithGithub: () => Promise<{ success: boolean; data?: any; error?: any }>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData?: any) => Promise<void>;
-  createSuperAdmin: (email: string, password: string, userData?: any) => Promise<void>;
+  createSuperAdmin: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -186,7 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const createSuperAdmin = async (email: string, password: string, userData?: any) => {
+  const createSuperAdmin = async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signUp({ 
@@ -194,8 +193,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         options: {
           data: {
-            first_name: userData?.firstName || '',
-            last_name: userData?.lastName || '',
+            first_name: firstName || '',
+            last_name: lastName || '',
             is_super_admin: true
           }
         }
@@ -287,5 +286,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Export the User type for other components that need it
-export type { User, ProfileData, AuthContextProps };
+// Export the types for other components that need them
+export type { ProfileData, AuthContextProps, User };
