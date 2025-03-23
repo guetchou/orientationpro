@@ -52,13 +52,21 @@ export const TestHeader = ({ currentQuestion, totalQuestions }: TestHeaderProps)
       </motion.div>
       
       {/* Progress Bar */}
-      <ProgressBar progress={progress} />
+      <ProgressBar progress={progress} currentQuestion={currentQuestion} totalQuestions={totalQuestions} />
     </div>
   );
 };
 
 // Separate progress bar component
-const ProgressBar = ({ progress }: { progress: number }) => {
+const ProgressBar = ({ 
+  progress, 
+  currentQuestion, 
+  totalQuestions 
+}: { 
+  progress: number;
+  currentQuestion: number;
+  totalQuestions: number;
+}) => {
   return (
     <>
       <div className="relative w-full h-5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mt-6 shadow-inner group">

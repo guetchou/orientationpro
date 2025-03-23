@@ -10,6 +10,14 @@ export interface Establishment {
     lng: number;
   };
   description: string;
+  phone?: string;
+  website?: string;
+  email?: string;
+  ratings?: number;
+  reviewCount?: number;
+  programs?: string[];
+  image?: string;
+  neighborhood?: string;
 }
 
 export interface EstablishmentFiltersProps {
@@ -21,4 +29,5 @@ export interface EstablishmentFiltersProps {
   onCityChange: (city: string) => void;
   onTypeChange: (type: string) => void;
   onSearchChange: (search: string) => void;
+  setSelectedType?: (type: string) => void; // Ajout de cette propriété optionnelle
 }
