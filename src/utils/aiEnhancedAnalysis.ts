@@ -17,7 +17,9 @@ export async function performAIEnhancedAnalysis(testResult: TestResult): Promise
           created_at: testResult.created_at,
           user_id: testResult.user_id,
           test_type: testResult.test_type,
-          result_data: testResult.result_data,
+          results: testResult.results, 
+          // For backward compatibility
+          result_data: testResult.results || testResult.result_data,
           score: testResult.score
         }
       }
@@ -44,7 +46,7 @@ export async function getAIEnhancedAnalysis(testType: string, results: any): Pro
       created_at: new Date().toISOString(),
       user_id: 'temp-user',
       test_type: testType,
-      result_data: results
+      results: results || {}
     };
 
     return await performAIEnhancedAnalysis(mockTestResult);

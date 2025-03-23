@@ -40,8 +40,8 @@ export function useProfileData(user: User | null) {
           department: 'default',
           is_super_admin: user.role === 'superadmin',
           is_master_admin: user.role === 'admin',
-          first_name: user.firstName,
-          last_name: user.lastName
+          first_name: user.email?.split('@')[0] || '', // Fallback when firstName is not available
+          last_name: ''
         });
       } catch (err) {
         console.error('Error in profile data fetching:', err);

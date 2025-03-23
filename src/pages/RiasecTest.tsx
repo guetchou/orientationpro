@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
@@ -180,7 +179,8 @@ export default function RiasecTest() {
       enterprising,
       conventional,
       personalityCode,
-      confidenceScore: 90
+      confidenceScore: 90,
+      dominantTypes: scores.slice(0, 3).map(item => item.code)
     };
 
     // Set the results

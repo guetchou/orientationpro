@@ -9,10 +9,14 @@ import { motion } from 'framer-motion';
 export interface AIInsightsPanelProps {
   analysis: AIEnhancedAnalysis;
   testType: string;
+  insights?: any; // For backward compatibility
 }
 
-export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, testType }) => {
-  if (!analysis) {
+export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, testType, insights }) => {
+  // Use insights if provided (for backward compatibility), otherwise use analysis
+  const data = insights || analysis;
+  
+  if (!data) {
     return (
       <Card className="mb-6 border-dashed border-2 bg-gray-50/50">
         <CardHeader>
@@ -36,7 +40,7 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, test
     );
   }
 
-  if (analysis.error) {
+  if (data.error) {
     return (
       <Card className="mb-6 border-red-200 bg-red-50/30">
         <CardHeader>
@@ -94,14 +98,14 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, test
         </CardHeader>
         
         <CardContent className="pt-6 relative z-10">
-          {analysis.dominantTraits && analysis.dominantTraits.length > 0 && (
+          {data.dominantTraits && data.dominantTraits.length > 0 && (
             <motion.div variants={item} className="mb-6">
               <h4 className="font-medium text-lg mb-3 flex items-center gap-2 text-primary-700">
                 <Star className="h-5 w-5 text-amber-500" />
                 Traits dominants
               </h4>
               <div className="flex flex-wrap gap-2">
-                {analysis.dominantTraits.map((trait, index) => (
+                {data.dominantTraits.map((trait, index) => (
                   <Badge 
                     key={index} 
                     variant="secondary" 
@@ -114,14 +118,14 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, test
             </motion.div>
           )}
 
-          {analysis.strengths && analysis.strengths.length > 0 && (
+          {data.strengths && data.strengths.length > 0 && (
             <motion.div variants={item} className="mb-6">
               <h4 className="font-medium text-lg mb-3 flex items-center gap-2 text-primary-700">
                 <Activity className="h-5 w-5 text-green-500" />
                 Vos forces
               </h4>
               <ul className="space-y-2">
-                {analysis.strengths.map((strength, index) => (
+                {data.strengths.map((strength, index) => (
                   <li key={index} className="pl-6 relative">
                     <div className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-green-100 border-2 border-green-400"></div>
                     {strength}
@@ -131,14 +135,14 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, test
             </motion.div>
           )}
 
-          {analysis.weaknesses && analysis.weaknesses.length > 0 && (
+          {data.weaknesses && data.weaknesses.length > 0 && (
             <motion.div variants={item} className="mb-6">
               <h4 className="font-medium text-lg mb-3 flex items-center gap-2 text-primary-700">
                 <Target className="h-5 w-5 text-orange-500" />
                 Axes d'amélioration
               </h4>
               <ul className="space-y-2">
-                {analysis.weaknesses.map((weakness, index) => (
+                {data.weaknesses.map((weakness, index) => (
                   <li key={index} className="pl-6 relative">
                     <div className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-orange-100 border-2 border-orange-400"></div>
                     {weakness}
@@ -148,14 +152,14 @@ export const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ analysis, test
             </motion.div>
           )}
 
-          {analysis.recommendations && analysis.recommendations.length > 0 && (
+          {data.recommendations && data.recommendations.length > 0 && (
             <motion.div variants={item} className="mb-0">
               <h4 className="font-medium text-lg mb-3 flex items-center gap-2 text-primary-700">
                 <Lightbulb className="h-5 w-5 text-blue-500" />
                 Recommandations personnalisées
               </h4>
               <ul className="space-y-3">
-                {analysis.recommendations.map((recommendation, index) => (
+                {data.recommendations.map((recommendation, index) => (
                   <li key={index} className="bg-blue-50/50 rounded-lg p-3 border border-blue-100/50">
                     {recommendation}
                   </li>

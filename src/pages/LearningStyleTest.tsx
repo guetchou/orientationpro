@@ -1,84 +1,92 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
 import { LearningStyleResults } from "@/types/test";
+import axios from "axios";
+
+// Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 export default function LearningStyleTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<number[]>([]);
   const navigate = useNavigate();
 
-  const learningQuestions = [
+  const learningStyleQuestions = [
     {
       id: 1,
-      question: "Comment préférez-vous recevoir des instructions ?",
+      question: "Quand j'apprends quelque chose de nouveau, je préfère :",
       options: [
-        "Par écrit avec des explications détaillées",
-        "À travers une démonstration visuelle",
-        "En écoutant quelqu'un expliquer",
-        "En essayant par vous-même"
+        { text: "Voir des diagrammes ou des illustrations", value: 4 },
+        { text: "Écouter une explication", value: 3 },
+        { text: "Faire des exercices pratiques", value: 5 },
+        { text: "Lire des instructions écrites", value: 2 }
       ]
     },
     {
       id: 2,
-      question: "Lors de l'apprentissage d'une nouvelle compétence, vous préférez :",
+      question: "Pour me souvenir d'une information, je préfère :",
       options: [
-        "Lire le manuel d'instructions",
-        "Regarder une vidéo tutorielle",
-        "Écouter un expert expliquer",
-        "Expérimenter directement"
+        { text: "Visualiser une image mentale", value: 4 },
+        { text: "Répéter l'information à voix haute", value: 3 },
+        { text: "Écrire ou gribouiller des notes", value: 2 },
+        { text: "Manipuler des objets liés à l'information", value: 5 }
       ]
     },
     {
       id: 3,
-      question: "Comment mémorisez-vous le mieux l'information ?",
+      question: "En général, je comprends mieux quand :",
       options: [
-        "En prenant des notes",
-        "En créant des schémas ou des diagrammes",
-        "En répétant à voix haute",
-        "En mettant en pratique"
+        { text: "Je vois comment les choses fonctionnent", value: 4 },
+        { text: "Quelqu'un m'explique les choses", value: 3 },
+        { text: "Je peux expérimenter par moi-même", value: 5 },
+        { text: "Je lis des informations détaillées", value: 2 }
       ]
     }
   ];
 
-  const handleAnswer = async (answer: string) => {
+  const handleAnswer = async (answer: number) => {
     const newAnswers = [...answers, answer];
     setAnswers(newAnswers);
 
-    if (currentQuestion < learningQuestions.length - 1) {
+    if (currentQuestion < learningStyleQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       // Analyser les résultats
-      const results: LearningStyleResults = analyzeLearningStyle(newAnswers);
+      const results: LearningStyleResults = analyzeLearningStyleResults(newAnswers);
       
       try {
         // Enrichir les résultats avec l'IA
         const aiInsights = await getAIEnhancedAnalysis('learning_style', results);
         
-        const { data: { user } } = await supabase.auth.getUser();
+        // Récupération de l'utilisateur connecté depuis le service d'authentification local
+        const userResponse = await axios.get(`${backendUrl}/api/users/current`, {
+          withCredentials: true  // Important pour envoyer les cookies d'authentification
+        });
+        const user = userResponse.data;
+        
         if (user?.id) {
-          // Sauvegarder les résultats dans Supabase
-          await supabase.from('test_results').insert({
+          // Sauvegarder les résultats dans le backend
+          await axios.post(`${backendUrl}/api/test-results`, {
             user_id: user.id,
             test_type: 'learning_style',
-            results: JSON.stringify({
+            results: {
               ...results,
               aiInsights
-            }),
+            },
             answers: newAnswers,
-            confidence_score: results.confidenceScore || 80
+            confidence_score: results.confidenceScore || 75
+          }, {
+            withCredentials: true
           });
-          
           toast.success("Test complété avec succès !");
         } else {
           toast.error("Vous devez être connecté pour sauvegarder vos résultats");
         }
-        
+        // Rediriger vers la page des résultats
         navigate('/dashboard/results', { 
           state: { 
             results: {
@@ -95,118 +103,83 @@ export default function LearningStyleTest() {
     }
   };
 
-  const analyzeLearningStyle = (responses: string[]): LearningStyleResults => {
-    // Initialiser les scores à 25 (valeur de base)
-    let visual = 25;
-    let auditory = 25;
-    let kinesthetic = 25;
-    let reading = 25;
+  // Analyse des résultats des styles d'apprentissage
+  const analyzeLearningStyleResults = (responses: number[]): LearningStyleResults => {
+    // Calcul des scores pour chaque style
+    const visual = responses.reduce((sum, val, index) => (learningStyleQuestions[index].options[0].value === 4 ? sum + val : sum), 0);
+    const auditory = responses.reduce((sum, val, index) => (learningStyleQuestions[index].options[1].value === 3 ? sum + val : sum), 0);
+    const kinesthetic = responses.reduce((sum, val, index) => (learningStyleQuestions[index].options[2].value === 5 ? sum + val : sum), 0);
+    const reading = responses.reduce((sum, val, index) => (learningStyleQuestions[index].options[3].value === 2 ? sum + val : sum), 0);
 
-    // Analyser chaque réponse et ajuster les scores
-    responses.forEach((response, index) => {
-      if (index === 0) {
-        // Question 1
-        if (response.includes("écrit")) reading += 25;
-        else if (response.includes("visuelle") || response.includes("démonstration")) visual += 25;
-        else if (response.includes("écoutant")) auditory += 25;
-        else if (response.includes("essayant")) kinesthetic += 25;
-      } else if (index === 1) {
-        // Question 2
-        if (response.includes("manuel") || response.includes("lire")) reading += 25;
-        else if (response.includes("vidéo") || response.includes("regarder")) visual += 25;
-        else if (response.includes("écouter") || response.includes("expert")) auditory += 25;
-        else if (response.includes("expérimenter")) kinesthetic += 25;
-      } else if (index === 2) {
-        // Question 3
-        if (response.includes("notes")) reading += 25;
-        else if (response.includes("schémas") || response.includes("diagrammes")) visual += 25;
-        else if (response.includes("voix") || response.includes("répétant")) auditory += 25;
-        else if (response.includes("pratique")) kinesthetic += 25;
-      }
-    });
-
-    // Normaliser les scores pour qu'ils soient sur 100
-    const totalScore = visual + auditory + kinesthetic + reading;
-    visual = Math.round((visual / totalScore) * 100);
-    auditory = Math.round((auditory / totalScore) * 100);
-    kinesthetic = Math.round((kinesthetic / totalScore) * 100);
-    reading = Math.round((reading / totalScore) * 100);
-
-    // Déterminer les styles primaire et secondaire
+    // Déterminer le style dominant
     const styles = [
-      { name: "Visuel", score: visual },
-      { name: "Auditif", score: auditory },
-      { name: "Kinesthésique", score: kinesthetic },
-      { name: "Lecture/Écriture", score: reading }
+      { style: 'visual', score: visual },
+      { style: 'auditory', score: auditory },
+      { style: 'kinesthetic', score: kinesthetic },
+      { style: 'reading', score: reading }
     ];
     styles.sort((a, b) => b.score - a.score);
-    
-    const primary = styles[0].name;
-    const secondary = styles[1].name;
+    const primaryStyle = styles[0].style;
+    const secondaryStyle = styles[1].style;
 
-    // Créer des recommandations basées sur le style primaire
+    // Recommandations basées sur le style dominant
     const recommendedStrategies = [];
-    if (primary === "Visuel") {
-      recommendedStrategies.push("Utilisez des schémas et des graphiques pour apprendre");
-      recommendedStrategies.push("Regardez des vidéos éducatives sur les sujets à étudier");
-      recommendedStrategies.push("Créez des cartes mentales pour organiser l'information");
-    } else if (primary === "Auditif") {
-      recommendedStrategies.push("Enregistrez et écoutez les cours ou conférences");
-      recommendedStrategies.push("Participez à des discussions de groupe");
-      recommendedStrategies.push("Lisez à voix haute pour mieux mémoriser");
-    } else if (primary === "Kinesthésique") {
-      recommendedStrategies.push("Apprenez en faisant des exercices pratiques");
-      recommendedStrategies.push("Bougez pendant l'apprentissage (marcher, manipuler des objets)");
-      recommendedStrategies.push("Utilisez des jeux de rôle ou des simulations");
-    } else if (primary === "Lecture/Écriture") {
-      recommendedStrategies.push("Prenez des notes détaillées");
-      recommendedStrategies.push("Faites des résumés écrits des concepts");
-      recommendedStrategies.push("Utilisez des listes et des définitions");
+    if (primaryStyle === 'visual') {
+      recommendedStrategies.push("Utiliser des graphiques et des diagrammes", "Prendre des notes visuelles", "Regarder des vidéos éducatives");
+    } else if (primaryStyle === 'auditory') {
+      recommendedStrategies.push("Écouter des podcasts ou des conférences", "Participer à des discussions de groupe", "Enregistrer des notes vocales");
+    } else if (primaryStyle === 'kinesthetic') {
+      recommendedStrategies.push("Faire des expériences pratiques", "Utiliser des modèles ou des simulations", "Bouger pendant l'étude");
+    } else {
+      recommendedStrategies.push("Lire des livres et des articles", "Écrire des résumés", "Faire des recherches approfondies");
     }
+
+    // Niveau de confiance basé sur la cohérence des réponses
+    const confidenceScore = 75; // valeur par défaut, à affiner si nécessaire
 
     return {
       visual,
       auditory,
       kinesthetic,
       reading,
-      primary,
-      secondary,
+      dominantStyle: primaryStyle,
+      secondary: secondaryStyle,
       recommendedStrategies,
-      confidenceScore: 80
+      confidenceScore
     };
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Test de Style d'Apprentissage</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">Test de Styles d'Apprentissage</h1>
       
       <Card className="max-w-2xl mx-auto">
         <CardContent className="p-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">
-              Question {currentQuestion + 1} sur {learningQuestions.length}
+              Question {currentQuestion + 1} sur {learningStyleQuestions.length}
             </h2>
-            <p className="text-lg mb-4">{learningQuestions[currentQuestion].question}</p>
+            <p className="text-lg mb-4">{learningStyleQuestions[currentQuestion].question}</p>
             
             <div className="w-full bg-gray-200 h-2 rounded-full mt-4 mb-6">
               <div
-                className="bg-secondary h-2 rounded-full transition-all"
+                className="bg-green-500 h-2 rounded-full transition-all"
                 style={{
-                  width: `${((currentQuestion + 1) / learningQuestions.length) * 100}%`,
+                  width: `${((currentQuestion + 1) / learningStyleQuestions.length) * 100}%`,
                 }}
               />
             </div>
           </div>
 
           <div className="space-y-4">
-            {learningQuestions[currentQuestion].options.map((option, index) => (
+            {learningStyleQuestions[currentQuestion].options.map((option, index) => (
               <Button
                 key={index}
-                onClick={() => handleAnswer(option)}
+                onClick={() => handleAnswer(option.value)}
                 variant="outline"
                 className="w-full text-left justify-start h-auto py-4 px-6"
               >
-                {option}
+                {option.text}
               </Button>
             ))}
           </div>

@@ -4,8 +4,11 @@ export interface TestResult {
   created_at: string;
   user_id: string;
   test_type: string;
-  result_data: any;
+  results: any;
+  result_data?: any;
   score?: number;
+  answers?: any[];
+  progress_score?: number;
 }
 
 export interface AIEnhancedAnalysis {
@@ -15,6 +18,7 @@ export interface AIEnhancedAnalysis {
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
+  confidenceScore?: number;
   error?: string;
 }
 
@@ -28,18 +32,17 @@ export interface CareerRecommendation {
 
 // Additional test result types needed by test pages
 export interface EmotionalResults {
-  emotional_awareness: number;
-  emotional_regulation: number;
+  selfAwareness: number;
+  selfRegulation: number;
+  motivation: number;
   empathy: number;
-  social_skills: number;
-  selfAwareness?: number;
-  selfRegulation?: number;
-  motivation?: number;
+  socialSkills: number;
   overallScore?: number;
   strengths?: string[];
   areasToImprove?: string[];
   confidenceScore?: number;
-  // Add these to match usage in pages
+  dominantTrait?: string;
+  // Legacy properties
   emotional_awareness?: number;
   emotional_regulation?: number;
 }
@@ -48,73 +51,90 @@ export interface LearningStyleResults {
   visual: number;
   auditory: number;
   kinesthetic: number;
-  reading_writing: number;
-  reading?: number;
+  reading: number;
+  dominantStyle?: string;
   primary?: string;
   secondary?: string;
   recommendedStrategies?: string[];
   confidenceScore?: number;
+  // Legacy properties
+  reading_writing?: number;
 }
 
 export interface NoDiplomaCareerResults {
-  practical_skills: number;
-  technical_aptitude: number;
-  soft_skills: number;
-  adaptability: number;
-  entrepreneurialAptitude?: number;
-  tradeInterest?: number;
-  selfLearningCapacity?: number;
-  experiencePortfolio?: number;
-  careerPotential?: number;
+  practicalSkills: number;
+  entrepreneurialAptitude: number;
+  tradeInterest: number;
+  selfLearningCapacity: number;
   recommendedPaths?: string[];
   confidenceScore?: number;
+  experiencePortfolio?: number;
+  careerPotential?: number;
+  // Legacy properties
+  practical_skills?: number;
+  technical_aptitude?: number;
+  soft_skills?: number;
+  adaptability?: number;
 }
 
 export interface RetirementReadinessResults {
-  financial_preparedness: number;
-  health_wellness: number;
-  social_connections: number;
-  purpose_planning: number;
+  financialPreparation: number;
+  healthPlanning: number;
+  socialConnections: number;
+  purposeClarity: number;
+  leisureInterests: number;
+  readinessLevel?: string;
   readinessScore?: number;
   recommendedSteps?: string[];
   confidenceScore?: number;
+  // Legacy properties
+  financial_preparedness?: number;
+  health_wellness?: number;
+  purpose_planning?: number;
 }
 
 export interface SeniorEmploymentResults {
-  tech_skills: number;
-  adaptability: number;
-  mentorship_capacity: number;
-  work_life_balance: number;
-  flexibilityNeeds?: number;
-  marketValue?: number;
+  experienceValue: number;
+  technologyAdaptation: number;
+  workLifeBalance: number;
+  mentorshipPotential: number;
   recommendedRoles?: string[];
   confidenceScore?: number;
+  flexibilityNeeds?: number;
+  marketValue?: number;
+  // Legacy properties
+  tech_skills?: number;
+  adaptability?: number;
+  mentorship_capacity?: number;
+  work_life_balance?: number;
 }
 
 export interface CareerTransitionResults {
-  transferable_skills: number;
-  adaptability_quotient: number;
-  new_field_readiness: number;
-  networking_capacity: number;
-  currentSatisfaction?: number;
-  skillTransferability?: number;
-  adaptability?: number;
-  riskTolerance?: number;
+  currentSatisfaction: number;
+  skillTransferability: number;
+  adaptability: number;
+  riskTolerance: number;
   learningCapacity?: number;
   recommendedSectors?: string[];
+  recommendedPaths?: string[];
   transitionReadiness?: number;
   confidenceScore?: number;
+  // Legacy properties
+  transferable_skills?: number;
+  adaptability_quotient?: number;
+  new_field_readiness?: number;
+  networking_capacity?: number;
 }
 
 export interface MultipleIntelligenceResults {
-  linguistic?: number;
-  logical?: number;
-  spatial?: number;
-  musical?: number;
-  bodily?: number;
-  interpersonal?: number;
-  intrapersonal?: number;
-  naturalist?: number;
+  linguistic: number;
+  logical: number;
+  spatial: number;
+  musical: number;
+  bodily: number;
+  interpersonal: number;
+  intrapersonal: number;
+  naturalist: number;
   dominantIntelligences?: string[];
   confidenceScore?: number;
 }
@@ -127,5 +147,6 @@ export interface RiasecResults {
   enterprising: number;
   conventional: number;
   personalityCode?: string;
+  dominantTypes: string[];
   confidenceScore?: number;
 }

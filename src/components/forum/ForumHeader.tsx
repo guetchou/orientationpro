@@ -32,7 +32,7 @@ export const ForumHeader = () => {
           {user ? (
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium hidden md:inline-block">
-                {user.firstName || user.email}
+                {user.email || ''}
               </span>
               <Link to="/dashboard">
                 <Button variant="outline" size="sm">

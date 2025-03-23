@@ -1,12 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
-import { EmotionalTestResults } from "@/types/test";
-import { emotionalIntelligenceQuestions } from "@/data/riasecQuestions";
+import { EmotionalResults } from "@/types/test";
 import axios from "axios";
 
 // Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
@@ -58,7 +56,7 @@ export default function EmotionalTest() {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       // Analyser les résultats
-      const results: EmotionalTestResults = {
+      const results: EmotionalResults = {
         selfAwareness: Math.round((newAnswers[0] / 5) * 100),
         selfRegulation: Math.round((newAnswers[1] / 5) * 100),
         motivation: 70, // valeur par défaut

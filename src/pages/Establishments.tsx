@@ -8,14 +8,16 @@ import { useEstablishmentData } from '@/components/home/map/useEstablishmentData
 import { Establishment } from '@/types/establishments';
 
 const Establishments = () => {
-  const { establishments, loading, filterEstablishments } = useEstablishmentData();
+  const { establishments, loading, filterEstablishments, selectedType, setSelectedType, searchQuery, setSearchQuery } = useEstablishmentData();
   const [filteredEstablishments, setFilteredEstablishments] = useState<Establishment[]>([]);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [showList, setShowList] = useState(true);
 
   useEffect(() => {
-    setFilteredEstablishments(establishments);
-  }, [establishments]);
+    if (!loading) {
+      setFilteredEstablishments(establishments);
+    }
+  }, [establishments, loading]);
 
   const handleFilterChange = (filters: any) => {
     const filtered = filterEstablishments(filters);
@@ -32,9 +34,18 @@ const Establishments = () => {
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">Établissements d'enseignement</h1>
         
-        <EstablishmentFilters onFilterChange={handleFilterChange} />
+        <EstablishmentFilters 
+          onFilterChange={handleFilterChange} 
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
         
-        <MobileToggleList showList={showList} toggleView={toggleView} />
+        <MobileToggleList 
+          showList={showList} 
+          toggleView={toggleView} 
+        />
         
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className={`lg:col-span-1 ${!showList ? 'hidden lg:block' : ''}`}>

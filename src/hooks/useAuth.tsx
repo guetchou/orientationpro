@@ -1,7 +1,17 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Session, User } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
+
+export interface User {
+  id: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  photoURL?: string;
+  displayName?: string;
+}
 
 interface ProfileData {
   id: string;
@@ -19,10 +29,15 @@ interface AuthContextProps {
   loading: boolean;
   session: Session | null;
   profileData: ProfileData;
+  isSuperAdmin: boolean;
+  isMasterAdmin: boolean;
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
   logout: () => Promise<{ success: boolean; error?: any }>;
   signInWithGoogle: () => Promise<{ success: boolean; data?: any; error?: any }>;
   signInWithGithub: () => Promise<{ success: boolean; data?: any; error?: any }>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData?: any) => Promise<void>;
+  createSuperAdmin: (email: string, password: string, userData?: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -38,6 +53,8 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     id: '',
     first_name: '',
@@ -134,6 +151,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error signing in:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, userData?: any) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: userData?.firstName || '',
+            last_name: userData?.lastName || '',
+          }
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error signing up:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createSuperAdmin = async (email: string, password: string, userData?: any) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: userData?.firstName || '',
+            last_name: userData?.lastName || '',
+            is_super_admin: true
+          }
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error creating super admin:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -199,9 +274,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     profileData,
     session,
+    isSuperAdmin,
+    isMasterAdmin,
     updateProfile,
     signInWithGoogle,
-    signInWithGithub
+    signInWithGithub,
+    signIn,
+    signUp,
+    createSuperAdmin
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

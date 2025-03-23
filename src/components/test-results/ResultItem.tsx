@@ -114,7 +114,7 @@ const ResultItem = ({ itemKey, value, index, hasPaid, testType }: ResultItemProp
           </Button>
           
           {showAiInsights && testType && (
-            <AIInsightsPanel insights={value} testType={testType} />
+            <AIInsightsPanel analysis={value} testType={testType} />
           )}
         </div>
       )}
