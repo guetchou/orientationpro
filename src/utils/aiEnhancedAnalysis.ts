@@ -1,6 +1,15 @@
 
 import { supabase } from "@/lib/supabaseClient";
-import { AIEnhancedAnalysis } from "@/types/test";
+
+// Define the AIEnhancedAnalysis interface
+export interface AIEnhancedAnalysis {
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  careerSuggestions?: string[];
+  analysis: string;
+  confidenceScore: number;
+}
 
 /**
  * Get enhanced analysis with AI processing for test results
@@ -41,7 +50,7 @@ export async function getAIEnhancedAnalysis(testType: string, testResults: any):
             "Ingénieur en recherche et développement",
             "Chercheur"
           ],
-          analysis: `Votre profil RIASEC révèle une forte orientation vers les domaines ${testResults.dominantTypes.join(', ')}. 
+          analysis: `Votre profil RIASEC révèle une forte orientation vers les domaines ${testResults.dominantTypes?.join(', ')}. 
             Cela indique une préférence pour les activités analytiques, techniques et créatives.
             Vous excellez dans les environnements qui vous permettent d'explorer des idées nouvelles 
             et de résoudre des problèmes complexes.`,

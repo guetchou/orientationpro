@@ -3,13 +3,14 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { QuestionDisplayProps } from "./types";
+import { LightbulbIcon, CheckCircle2, HelpCircle } from "lucide-react";
 
 // Animation variants
 const questionAnimations = {
   container: {
-    initial: { opacity: 0, x: 50 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -50 },
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
     transition: { duration: 0.4 }
   },
   option: (index: number) => ({
@@ -21,11 +22,11 @@ const questionAnimations = {
 
 // Option structure for readability
 const options = [
-  { score: 1, label: "Pas du tout", color: "bg-red-50 hover:bg-red-100 border-red-200" },
-  { score: 2, label: "Un peu", color: "bg-orange-50 hover:bg-orange-100 border-orange-200" },
-  { score: 3, label: "Moyennement", color: "bg-yellow-50 hover:bg-yellow-100 border-yellow-200" },
-  { score: 4, label: "Beaucoup", color: "bg-green-50 hover:bg-green-100 border-green-200" },
-  { score: 5, label: "Passionnément", color: "bg-emerald-50 hover:bg-emerald-100 border-emerald-200" }
+  { score: 1, label: "Pas du tout", color: "border-red-200 hover:bg-red-50 hover:border-red-300", icon: "😕" },
+  { score: 2, label: "Un peu", color: "border-orange-200 hover:bg-orange-50 hover:border-orange-300", icon: "🙂" },
+  { score: 3, label: "Moyennement", color: "border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300", icon: "😊" },
+  { score: 4, label: "Beaucoup", color: "border-green-200 hover:bg-green-50 hover:border-green-300", icon: "😃" },
+  { score: 5, label: "Passionnément", color: "border-purple-200 hover:bg-purple-50 hover:border-purple-300", icon: "🤩" }
 ];
 
 export const QuestionDisplay = ({ 
@@ -39,7 +40,10 @@ export const QuestionDisplay = ({
       <motion.div
         key={currentQuestion}
         className="space-y-6"
-        {...questionAnimations.container}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4 }}
       >
         <QuestionCard question={question.question} />
         <OptionsGrid 
@@ -55,17 +59,32 @@ export const QuestionDisplay = ({
 // Question card component
 const QuestionCard = ({ question }: { question: string }) => {
   return (
-    <div className="bg-white/50 backdrop-blur-sm p-6 rounded-xl border border-primary/10 shadow-sm mb-8">
-      <p className="text-xl text-center font-medium text-gray-800">
-        {question}
-      </p>
-    </div>
+    <motion.div 
+      className="bg-white p-8 rounded-2xl border-2 border-purple-100 shadow-lg relative overflow-hidden"
+      initial={{ scale: 0.95 }}
+      animate={{ scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-primary-400"></div>
+      <div className="flex items-start mb-4">
+        <LightbulbIcon className="h-7 w-7 text-purple-500 mr-3 mt-0.5 flex-shrink-0" />
+        <p className="text-xl font-medium text-gray-800 leading-relaxed">
+          {question}
+        </p>
+      </div>
+      <div className="flex justify-end">
+        <div className="text-xs text-gray-500 italic flex items-center">
+          <HelpCircle className="h-3 w-3 mr-1" />
+          Choisissez l'option qui vous correspond le mieux
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
 // Options grid component
 interface OptionsGridProps {
-  options: Array<{ score: number, label: string, color: string }>;
+  options: Array<{ score: number, label: string, color: string, icon: string }>;
   onAnswer: (score: number) => void;
   loading: boolean;
 }
@@ -76,20 +95,31 @@ const OptionsGrid = ({ options, onAnswer, loading }: OptionsGridProps) => {
       {options.map((option) => (
         <motion.div
           key={option.score}
-          {...questionAnimations.option(option.score)}
-          className="transform transition-all duration-200 hover:scale-[1.01]"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: option.score * 0.1 }}
+          className="transform transition-all duration-200 hover:scale-[1.02]"
         >
           <Button
             onClick={() => onAnswer(option.score)}
             variant="outline"
-            className={`w-full py-6 justify-start px-6 ${option.color} backdrop-blur-sm transition-all duration-300 border-2 hover:shadow-md ${
+            className={`w-full py-5 justify-between px-6 bg-white/80 backdrop-blur-sm transition-all duration-300 border-2 ${option.color} hover:shadow-md ${
               option.score === 5 
-                ? "border-primary/30 shadow-primary/20" 
+                ? "border-purple-400 shadow-purple-100" 
                 : ""
             }`}
             disabled={loading}
           >
-            <OptionContent score={option.score} label={option.label} />
+            <OptionContent score={option.score} label={option.label} icon={option.icon} />
+            {option.score === 5 && (
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring" }}
+              >
+                <CheckCircle2 className="h-5 w-5 text-purple-500" />
+              </motion.div>
+            )}
           </Button>
         </motion.div>
       ))}
@@ -98,17 +128,17 @@ const OptionsGrid = ({ options, onAnswer, loading }: OptionsGridProps) => {
 };
 
 // Option content component
-const OptionContent = ({ score, label }: { score: number, label: string }) => {
+const OptionContent = ({ score, label, icon }: { score: number, label: string, icon: string }) => {
   return (
-    <div className="flex items-center w-full">
-      <div className={`h-8 w-8 flex items-center justify-center rounded-full mr-4 bg-white shadow-sm ${
+    <div className="flex items-center">
+      <div className={`h-10 w-10 flex items-center justify-center rounded-full mr-4 bg-white shadow-sm text-xl ${
         score === 5
-          ? "text-primary font-bold"
-          : "text-gray-600"
+          ? "ring-2 ring-purple-300 ring-offset-2"
+          : "border border-gray-200"
       }`}>
-        {score}
+        {icon}
       </div>
-      <span className={`text-lg ${score === 5 ? "font-medium" : ""}`}>
+      <span className={`text-lg ${score === 5 ? "font-semibold text-purple-700" : "text-gray-700"}`}>
         {label}
       </span>
     </div>
