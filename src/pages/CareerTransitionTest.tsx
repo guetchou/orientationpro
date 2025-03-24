@@ -1,16 +1,17 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
-import { CareerTransitionResults } from "@/types/test";
 import axios from "axios";
-import { Link } from "react-router-dom";
-import { Home, ArrowLeft } from "lucide-react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { motion } from "framer-motion";
 import { fadeIn } from "@/animations/transitions";
+import { Loader2 } from "lucide-react";
+import TestBreadcrumb from "@/components/tests/TestBreadcrumb";
+import { careerTransitionQuestions } from "@/components/tests/career/CareerTransitionQuestions";
+import { analyzeCareerTransitionResults } from "@/components/tests/career/CareerTransitionAnalyzer";
 
 // Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -18,65 +19,8 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 export default function CareerTransitionTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-
-  const careerTransitionQuestions = [
-    {
-      id: 1,
-      question: "Quel est votre niveau de satisfaction dans votre carrière actuelle ?",
-      options: [
-        { text: "Très insatisfait(e)", value: 10 },
-        { text: "Plutôt insatisfait(e)", value: 30 },
-        { text: "Neutre", value: 50 },
-        { text: "Plutôt satisfait(e)", value: 70 },
-        { text: "Très satisfait(e)", value: 90 }
-      ]
-    },
-    {
-      id: 2,
-      question: "Comment évaluez-vous la transférabilité de vos compétences actuelles vers un nouveau domaine ?",
-      options: [
-        { text: "Très faible", value: 10 },
-        { text: "Faible", value: 30 },
-        { text: "Moyenne", value: 50 },
-        { text: "Bonne", value: 70 },
-        { text: "Excellente", value: 90 }
-      ]
-    },
-    {
-      id: 3,
-      question: "Quel est votre niveau d'adaptabilité au changement ?",
-      options: [
-        { text: "Je résiste fortement au changement", value: 10 },
-        { text: "Je préfère la stabilité", value: 30 },
-        { text: "Je m'adapte progressivement", value: 50 },
-        { text: "Je m'adapte bien aux changements", value: 70 },
-        { text: "J'accueille positivement les changements", value: 90 }
-      ]
-    },
-    {
-      id: 4,
-      question: "Quelle est votre tolérance au risque professionnel ?",
-      options: [
-        { text: "Très faible", value: 10 },
-        { text: "Faible", value: 30 },
-        { text: "Moyenne", value: 50 },
-        { text: "Élevée", value: 70 },
-        { text: "Très élevée", value: 90 }
-      ]
-    },
-    {
-      id: 5,
-      question: "Comment évaluez-vous votre capacité à apprendre de nouvelles compétences ?",
-      options: [
-        { text: "Très limitée", value: 10 },
-        { text: "Limitée", value: 30 },
-        { text: "Moyenne", value: 50 },
-        { text: "Bonne", value: 70 },
-        { text: "Excellente", value: 90 }
-      ]
-    }
-  ];
 
   const handleAnswer = async (answer: number) => {
     const newAnswers = [...answers, answer];
@@ -85,10 +29,12 @@ export default function CareerTransitionTest() {
     if (currentQuestion < careerTransitionQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Analyser les résultats
-      const results: CareerTransitionResults = analyzeCareerTransitionResults(newAnswers);
+      setIsSubmitting(true);
       
       try {
+        // Analyser les résultats
+        const results = analyzeCareerTransitionResults(newAnswers);
+        
         // Enrichir les résultats avec l'IA
         const aiInsights = await getAIEnhancedAnalysis('career_transition', results);
         
@@ -129,137 +75,71 @@ export default function CareerTransitionTest() {
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error("Erreur lors de la sauvegarde des résultats");
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
 
-  // Analyse des résultats de reconversion professionnelle
-  const analyzeCareerTransitionResults = (responses: number[]): CareerTransitionResults => {
-    // Calcul des scores pour chaque dimension
-    const currentSatisfaction = responses[0] || 50;
-    const skillTransferability = responses[1] || 50;
-    const adaptability = responses[2] || 50;
-    const riskTolerance = responses[3] || 50;
-    const learningCapacity = responses[4] || 50;
-
-    // Calcul du score de préparation à la transition
-    const transitionReadiness = Math.round(
-      (currentSatisfaction * 0.1) + // moins on est satisfait, plus on est prêt à changer
-      (skillTransferability * 0.25) +
-      (adaptability * 0.25) +
-      (riskTolerance * 0.2) +
-      (learningCapacity * 0.2)
-    );
-
-    // Recommandations de secteurs basées sur les réponses
-    const recommendedSectors = [];
-    if (skillTransferability > 70 && learningCapacity > 70) {
-      recommendedSectors.push("Technologie", "Conseil", "Formation");
-    } else if (adaptability > 70 && riskTolerance > 70) {
-      recommendedSectors.push("Entrepreneuriat", "Vente", "Marketing");
-    } else if (currentSatisfaction < 30) {
-      recommendedSectors.push("Services sociaux", "Éducation", "Environnement");
-    } else {
-      recommendedSectors.push("Gestion de projet", "Ressources humaines", "Administration");
-    }
-    
-    // Recommandations de parcours basées sur les réponses
-    const recommendedPaths = [];
-    if (learningCapacity > 70) {
-      recommendedPaths.push("Formation continue", "Reconversion académique");
-    } else if (riskTolerance > 70) {
-      recommendedPaths.push("Entrepreneuriat", "Freelance");
-    } else {
-      recommendedPaths.push("Évolution interne", "Changement progressif");
-    }
-
-    // Niveau de confiance basé sur la cohérence des réponses
-    const confidenceScore = 85; // valeur par défaut, à affiner si nécessaire
-
-    return {
-      currentSatisfaction,
-      skillTransferability,
-      adaptability,
-      riskTolerance,
-      learningCapacity,
-      recommendedSectors,
-      recommendedPaths,
-      transitionReadiness,
-      confidenceScore
-    };
-  };
-
   return (
     <motion.div 
-      className="container mx-auto px-4 py-8"
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-50 dark:from-gray-900 dark:to-blue-900 py-12 px-4"
       initial="initial"
       animate="animate"
       exit="exit"
       variants={fadeIn}
     >
-      {/* Navigation header */}
-      <div className="mb-6">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/" className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
-                  <Home className="h-4 w-4 mr-2" />
-                  Accueil
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/tests" className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Tests
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <span className="font-medium">Test de Reconversion Professionnelle</span>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+      <div className="max-w-4xl mx-auto">
+        {/* Navigation header */}
+        <div className="mb-6">
+          <TestBreadcrumb testName="Test de Reconversion Professionnelle" color="blue" />
+        </div>
 
-      <h1 className="text-3xl font-bold text-center mb-8">Test de Reconversion Professionnelle</h1>
-      
-      <Card className="max-w-2xl mx-auto">
-        <CardContent className="p-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">
-              Question {currentQuestion + 1} sur {careerTransitionQuestions.length}
-            </h2>
-            <p className="text-lg mb-4">{careerTransitionQuestions[currentQuestion].question}</p>
-            
-            <div className="w-full bg-gray-200 h-2 rounded-full mt-4 mb-6">
-              <div
-                className="bg-blue-500 h-2 rounded-full transition-all"
-                style={{
-                  width: `${((currentQuestion + 1) / careerTransitionQuestions.length) * 100}%`,
-                }}
-              />
+        <h1 className="text-3xl font-bold text-center mb-8 text-blue-800 dark:text-blue-300">Test de Reconversion Professionnelle</h1>
+        
+        <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 overflow-hidden relative max-w-2xl mx-auto">
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-sky-500/5"></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-sky-500"></div>
+          <CardContent className="p-6 relative z-10">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">
+                Question {currentQuestion + 1} sur {careerTransitionQuestions.length}
+              </h2>
+              <p className="text-lg mb-4">{careerTransitionQuestions[currentQuestion].question}</p>
+              
+              <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full mt-4 mb-6">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-in-out"
+                  style={{
+                    width: `${((currentQuestion + 1) / careerTransitionQuestions.length) * 100}%`,
+                  }}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            {careerTransitionQuestions[currentQuestion].options.map((option, index) => (
-              <Button
-                key={index}
-                onClick={() => handleAnswer(option.value)}
-                variant="outline"
-                className="w-full text-left justify-start h-auto py-4 px-6"
-              >
-                {option.text}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            <div className="space-y-4">
+              {careerTransitionQuestions[currentQuestion].options.map((option, index) => (
+                <Button
+                  key={index}
+                  onClick={() => handleAnswer(option.value)}
+                  variant="outline"
+                  disabled={isSubmitting}
+                  className="w-full text-left justify-start h-auto py-4 px-6 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all duration-200"
+                >
+                  {option.text}
+                </Button>
+              ))}
+            </div>
+
+            {isSubmitting && (
+              <div className="flex justify-center mt-6">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
+                <span className="ml-2 text-blue-600 dark:text-blue-400">Analyse en cours...</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </motion.div>
   );
 }
