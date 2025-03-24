@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +63,7 @@ export default function EmotionalTest() {
         motivation: 70, // valeur par défaut
         empathy: Math.round((newAnswers[2] / 5) * 100),
         socialSkills: 65, // valeur par défaut
+        dominantTrait: determineDominantTrait(newAnswers),
         overallScore: Math.round((newAnswers.reduce((sum, val) => sum + val, 0) / (newAnswers.length * 5)) * 100),
         strengths: ['Conscience de soi', 'Gestion des émotions'],
         areasToImprove: ['Communication émotionnelle'],
@@ -112,6 +114,13 @@ export default function EmotionalTest() {
         toast.error("Erreur lors de la sauvegarde des résultats");
       }
     }
+  };
+
+  // Fonction pour déterminer le trait dominant
+  const determineDominantTrait = (answers: number[]): string => {
+    const traits = ["Conscience de soi", "Auto-régulation", "Empathie"];
+    const index = answers.indexOf(Math.max(...answers));
+    return traits[index] || "Équilibré";
   };
 
   return (

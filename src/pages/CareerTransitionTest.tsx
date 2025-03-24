@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -157,6 +158,16 @@ export default function CareerTransitionTest() {
     } else {
       recommendedSectors.push("Gestion de projet", "Ressources humaines", "Administration");
     }
+    
+    // Recommandations de parcours basées sur les réponses
+    const recommendedPaths = [];
+    if (learningCapacity > 70) {
+      recommendedPaths.push("Formation continue", "Reconversion académique");
+    } else if (riskTolerance > 70) {
+      recommendedPaths.push("Entrepreneuriat", "Freelance");
+    } else {
+      recommendedPaths.push("Évolution interne", "Changement progressif");
+    }
 
     // Niveau de confiance basé sur la cohérence des réponses
     const confidenceScore = 85; // valeur par défaut, à affiner si nécessaire
@@ -168,6 +179,7 @@ export default function CareerTransitionTest() {
       riskTolerance,
       learningCapacity,
       recommendedSectors,
+      recommendedPaths,
       transitionReadiness,
       confidenceScore
     };

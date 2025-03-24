@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronLeft, RotateCcw } from "lucide-react";
-import { TestHeader } from "@/components/tests/riasec/TestHeader";
+import TestHeader from "@/components/tests/riasec/TestHeader";
 import { TestDescription } from "@/components/tests/TestDescription";
 import { TestCompletion } from "@/components/tests/TestCompletion";
 import { QuestionDisplay } from "@/components/tests/riasec/QuestionDisplay";
