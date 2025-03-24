@@ -52,8 +52,8 @@ const TestProgressTracker = ({
         <Progress
           value={progressPercentage}
           className={`h-2 rounded-full bg-gray-200 dark:bg-gray-700`}
-          indicatorClassName={getProgressColor()}
         />
+        <div className={`absolute top-0 left-0 h-2 rounded-full transition-all ${getProgressColor()}`} style={{ width: `${progressPercentage}%` }} />
         
         <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-500 px-1">
           <span>Question {currentStep} / {totalSteps}</span>
