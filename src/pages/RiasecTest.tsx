@@ -1,9 +1,8 @@
-
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, RotateCcw } from "lucide-react";
+import { Loader2, ChevronLeft, RotateCcw, Home, ArrowLeft } from "lucide-react";
 import TestHeader from "@/components/tests/riasec/TestHeader";
 import { TestDescription } from "@/components/tests/TestDescription";
 import { TestCompletion } from "@/components/tests/TestCompletion";
@@ -12,6 +11,8 @@ import { useRiasecTest } from "@/hooks/useRiasecTest";
 import { RiasecQuestionData } from "@/components/tests/riasec/types";
 import { riasecQuestions } from "@/data/questions";
 import { pageTransitions } from "@/animations/transitions";
+import { Link } from "react-router-dom";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 export default function RiasecTest() {
   const {
@@ -31,6 +32,35 @@ export default function RiasecTest() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-purple-900 py-12 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Navigation header */}
+        <div className="mb-6 flex justify-between items-center">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/" className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+                    <Home className="h-4 w-4 mr-2" />
+                    Accueil
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/tests" className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Tests
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <span className="font-medium">Test RIASEC</span>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         <AnimatePresence mode="wait">
           {!started && !completed && <RiasecTestIntro startTest={startTest} />}
           {started && !completed && (

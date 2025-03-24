@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +6,11 @@ import { toast } from "sonner";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
 import { EmotionalResults } from "@/types/test";
 import axios from "axios";
+import { Link } from "react-router-dom";
+import { Home, ArrowLeft } from "lucide-react";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { motion } from "framer-motion";
+import { fadeIn } from "@/animations/transitions";
 
 // Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -124,7 +128,42 @@ export default function EmotionalTest() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <motion.div 
+      className="container mx-auto px-4 py-8"
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={fadeIn}
+    >
+      {/* Navigation header */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/" className="flex items-center text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-300 transition-colors">
+                  <Home className="h-4 w-4 mr-2" />
+                  Accueil
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/tests" className="flex items-center text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-300 transition-colors">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Tests
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <span className="font-medium">Test d'Intelligence Émotionnelle</span>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <h1 className="text-3xl font-bold text-center mb-8">Test d'Intelligence Émotionnelle</h1>
       
       <Card className="max-w-2xl mx-auto">
@@ -159,6 +198,6 @@ export default function EmotionalTest() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
