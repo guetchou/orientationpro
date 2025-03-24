@@ -36,6 +36,10 @@ export interface LearningStyleResults {
   reading: number;
   dominantStyle: string;
   confidenceScore: number;
+  primary?: string;
+  secondary?: string;
+  recommendations?: string[];
+  recommendedStrategies?: string[];
 }
 
 export interface EmotionalResults {
@@ -46,6 +50,14 @@ export interface EmotionalResults {
   socialSkills: number;
   dominantTrait: string;
   confidenceScore: number;
+  overallScore?: number;
+  strengths?: string[];
+  weaknesses?: string[];
+  recommendations?: string[];
+  selfManagement?: number;
+  socialAwareness?: number;
+  relationshipManagement?: number;
+  areasToImprove?: string[];
 }
 
 export interface MultipleIntelligenceResults {
@@ -68,6 +80,10 @@ export interface CareerTransitionResults {
   riskTolerance: number;
   recommendedPaths: string[];
   confidenceScore: number;
+  learningCapacity?: number;
+  networkingStrength?: number;
+  transitionReadiness?: number;
+  recommendedSectors?: string[];
 }
 
 export interface SeniorEmploymentResults {
@@ -87,6 +103,10 @@ export interface RetirementReadinessResults {
   leisureInterests: number;
   readinessLevel: string;
   confidenceScore: number;
+  socialPlanning?: number;
+  activityPlanning?: number;
+  readinessScore?: number;
+  recommendedSteps?: string[];
 }
 
 export interface NoDiplomaCareerResults {
@@ -95,5 +115,19 @@ export interface NoDiplomaCareerResults {
   tradeInterest: number;
   selfLearningCapacity: number;
   recommendedPaths: string[];
+  confidenceScore: number;
+  careerPotential?: number;
+  resilience?: number;
+  socialIntelligence?: number; 
+  experiencePortfolio?: number;
+  recommendedFields?: string[];
+}
+
+export interface AIEnhancedAnalysis {
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  careerSuggestions?: string[];
+  analysis: string;
   confidenceScore: number;
 }
