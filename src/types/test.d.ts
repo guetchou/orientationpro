@@ -17,7 +17,7 @@ export interface EmotionalResults {
   selfManagement: number;
   socialAwareness: number;
   relationshipManagement: number;
-  overallScore: number;  // Ajout
+  overallScore: number;
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
@@ -27,6 +27,7 @@ export interface EmotionalResults {
   socialSkills?: number;
   areasToImprove?: string[];
   confidenceScore?: number;
+  dominantTrait?: string;
 }
 
 export interface LearningStyleResults {
@@ -35,7 +36,7 @@ export interface LearningStyleResults {
   reading: number;
   kinesthetic: number;
   primary: string;
-  secondary: string;  // Ajout
+  secondary: string;
   recommendations: string[];
   dominantStyle?: string;
   recommendedStrategies?: string[];
@@ -61,7 +62,7 @@ export interface CareerTransitionResults {
   riskTolerance: number;
   networkingStrength: number;
   skillTransferability: number;
-  learningCapacity: number;  // Ajout
+  learningCapacity: number;
   recommendedPaths: string[];
   currentSatisfaction?: number;
   recommendedSectors?: string[];
@@ -76,7 +77,7 @@ export interface NoDiplomaCareerResults {
   resilience: number;
   socialIntelligence: number;
   experiencePortfolio: number;
-  careerPotential: number;  // Ajout
+  careerPotential: number;
   recommendedFields: string[];
   entrepreneurialAptitude?: number;
   tradeInterest?: number;
@@ -91,7 +92,7 @@ export interface RetirementReadinessResults {
   socialPlanning: number;
   activityPlanning: number;
   readinessScore: number;
-  recommendedSteps: string[];  // Ajout
+  recommendedSteps: string[];
   healthPlanning?: number;
   socialConnections?: number;
   purposeClarity?: number;
