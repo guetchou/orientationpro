@@ -169,3 +169,30 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+extend: {
+  animation: {
+    'carousel-slide': 'slide 20s linear infinite',
+    'zoom-in': 'zoomIn 0.5s ease-in-out',
+    'shake': 'shake 0.5s ease-in-out infinite',
+    'swipe': 'swipe 0.6s ease-out forwards',
+  },
+  keyframes: {
+    slide: {
+      '0%': { transform: 'translateX(0%)' },
+      '100%': { transform: 'translateX(-100%)' },
+    },
+    zoomIn: {
+      '0%': { transform: 'scale(0.95)', opacity: '0' },
+      '100%': { transform: 'scale(1)', opacity: '1' },
+    },
+    shake: {
+      '0%, 100%': { transform: 'translateX(0)' },
+      '25%': { transform: 'translateX(-5px)' },
+      '75%': { transform: 'translateX(5px)' },
+    },
+    swipe: {
+      '0%': { transform: 'translateX(-100%)', opacity: '0' },
+      '100%': { transform: 'translateX(0)', opacity: '1' },
+    },
+  },
+},
