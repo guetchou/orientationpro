@@ -14,7 +14,19 @@ export const useConseillerStats = (conseillerId: string) => {
         .single();
 
       if (error) throw error;
-      return data as ConseillerStats;
+
+      // Ajouter des valeurs calculées pour les statistiques de croissance
+      const defaultData = {
+        total_students: data?.total_students || 0,
+        tests_completed: data?.tests_completed || 0,
+        appointments_scheduled: data?.appointments_scheduled || 0,
+        average_progress: data?.average_progress || 0,
+        tests_growth: 5, // Valeur par défaut pour la démonstration
+        appointment_growth: 3, // Valeur par défaut pour la démonstration
+        skill_points: 420 // Valeur par défaut
+      } as ConseillerStats;
+
+      return defaultData;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

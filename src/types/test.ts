@@ -121,6 +121,8 @@ export interface NoDiplomaCareerResults {
   socialIntelligence?: number; 
   experiencePortfolio?: number;
   recommendedFields?: string[];
+  creativity?: number;
+  entrepreneurialSpirit?: number;
 }
 
 export interface AIEnhancedAnalysis {

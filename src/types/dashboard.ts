@@ -4,6 +4,9 @@ export interface ConseillerStats {
   tests_completed: number;
   appointments_scheduled: number;
   average_progress: number;
+  tests_growth?: number;
+  appointment_growth?: number;
+  skill_points?: number;
 }
 
 export interface DashboardTabsStats {

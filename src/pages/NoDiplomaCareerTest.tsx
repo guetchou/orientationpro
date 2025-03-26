@@ -169,6 +169,7 @@ export default function NoDiplomaCareerTest() {
     const resilience = (practicalSkills + selfLearningCapacity) / 2;
     const careerPotential = (practicalSkills + creativity + selfLearningCapacity + entrepreneurialAptitude + socialIntelligence) / 5;
     const experiencePortfolio = (practicalSkills + entrepreneurialAptitude) / 2;
+    const entrepreneurialSpirit = entrepreneurialAptitude; // Assignation directe pour correspondre au type
 
     // Identification des domaines recommandés
     const recommendedFields = [];
@@ -227,7 +228,7 @@ export default function NoDiplomaCareerTest() {
     return {
       practicalSkills,
       creativity,
-      entrepreneurialSpirit: entrepreneurialAptitude,
+      entrepreneurialSpirit,
       resilience,
       socialIntelligence,
       experiencePortfolio,
