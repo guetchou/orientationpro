@@ -108,14 +108,14 @@ const TestResultsView = ({
             <TabsContent value="scores" className="p-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-2">Vos scores détaillés</h3>
-                {!hasPaid && index > 2 && (
+                {!hasPaid && (
                   <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    {groupedResults.scores.slice(0, 2).map(([key, value]: [string, any], index) => (
+                    {groupedResults.scores.slice(0, 2).map(([key, value]: [string, any], viewIndex) => (
                       <ResultItem 
                         key={key} 
                         itemKey={key} 
                         value={value} 
-                        index={index} 
+                        index={viewIndex} 
                         hasPaid={true}
                         testType={testType}
                       />
@@ -125,22 +125,22 @@ const TestResultsView = ({
                 
                 {(hasPaid || !groupedResults.scores.length) ? (
                   <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    {groupedResults.scores.map(([key, value]: [string, any], index) => (
+                    {groupedResults.scores.map(([key, value]: [string, any], viewIndex) => (
                       <ResultItem 
                         key={key} 
                         itemKey={key} 
                         value={value} 
-                        index={index} 
+                        index={viewIndex} 
                         hasPaid={true}
                         testType={testType}
                       />
                     ))}
-                    {groupedResults.metrics.map(([key, value]: [string, any], index) => (
+                    {groupedResults.metrics.map(([key, value]: [string, any], viewIndex) => (
                       <ResultItem 
                         key={key} 
                         itemKey={key} 
                         value={value} 
-                        index={index} 
+                        index={viewIndex} 
                         hasPaid={true}
                         testType={testType}
                       />
@@ -160,12 +160,12 @@ const TestResultsView = ({
                 <h3 className="text-lg font-semibold mb-2">Recommandations personnalisées</h3>
                 {hasPaid ? (
                   <div className="grid gap-4 grid-cols-1">
-                    {groupedResults.recommendations.map(([key, value]: [string, any], index) => (
+                    {groupedResults.recommendations.map(([key, value]: [string, any], viewIndex) => (
                       <ResultItem 
                         key={key} 
                         itemKey={key} 
                         value={value} 
-                        index={index} 
+                        index={viewIndex} 
                         hasPaid={true}
                         testType={testType}
                       />
@@ -174,7 +174,7 @@ const TestResultsView = ({
                 ) : (
                   <>
                     <div className="opacity-50 pointer-events-none">
-                      {groupedResults.recommendations.slice(0, 1).map(([key, value]: [string, any], index) => (
+                      {groupedResults.recommendations.slice(0, 1).map(([key, value]: [string, any]) => (
                         <ResultItem 
                           key={key} 
                           itemKey={key} 
