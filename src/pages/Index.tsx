@@ -16,6 +16,7 @@ import { motion, useScroll, useSpring } from "framer-motion";
 import { ScrollToTop } from "@/components/home/ScrollToTop";
 import { AnimatedBackground } from "@/components/home/AnimatedBackground";
 import { CTASection } from "@/components/home/CTASection";
+import { HorizontalCarousel } from "@/components/home/HorizontalCarousel";
 
 export default function Index() {
   // Scroll progress indicator
@@ -46,6 +47,7 @@ export default function Index() {
         className="pt-20 relative z-10"
       >
         <HeroSection />
+        <HorizontalCarousel />
         <StepsSection />
         <TestsSection />
         <CTASection />
