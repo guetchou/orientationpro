@@ -4,9 +4,9 @@ require('dotenv').config();
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'rj8dl.myd.infomaniak.com',
-  user: process.env.MYSQL_USER || 'rj8dl_topcenter',
-  password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || '',
-  database: process.env.MYSQL_DATABASE || 'rj8dl_topcenter_moderne',
+  user: process.env.MYSQL_USER || 'rj8dl_ambangue',
+  password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || 'Admin242@BZV#',
+  database: process.env.MYSQL_DATABASE || 'rj8dl_orientationpro',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
