@@ -3,21 +3,15 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { TestQuestion as QuestionType } from "./TestQuestions";
 
 interface Option {
-  text: string;
   value: number;
+  label: string;
 }
 
 interface TestQuestionProps {
-  currentQuestion: {
-    id: number;
-    question: string;
-    description: string;
-    icon: React.ReactNode;
-    tags: string[];
-    options: Option[];
-  };
+  currentQuestion: QuestionType;
   totalQuestions: number;
   currentQuestionIndex: number;
   onAnswer: (value: number) => void;
@@ -34,19 +28,16 @@ export const TestQuestion = ({
   return (
     <div className="mb-6">
       <div className="flex flex-col items-center mb-6">
-        {currentQuestion.icon}
         <h2 className="text-xl font-semibold my-4 text-center">
           {currentQuestion.question}
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-center mb-3">
-          {currentQuestion.description}
+          {currentQuestion.category}
         </p>
         <div className="flex flex-wrap gap-2 justify-center">
-          {currentQuestion.tags.map((tag) => (
-            <Badge key={tag} variant="outline" className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300">
-              {tag}
-            </Badge>
-          ))}
+          <Badge variant="outline" className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300">
+            {currentQuestion.category}
+          </Badge>
         </div>
       </div>
       
@@ -77,7 +68,7 @@ export const TestQuestion = ({
               disabled={isSubmitting}
               className="w-full text-left justify-start h-auto py-4 px-6 hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-teal-900/30 dark:hover:text-teal-300 transition-all duration-200"
             >
-              {option.text}
+              {option.label}
             </Button>
           </motion.div>
         ))}
