@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +8,7 @@ import { motion } from "framer-motion";
 import { fadeIn } from "@/animations/transitions";
 import TestBreadcrumb from "@/components/tests/TestBreadcrumb";
 import { TestQuestion } from "@/components/tests/nodiploma/TestQuestion";
-import { noDiplomaCareerQuestions } from "@/components/tests/nodiploma/TestQuestions";
+import { careerTestQuestions } from "@/components/tests/nodiploma/TestQuestions";
 import { analyzeNoDiplomaCareerResults } from "@/components/tests/nodiploma/ResultsAnalyzer";
 
 // Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
@@ -25,7 +24,7 @@ export default function NoDiplomaCareerTest() {
     const newAnswers = [...answers, answer];
     setAnswers(newAnswers);
 
-    if (currentQuestion < noDiplomaCareerQuestions.length - 1) {
+    if (currentQuestion < careerTestQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       setIsSubmitting(true);
@@ -82,7 +81,7 @@ export default function NoDiplomaCareerTest() {
     }
   };
 
-  const currentQuestionData = noDiplomaCareerQuestions[currentQuestion];
+  const currentQuestionData = careerTestQuestions[currentQuestion];
 
   return (
     <motion.div 
@@ -108,7 +107,7 @@ export default function NoDiplomaCareerTest() {
           <CardContent className="p-6 relative z-10">
             <TestQuestion
               currentQuestion={currentQuestionData}
-              totalQuestions={noDiplomaCareerQuestions.length}
+              totalQuestions={careerTestQuestions.length}
               currentQuestionIndex={currentQuestion}
               onAnswer={handleAnswer}
               isSubmitting={isSubmitting}
