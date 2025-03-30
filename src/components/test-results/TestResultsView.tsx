@@ -1,12 +1,14 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ResultItem from '@/components/test-results/ResultItem';
-import PaymentPrompt from '@/components/test-results/PaymentPrompt';
-import ResultsActions from '@/components/test-results/ResultsActions';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, ChartBar, Brain, Star } from "lucide-react";
+import ResultsOverviewTab from './tabs/ResultsOverviewTab';
+import ResultsScoresTab from './tabs/ResultsScoresTab';
+import ResultsRecommendationsTab from './tabs/ResultsRecommendationsTab';
+import ResultsInsightsTab from './tabs/ResultsInsightsTab';
+import ResultsActions from '@/components/test-results/ResultsActions';
 
 interface TestResultsViewProps {
   testResults: any;
@@ -72,152 +74,45 @@ const TestResultsView = ({
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="overview" className="p-6">
-              <div className="space-y-6">
-                {!hasPaid && (
-                  <PaymentPrompt 
-                    isProcessingPayment={isProcessingPayment} 
-                    onPayment={onPayment}
-                  />
-                )}
-                
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                  {Object.entries(results).slice(0, 4).map(([key, value]: [string, any], index) => (
-                    <ResultItem 
-                      key={key} 
-                      itemKey={key} 
-                      value={value} 
-                      index={index} 
-                      hasPaid={hasPaid}
-                      testType={testType}
-                    />
-                  ))}
-                </div>
-                
-                {hasPaid && (
-                  <div className="mt-4 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
-                    <h3 className="font-medium mb-2">Consultez tous les onglets pour voir l'analyse complète</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Nous avons analysé vos réponses en profondeur. Consultez chaque onglet pour explorer les différents aspects de vos résultats.
-                    </p>
-                  </div>
-                )}
-              </div>
+            <TabsContent value="overview">
+              <ResultsOverviewTab 
+                results={results} 
+                groupedResults={groupedResults}
+                hasPaid={hasPaid} 
+                isProcessingPayment={isProcessingPayment}
+                onPayment={onPayment}
+                testType={testType}
+              />
             </TabsContent>
             
-            <TabsContent value="scores" className="p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-2">Vos scores détaillés</h3>
-                {!hasPaid && (
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    {groupedResults.scores.slice(0, 2).map(([key, value]: [string, any], viewIndex) => (
-                      <ResultItem 
-                        key={key} 
-                        itemKey={key} 
-                        value={value} 
-                        index={viewIndex} 
-                        hasPaid={true}
-                        testType={testType}
-                      />
-                    ))}
-                  </div>
-                )}
-                
-                {(hasPaid || !groupedResults.scores.length) ? (
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    {groupedResults.scores.map(([key, value]: [string, any], viewIndex) => (
-                      <ResultItem 
-                        key={key} 
-                        itemKey={key} 
-                        value={value} 
-                        index={viewIndex} 
-                        hasPaid={true}
-                        testType={testType}
-                      />
-                    ))}
-                    {groupedResults.metrics.map(([key, value]: [string, any], viewIndex) => (
-                      <ResultItem 
-                        key={key} 
-                        itemKey={key} 
-                        value={value} 
-                        index={viewIndex} 
-                        hasPaid={true}
-                        testType={testType}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <PaymentPrompt 
-                    isProcessingPayment={isProcessingPayment} 
-                    onPayment={onPayment}
-                  />
-                )}
-              </div>
+            <TabsContent value="scores">
+              <ResultsScoresTab 
+                groupedResults={groupedResults}
+                hasPaid={hasPaid}
+                isProcessingPayment={isProcessingPayment}
+                onPayment={onPayment}
+                testType={testType}
+              />
             </TabsContent>
             
-            <TabsContent value="recommendations" className="p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-2">Recommandations personnalisées</h3>
-                {hasPaid ? (
-                  <div className="grid gap-4 grid-cols-1">
-                    {groupedResults.recommendations.map(([key, value]: [string, any], viewIndex) => (
-                      <ResultItem 
-                        key={key} 
-                        itemKey={key} 
-                        value={value} 
-                        index={viewIndex} 
-                        hasPaid={true}
-                        testType={testType}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <>
-                    <div className="opacity-50 pointer-events-none">
-                      {groupedResults.recommendations.slice(0, 1).map(([key, value]: [string, any]) => (
-                        <ResultItem 
-                          key={key} 
-                          itemKey={key} 
-                          value={value} 
-                          index={3} // Force blurring
-                          hasPaid={false}
-                          testType={testType}
-                        />
-                      ))}
-                    </div>
-                    <PaymentPrompt 
-                      isProcessingPayment={isProcessingPayment} 
-                      onPayment={onPayment}
-                    />
-                  </>
-                )}
-              </div>
+            <TabsContent value="recommendations">
+              <ResultsRecommendationsTab 
+                groupedResults={groupedResults}
+                hasPaid={hasPaid}
+                isProcessingPayment={isProcessingPayment}
+                onPayment={onPayment}
+                testType={testType}
+              />
             </TabsContent>
             
-            <TabsContent value="insights" className="p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-2">Analyses approfondies</h3>
-                {hasPaid ? (
-                  <div>
-                    {results.aiInsights ? (
-                      <ResultItem 
-                        itemKey="aiInsights" 
-                        value={results.aiInsights} 
-                        index={0} 
-                        hasPaid={true}
-                        testType={testType}
-                      />
-                    ) : (
-                      <p className="text-gray-500">Analyses IA non disponibles pour ce test.</p>
-                    )}
-                  </div>
-                ) : (
-                  <PaymentPrompt 
-                    isProcessingPayment={isProcessingPayment} 
-                    onPayment={onPayment}
-                  />
-                )}
-              </div>
+            <TabsContent value="insights">
+              <ResultsInsightsTab 
+                results={results}
+                hasPaid={hasPaid}
+                isProcessingPayment={isProcessingPayment}
+                onPayment={onPayment}
+                testType={testType}
+              />
             </TabsContent>
           </Tabs>
           

@@ -22,6 +22,8 @@ import Impressum from "@/pages/Impressum";
 import DataProtection from "@/pages/DataProtection";
 import OrientationGuide from "@/pages/OrientationGuide";
 import NotFound from "@/pages/NotFound";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
@@ -40,6 +42,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           
           {/* Test Routes */}
           <Route path="/test-riasec" element={<RiasecTest />} />
