@@ -16,6 +16,7 @@ import LearningStyleTest from "@/pages/LearningStyleTest";
 import MultipleIntelligenceTest from "@/pages/MultipleIntelligenceTest";
 import CareerTransitionTest from "@/pages/CareerTransitionTest";
 import NoDiplomaCareerTest from "@/pages/NoDiplomaCareerTest";
+import SeniorEmploymentTest from "@/pages/SeniorEmploymentTest";
 import Establishments from "@/pages/Establishments";
 import Contact from "@/pages/Contact";
 import Impressum from "@/pages/Impressum";
@@ -53,6 +54,7 @@ function App() {
           <Route path="/test-multiple" element={<MultipleIntelligenceTest />} />
           <Route path="/test-career-transition" element={<CareerTransitionTest />} />
           <Route path="/test-no-diploma" element={<NoDiplomaCareerTest />} />
+          <Route path="/test-senior-employment" element={<SeniorEmploymentTest />} />
           
           {/* Admin Routes */}
           <Route path="/admin/blog" element={<RequireAuth><BlogAdmin /></RequireAuth>} />

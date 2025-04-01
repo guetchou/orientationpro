@@ -18,6 +18,7 @@ export interface WordPressPost {
   slug: string;
   link: string;
   modified: string;
+  status?: string;
   _embedded?: {
     author?: {
       id: number;
