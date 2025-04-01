@@ -5,6 +5,7 @@ import {
   Users,
   Settings,
   Key,
+  BookOpen,
 } from "lucide-react";
 
 import { NavItem, NavList } from "@/components/ui/nav";
@@ -20,6 +21,7 @@ export function DashboardNav() {
         <>
           <NavItem href="/admin/dashboard" label="Tableau de bord" icon={<LayoutDashboard size={16} />} />
           <NavItem href="/admin/cms" label="Gestion de contenu" icon={<FileText size={16} />} />
+          <NavItem href="/admin/blog" label="Gestion du blog" icon={<BookOpen size={16} />} />
           <NavItem href="/admin/user-management" label="Gestion des utilisateurs" icon={<Users size={16} />} />
           <NavItem href="/admin/user-credentials" label="Identifiants & Rôles" icon={<Key size={16} />} />
         </>

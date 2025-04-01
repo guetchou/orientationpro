@@ -22,7 +22,15 @@ export const wordpressService = {
       }
       
       const response = await axios.get(`${WP_API_URL}/posts?${params.toString()}`);
-      return response.data;
+      
+      // Store total pages in a variable
+      const totalPages = parseInt(response.headers['x-wp-totalpages'] || '1', 10);
+      
+      // Add totalPages property to the response data array
+      const posts = response.data;
+      (posts as any).totalPages = totalPages;
+      
+      return posts;
     } catch (error) {
       console.error('Error fetching WordPress posts:', error);
       return [];
@@ -37,6 +45,75 @@ export const wordpressService = {
     } catch (error) {
       console.error('Error fetching WordPress post by slug:', error);
       return null;
+    }
+  },
+
+  // Fetch a single post by ID
+  getPostById: async (id: number): Promise<WordPressPost | null> => {
+    try {
+      const response = await axios.get(`${WP_API_URL}/posts/${id}?_embed=true`);
+      return response.data || null;
+    } catch (error) {
+      console.error('Error fetching WordPress post by ID:', error);
+      return null;
+    }
+  },
+  
+  // Create a new post
+  createPost: async (postData: Partial<WordPressPost>, token: string): Promise<WordPressPost | null> => {
+    try {
+      const response = await axios.post(
+        `${WP_API_URL}/posts`, 
+        postData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error creating WordPress post:', error);
+      return null;
+    }
+  },
+  
+  // Update an existing post
+  updatePost: async (id: number, postData: Partial<WordPressPost>, token: string): Promise<WordPressPost | null> => {
+    try {
+      const response = await axios.put(
+        `${WP_API_URL}/posts/${id}`, 
+        postData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error updating WordPress post:', error);
+      return null;
+    }
+  },
+  
+  // Delete a post
+  deletePost: async (id: number, token: string): Promise<boolean> => {
+    try {
+      await axios.delete(
+        `${WP_API_URL}/posts/${id}?force=true`, 
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return true;
+    } catch (error) {
+      console.error('Error deleting WordPress post:', error);
+      return false;
     }
   },
   
@@ -69,6 +146,29 @@ export const wordpressService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching WordPress media:', error);
+      return null;
+    }
+  },
+  
+  // Upload media
+  uploadMedia: async (file: File, token: string): Promise<WordPressMedia | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${WP_API_URL}/media`, 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading media to WordPress:', error);
       return null;
     }
   },

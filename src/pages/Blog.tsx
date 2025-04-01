@@ -2,19 +2,10 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarIcon, Clock, Search, Tag, User } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Link } from "react-router-dom";
 import { ChatBot } from "@/components/chat/ChatBot";
 import { wordpressService } from "@/services/wordpressService";
 import { WordPressPost } from "@/types/wordpress";
 import { toast } from "sonner";
-import { Pagination } from "@/components/blog/Pagination";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { BlogPost } from "@/components/blog/BlogPost";
 import { BlogSkeleton } from "@/components/blog/BlogSkeleton";
@@ -45,10 +36,10 @@ export default function Blog() {
       setLoading(true);
       const data = await wordpressService.getPosts(currentPage, postsPerPage, searchTerm);
       
-      // Get total pages from headers - this assumes the WordPress API returns X-WP-TotalPages header
-      // You might need to adjust this based on your WordPress setup
-      const totalPagesFromHeader = parseInt(data.headers?.['x-wp-totalpages'] || '1');
-      setTotalPages(totalPagesFromHeader);
+      // Get total pages - now the totalPages should be available on the data
+      if ((data as any).totalPages) {
+        setTotalPages((data as any).totalPages);
+      }
       
       setPosts(data);
     } catch (error) {
@@ -93,11 +84,27 @@ export default function Blog() {
               ))}
             </div>
             
-            <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              onPageChange={handlePageChange} 
-            />
+            <div className="flex justify-center mt-8">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded border bg-white/80 disabled:opacity-50"
+                >
+                  Précédent
+                </button>
+                <span className="text-sm">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1 rounded border bg-white/80 disabled:opacity-50"
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
           </>
         ) : (
           <BlogEmpty searchTerm={searchTerm} onReset={() => setSearchTerm("")} />

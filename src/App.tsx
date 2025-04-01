@@ -24,6 +24,7 @@ import OrientationGuide from "@/pages/OrientationGuide";
 import NotFound from "@/pages/NotFound";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
+import BlogAdmin from "@/pages/admin/BlogAdmin";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
@@ -52,6 +53,9 @@ function App() {
           <Route path="/test-multiple" element={<MultipleIntelligenceTest />} />
           <Route path="/test-career-transition" element={<CareerTransitionTest />} />
           <Route path="/test-no-diploma" element={<NoDiplomaCareerTest />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/blog" element={<RequireAuth><BlogAdmin /></RequireAuth>} />
           
           <Route path="/establishments" element={<Establishments />} />
           <Route path="/contact" element={<Contact />} />

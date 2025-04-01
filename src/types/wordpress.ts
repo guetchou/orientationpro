@@ -18,6 +18,36 @@ export interface WordPressPost {
   slug: string;
   link: string;
   modified: string;
+  _embedded?: {
+    author?: {
+      id: number;
+      name: string;
+      avatar_urls?: {
+        [key: string]: string;
+      };
+    }[];
+    "wp:featuredmedia"?: {
+      id: number;
+      source_url: string;
+      media_details?: {
+        sizes: {
+          thumbnail?: {
+            source_url: string;
+          };
+          medium?: {
+            source_url: string;
+          };
+          large?: {
+            source_url: string;
+          };
+          full?: {
+            source_url: string;
+          };
+        };
+      };
+    }[];
+    "wp:term"?: any[][];
+  };
 }
 
 export interface WordPressCategory {
