@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { wordpressService } from '@/services/wordpressService';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { WordPressPost } from '@/types/wordpress';
+import { WordPressPost, WordPressCategory } from '@/types/wordpress';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,6 +15,7 @@ const BlogAdmin = () => {
   const isSuperAdmin = profileData?.role === 'super_admin';
   
   const [posts, setPosts] = useState<WordPressPost[]>([]);
+  const [categories, setCategories] = useState<WordPressCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState<WordPressPost | null>(null);
@@ -23,18 +24,29 @@ const BlogAdmin = () => {
 
   useEffect(() => {
     fetchPosts();
+    fetchCategories();
   }, []);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const fetchedPosts = await wordpressService.getPosts(1, 100, '');
+      const fetchedPosts = await wordpressService.getPosts(1, 100);
       setPosts(fetchedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Erreur lors du chargement des articles');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const fetchedCategories = await wordpressService.getCategories();
+      setCategories(fetchedCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Erreur lors du chargement des catégories');
     }
   };
 
@@ -185,6 +197,8 @@ const BlogAdmin = () => {
             post={currentPost} 
             onSave={handleSave}
             onCancel={() => setIsEditorOpen(false)}
+            isNew={!currentPost}
+            categories={categories}
           />
         </DialogContent>
       </Dialog>
