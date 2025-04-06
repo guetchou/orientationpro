@@ -1,75 +1,109 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
-const DataProtection = () => {
+export default function DataProtection() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
-      <div className="container mx-auto px-4">
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl">Protection des données</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-2">1. Données collectées</h3>
-              <p>Nous collectons les données suivantes :</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Informations personnelles : nom, prénom, adresse email, numéro de téléphone</li>
-                <li>Données d'utilisation : résultats des tests, historique de navigation, préférences</li>
-                <li>Données techniques : adresse IP, type de navigateur, appareil utilisé</li>
-              </ul>
-            </div>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <main className="flex-1 container mx-auto px-4 py-20">
+        <div className="max-w-3xl mx-auto prose">
+          <h1 className="text-3xl font-bold mb-6">Protection des données</h1>
+          
+          <div className="space-y-6">
+            <section>
+              <h2 className="text-2xl font-semibold">Politique de confidentialité</h2>
+              <p>
+                Dernière mise à jour : 6 avril 2025
+              </p>
+              <p>
+                OrientationPro s'engage à protéger vos données personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos informations lorsque vous utilisez notre site web et nos services.
+              </p>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">2. Utilisation des données</h3>
-              <p>Vos données sont utilisées pour :</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Vous fournir nos services d'orientation professionnelle</li>
-                <li>Améliorer et personnaliser votre expérience utilisateur</li>
+            <section>
+              <h2 className="text-2xl font-semibold">Collecte de données</h2>
+              <p>
+                Nous collectons les informations suivantes :
+              </p>
+              <ul className="list-disc pl-6">
+                <li>Informations d'identification (nom, prénom, email)</li>
+                <li>Données de profil (parcours scolaire, centres d'intérêt)</li>
+                <li>Résultats de tests d'orientation</li>
+                <li>Données de navigation et d'utilisation du site</li>
+              </ul>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold">Utilisation des données</h2>
+              <p>
+                Nous utilisons vos données pour :
+              </p>
+              <ul className="list-disc pl-6">
+                <li>Fournir nos services d'orientation professionnelle</li>
+                <li>Personnaliser votre expérience utilisateur</li>
+                <li>Améliorer nos services et développer de nouvelles fonctionnalités</li>
                 <li>Vous contacter concernant votre compte ou nos services</li>
-                <li>Analyser l'utilisation de notre plateforme</li>
               </ul>
-            </div>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">3. Partage des données</h3>
-              <p>Nous ne partageons vos données qu'avec :</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Nos prestataires de services (hébergement, paiement, analyses)</li>
-                <li>Les autorités compétentes en cas d'obligation légale</li>
+            <section>
+              <h2 className="text-2xl font-semibold">Protection des données</h2>
+              <p>
+                Nous mettons en œuvre des mesures de sécurité pour protéger vos données contre tout accès, modification, divulgation ou destruction non autorisés. Nos pratiques incluent :
+              </p>
+              <ul className="list-disc pl-6">
+                <li>Le chiffrement des données sensibles</li>
+                <li>Des protocoles de sécurité pour les transferts de données</li>
+                <li>Des contrôles d'accès stricts pour notre personnel</li>
+                <li>Des audits de sécurité réguliers</li>
               </ul>
-              <p className="mt-2">Nous ne vendons jamais vos données personnelles à des tiers.</p>
-            </div>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">4. Conservation des données</h3>
-              <p>Vos données sont conservées pendant la durée de votre utilisation de nos services, et jusqu'à 2 ans après votre dernière connexion, sauf obligation légale de conservation plus longue.</p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-2">5. Sécurité des données</h3>
-              <p>Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées pour protéger vos données personnelles contre la perte, l'accès non autorisé ou toute forme de traitement illicite.</p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-2">6. Vos droits</h3>
-              <p>Vous disposez des droits suivants concernant vos données personnelles :</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Accès et copie de vos données</li>
-                <li>Rectification et mise à jour</li>
-                <li>Effacement (droit à l'oubli)</li>
-                <li>Limitation du traitement</li>
-                <li>Opposition au traitement</li>
-                <li>Portabilité de vos données</li>
+            <section>
+              <h2 className="text-2xl font-semibold">Vos droits</h2>
+              <p>
+                Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez des droits suivants :
+              </p>
+              <ul className="list-disc pl-6">
+                <li>Droit d'accès à vos données personnelles</li>
+                <li>Droit de rectification de vos données</li>
+                <li>Droit à l'effacement ("droit à l'oubli")</li>
+                <li>Droit à la limitation du traitement</li>
+                <li>Droit à la portabilité des données</li>
+                <li>Droit d'opposition au traitement</li>
               </ul>
-              <p className="mt-2">Pour exercer ces droits, contactez-nous à privacy@orientme.cg</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <p>
+                Pour exercer ces droits, veuillez nous contacter à l'adresse suivante : privacy@orientationpro.com
+              </p>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold">Cookies</h2>
+              <p>
+                Notre site utilise des cookies pour améliorer votre expérience de navigation. Vous pouvez configurer votre navigateur pour refuser les cookies, mais certaines fonctionnalités du site pourraient ne plus être disponibles.
+              </p>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold">Modifications de la politique</h2>
+              <p>
+                Nous pouvons mettre à jour cette politique de temps à autre. Nous vous informerons de tout changement important par email ou par une notification sur notre site.
+              </p>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold">Contact</h2>
+              <p>
+                Pour toute question concernant cette politique ou nos pratiques en matière de protection des données, veuillez nous contacter à privacy@orientationpro.com.
+              </p>
+            </section>
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
     </div>
   );
-};
-
-export default DataProtection;
+}

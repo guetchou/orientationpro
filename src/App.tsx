@@ -28,9 +28,10 @@ import BlogPost from "@/pages/BlogPost";
 import BlogAdmin from "@/pages/admin/BlogAdmin";
 import Recrutement from "@/pages/Recrutement";
 import ATSAdmin from "@/pages/admin/ATSAdmin";
+import SuperAdmin from "@/pages/admin/SuperAdmin";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/blog" element={<RequireAuth><BlogAdmin /></RequireAuth>} />
           <Route path="/admin/ats" element={<RequireAuth><ATSAdmin /></RequireAuth>} />
+          <Route path="/admin/super-admin" element={<SuperAdmin />} />
           
           <Route path="/establishments" element={<Establishments />} />
           <Route path="/contact" element={<Contact />} />

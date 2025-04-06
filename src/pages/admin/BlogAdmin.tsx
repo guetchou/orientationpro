@@ -10,8 +10,8 @@ import { BlogPostEditor } from '@/components/admin/blog/BlogPostEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-// Define types for Blog Posts and BlogPostTable
-interface BlogPost {
+// Define types for Blog Posts
+export interface BlogPost {
   id: string;
   title: string;
   slug: string;
@@ -24,6 +24,22 @@ interface BlogPost {
   updated_at: string;
 }
 
+export interface BlogPostEditorProps {
+  initialData: {
+    title: string;
+    slug: string;
+    content: string;
+    excerpt: string;
+    category: string;
+    status: string;
+    featured_image: string;
+  };
+  isEditing: boolean;
+  onSubmit: (data: any) => Promise<void>;
+  onCancel: () => void;
+}
+
+// Modifions l'interface pour correspondre aux props attendues par BlogPostTable
 interface BlogPostTableProps {
   posts: BlogPost[];
   loading: boolean;
@@ -234,7 +250,7 @@ export default function BlogAdmin() {
             </DialogTitle>
           </DialogHeader>
           <BlogPostEditor
-            data={formData}
+            initialData={formData}
             isEditing={isEditing}
             onSubmit={(data) => handleSubmit(data, isEditing)}
             onCancel={() => setShowDialog(false)}

@@ -1,56 +1,98 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
-const Impressum = () => {
+export default function Impressum() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
-      <div className="container mx-auto px-4">
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl">Mentions légales</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-2">Éditeur du site</h3>
-              <p>Nom de l'entreprise : OrientMe</p>
-              <p>Forme juridique : SARL</p>
-              <p>Adresse : Avenue de la Paix, Brazzaville, République du Congo</p>
-              <p>Téléphone : +242 00 00 00 00</p>
-              <p>Email : contact@orientme.cg</p>
-            </div>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <main className="flex-1 container mx-auto px-4 py-20">
+        <div className="max-w-3xl mx-auto prose">
+          <h1 className="text-3xl font-bold mb-6">Impressum</h1>
+          
+          <div className="space-y-6">
+            <section>
+              <h2 className="text-2xl font-semibold">Informations légales</h2>
+              <p>
+                Conformément aux dispositions des articles 6-III et 19 de la Loi n° 2004-575 du 21 juin 2004 pour la Confiance dans l'économie numérique, nous portons à la connaissance des utilisateurs du site OrientationPro les informations suivantes.
+              </p>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">Directeur de la publication</h3>
-              <p>Nom : Jean Dupont</p>
-              <p>Fonction : Directeur Général</p>
-            </div>
+            <section>
+              <h2 className="text-2xl font-semibold">Éditeur</h2>
+              <p>
+                Le site OrientationPro est édité par :
+              </p>
+              <div className="pl-4">
+                <p>OrientationPro SAS</p>
+                <p>12 Avenue de l'Innovation</p>
+                <p>75008 Paris</p>
+                <p>France</p>
+                <p>SIRET : 123 456 789 00010</p>
+                <p>Capital social : 50 000 €</p>
+                <p>TVA Intracommunautaire : FR 12 345678910</p>
+                <p>Email : contact@orientationpro.com</p>
+                <p>Téléphone : +33 1 23 45 67 89</p>
+              </div>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">Hébergement</h3>
-              <p>Nom : Supabase</p>
-              <p>Adresse : 123 Market Street, San Francisco, CA 94103, USA</p>
-            </div>
+            <section>
+              <h2 className="text-2xl font-semibold">Directeur de la publication</h2>
+              <p>
+                Le Directeur de la publication est Marie Dubois, en sa qualité de Présidente de OrientationPro SAS.
+              </p>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">Propriété intellectuelle</h3>
-              <p>L'ensemble du contenu du site web, incluant textes, images, vidéos, et éléments graphiques est la propriété exclusive d'OrientMe, sauf mention contraire. Toute reproduction ou diffusion non autorisée est strictement interdite.</p>
-            </div>
+            <section>
+              <h2 className="text-2xl font-semibold">Hébergeur</h2>
+              <p>
+                Le site OrientationPro est hébergé par :
+              </p>
+              <div className="pl-4">
+                <p>Lovable.ai</p>
+                <p>123 AI Avenue</p>
+                <p>San Francisco, CA 94107</p>
+                <p>États-Unis</p>
+                <p>contact@lovable.ai</p>
+              </div>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">Protection des données personnelles</h3>
-              <p>Conformément à la loi sur la protection des données personnelles, les utilisateurs disposent d'un droit d'accès, de rectification et de suppression des données les concernant. Pour exercer ce droit, contactez-nous à l'adresse suivante : privacy@orientme.cg</p>
-            </div>
+            <section>
+              <h2 className="text-2xl font-semibold">Propriété intellectuelle</h2>
+              <p>
+                L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur et la propriété intellectuelle. Tous les droits de reproduction sont réservés, y compris pour les documents téléchargeables et les représentations iconographiques et photographiques.
+              </p>
+              <p>
+                La reproduction de tout ou partie de ce site sur un support électronique ou autre est formellement interdite sauf autorisation expresse du directeur de la publication.
+              </p>
+            </section>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">Cookies</h3>
-              <p>Ce site utilise des cookies à des fins d'analyse de trafic et d'amélioration de l'expérience utilisateur. En naviguant sur ce site, vous acceptez l'utilisation de ces cookies.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <section>
+              <h2 className="text-2xl font-semibold">Limitation de responsabilité</h2>
+              <p>
+                OrientationPro s'efforce d'assurer au mieux de ses possibilités l'exactitude et la mise à jour des informations diffusées sur ce site, dont elle se réserve le droit de corriger, à tout moment et sans préavis, le contenu. Toutefois, OrientationPro ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations mises à la disposition sur ce site.
+              </p>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold">Données personnelles</h2>
+              <p>
+                Les informations concernant la collecte et le traitement de vos données personnelles sont détaillées dans notre <a href="/data-protection" className="text-primary hover:underline">Politique de protection des données</a>.
+              </p>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold">Droit applicable et juridiction compétente</h2>
+              <p>
+                Tout litige en relation avec l'utilisation du site OrientationPro est soumis au droit français. Il est fait attribution exclusive de juridiction aux tribunaux compétents de Paris.
+              </p>
+            </section>
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
     </div>
   );
-};
-
-export default Impressum;
+}
