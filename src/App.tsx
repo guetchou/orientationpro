@@ -26,6 +26,8 @@ import NotFound from "@/pages/NotFound";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
 import BlogAdmin from "@/pages/admin/BlogAdmin";
+import Recrutement from "@/pages/Recrutement";
+import ATSAdmin from "@/pages/admin/ATSAdmin";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
@@ -46,6 +48,7 @@ function App() {
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/recrutement" element={<Recrutement />} />
           
           {/* Test Routes */}
           <Route path="/test-riasec" element={<RiasecTest />} />
@@ -58,6 +61,7 @@ function App() {
           
           {/* Admin Routes */}
           <Route path="/admin/blog" element={<RequireAuth><BlogAdmin /></RequireAuth>} />
+          <Route path="/admin/ats" element={<RequireAuth><ATSAdmin /></RequireAuth>} />
           
           <Route path="/establishments" element={<Establishments />} />
           <Route path="/contact" element={<Contact />} />
