@@ -1,37 +1,75 @@
 
-import React, { useState, useEffect } from 'react';
-import { wordpressService } from '@/services/wordpressService';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { WordPressPost, WordPressCategory } from '@/types/wordpress';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BlogPostEditor } from '@/components/admin/blog/BlogPostEditor';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
+import { BlogPostTable } from '@/components/admin/blog/BlogPostTable';
+import { BlogPostEditor } from '@/components/admin/blog/BlogPostEditor';
+import { supabase } from '@/integrations/supabase/client';
 
-const BlogAdmin = () => {
-  const { profileData } = useAuth();
-  const isSuperAdmin = profileData?.role === 'super_admin';
-  
-  const [posts, setPosts] = useState<WordPressPost[]>([]);
-  const [categories, setCategories] = useState<WordPressCategory[]>([]);
+export default function BlogAdmin() {
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [currentPost, setCurrentPost] = useState<WordPressPost | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    category: 'news',
+    status: 'draft',
+    featured_image: '',
+  });
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     fetchPosts();
-    fetchCategories();
   }, []);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const fetchedPosts = await wordpressService.getPosts(1, 100);
-      setPosts(fetchedPosts);
+      // Replace with your actual data fetching logic
+      const mockPosts = [
+        {
+          id: '1',
+          title: 'Guide complet pour choisir son orientation',
+          slug: 'guide-orientation',
+          status: 'published',
+          category: 'guides',
+          excerpt: 'Découvrez comment faire les bons choix pour votre avenir professionnel',
+          created_at: '2024-01-15T10:30:00Z',
+          updated_at: '2024-01-16T14:20:00Z',
+        },
+        {
+          id: '2',
+          title: 'Les métiers d\'avenir dans la tech',
+          slug: 'metiers-avenir-tech',
+          status: 'published',
+          category: 'career',
+          excerpt: 'Quels sont les métiers qui recruteront le plus dans les 10 prochaines années',
+          created_at: '2024-02-01T09:15:00Z',
+          updated_at: '2024-02-01T09:15:00Z',
+        },
+        {
+          id: '3',
+          title: 'Préparer son entretien d\'embauche',
+          slug: 'preparer-entretien',
+          status: 'draft',
+          category: 'tips',
+          excerpt: 'Les conseils essentiels pour réussir vos entretiens d\'embauche',
+          created_at: '2024-03-10T16:20:00Z',
+          updated_at: '2024-03-10T16:20:00Z',
+        },
+      ];
+      setPosts(mockPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Erreur lors du chargement des articles');
@@ -40,170 +78,107 @@ const BlogAdmin = () => {
     }
   };
 
-  const fetchCategories = async () => {
+  const handleCreatePost = () => {
+    setFormData({
+      title: '',
+      slug: '',
+      content: '',
+      excerpt: '',
+      category: 'news',
+      status: 'draft',
+      featured_image: '',
+    });
+    setIsEditing(false);
+    setShowDialog(true);
+  };
+
+  const handleEditPost = (post: any) => {
+    setFormData({
+      ...post,
+      content: post.content || '',
+      featured_image: post.featured_image || '',
+    });
+    setSelectedPost(post);
+    setIsEditing(true);
+    setShowDialog(true);
+  };
+
+  const handleSubmit = async (data: any, isEditing: boolean) => {
     try {
-      const fetchedCategories = await wordpressService.getCategories();
-      setCategories(fetchedCategories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Erreur lors du chargement des catégories');
-    }
-  };
-
-  const handleCreateNew = () => {
-    setCurrentPost(null);
-    setIsEditorOpen(true);
-  };
-
-  const handleEdit = (post: WordPressPost) => {
-    setCurrentPost(post);
-    setIsEditorOpen(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
-      return;
-    }
-
-    try {
-      setIsDeleting(true);
-      setDeleteId(id);
-      await wordpressService.deletePost(id);
-      toast.success('Article supprimé avec succès');
-      fetchPosts();
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      toast.error('Erreur lors de la suppression de l\'article');
-    } finally {
-      setIsDeleting(false);
-      setDeleteId(null);
-    }
-  };
-
-  const handleSave = async (post: Partial<WordPressPost>) => {
-    try {
-      if (post.id) {
+      if (isEditing) {
         // Update existing post
-        await wordpressService.updatePost(post.id, post);
         toast.success('Article mis à jour avec succès');
       } else {
         // Create new post
-        await wordpressService.createPost(post);
         toast.success('Article créé avec succès');
       }
-      setIsEditorOpen(false);
+      setShowDialog(false);
       fetchPosts();
     } catch (error) {
       console.error('Error saving post:', error);
-      toast.error('Erreur lors de la sauvegarde de l\'article');
+      toast.error('Erreur lors de l\'enregistrement de l\'article');
     }
   };
 
-  if (!isSuperAdmin) {
-    return (
-      <DashboardLayout>
-        <div className="p-4">
-          <h1 className="text-2xl font-bold mb-4">Gestion du Blog</h1>
-          <p className="text-red-500">Vous n'avez pas les autorisations nécessaires pour accéder à cette page.</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Gestion du Blog</h1>
-          <Button onClick={handleCreateNew} className="bg-green-600 hover:bg-green-700">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Nouvel article
-          </Button>
+      <div className="flex flex-col gap-4 md:gap-8 p-4 md:p-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Gestion du Blog</h1>
+          <Button onClick={handleCreatePost}>Nouvel article</Button>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {posts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                      Aucun article trouvé
-                    </td>
-                  </tr>
-                ) : (
-                  posts.map(post => (
-                    <tr key={post.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{post.title.rendered}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{new Date(post.date).toLocaleDateString('fr-FR')}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          {post.status || 'Publié'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-blue-600 hover:text-blue-800 mr-2"
-                          onClick={() => handleEdit(post)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-600 hover:text-red-800"
-                          onClick={() => handleDelete(post.id)}
-                          disabled={isDeleting && deleteId === post.id}
-                        >
-                          {isDeleting && deleteId === post.id ? 
-                            <div className="animate-spin h-4 w-4 border-2 border-red-600 rounded-full border-t-transparent"></div> : 
-                            <Trash2 className="h-4 w-4" />
-                          }
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">Tous les articles</TabsTrigger>
+            <TabsTrigger value="published">Publiés</TabsTrigger>
+            <TabsTrigger value="drafts">Brouillons</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-6">
+            <BlogPostTable
+              posts={posts}
+              loading={loading}
+              onEdit={handleEditPost}
+              onDelete={(id) => console.log('Delete post', id)}
+            />
+          </TabsContent>
+          
+          <TabsContent value="published" className="mt-6">
+            <BlogPostTable
+              posts={posts.filter(post => post.status === 'published')}
+              loading={loading}
+              onEdit={handleEditPost}
+              onDelete={(id) => console.log('Delete post', id)}
+            />
+          </TabsContent>
+          
+          <TabsContent value="drafts" className="mt-6">
+            <BlogPostTable
+              posts={posts.filter(post => post.status === 'draft')}
+              loading={loading}
+              onEdit={handleEditPost}
+              onDelete={(id) => console.log('Delete post', id)}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{currentPost ? 'Modifier l\'article' : 'Nouvel article'}</DialogTitle>
+            <DialogTitle>
+              {isEditing ? 'Modifier l\'article' : 'Nouvel article'}
+            </DialogTitle>
           </DialogHeader>
-          <BlogPostEditor 
-            post={currentPost} 
-            onSave={handleSave}
-            onCancel={() => setIsEditorOpen(false)}
-            isNew={!currentPost}
-            categories={categories}
+          <BlogPostEditor
+            initialData={formData}
+            isEditing={isEditing}
+            onSubmit={(data) => handleSubmit(data, isEditing)}
+            onCancel={() => setShowDialog(false)}
           />
         </DialogContent>
       </Dialog>
     </DashboardLayout>
   );
-};
-
-export default BlogAdmin;
+}

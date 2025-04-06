@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Briefcase, PenTool, School, Users, Clock, ArrowUpRight, ArrowRight, FileText, Loader2, Upload } from "lucide-react";
+import { Briefcase, PenTool, School, Users, Clock, ArrowUpRight, ArrowRight, FileText, Loader2, Upload, Check, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChatBot } from "@/components/chat/ChatBot";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

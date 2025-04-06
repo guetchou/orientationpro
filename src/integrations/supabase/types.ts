@@ -161,6 +161,51 @@ export type Database = {
           },
         ]
       }
+      candidates: {
+        Row: {
+          created_at: string | null
+          email: string
+          experience: string
+          full_name: string
+          id: string
+          motivation: string
+          notes: string | null
+          phone: string
+          position: string
+          rating: number | null
+          resume_url: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          experience: string
+          full_name: string
+          id?: string
+          motivation: string
+          notes?: string | null
+          phone: string
+          position: string
+          rating?: number | null
+          resume_url?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          experience?: string
+          full_name?: string
+          id?: string
+          motivation?: string
+          notes?: string | null
+          phone?: string
+          position?: string
+          rating?: number | null
+          resume_url?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       cms_contents: {
         Row: {
           content: string
