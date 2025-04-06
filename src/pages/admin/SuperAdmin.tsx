@@ -5,13 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function SuperAdmin() {
-  const { createSuperAdmin } = useAuth();
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("admin123");
   const [firstName, setFirstName] = useState("Super");
@@ -67,8 +65,36 @@ export default function SuperAdmin() {
     try {
       console.log("Creating super admin:", email);
       
-      // Use the createSuperAdmin method from useAuth with the correct arguments
-      await createSuperAdmin(email, password, firstName, lastName);
+      // Create the user account with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            is_super_admin: true
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Update the profile to mark as super admin
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            is_super_admin: true,
+            is_master_admin: false
+          });
+        
+        if (profileError) throw profileError;
+      }
       
       toast.success("Compte super administrateur créé avec succès !");
       

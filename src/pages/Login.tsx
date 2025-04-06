@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
-import axios from "axios";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
   const [email, setEmail] = useState("admin@example.com"); // Default email for testing
@@ -26,18 +26,30 @@ export default function Login() {
 
     try {
       console.log("Attempting login with:", { email });
-      await signIn(email, password);
       
-      // If successful, navigate to dashboard
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      if (error.response?.data?.message === "Invalid login credentials") {
+      // Use Supabase client directly for more detailed error handling
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      if (data?.user) {
+        toast.success('Connexion réussie !');
+        // Store token and user data in localStorage
+        localStorage.setItem('authToken', data.session?.access_token || '');
+        localStorage.setItem('userData', JSON.stringify(data.user));
+        navigate("/dashboard");
+      }
+    } catch (err: any) {
+      console.error("Sign in error:", err);
+      if (err.message.includes("Invalid login credentials")) {
         setError("Email ou mot de passe incorrect");
-      } else if (error.message.includes("Email not confirmed")) {
+      } else if (err.message.includes("Email not confirmed")) {
         setError("Veuillez confirmer votre email avant de vous connecter");
       } else {
-        setError(error.message || "Une erreur inattendue s'est produite");
+        setError(err.message || "Une erreur inattendue s'est produite");
       }
     } finally {
       setLoading(false);
@@ -47,8 +59,8 @@ export default function Login() {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
         navigate("/dashboard");
       }
     };
