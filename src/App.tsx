@@ -63,8 +63,9 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/blog" element={<RequireAuth><BlogAdmin /></RequireAuth>} />
           <Route path="/admin/ats" element={<RequireAuth><ATSAdmin /></RequireAuth>} />
-          <Route path="/admin/super-admin" element={<SuperAdmin />} />
+          <Route path="/admin/super-admin" element={<RequireAuth><SuperAdmin /></RequireAuth>} />
           
+          {/* Static Pages */}
           <Route path="/establishments" element={<Establishments />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/impressum" element={<Impressum />} />

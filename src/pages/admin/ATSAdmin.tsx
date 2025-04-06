@@ -4,10 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  CardContent
 } from "@/components/ui/card";
 import {
   Table,
@@ -37,7 +34,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  FileDown,
   MoreHorizontal,
   Search,
   Filter,
@@ -46,9 +42,6 @@ import {
   Download,
   Mail,
   Phone,
-  Check,
-  X,
-  Clock,
   MailIcon,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -436,7 +429,6 @@ export default function ATSAdmin() {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    {/* Use same headers as the 'all' tab */}
                     <TableRow>
                       <TableHead>Candidat</TableHead>
                       <TableHead>Poste</TableHead>
@@ -451,7 +443,6 @@ export default function ATSAdmin() {
                       .filter((c) => c.status === "new")
                       .map((candidate) => (
                         <TableRow key={candidate.id}>
-                          {/* Similar row content as in the 'all' tab */}
                           <TableCell>
                             <div>
                               <p className="font-medium">{candidate.full_name}</p>

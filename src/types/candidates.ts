@@ -9,7 +9,7 @@ export interface Candidate {
   resume_url: string | null;
   motivation: string;
   experience: string;
-  status: 'new' | 'reviewing' | 'interview' | 'rejected' | 'hired';
+  status: 'new' | 'contacted' | 'interview' | 'offer' | 'hired' | 'rejected';
   rating: number;
   notes: string | null;
 }

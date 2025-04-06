@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { BlogPostTable } from '@/components/admin/blog/BlogPostTable';
@@ -39,7 +38,6 @@ export interface BlogPostEditorProps {
   onCancel: () => void;
 }
 
-// Modifions l'interface pour correspondre aux props attendues par BlogPostTable
 interface BlogPostTableProps {
   posts: BlogPost[];
   loading: boolean;
@@ -79,13 +77,13 @@ export default function BlogAdmin() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      // Replace with your actual data fetching logic
+      // Mock data for example
       const mockPosts = [
         {
           id: '1',
           title: 'Guide complet pour choisir son orientation',
           slug: 'guide-orientation',
-          status: 'published',
+          status: 'published' as const,
           category: 'guides',
           excerpt: 'Découvrez comment faire les bons choix pour votre avenir professionnel',
           created_at: '2024-01-15T10:30:00Z',
@@ -95,7 +93,7 @@ export default function BlogAdmin() {
           id: '2',
           title: 'Les métiers d\'avenir dans la tech',
           slug: 'metiers-avenir-tech',
-          status: 'published',
+          status: 'published' as const,
           category: 'career',
           excerpt: 'Quels sont les métiers qui recruteront le plus dans les 10 prochaines années',
           created_at: '2024-02-01T09:15:00Z',
@@ -105,14 +103,14 @@ export default function BlogAdmin() {
           id: '3',
           title: 'Préparer son entretien d\'embauche',
           slug: 'preparer-entretien',
-          status: 'draft',
+          status: 'draft' as const,
           category: 'tips',
           excerpt: 'Les conseils essentiels pour réussir vos entretiens d\'embauche',
           created_at: '2024-03-10T16:20:00Z',
           updated_at: '2024-03-10T16:20:00Z',
         },
       ];
-      setPosts(mockPosts as BlogPost[]);
+      setPosts(mockPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Erreur lors du chargement des articles');
