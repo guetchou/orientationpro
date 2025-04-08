@@ -1,260 +1,154 @@
 
-import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { BlogPostTable } from '@/components/admin/blog/BlogPostTable';
-import { BlogPostEditor } from '@/components/admin/blog/BlogPostEditor';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-// Define types for Blog Posts
-export interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  content?: string;
-  excerpt: string;
-  category: string;
-  status: 'draft' | 'published';
-  featured_image?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface BlogPostEditorProps {
-  initialData: {
-    title: string;
-    slug: string;
-    content: string;
-    excerpt: string;
-    category: string;
-    status: string;
-    featured_image: string;
-  };
-  isEditing: boolean;
-  onSubmit: (data: any) => Promise<void>;
-  onCancel: () => void;
-}
-
-interface BlogPostTableProps {
-  posts: BlogPost[];
-  loading: boolean;
-  searchTerm: string;
-  currentPage: number;
-  totalPages: number;
-  onEdit: (post: BlogPost) => void;
-  onDelete: (id: string) => void;
-  onNew: () => void;
-  onPageChange: (page: number) => void;
-  onSearch: (term: string) => void;
-}
+import { BlogPost } from '@/types/blog';
+import BlogPostsTable from '@/components/admin/blog/BlogPostsTable';
+import BlogPostEditor from '@/components/admin/blog/BlogPostEditor';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 export default function BlogAdmin() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    content: '',
-    excerpt: '',
-    category: 'news',
-    status: 'draft',
-    featured_image: '',
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchPosts();
   }, []);
 
-  const fetchPosts = async () => {
+  async function fetchPosts() {
     try {
       setLoading(true);
-      // Mock data for example
-      const mockPosts = [
-        {
-          id: '1',
-          title: 'Guide complet pour choisir son orientation',
-          slug: 'guide-orientation',
-          status: 'published' as const,
-          category: 'guides',
-          excerpt: 'Découvrez comment faire les bons choix pour votre avenir professionnel',
-          created_at: '2024-01-15T10:30:00Z',
-          updated_at: '2024-01-16T14:20:00Z',
-        },
-        {
-          id: '2',
-          title: 'Les métiers d\'avenir dans la tech',
-          slug: 'metiers-avenir-tech',
-          status: 'published' as const,
-          category: 'career',
-          excerpt: 'Quels sont les métiers qui recruteront le plus dans les 10 prochaines années',
-          created_at: '2024-02-01T09:15:00Z',
-          updated_at: '2024-02-01T09:15:00Z',
-        },
-        {
-          id: '3',
-          title: 'Préparer son entretien d\'embauche',
-          slug: 'preparer-entretien',
-          status: 'draft' as const,
-          category: 'tips',
-          excerpt: 'Les conseils essentiels pour réussir vos entretiens d\'embauche',
-          created_at: '2024-03-10T16:20:00Z',
-          updated_at: '2024-03-10T16:20:00Z',
-        },
-      ];
-      setPosts(mockPosts);
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Erreur lors du chargement des articles');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleCreatePost = () => {
-    setFormData({
-      title: '',
-      slug: '',
-      content: '',
-      excerpt: '',
-      category: 'news',
-      status: 'draft',
-      featured_image: '',
-    });
-    setIsEditing(false);
-    setShowDialog(true);
-  };
-
-  const handleEditPost = (post: BlogPost) => {
-    setFormData({
-      ...post,
-      content: post.content || '',
-      featured_image: post.featured_image || '',
-    });
-    setSelectedPost(post);
-    setIsEditing(true);
-    setShowDialog(true);
-  };
-
-  const handleDeletePost = (id: string) => {
-    console.log('Delete post', id);
-    // Add deletion logic here
-    toast.success('Article supprimé avec succès');
-    fetchPosts();
-  };
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    // Implement search logic
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    // Implement pagination
-  };
-
-  const handleSubmit = async (data: any, isEditing: boolean) => {
+  async function createPost(newPost: Partial<BlogPost>) {
     try {
-      if (isEditing) {
-        // Update existing post
-        toast.success('Article mis à jour avec succès');
-      } else {
-        // Create new post
-        toast.success('Article créé avec succès');
-      }
-      setShowDialog(false);
-      fetchPosts();
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .insert([
+          {
+            ...newPost,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+      toast.success('Article créé avec succès');
+      setPosts([data[0], ...posts]);
+      setIsCreating(false);
     } catch (error) {
-      console.error('Error saving post:', error);
-      toast.error('Erreur lors de l\'enregistrement de l\'article');
+      console.error('Error creating post:', error);
+      toast.error('Erreur lors de la création de l\'article');
     }
+  }
+
+  async function updatePost(updatedPost: BlogPost) {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({
+          ...updatedPost,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', updatedPost.id);
+
+      if (error) throw error;
+      toast.success('Article mis à jour avec succès');
+      setPosts(posts.map(post => post.id === updatedPost.id ? updatedPost : post));
+      setEditingPost(null);
+    } catch (error) {
+      console.error('Error updating post:', error);
+      toast.error('Erreur lors de la mise à jour de l\'article');
+    }
+  }
+
+  async function deletePost(id: string) {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Article supprimé avec succès');
+      setPosts(posts.filter(post => post.id !== id));
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Erreur lors de la suppression de l\'article');
+    }
+  }
+
+  async function handleSubmit(post: BlogPost) {
+    if (editingPost) {
+      await updatePost(post);
+    } else {
+      await createPost(post);
+    }
+  }
+
+  function handleCancel() {
+    setEditingPost(null);
+    setIsCreating(false);
+  }
+
+  const emptyPost: BlogPost = {
+    id: '',
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    status: 'draft',
+    featured_image: '',
+    category: 'uncategorized',
+    created_at: '',
+    updated_at: ''
   };
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-4 md:gap-8 p-4 md:p-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Gestion du Blog</h1>
-          <Button onClick={handleCreatePost}>Nouvel article</Button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Gestion du Blog</h1>
+      
+      {!editingPost && !isCreating && (
+        <div className="mb-4">
+          <Button onClick={() => setIsCreating(true)} className="flex items-center gap-2">
+            <Plus size={16} />
+            Nouvel Article
+          </Button>
         </div>
-
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">Tous les articles</TabsTrigger>
-            <TabsTrigger value="published">Publiés</TabsTrigger>
-            <TabsTrigger value="drafts">Brouillons</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="mt-6">
-            <BlogPostTable
-              posts={posts}
-              loading={loading}
-              onEdit={handleEditPost}
-              onDelete={handleDeletePost}
-              searchTerm={searchTerm}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onNew={handleCreatePost}
-              onPageChange={handlePageChange}
-              onSearch={handleSearch}
-            />
-          </TabsContent>
-          
-          <TabsContent value="published" className="mt-6">
-            <BlogPostTable
-              posts={posts.filter(post => post.status === 'published')}
-              loading={loading}
-              onEdit={handleEditPost}
-              onDelete={handleDeletePost}
-              searchTerm={searchTerm}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onNew={handleCreatePost}
-              onPageChange={handlePageChange}
-              onSearch={handleSearch}
-            />
-          </TabsContent>
-          
-          <TabsContent value="drafts" className="mt-6">
-            <BlogPostTable
-              posts={posts.filter(post => post.status === 'draft')}
-              loading={loading}
-              onEdit={handleEditPost}
-              onDelete={handleDeletePost}
-              searchTerm={searchTerm}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onNew={handleCreatePost}
-              onPageChange={handlePageChange}
-              onSearch={handleSearch}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing ? 'Modifier l\'article' : 'Nouvel article'}
-            </DialogTitle>
-          </DialogHeader>
-          <BlogPostEditor
-            initialData={formData}
-            isEditing={isEditing}
-            onSubmit={(data) => handleSubmit(data, isEditing)}
-            onCancel={() => setShowDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
+      )}
+      
+      {(editingPost || isCreating) ? (
+        <BlogPostEditor
+          post={editingPost || emptyPost}
+          isEditing={!!editingPost}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
+      ) : (
+        <BlogPostsTable
+          posts={posts}
+          loading={loading}
+          onEdit={(post) => setEditingPost(post)}
+          onDelete={(id) => deletePost(id)}
+        />
+      )}
+    </div>
   );
 }

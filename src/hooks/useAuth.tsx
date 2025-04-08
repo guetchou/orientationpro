@@ -178,6 +178,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Fixed signature to match the interface
+  const logout = async (): Promise<{ success: boolean; error?: any }> => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error("Error signing out:", error);
+      return { success: false, error };
+    }
+  };
+
   const createSuperAdmin = async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
       setLoading(true);
@@ -202,10 +214,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const value = {
+  const value: AuthContextProps = {
     user,
     loading: loading || authLoading,
-    logout: signOut,
+    logout,  // Using the corrected logout function
     profileData,
     session,
     isSuperAdmin,
