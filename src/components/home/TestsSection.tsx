@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, BookOpen, Heart, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
+import { Brain, BookOpen, Heart, Lightbulb, ArrowRight, CheckCircle, LineChart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export const TestsSection = () => {
@@ -71,6 +71,21 @@ export const TestsSection = () => {
       ],
       path: "/test-learning",
       color: "bg-gradient-to-br from-secondary-100 to-secondary-50"
+    },
+    {
+      id: "entrepreneurial",
+      title: "Test d'Aptitude Entrepreneuriale",
+      description: "Découvrez si vous avez l'étoffe d'un entrepreneur ou d'un salarié",
+      icon: <LineChart className="w-10 h-10 text-amber-500" />,
+      duration: "10-12 min",
+      questions: 15,
+      benefits: [
+        "Identifiez votre profil professionnel idéal",
+        "Découvrez si vous êtes fait pour entreprendre",
+        "Obtenez des recommandations adaptées à votre profil"
+      ],
+      path: "/test-entrepreneurial",
+      color: "bg-gradient-to-br from-amber-100 to-amber-50"
     }
   ];
 

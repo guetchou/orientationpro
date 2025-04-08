@@ -5,7 +5,7 @@ import { TestsSection } from "@/components/home/TestsSection";
 import { ChatBot } from "@/components/chat/ChatBot";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Brain, Heart, Lightbulb, BookOpen, RefreshCw, Award, Briefcase } from "lucide-react";
+import { ArrowRight, Brain, Heart, Lightbulb, BookOpen, RefreshCw, Award, Briefcase, LineChart } from "lucide-react";
 
 export default function Tests() {
   return (
@@ -170,6 +170,29 @@ export default function Tests() {
               </p>
               <Link 
                 to="/test-senior-employment" 
+                className="inline-flex items-center text-amber-700 font-medium hover:text-amber-800"
+              >
+                Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Card>
+            
+            {/* Entrepreneurial Test Card - NOUVEAU */}
+            <Card className="bg-amber-50 border-amber-200 p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start mb-3">
+                <div className="p-2 bg-amber-100 rounded-full mr-3">
+                  <LineChart className="w-8 h-8 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-amber-800 mb-1">Test d'Aptitude Entrepreneuriale</h2>
+                  <p className="text-sm text-gray-500">10-12 min • 15 questions</p>
+                </div>
+              </div>
+              <p className="text-gray-700 mb-4">
+                Découvrez votre profil professionnel : entrepreneur, salarié, commerçant, artisan, candidat à l'expatriation 
+                ou si vous préférez un mode de vie plus libre. Ce test vous aide à comprendre vos préférences fondamentales.
+              </p>
+              <Link 
+                to="/test-entrepreneurial" 
                 className="inline-flex items-center text-amber-700 font-medium hover:text-amber-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
