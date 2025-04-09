@@ -5,7 +5,7 @@ export const config = {
   wordpressApi: {
     // Par défaut, on utilise une API WordPress publique pour les tests
     // Remplacez cette URL par celle de votre instance WordPress
-    baseUrl: process.env.WORDPRESS_API_URL || 'https://demo.wp-api.org/wp-json/wp/v2',
+    baseUrl: import.meta.env.VITE_WORDPRESS_API_URL || 'https://demo.wp-api.org/wp-json/wp/v2',
   },
   
   // Autres configurations
