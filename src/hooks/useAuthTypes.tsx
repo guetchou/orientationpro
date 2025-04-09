@@ -33,7 +33,7 @@ export interface AuthContextProps {
   logout: () => Promise<{ success: boolean; error?: any }>;
   signInWithGoogle: () => Promise<{ success: boolean; data?: any; error?: any }>;
   signInWithGithub: () => Promise<{ success: boolean; data?: any; error?: any }>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData?: any) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ user: any; token: any; }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ user: any; token: any; }>;
   createSuperAdmin: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
 }
