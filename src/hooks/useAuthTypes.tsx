@@ -1,39 +1,27 @@
 
-import { Session } from '@supabase/supabase-js';
-
 export interface User {
   id: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  role?: string;
-  photoURL?: string;
-  displayName?: string;
+  email: string;
 }
 
 export interface ProfileData {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  created_at: string;
-  phone: string;
-  address: string;
-  role: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  created_at?: string;
 }
 
 export interface AuthContextProps {
   user: User | null;
+  profile: ProfileData | null;
   loading: boolean;
-  session: Session | null;
-  profileData: ProfileData;
-  isSuperAdmin: boolean;
-  isMasterAdmin: boolean;
-  updateProfile: (data: Partial<ProfileData>) => Promise<void>;
-  logout: () => Promise<{ success: boolean; error?: any }>;
-  signInWithGoogle: () => Promise<{ success: boolean; data?: any; error?: any }>;
-  signInWithGithub: () => Promise<{ success: boolean; data?: any; error?: any }>;
-  signIn: (email: string, password: string) => Promise<{ user: any; token: any; }>;
-  signUp: (email: string, password: string, userData?: any) => Promise<{ user: any; token: any; }>;
-  createSuperAdmin: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ user: any; token: any }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ user: any; token: any }>;
+  signOut: () => Promise<void>;
+  updateProfile: (profileData: Partial<ProfileData>) => Promise<void>;
+  refreshProfile: () => void;
 }

@@ -1,14 +1,16 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, ChartBar, Brain, Star } from "lucide-react";
+import { useTestAnalysis } from "@/hooks/useTestAnalysis";
 import ResultsOverviewTab from './tabs/ResultsOverviewTab';
 import ResultsScoresTab from './tabs/ResultsScoresTab';
 import ResultsRecommendationsTab from './tabs/ResultsRecommendationsTab';
 import ResultsInsightsTab from './tabs/ResultsInsightsTab';
 import ResultsActions from '@/components/test-results/ResultsActions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TestResultsViewProps {
   testResults: any;
@@ -25,8 +27,16 @@ const TestResultsView = ({
 }: TestResultsViewProps) => {
   const results = testResults.results || {};
   const testType = testResults.test_type || 'orientation';
-
-  // Groupe les résultats par catégorie pour un affichage plus organisé
+  const [isLoadingInsights, setIsLoadingInsights] = useState(hasPaid && !results.aiInsights);
+  
+  // Utilise le hook pour l'analyse
+  const { generateAnalysis, isAnalyzing } = useTestAnalysis({
+    testId: testResults.id,
+    testType,
+    results
+  });
+  
+  // Regroupement des résultats par catégorie pour un affichage plus organisé
   const groupedResults = {
     scores: Object.entries(results).filter(([key]) => 
       typeof results[key] === 'number' && !key.includes('confidence') && !key.includes('interest')
@@ -41,6 +51,19 @@ const TestResultsView = ({
       typeof results[key] === 'object' && !Array.isArray(results[key]) && key.includes('insights')
     )
   };
+  
+  // Génère les insights si l'utilisateur a payé et qu'ils n'existent pas encore
+  useEffect(() => {
+    const loadInsights = async () => {
+      if (hasPaid && !results.aiInsights) {
+        setIsLoadingInsights(true);
+        await generateAnalysis();
+        setIsLoadingInsights(false);
+      }
+    };
+    
+    loadInsights();
+  }, [hasPaid, results.aiInsights]);
 
   return (
     <div className="container mx-auto p-4">
@@ -74,46 +97,59 @@ const TestResultsView = ({
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="overview">
-              <ResultsOverviewTab 
-                results={results} 
-                groupedResults={groupedResults}
-                hasPaid={hasPaid} 
-                isProcessingPayment={isProcessingPayment}
-                onPayment={onPayment}
-                testType={testType}
-              />
-            </TabsContent>
-            
-            <TabsContent value="scores">
-              <ResultsScoresTab 
-                groupedResults={groupedResults}
-                hasPaid={hasPaid}
-                isProcessingPayment={isProcessingPayment}
-                onPayment={onPayment}
-                testType={testType}
-              />
-            </TabsContent>
-            
-            <TabsContent value="recommendations">
-              <ResultsRecommendationsTab 
-                groupedResults={groupedResults}
-                hasPaid={hasPaid}
-                isProcessingPayment={isProcessingPayment}
-                onPayment={onPayment}
-                testType={testType}
-              />
-            </TabsContent>
-            
-            <TabsContent value="insights">
-              <ResultsInsightsTab 
-                results={results}
-                hasPaid={hasPaid}
-                isProcessingPayment={isProcessingPayment}
-                onPayment={onPayment}
-                testType={testType}
-              />
-            </TabsContent>
+            {isLoadingInsights || isAnalyzing ? (
+              <div className="p-10 space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-36 w-full" />
+                <div className="text-center text-gray-500 mt-4">
+                  Génération de votre analyse personnalisée...
+                </div>
+              </div>
+            ) : (
+              <>
+                <TabsContent value="overview">
+                  <ResultsOverviewTab 
+                    results={results} 
+                    groupedResults={groupedResults}
+                    hasPaid={hasPaid} 
+                    isProcessingPayment={isProcessingPayment}
+                    onPayment={onPayment}
+                    testType={testType}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="scores">
+                  <ResultsScoresTab 
+                    groupedResults={groupedResults}
+                    hasPaid={hasPaid}
+                    isProcessingPayment={isProcessingPayment}
+                    onPayment={onPayment}
+                    testType={testType}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="recommendations">
+                  <ResultsRecommendationsTab 
+                    groupedResults={groupedResults}
+                    hasPaid={hasPaid}
+                    isProcessingPayment={isProcessingPayment}
+                    onPayment={onPayment}
+                    testType={testType}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="insights">
+                  <ResultsInsightsTab 
+                    results={results}
+                    hasPaid={hasPaid}
+                    isProcessingPayment={isProcessingPayment}
+                    onPayment={onPayment}
+                    testType={testType}
+                  />
+                </TabsContent>
+              </>
+            )}
           </Tabs>
           
           <Separator />

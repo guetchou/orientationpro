@@ -1,217 +1,160 @@
 
-import { useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
-import { useAuthMethods } from './useAuthMethods';
 import { User, ProfileData, AuthContextProps } from './useAuthTypes';
 import { AuthContext } from './useAuthContext';
+import { toast } from 'sonner';
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
-  const [profileData, setProfileData] = useState<ProfileData>({
-    id: '',
-    first_name: '',
-    last_name: '',
-    email: '',
-    created_at: '',
-    phone: '',
-    address: '',
-    role: 'user'
-  });
-  const [session, setSession] = useState<Session | null>(null);
-  const { loading: authLoading, signIn, signUp, signOut, resetPassword, updatePassword } = useAuthMethods();
 
+  // Authentification initiale
   useEffect(() => {
-    const getSession = async () => {
+    const checkSession = async () => {
       try {
-        setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user || null);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
         if (session?.user) {
-          await fetchProfileData(session.user.id);
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+          });
+          await fetchProfile(session.user.id);
         }
       } catch (error) {
-        console.error("Error fetching session:", error);
+        console.error('Error checking auth session:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    getSession();
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user || null);
-      setSession(session || null);
-      if (session?.user) {
-        await fetchProfileData(session.user.id);
-      } else {
-        setProfileData({
-          id: '',
-          first_name: '',
-          last_name: '',
-          email: '',
-          created_at: '',
-          phone: '',
-          address: '',
-          role: 'user'
-        });
+    
+    checkSession();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+          });
+          await fetchProfile(session.user.id);
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+        setLoading(false);
       }
-    });
-
+    );
+    
     return () => {
-      subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
-  const fetchProfileData = async (userId: string) => {
+  // Récupération du profil utilisateur
+  const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-        
-      if (error) {
-        console.error("Error fetching profile data:", error);
-      } else if (data) {
-        setProfileData({
-          id: data.id,
-          first_name: data.first_name || '',
-          last_name: data.last_name || '',
-          email: data.email || '',
-          created_at: data.created_at || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          role: data.role || 'user'
-        });
-        
-        setIsSuperAdmin(!!data.is_super_admin);
-        setIsMasterAdmin(!!data.is_master_admin);
-      }
+      
+      if (error) throw error;
+      setProfile(data);
     } catch (error) {
-      console.error("Error fetching profile data:", error);
+      console.error('Error fetching user profile:', error);
     }
   };
 
-  const updateProfile = async (data: Partial<ProfileData>) => {
+  // Connexion avec email/mot de passe
+  const signIn = async (email: string, password: string) => {
     try {
-      setLoading(true);
-      const updates = {
-        ...data,
-        updated_at: new Date().toISOString()
-      };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(updates);
-        
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      // Optimistically update state
-      setProfileData((prevData) => ({
-        ...prevData,
-        ...data
-      }));
-    } catch (error) {
-      console.error("Error updating the profile!", error);
-    } finally {
-      setLoading(false);
+      toast.success('Connexion réussie');
+      return { user: data.user, token: data.session };
+    } catch (error: any) {
+      toast.error(error.message || 'Échec de la connexion');
+      throw error;
     }
   };
 
-  const createSuperAdmin = async (email: string, password: string, firstName?: string, lastName?: string) => {
+  // Inscription avec email/mot de passe
+  const signUp = async (email: string, password: string, userData = {}) => {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({ 
-        email, 
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
-        options: {
-          data: {
-            first_name: firstName || '',
-            last_name: lastName || '',
-            is_super_admin: true
-          }
-        }
+        options: { data: userData }
       });
       
       if (error) throw error;
-    } catch (error) {
-      console.error("Error creating super admin:", error);
+      
+      toast.success('Inscription réussie! Vérifiez votre email pour confirmer votre compte.');
+      return { user: data.user, token: data.session };
+    } catch (error: any) {
+      toast.error(error.message || 'Échec de l\'inscription');
       throw error;
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  // Déconnexion
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Déconnexion réussie');
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors de la déconnexion');
+    }
+  };
+
+  // Mise à jour du profil
+  const updateProfile = async (profileData: Partial<ProfileData>) => {
+    try {
+      if (!user) throw new Error('Utilisateur non connecté');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      setProfile(prev => prev ? { ...prev, ...profileData } : null);
+      toast.success('Profil mis à jour avec succès');
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors de la mise à jour du profil');
+      throw error;
     }
   };
 
   const value: AuthContextProps = {
     user,
-    loading: loading || authLoading,
-    logout: async () => {
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        return { success: true };
-      } catch (error) {
-        console.error("Error signing out:", error);
-        return { success: false, error };
-      }
-    },
-    profileData,
-    session,
-    isSuperAdmin,
-    isMasterAdmin,
-    updateProfile,
-    signInWithGoogle: async () => {
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/profile`
-          }
-        });
-        
-        if (error) {
-          console.error("Error signing in with Google:", error);
-          return { success: false, error };
-        }
-        
-        return { success: true, data };
-      } catch (error) {
-        console.error("Error signing in with Google:", error);
-        return { success: false, error };
-      }
-    },
-    signInWithGithub: async () => {
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'github',
-          options: {
-            redirectTo: `${window.location.origin}/profile`
-          }
-        });
-        
-        if (error) {
-          console.error("Error signing in with Github:", error);
-          return { success: false, error };
-        }
-        
-        return { success: true, data };
-      } catch (error) {
-        console.error("Error signing in with Github:", error);
-        return { success: false, error };
-      }
-    },
+    profile,
+    loading,
     signIn,
     signUp,
-    createSuperAdmin
+    signOut,
+    updateProfile,
+    refreshProfile: () => user && fetchProfile(user.id),
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

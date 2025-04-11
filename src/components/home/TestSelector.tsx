@@ -1,6 +1,6 @@
 
 import { FC } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/card";
 import { TestType } from "./testsData";
 
 interface TestSelectorProps {
@@ -17,11 +17,13 @@ export const TestSelector: FC<TestSelectorProps> = ({
   onViewAllTests
 }) => {
   const nextTest = () => {
-    setActiveTestIndex((prevIndex) => (prevIndex + 1) % tests.length);
+    const newIndex = (activeTestIndex + 1) % tests.length;
+    setActiveTestIndex(newIndex);
   };
 
   const prevTest = () => {
-    setActiveTestIndex((prevIndex) => (prevIndex - 1 + tests.length) % tests.length);
+    const newIndex = (activeTestIndex - 1 + tests.length) % tests.length;
+    setActiveTestIndex(newIndex);
   };
 
   return (

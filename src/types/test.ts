@@ -29,19 +29,6 @@ export interface RiasecResults {
   confidenceScore: number;
 }
 
-export interface LearningStyleResults {
-  visual: number;
-  auditory: number;
-  kinesthetic: number;
-  reading: number;
-  dominantStyle: string;
-  confidenceScore: number;
-  primary?: string;
-  secondary?: string;
-  recommendations?: string[];
-  recommendedStrategies?: string[];
-}
-
 export interface EmotionalResults {
   selfAwareness: number;
   selfRegulation: number;
@@ -49,15 +36,19 @@ export interface EmotionalResults {
   empathy: number;
   socialSkills: number;
   dominantTrait: string;
+  overallScore: number;
+  strengths: string[];
+  areasToImprove: string[];
   confidenceScore: number;
-  overallScore?: number;
-  strengths?: string[];
-  weaknesses?: string[];
-  recommendations?: string[];
-  selfManagement?: number;
-  socialAwareness?: number;
-  relationshipManagement?: number;
-  areasToImprove?: string[];
+}
+
+export interface LearningStyleResults {
+  visual: number;
+  auditory: number;
+  kinesthetic: number;
+  reading?: number;
+  primary: string;
+  secondary: string;
 }
 
 export interface MultipleIntelligenceResults {
@@ -78,64 +69,27 @@ export interface CareerTransitionResults {
   skillTransferability: number;
   adaptability: number;
   riskTolerance: number;
+  learningCapacity: number;
+  recommendedSectors: string[];
   recommendedPaths: string[];
+  transitionReadiness: number;
   confidenceScore: number;
-  learningCapacity?: number;
-  networkingStrength?: number;
-  transitionReadiness?: number;
-  recommendedSectors?: string[];
-}
-
-export interface SeniorEmploymentResults {
-  experienceValue: number;
-  technologyAdaptation: number;
-  workLifeBalance: number;
-  mentorshipPotential: number;
-  recommendedRoles: string[];
-  confidenceScore: number;
-}
-
-export interface RetirementReadinessResults {
-  financialPreparation: number;
-  healthPlanning: number;
-  socialConnections: number;
-  purposeClarity: number;
-  leisureInterests: number;
-  readinessLevel: string;
-  confidenceScore: number;
-  socialPlanning?: number;
-  activityPlanning?: number;
-  readinessScore?: number;
-  recommendedSteps?: string[];
 }
 
 export interface NoDiplomaCareerResults {
   practicalSkills: number;
+  creativity: number;
   entrepreneurialAptitude: number;
-  tradeInterest: number;
   selfLearningCapacity: number;
+  socialIntelligence: number;
+  resilience: number;
+  careerPotential: number;
+  experiencePortfolio: number;
+  entrepreneurialSpirit: number;
+  tradeInterest: number;
+  recommendedFields: string[];
   recommendedPaths: string[];
   confidenceScore: number;
-  careerPotential?: number;
-  resilience?: number;
-  socialIntelligence?: number; 
-  experiencePortfolio?: number;
-  recommendedFields?: string[];
-  creativity?: number;
-  entrepreneurialSpirit?: number;
-}
-
-export interface EntrepreneurialResults {
-  entrepreneur: number;
-  salarie: number;
-  commercant: number;
-  artisan: number;
-  expatriation: number;
-  inactif: number;
-  profilDominant: string;
-  profilSecondaire: string;
-  confidenceScore: number;
-  recommendations: string[];
 }
 
 export interface AIEnhancedAnalysis {
@@ -143,6 +97,8 @@ export interface AIEnhancedAnalysis {
   weaknesses: string[];
   recommendations: string[];
   careerSuggestions?: string[];
+  developmentSuggestions?: string[];
+  learningPathways?: string[];
   analysis: string;
   confidenceScore: number;
 }
