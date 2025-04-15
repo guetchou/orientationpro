@@ -1,4 +1,3 @@
-
 export interface TestResult {
   id: string;
   user_id: string;
@@ -100,5 +99,28 @@ export interface AIEnhancedAnalysis {
   developmentSuggestions?: string[];
   learningPathways?: string[];
   analysis: string;
+  confidenceScore: number;
+}
+
+export interface RetirementReadinessResults {
+  financialPreparation: number;
+  healthPlanning: number;
+  socialConnections: number;
+  purposeClarity: number;
+  leisureInterests: number;
+  readinessLevel: string;
+  recommendedSteps: string[];
+  confidenceScore: number;
+  socialPlanning: number;
+  activityPlanning: number;
+  readinessScore: number;
+}
+
+export interface SeniorEmploymentResults {
+  experienceValue: number;
+  technologyAdaptation: number;
+  workLifeBalance: number;
+  mentorshipPotential: number;
+  recommendedRoles: string[];
   confidenceScore: number;
 }

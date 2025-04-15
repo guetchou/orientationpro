@@ -11,6 +11,7 @@ import ResultsRecommendationsTab from './tabs/ResultsRecommendationsTab';
 import ResultsInsightsTab from './tabs/ResultsInsightsTab';
 import ResultsActions from '@/components/test-results/ResultsActions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 interface TestResultsViewProps {
   testResults: any;
@@ -56,9 +57,16 @@ const TestResultsView = ({
   useEffect(() => {
     const loadInsights = async () => {
       if (hasPaid && !results.aiInsights) {
-        setIsLoadingInsights(true);
-        await generateAnalysis();
-        setIsLoadingInsights(false);
+        try {
+          setIsLoadingInsights(true);
+          await generateAnalysis();
+          toast.success("Analyse IA générée avec succès");
+        } catch (error) {
+          console.error("Erreur lors de la génération de l'analyse IA:", error);
+          toast.error("Impossible de générer l'analyse IA");
+        } finally {
+          setIsLoadingInsights(false);
+        }
       }
     };
     
