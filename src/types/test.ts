@@ -1,3 +1,5 @@
+
+// Types for different test results
 export interface TestResult {
   id: string;
   user_id: string;
@@ -48,6 +50,10 @@ export interface LearningStyleResults {
   reading?: number;
   primary: string;
   secondary: string;
+  dominantStyle?: string;         // Ajout de cette propriété
+  recommendedStrategies?: string[]; // Ajout de cette propriété
+  recommendations?: string[];     // Ajout de cette propriété
+  confidenceScore?: number;       // Ajout de cette propriété
 }
 
 export interface MultipleIntelligenceResults {
@@ -60,6 +66,8 @@ export interface MultipleIntelligenceResults {
   intrapersonal: number;
   naturalist: number;
   dominantIntelligences: string[];
+  dominantIntelligence?: string;    // Ajout de cette propriété
+  secondaryIntelligence?: string;   // Ajout de cette propriété
   confidenceScore: number;
 }
 

@@ -29,6 +29,7 @@ const TestResultsView = ({
   const results = testResults.results || {};
   const testType = testResults.test_type || 'orientation';
   const [isLoadingInsights, setIsLoadingInsights] = useState(hasPaid && !results.aiInsights);
+  const [processedResults, setProcessedResults] = useState(results);
   
   // Utilise le hook pour l'analyse
   const { generateAnalysis, isAnalyzing } = useTestAnalysis({
@@ -37,19 +38,39 @@ const TestResultsView = ({
     results
   });
   
+  // Assurer que tous les résultats sont correctement traités pour l'affichage
+  useEffect(() => {
+    // Si les résultats n'ont pas de propriétés spécifiques, les ajouter
+    const enhanced = {...results};
+    
+    if (testType === 'learning_style' && !enhanced.recommendations) {
+      enhanced.recommendations = [
+        "Adapter vos méthodes d'étude à votre style d'apprentissage", 
+        "Utiliser des outils adaptés à votre style préférentiel"
+      ];
+    }
+    
+    if (testType === 'emotional' && !enhanced.strengths) {
+      enhanced.strengths = ["Conscience de soi", "Gestion des émotions"];
+      enhanced.areasToImprove = ["Communication émotionnelle"];
+    }
+    
+    setProcessedResults(enhanced);
+  }, [results, testType]);
+  
   // Regroupement des résultats par catégorie pour un affichage plus organisé
   const groupedResults = {
-    scores: Object.entries(results).filter(([key]) => 
-      typeof results[key] === 'number' && !key.includes('confidence') && !key.includes('interest')
+    scores: Object.entries(processedResults).filter(([key]) => 
+      typeof processedResults[key] === 'number' && !key.includes('confidence') && !key.includes('interest')
     ),
-    recommendations: Object.entries(results).filter(([key]) => 
-      Array.isArray(results[key]) && (key.includes('recommended') || key.includes('paths'))
+    recommendations: Object.entries(processedResults).filter(([key]) => 
+      Array.isArray(processedResults[key]) && (key.includes('recommended') || key.includes('paths') || key.includes('recommendations'))
     ),
-    metrics: Object.entries(results).filter(([key]) => 
-      typeof results[key] === 'number' && (key.includes('interest') || key.includes('potential'))
+    metrics: Object.entries(processedResults).filter(([key]) => 
+      typeof processedResults[key] === 'number' && (key.includes('interest') || key.includes('potential') || key.includes('score'))
     ),
-    insights: Object.entries(results).filter(([key]) => 
-      typeof results[key] === 'object' && !Array.isArray(results[key]) && key.includes('insights')
+    insights: Object.entries(processedResults).filter(([key]) => 
+      typeof processedResults[key] === 'object' && !Array.isArray(processedResults[key]) && key.includes('insights')
     )
   };
   
@@ -59,7 +80,14 @@ const TestResultsView = ({
       if (hasPaid && !results.aiInsights) {
         try {
           setIsLoadingInsights(true);
-          await generateAnalysis();
+          const analysis = await generateAnalysis();
+          
+          // Mettre à jour les résultats traités avec l'analyse générée
+          setProcessedResults(prev => ({
+            ...prev,
+            aiInsights: analysis
+          }));
+          
           toast.success("Analyse IA générée avec succès");
         } catch (error) {
           console.error("Erreur lors de la génération de l'analyse IA:", error);
@@ -118,7 +146,7 @@ const TestResultsView = ({
               <>
                 <TabsContent value="overview">
                   <ResultsOverviewTab 
-                    results={results} 
+                    results={processedResults} 
                     groupedResults={groupedResults}
                     hasPaid={hasPaid} 
                     isProcessingPayment={isProcessingPayment}
@@ -149,7 +177,7 @@ const TestResultsView = ({
                 
                 <TabsContent value="insights">
                   <ResultsInsightsTab 
-                    results={results}
+                    results={processedResults}
                     hasPaid={hasPaid}
                     isProcessingPayment={isProcessingPayment}
                     onPayment={onPayment}

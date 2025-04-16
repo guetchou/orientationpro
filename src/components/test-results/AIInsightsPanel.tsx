@@ -82,6 +82,18 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ testType, analysis, i
             </div>
           )}
           
+          {/* Affichage des recommendedStrategies si disponible */}
+          {data.recommendedStrategies && data.recommendedStrategies.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold text-purple-700">Stratégies recommandées</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-600 mt-1">
+                {Array.isArray(data.recommendedStrategies) ? data.recommendedStrategies.map((strategy: string, index: number) => (
+                  <li key={index}>{strategy}</li>
+                )) : <li>{data.recommendedStrategies}</li>}
+              </ul>
+            </div>
+          )}
+          
           {data.analysis && (
             <div>
               <h4 className="text-md font-semibold text-purple-700">Analyse détaillée</h4>

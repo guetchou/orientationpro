@@ -1,47 +1,59 @@
 
 import { LearningStyleResults } from "@/types/test";
 
-export const analyzeLearningStyleResults = (responses: number[]): LearningStyleResults => {
-  // Calcul des scores pour chaque style
-  const visual = responses.reduce((sum, val, index) => index === 0 && val === 4 ? sum + val : (index === 1 && val === 4 ? sum + val : (index === 2 && val === 4 ? sum + val : sum)), 0);
-  const auditory = responses.reduce((sum, val, index) => index === 0 && val === 3 ? sum + val : (index === 1 && val === 3 ? sum + val : (index === 2 && val === 3 ? sum + val : sum)), 0);
-  const kinesthetic = responses.reduce((sum, val, index) => index === 0 && val === 5 ? sum + val : (index === 1 && val === 5 ? sum + val : (index === 2 && val === 5 ? sum + val : sum)), 0);
-  const reading = responses.reduce((sum, val, index) => index === 0 && val === 2 ? sum + val : (index === 1 && val === 2 ? sum + val : (index === 2 && val === 2 ? sum + val : sum)), 0);
-
-  // Déterminer le style dominant
-  const styles = [
-    { style: 'visual', score: visual },
-    { style: 'auditory', score: auditory },
-    { style: 'kinesthetic', score: kinesthetic },
-    { style: 'reading', score: reading }
-  ];
-  styles.sort((a, b) => b.score - a.score);
-  const primaryStyle = styles[0].style;
-  const secondaryStyle = styles[1].style;
-
-  // Recommandations basées sur le style dominant
-  const recommendedStrategies = [];
-  if (primaryStyle === 'visual') {
-    recommendedStrategies.push("Utiliser des graphiques et des diagrammes", "Prendre des notes visuelles", "Regarder des vidéos éducatives");
-  } else if (primaryStyle === 'auditory') {
-    recommendedStrategies.push("Écouter des podcasts ou des conférences", "Participer à des discussions de groupe", "Enregistrer des notes vocales");
-  } else if (primaryStyle === 'kinesthetic') {
-    recommendedStrategies.push("Faire des expériences pratiques", "Utiliser des modèles ou des simulations", "Bouger pendant l'étude");
+export function analyzeLearningStyleResults(responses: any[]): LearningStyleResults {
+  // Calculer les scores pour chaque dimension
+  const visual = Math.round((responses[0] || 3) * 20);
+  const auditory = Math.round((responses[1] || 3) * 20);
+  const kinesthetic = Math.round((responses[2] || 3) * 20);
+  
+  // Déterminer les styles primaire et secondaire
+  let primary = 'visual';
+  let secondary = 'auditory';
+  
+  if (visual >= auditory && visual >= kinesthetic) {
+    primary = 'visual';
+    secondary = auditory >= kinesthetic ? 'auditory' : 'kinesthetic';
+  } else if (auditory >= visual && auditory >= kinesthetic) {
+    primary = 'auditory';
+    secondary = visual >= kinesthetic ? 'visual' : 'kinesthetic';
   } else {
-    recommendedStrategies.push("Lire des livres et des articles", "Écrire des résumés", "Faire des recherches approfondies");
+    primary = 'kinesthetic';
+    secondary = visual >= auditory ? 'visual' : 'auditory';
   }
-
-  // Niveau de confiance basé sur la cohérence des réponses
-  const confidenceScore = 75; // valeur par défaut, à affiner si nécessaire
-
+  
+  // Créer des recommandations basées sur le style primaire
+  const recommendations = [];
+  
+  if (primary === 'visual') {
+    recommendations.push(
+      "Utiliser des supports visuels comme des schémas et des graphiques",
+      "Prendre des notes colorées avec des symboles",
+      "Visualiser les informations à mémoriser"
+    );
+  } else if (primary === 'auditory') {
+    recommendations.push(
+      "Participer à des discussions de groupe",
+      "Lire à haute voix les informations importantes",
+      "Enregistrer et réécouter les cours"
+    );
+  } else {
+    recommendations.push(
+      "Apprendre par la pratique et l'expérimentation",
+      "Utiliser des jeux de rôle et des simulations",
+      "Étudier tout en marchant ou en bougeant"
+    );
+  }
+  
   return {
     visual,
     auditory,
     kinesthetic,
-    reading,
-    dominantStyle: primaryStyle,
-    secondary: secondaryStyle,
-    recommendedStrategies,
-    confidenceScore
+    primary,
+    secondary,
+    dominantStyle: primary,
+    recommendedStrategies: recommendations,
+    recommendations,
+    confidenceScore: 85
   };
-};
+}
