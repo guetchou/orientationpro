@@ -1,6 +1,6 @@
 
 import { FC } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Fix: import Button from correct path
 import { TestType } from "./testsData";
 
 interface TestSelectorProps {

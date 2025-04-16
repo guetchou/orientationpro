@@ -149,11 +149,11 @@ function enhanceAnalysisWithTestSpecificData(analysis: AIEnhancedAnalysis, testT
       if (results.dominantTypes && results.dominantTypes.length > 0) {
         const riasecMap: Record<string, string> = {
           'R': 'Réaliste - préférence pour les activités pratiques et manuelles',
-          'I': 'Investigateur - intérêt pour la recherche et l'analyse',
-          'A': 'Artistique - attirance pour la création et l'expression',
+          'I': 'Investigateur - intérêt pour la recherche et l\'analyse',
+          'A': 'Artistique - attirance pour la création et l\'expression',
           'S': 'Social - facilité à aider et communiquer avec les autres',
           'E': 'Entreprenant - aptitude à diriger et influencer',
-          'C': 'Conventionnel - goût pour l'organisation et la structure'
+          'C': 'Conventionnel - goût pour l\'organisation et la structure'
         };
         
         const dominantTypesExplanation = results.dominantTypes
