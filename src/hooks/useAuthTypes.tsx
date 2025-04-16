@@ -17,6 +17,8 @@ export interface ProfileData {
   bio?: string;
   created_at?: string;
   role?: string;
+  is_super_admin?: boolean;
+  is_master_admin?: boolean;
 }
 
 export interface AuthContextProps {

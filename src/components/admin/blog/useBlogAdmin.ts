@@ -2,27 +2,23 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { BlogPost } from '@/types/blog'; // Import the unified BlogPost type
 
-export interface BlogPost {
-  id?: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  image_url?: string;
-  author_id?: string;
-  published_at?: string;
-  tags?: string[];
-  status: 'draft' | 'published';
-  created_at?: string;
-}
+// We'll remove the local BlogPost interface definition and use the imported one
 
 export const emptyPost: BlogPost = {
+  id: '',
   title: '',
   content: '',
   excerpt: '',
   image_url: '',
+  featured_image: '', // Added from the imported type
+  slug: '', // Added from the imported type
+  category: 'uncategorized', // Added from the imported type
   tags: [],
-  status: 'draft'
+  status: 'draft',
+  created_at: '',
+  updated_at: '', // Added from the imported type
 };
 
 export function useBlogAdmin() {
@@ -43,7 +39,18 @@ export function useBlogAdmin() {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setPosts(data || []);
+        
+        // Convert status to the expected type
+        const typedPosts = (data || []).map(post => ({
+          ...post,
+          status: post.status === 'published' ? 'published' : 'draft' as 'draft' | 'published',
+          slug: post.slug || '',
+          featured_image: post.featured_image || post.image_url || '',
+          category: post.category || 'uncategorized',
+          updated_at: post.updated_at || post.created_at || ''
+        }));
+        
+        setPosts(typedPosts);
       } catch (error: any) {
         console.error('Error fetching blog posts:', error);
         setError(error.message);
@@ -59,38 +66,47 @@ export function useBlogAdmin() {
   // Gérer la soumission du formulaire (création ou mise à jour)
   const handleSubmit = async (post: BlogPost) => {
     try {
+      const normalizedPost = {
+        ...post,
+        status: post.status === 'published' ? 'published' : 'draft' as 'draft' | 'published'
+      };
+      
       if (editingPost) {
         // Mise à jour d'un article existant
         const { error } = await supabase
           .from('blog_posts')
           .update({
-            title: post.title,
-            content: post.content,
-            excerpt: post.excerpt,
-            image_url: post.image_url,
-            tags: post.tags,
-            status: post.status,
+            title: normalizedPost.title,
+            content: normalizedPost.content,
+            excerpt: normalizedPost.excerpt,
+            image_url: normalizedPost.image_url,
+            featured_image: normalizedPost.featured_image,
+            slug: normalizedPost.slug,
+            category: normalizedPost.category,
+            tags: normalizedPost.tags,
+            status: normalizedPost.status,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingPost.id);
 
         if (error) throw error;
         
-        setPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, ...post } : p));
+        setPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, ...normalizedPost } : p));
         toast.success('Article mis à jour avec succès');
       } else {
         // Création d'un nouvel article
         const { data, error } = await supabase
           .from('blog_posts')
           .insert({
-            ...post,
-            created_at: new Date().toISOString()
+            ...normalizedPost,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
           .select();
 
         if (error) throw error;
         
-        setPosts(prev => [...prev, data[0]]);
+        setPosts(prev => [...prev, {...data[0], status: data[0].status as 'draft' | 'published'}]);
         toast.success('Article créé avec succès');
       }
 

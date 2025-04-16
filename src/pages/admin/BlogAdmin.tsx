@@ -37,14 +37,30 @@ export default function BlogAdmin() {
         <BlogPostEditor
           post={editingPost || emptyPost}
           isEditing={!!editingPost}
-          onSubmit={async (data: BlogPost) => await handleSubmit(data)}
+          onSubmit={async (data: BlogPost) => {
+            // Ensure status is correctly typed when passing to handleSubmit
+            const typedData = {
+              ...data,
+              status: data.status === 'published' ? 'published' : 'draft'
+            } as BlogPost;
+            
+            await handleSubmit(typedData);
+          }}
           onCancel={handleCancel}
         />
       ) : (
         <BlogPostsTable
           posts={posts}
           loading={loading}
-          onEdit={(post: BlogPost) => setEditingPost(post)}
+          onEdit={(post: BlogPost) => {
+            // Ensure the post has the correct status type
+            const typedPost = {
+              ...post,
+              status: post.status === 'published' ? 'published' : 'draft'
+            } as BlogPost;
+            
+            setEditingPost(typedPost);
+          }}
           onDelete={(id: string) => deletePost(id)}
         />
       )}
