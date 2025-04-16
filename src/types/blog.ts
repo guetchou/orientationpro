@@ -5,11 +5,15 @@ export interface BlogPost {
   slug: string;
   content: string;
   excerpt: string;
-  status: string;
+  status: 'draft' | 'published' | string;
   featured_image: string;
   category: string;
   created_at: string;
   updated_at: string;
+  image_url?: string;
+  tags?: string[];
+  author_id?: string;
+  published_at?: string;
 }
 
 export interface BlogPostEditorProps {
@@ -30,4 +34,5 @@ export interface WordPressPost {
   categories: number[];
   slug: string;
   status: string;
+  _embedded?: any;
 }

@@ -3,6 +3,7 @@ import React from 'react';
 import CandidateTable from '@/components/admin/ats/CandidateTable';
 import CandidateDetail from '@/components/admin/ats/CandidateDetail';
 import { useCandidates } from '@/hooks/admin/useCandidates';
+import { Candidate } from '@/types/candidates';
 
 export default function ATSAdmin() {
   const {
@@ -23,7 +24,7 @@ export default function ATSAdmin() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <CandidateTable 
-            candidates={candidates}
+            candidates={candidates as any}
             loading={loading}
             onSelectCandidate={setSelectedCandidate}
             onUpdateStatus={updateCandidateStatus}
@@ -36,7 +37,7 @@ export default function ATSAdmin() {
         <div>
           {selectedCandidate ? (
             <CandidateDetail
-              candidate={selectedCandidate}
+              candidate={selectedCandidate as any}
               onUpdateStatus={updateCandidateStatus}
               onUpdateRating={updateCandidateRating}
               onUpdateNotes={updateCandidateNotes}

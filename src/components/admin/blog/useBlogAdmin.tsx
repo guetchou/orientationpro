@@ -4,6 +4,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from '@/types/blog';
 import { toast } from 'sonner';
 
+// Create a base blog post with optional fields
+export const emptyPost: BlogPost = {
+  id: '',
+  title: '',
+  slug: '',
+  content: '',
+  excerpt: '',
+  status: 'draft',
+  featured_image: '',
+  category: 'uncategorized',
+  created_at: '',
+  updated_at: '',
+  image_url: '',
+  tags: []
+};
+
 export function useBlogAdmin() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +39,18 @@ export function useBlogAdmin() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPosts(data || []);
+      
+      // Ensure proper formatting and types
+      const formattedData: BlogPost[] = data?.map(post => ({
+        ...post,
+        status: post.status || 'draft',
+        slug: post.slug || '',
+        featured_image: post.featured_image || post.image_url || '',
+        category: post.category || 'uncategorized',
+        updated_at: post.updated_at || post.created_at
+      })) || [];
+      
+      setPosts(formattedData);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Erreur lors du chargement des articles');
@@ -34,20 +61,23 @@ export function useBlogAdmin() {
 
   async function createPost(newPost: Partial<BlogPost>) {
     try {
+      const postToCreate = {
+        ...newPost,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        slug: newPost.slug || newPost.title?.toLowerCase().replace(/\s+/g, '-') || '',
+        featured_image: newPost.featured_image || newPost.image_url || '',
+        category: newPost.category || 'uncategorized'
+      };
+
       const { data, error } = await supabase
         .from('blog_posts')
-        .insert([
-          {
-            ...newPost,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ])
+        .insert([postToCreate])
         .select();
 
       if (error) throw error;
       toast.success('Article créé avec succès');
-      setPosts([data[0], ...posts]);
+      setPosts([data[0] as BlogPost, ...posts]);
       setIsCreating(false);
     } catch (error) {
       console.error('Error creating post:', error);
@@ -116,16 +146,3 @@ export function useBlogAdmin() {
     deletePost
   };
 }
-
-export const emptyPost: BlogPost = {
-  id: '',
-  title: '',
-  slug: '',
-  content: '',
-  excerpt: '',
-  status: 'draft',
-  featured_image: '',
-  category: 'uncategorized',
-  created_at: '',
-  updated_at: ''
-};

@@ -2,6 +2,9 @@
 export interface User {
   id: string;
   email: string;
+  role?: string;
+  displayName?: string;
+  photoURL?: string;
 }
 
 export interface ProfileData {
@@ -13,6 +16,7 @@ export interface ProfileData {
   phone?: string;
   bio?: string;
   created_at?: string;
+  role?: string;
 }
 
 export interface AuthContextProps {
@@ -24,4 +28,8 @@ export interface AuthContextProps {
   signOut: () => Promise<void>;
   updateProfile: (profileData: Partial<ProfileData>) => Promise<void>;
   refreshProfile: () => void;
+  logout: () => Promise<void>;
+  profileData?: ProfileData;
+  isSuperAdmin?: boolean;
+  isMasterAdmin?: boolean;
 }

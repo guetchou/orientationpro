@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { User } from './useAuth';
+import { User } from './useAuthTypes';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -33,15 +33,15 @@ export function useProfileData(user: User | null) {
       try {
         // In our new system, role information is already part of the user object from login
         // but we could still fetch additional profile data from a profile endpoint if needed
-        setIsSuperAdmin(user.role === 'superadmin');
-        setIsMasterAdmin(user.role === 'admin'); // Simplified for this example
+        setIsSuperAdmin(user?.role === 'superadmin');
+        setIsMasterAdmin(user?.role === 'admin'); // Simplified for this example
         
         setProfileData({
           department: 'default',
-          is_super_admin: user.role === 'superadmin',
-          is_master_admin: user.role === 'admin',
-          first_name: user.email?.split('@')[0] || '', // Fallback when firstName is not available
-          last_name: ''
+          is_super_admin: user?.role === 'superadmin',
+          is_master_admin: user?.role === 'admin',
+          first_name: user?.displayName?.split(' ')[0] || user.email?.split('@')[0] || '', // Fallback when firstName is not available
+          last_name: user?.displayName?.split(' ')[1] || ''
         });
       } catch (err) {
         console.error('Error in profile data fetching:', err);

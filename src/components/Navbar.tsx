@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,7 +17,7 @@ interface NavItem {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -54,7 +53,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = () => {
-    logout();
+    signOut();
     closeMenu();
   };
 

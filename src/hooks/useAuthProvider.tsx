@@ -13,6 +13,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState<boolean>(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   // Authentification initiale
   useEffect(() => {
@@ -25,10 +28,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
         
         if (session?.user) {
-          setUser({
+          const userData: User = {
             id: session.user.id,
             email: session.user.email || '',
-          });
+            role: session.user.user_metadata?.role || 'user',
+            displayName: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+            photoURL: session.user.user_metadata?.avatar_url
+          };
+          setUser(userData);
           await fetchProfile(session.user.id);
         }
       } catch (error) {
@@ -43,14 +50,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
-          setUser({
+          const userData: User = {
             id: session.user.id,
             email: session.user.email || '',
-          });
+            role: session.user.user_metadata?.role || 'user',
+            displayName: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+            photoURL: session.user.user_metadata?.avatar_url
+          };
+          setUser(userData);
           await fetchProfile(session.user.id);
         } else {
           setUser(null);
           setProfile(null);
+          setProfileData(null);
+          setIsSuperAdmin(false);
+          setIsMasterAdmin(false);
         }
         setLoading(false);
       }
@@ -71,7 +85,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .single();
       
       if (error) throw error;
+      
       setProfile(data);
+      setProfileData(data);
+      
+      // Set admin status
+      setIsSuperAdmin(data?.is_super_admin || false);
+      setIsMasterAdmin(data?.is_master_admin || false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -121,6 +141,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Alias pour signOut pour compatibilité
+  const logout = signOut;
+
   // Mise à jour du profil
   const updateProfile = async (profileData: Partial<ProfileData>) => {
     try {
@@ -134,6 +157,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       
       setProfile(prev => prev ? { ...prev, ...profileData } : null);
+      setProfileData(prev => prev ? { ...prev, ...profileData } : null);
       toast.success('Profil mis à jour avec succès');
     } catch (error: any) {
       toast.error(error.message || 'Erreur lors de la mise à jour du profil');
@@ -150,6 +174,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signOut,
     updateProfile,
     refreshProfile: () => user && fetchProfile(user.id),
+    logout,
+    profileData: profileData || undefined,
+    isSuperAdmin,
+    isMasterAdmin
   };
 
   return (

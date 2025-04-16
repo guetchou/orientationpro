@@ -13,12 +13,11 @@ import { NavItem, NavList } from "@/components/ui/nav";
 import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardNav() {
-  const { profileData } = useAuth();
-  const isSuperAdmin = profileData?.role === 'super_admin';
+  const { isSuperAdmin, profile } = useAuth();
 
   return (
     <NavList>
-      {isSuperAdmin && (
+      {(isSuperAdmin || profile?.is_super_admin) && (
         <>
           <NavItem href="/admin/dashboard" label="Tableau de bord" icon={<LayoutDashboard size={16} />} />
           <NavItem href="/admin/cms" label="Gestion de contenu" icon={<FileText size={16} />} />

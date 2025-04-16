@@ -22,7 +22,16 @@ export function useCandidates() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCandidates(data || []);
+      
+      // Ensure all required fields are present in the data by providing defaults if needed
+      const formattedCandidates: Candidate[] = (data || []).map(candidate => ({
+        ...candidate,
+        created_at: candidate.created_at || new Date().toISOString(), // Ensure created_at is always present
+        status: candidate.status || 'new',
+        rating: candidate.rating || 0
+      }));
+      
+      setCandidates(formattedCandidates);
     } catch (error) {
       console.error('Error fetching candidates:', error);
       toast.error('Erreur lors du chargement des candidats');

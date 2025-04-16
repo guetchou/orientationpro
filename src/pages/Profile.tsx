@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,14 +12,14 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { 
-  User, Settings, Bell, Shield, FileText, 
+  User as UserIcon, Settings, Bell, Shield, FileText, 
   CreditCard, LogOut, CheckCircle, Mail, Phone,
   Camera, Lock, Save, RefreshCw
 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
-  const { success, error } = useToast();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -30,13 +29,19 @@ const Profile = () => {
     // Simulate API call
     setTimeout(() => {
       setSaving(false);
-      success("Profil mis à jour avec succès");
+      toast({
+        title: "Profil mis à jour avec succès",
+        variant: "default"
+      });
     }, 1500);
   };
 
   const handleLogout = () => {
-    logout();
-    success("Vous avez été déconnecté avec succès");
+    signOut();
+    toast({
+      title: "Vous avez été déconnecté avec succès",
+      variant: "default"
+    });
   };
 
   if (!user) {
@@ -94,7 +99,7 @@ const Profile = () => {
 
                   <nav className="space-y-1.5">
                     <Button variant="ghost" className="w-full justify-start gap-2">
-                      <User size={18} />
+                      <UserIcon size={18} />
                       Profil
                     </Button>
                     <Button variant="ghost" className="w-full justify-start gap-2">
@@ -119,7 +124,7 @@ const Profile = () => {
                     </Button>
                     <Separator className="my-2" />
                     <Button
-                      variant="ghost"
+                      variant="ghost" 
                       className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
                       onClick={handleLogout}
                     >
@@ -172,6 +177,7 @@ const Profile = () => {
                           </div>
                         </div>
 
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="phone">Téléphone</Label>
@@ -217,6 +223,7 @@ const Profile = () => {
                   </Card>
                 </TabsContent>
 
+                
                 <TabsContent value="security">
                   <Card>
                     <CardHeader>

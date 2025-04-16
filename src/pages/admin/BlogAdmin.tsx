@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import BlogPostsTable from '@/components/admin/blog/BlogPostsTable';
 import BlogPostEditor from '@/components/admin/blog/BlogPostEditor';
 import { useBlogAdmin, emptyPost } from '@/components/admin/blog/useBlogAdmin';
+import { BlogPost } from '@/types/blog';
 
 export default function BlogAdmin() {
   const {
@@ -36,15 +37,15 @@ export default function BlogAdmin() {
         <BlogPostEditor
           post={editingPost || emptyPost}
           isEditing={!!editingPost}
-          onSubmit={handleSubmit}
+          onSubmit={async (data: BlogPost) => await handleSubmit(data)}
           onCancel={handleCancel}
         />
       ) : (
         <BlogPostsTable
           posts={posts}
           loading={loading}
-          onEdit={(post) => setEditingPost(post)}
-          onDelete={(id) => deletePost(id)}
+          onEdit={(post: BlogPost) => setEditingPost(post)}
+          onDelete={(id: string) => deletePost(id)}
         />
       )}
     </div>
