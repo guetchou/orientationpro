@@ -1,24 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
+import axios from 'axios';
 import ResultsSkeleton from '@/components/test-results/ResultsSkeleton';
 import ResultsError from '@/components/test-results/ResultsError';
 import ResultsNotFound from '@/components/test-results/ResultsNotFound';
 import TestResultsView from '@/components/test-results/TestResultsView';
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
 const TestResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [testResults, setTestResults] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const testId = new URLSearchParams(location.search).get('testId');
+  
+  // Get testId from URL parameters
+  const testId = searchParams.get('testId');
+  
+  // Check if we have test results directly from the state (used when coming from completing a test)
+  const stateResults = location.state?.results;
+  const stateTestType = location.state?.testType;
 
   useEffect(() => {
     const fetchTestResults = async () => {
@@ -27,62 +36,66 @@ const TestResults = () => {
         setError(null);
 
         if (!user) {
-          navigate('/login');
+          navigate('/login', { state: { redirectAfterLogin: location.pathname + location.search } });
           return;
         }
-
-        // Convert user.id to string if it's a number
-        const userId = typeof user.id === 'number' ? String(user.id) : user.id;
-
-        // Check if the user has paid for this test result
-        if (testId) {
-          const { data: paymentData, error: paymentError } = await supabase
-            .from('payments')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('item_id', testId)
-            .eq('status', 'COMPLETED')
-            .single();
-
-          if (paymentError && paymentError.code !== 'PGRST116') {
-            console.error('Error checking payment status:', paymentError);
-          }
-
-          // If payment exists and is completed, show full results
-          if (paymentData) {
-            setHasPaid(true);
-          }
+        
+        // If we have results in the state and no testId in URL, use those
+        if (stateResults && stateTestType && !testId) {
+          setTestResults({
+            id: 'temp-id',
+            user_id: user.id,
+            test_type: stateTestType,
+            results: stateResults,
+            answers: [],
+            created_at: new Date().toISOString()
+          });
+          return;
+        }
+        
+        // If no testId was provided, redirect to dashboard
+        if (!testId) {
+          throw new Error("Aucun identifiant de test spécifié");
         }
 
-        const { data, error } = await supabase
-          .from('test_results')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('id', testId)
-          .single();
+        // Check if the user has paid for this test result
+        try {
+          const { data: paymentData } = await axios.get(`${backendUrl}/api/payments/check`, {
+            params: {
+              user_id: user.id,
+              item_id: testId,
+            },
+            withCredentials: true
+          });
+          
+          if (paymentData && paymentData.status === 'COMPLETED') {
+            setHasPaid(true);
+          }
+        } catch (paymentError) {
+          console.warn('Erreur lors de la vérification du paiement:', paymentError);
+          // Continue even if payment check fails
+        }
 
-        if (error) {
-          throw new Error(error.message);
+        // Fetch the test results
+        const { data } = await axios.get(`${backendUrl}/api/test-results/${testId}`, {
+          withCredentials: true
+        });
+
+        if (!data) {
+          throw new Error("Résultats de test non trouvés");
         }
 
         setTestResults(data);
       } catch (error: any) {
         console.error("Error fetching test results:", error);
-        setError(error.message || "Failed to load test results.");
+        setError(error.message || "Impossible de charger les résultats du test.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchTestResults();
-
-    // Cleanup function
-    return () => {
-      setTestResults(null);
-      setLoading(false);
-      setError(null);
-    };
-  }, [user, testId, navigate]);
+  }, [navigate, testId, user, stateResults, stateTestType, location.pathname, location.search]);
 
   const handlePayment = async () => {
     try {
@@ -94,13 +107,13 @@ const TestResults = () => {
       }
 
       // Create a payment request
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: {
-          plan_id: 'premium_report',
-          test_id: testId,
-          test_type: testResults?.test_type || 'orientation',
-          user_id: user.id
-        }
+      const { data, error } = await axios.post(`${backendUrl}/api/payments/create`, {
+        plan_id: 'premium_report',
+        test_id: testId,
+        test_type: testResults?.test_type || 'orientation',
+        user_id: user.id
+      }, {
+        withCredentials: true
       });
 
       if (error) {

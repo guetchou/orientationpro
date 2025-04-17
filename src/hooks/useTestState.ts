@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
 import axios from "axios";
+import { useAuth } from "@/hooks/useAuth";
 
 // Get backend URL from environment variables or use a default value
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -20,6 +21,7 @@ export function useTestState<T>({ testType, questions, analyzeResults }: UseTest
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleAnswer = async (answer: any) => {
     const newAnswers = [...answers, answer];
@@ -49,48 +51,50 @@ export function useTestState<T>({ testType, questions, analyzeResults }: UseTest
       // Enhance results with AI analysis
       const aiInsights = await getAIEnhancedAnalysis(testType, results);
       
-      // Get current user
-      const userResponse = await axios.get(`${backendUrl}/api/users/current`, {
-        withCredentials: true
-      });
-      const user = userResponse.data;
-      
-      if (user?.id) {
-        // Save results
-        await axios.post(`${backendUrl}/api/test-results`, {
-          user_id: user.id,
-          test_type: testType,
-          results: {
-            ...results,
-            aiInsights
-          },
-          answers: finalAnswers,
-          progress_score: 100,
-          // @ts-expect-error confidenceScore may not exist on all result types
-          confidence_score: results.confidenceScore || 85
-        }, {
-          withCredentials: true
-        });
-        
-        setIsCompleted(true);
-        toast.success("Test complété avec succès !");
-      } else {
+      if (!user) {
         toast.error("Vous devez être connecté pour sauvegarder vos résultats");
+        navigate('/login', { state: { redirectAfterLogin: '/tests' } });
+        return;
       }
       
-      // Navigate to results
-      navigate('/dashboard/results', { 
+      // Save results
+      const response = await axios.post(`${backendUrl}/api/test-results`, {
+        user_id: user.id,
+        test_type: testType,
+        results: {
+          ...results,
+          aiInsights
+        },
+        answers: finalAnswers,
+        confidence_score: results.confidenceScore || 85
+      }, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data?.id) {
+        setIsCompleted(true);
+        toast.success("Test complété avec succès !");
+        
+        // Navigate to results with the test ID
+        navigate(`/test-results?testId=${response.data.id}`);
+      } else {
+        throw new Error("La réponse du serveur ne contient pas l'ID du test");
+      }
+    } catch (error: any) {
+      console.error('Error completing test:', error);
+      toast.error(error.response?.data?.message || "Erreur lors de la sauvegarde des résultats");
+      
+      // Even if there's an error saving, navigate to dashboard to show partial results
+      navigate('/dashboard', { 
         state: { 
-          results: {
-            ...results,
-            aiInsights
-          }, 
-          testType 
+          results: analyzeResults(finalAnswers), 
+          testType,
+          saveError: true
         } 
       });
-    } catch (error) {
-      console.error('Error completing test:', error);
-      toast.error("Erreur lors de la sauvegarde des résultats");
     } finally {
       setIsSubmitting(false);
     }

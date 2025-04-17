@@ -1,5 +1,5 @@
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TestResult } from './test-results.entity';
@@ -25,6 +25,12 @@ export class TestResultsService {
   }
 
   async findById(id: number): Promise<TestResult> {
-    return this.testResultsRepository.findOne({ where: { id } });
+    const testResult = await this.testResultsRepository.findOne({ where: { id } });
+    
+    if (!testResult) {
+      throw new NotFoundException(`Test result with ID ${id} not found`);
+    }
+    
+    return testResult;
   }
 }
