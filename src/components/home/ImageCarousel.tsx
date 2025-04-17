@@ -1,123 +1,65 @@
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CarouselControls } from "./carousel/CarouselControls";
-import { CarouselSlide } from "./carousel/CarouselSlide";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const images = [
-  {
-    url: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    title: "Découvrez votre voie",
-    description: "Tests d'orientation personnalisés",
-    video: false
-  },
-  {
-    url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-    title: "Guidance professionnelle",
-    description: "Accompagnement personnalisé pour votre carrière",
-    video: false
-  },
-  {
-    url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655",
-    title: "Formations adaptées",
-    description: "Trouvez la formation qui vous correspond",
-    video: true
-  },
-  {
-    url: "https://images.unsplash.com/photo-1590650153855-d9e808231d41",
-    title: "Réussite académique",
-    description: "Préparez votre avenir professionnel",
-    video: false
-  }
+// Images d'Unsplash pour le carrousel
+const carouselImages = [
+  "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=1920&h=1080&q=80",
+  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1920&h=1080&q=80",
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&h=1080&q=80",
+  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1920&h=1080&q=80",
+  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1920&h=1080&q=80"
 ];
 
 export const ImageCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (isPaused) return;
-    
-    const timer = setInterval(() => {
-      nextSlide();
+    // Changement d'image toutes les 5 secondes
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
     }, 5000);
-
-    return () => clearInterval(timer);
-  }, [currentIndex, isPaused]);
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-      scale: 0.95
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-      scale: 0.95
-    })
-  };
-
-  const nextSlide = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
-
-  const pauseCarousel = () => {
-    setIsPaused(true);
-    setTimeout(() => setIsPaused(false), 10000); // Auto-resume after 10 seconds
-  };
-
-  const selectSlide = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
-    setCurrentIndex(index);
-    pauseCarousel();
-  };
+    
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden rounded-xl">
-      <AnimatePresence initial={false} custom={direction}>
-        <motion.div
+    <div className="w-full h-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div 
           key={currentIndex}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: 0.4 },
-            scale: { duration: 0.4 }
-          }}
-          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0 w-full h-full"
         >
-          <CarouselSlide 
-            slide={images[currentIndex]} 
-            onPlayVideo={pauseCarousel}
-          />
+          <div className="absolute inset-0 w-full h-full">
+            <motion.img
+              src={carouselImages[currentIndex]}
+              alt={`Carousel image ${currentIndex + 1}`}
+              className="w-full h-full object-cover"
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 5, ease: "easeOut" }}
+            />
+          </div>
         </motion.div>
       </AnimatePresence>
-
-      <CarouselControls
-        images={images}
-        currentIndex={currentIndex}
-        onPrevious={prevSlide}
-        onNext={nextSlide}
-        onSelect={selectSlide}
-      />
+      
+      {/* Indicateurs de position au bas du carrousel */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-30">
+        {carouselImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === currentIndex ? "w-6 bg-white" : "bg-white/50"
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 };

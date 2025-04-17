@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { GraduationCap, ArrowRight, PlayCircle, ChevronRight, Check } from "lucide-react";
@@ -66,20 +67,10 @@ export const HeroSection = () => {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="gap-2 border-primary/20 backdrop-blur-sm hover:bg-primary/10 transition-all duration-300 animate-shake">
+              <Button variant="outline" size="lg" className="gap-2 border-primary/20 backdrop-blur-sm hover:bg-primary/10 transition-all duration-300">
                 <PlayCircle className="w-5 h-5" />
                 Voir la démo
               </Button>
-            </motion.div>
-
-            {/* Boîte Zoom + Balayage */}
-            <motion.div variants={item} className="grid md:grid-cols-2 gap-4">
-              <div className="animate-zoom-in bg-primary text-white p-6 rounded-xl shadow-lg">
-                Tests instantanés disponibles ! ✨
-              </div>
-              <div className="animate-swipe p-6 bg-green-500 text-white rounded-xl shadow-lg">
-                Orientation personnalisée offerte 🎓
-              </div>
             </motion.div>
 
             {/* Preuves sociales */}
@@ -87,20 +78,14 @@ export const HeroSection = () => {
               <p className="text-sm font-medium text-gray-600">Des milliers d'étudiants nous font confiance</p>
               <div className="flex flex-wrap gap-3">
                 {[
-                  { color: "green", label: "Plus de 5000 utilisateurs", delay: 1 },
-                  { color: "blue", label: "95% de satisfaction", delay: 1.2 },
-                  { color: "secondary", label: "Résultats immédiats", delay: 1.4 }
+                  { color: "bg-green-500", label: "Plus de 5000 utilisateurs" },
+                  { color: "bg-blue-500", label: "95% de satisfaction" },
+                  { color: "bg-secondary", label: "Résultats immédiats" }
                 ].map((el, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: el.delay }}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-100"
-                  >
-                    <div className={`w-2 h-2 rounded-full bg-${el.color}-500 animate-pulse`} />
+                  <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-100">
+                    <div className={`w-2 h-2 rounded-full ${el.color} animate-pulse`} />
                     <span className="text-sm">{el.label}</span>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </motion.div>
