@@ -13,6 +13,17 @@ export class TestResultsService {
   ) {}
 
   async create(createTestResultDto: CreateTestResultDto): Promise<TestResult> {
+    // Assurer que les résultats incluent un score de confiance
+    if (createTestResultDto.results && !createTestResultDto.results.confidenceScore) {
+      if (createTestResultDto.confidence_score) {
+        // Si le DTO a un confidence_score, l'utiliser dans les résultats
+        createTestResultDto.results.confidenceScore = createTestResultDto.confidence_score;
+      } else {
+        // Sinon, utiliser une valeur par défaut
+        createTestResultDto.results.confidenceScore = 85;
+      }
+    }
+    
     const testResult = this.testResultsRepository.create(createTestResultDto);
     return this.testResultsRepository.save(testResult);
   }

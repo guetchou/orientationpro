@@ -107,7 +107,7 @@ const TestResults = () => {
       }
 
       // Create a payment request
-      const { data, error } = await axios.post(`${backendUrl}/api/payments/create`, {
+      const response = await axios.post(`${backendUrl}/api/payments/create`, {
         plan_id: 'premium_report',
         test_id: testId,
         test_type: testResults?.test_type || 'orientation',
@@ -116,11 +116,13 @@ const TestResults = () => {
         withCredentials: true
       });
 
-      if (error) {
-        throw new Error(error.message || "Échec de la création du paiement");
+      const data = response.data;
+      
+      if (!data || !data.payment_url) {
+        throw new Error("Aucune URL de paiement reçue");
       }
 
-      if (data?.payment_url) {
+      if (data.payment_url) {
         // Redirect to payment page
         navigate(`/payment?transaction_id=${data.transaction_id}&amount=${3500}`);
       } else {
@@ -128,7 +130,7 @@ const TestResults = () => {
       }
     } catch (error: any) {
       console.error("Error processing payment:", error);
-      toast.error(error.message || "Échec du traitement du paiement");
+      toast.error(error.response?.data?.message || "Échec du traitement du paiement");
     } finally {
       setIsProcessingPayment(false);
     }

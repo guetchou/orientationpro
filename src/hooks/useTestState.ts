@@ -9,13 +9,18 @@ import { useAuth } from "@/hooks/useAuth";
 // Get backend URL from environment variables or use a default value
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
-interface UseTestStateProps<T> {
+// Interface pour les types de résultats qui ont un score de confiance
+interface WithConfidenceScore {
+  confidenceScore?: number;
+}
+
+interface UseTestStateProps<T extends WithConfidenceScore> {
   testType: string;
   questions: any[];
   analyzeResults: (answers: any[]) => T;
 }
 
-export function useTestState<T>({ testType, questions, analyzeResults }: UseTestStateProps<T>) {
+export function useTestState<T extends WithConfidenceScore>({ testType, questions, analyzeResults }: UseTestStateProps<T>) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +62,7 @@ export function useTestState<T>({ testType, questions, analyzeResults }: UseTest
         return;
       }
       
-      // Save results
+      // Save results - utilise la valeur par défaut de 85 si confidenceScore n'existe pas
       const response = await axios.post(`${backendUrl}/api/test-results`, {
         user_id: user.id,
         test_type: testType,
