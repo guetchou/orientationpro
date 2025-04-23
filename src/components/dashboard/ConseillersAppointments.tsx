@@ -37,11 +37,11 @@ export const ConseillersAppointments = () => {
           </TabsContent>
 
           <TabsContent value="upcoming">
-            <AppointmentHistory filter="upcoming" />
+            <AppointmentHistory />
           </TabsContent>
 
           <TabsContent value="history">
-            <AppointmentHistory filter="past" />
+            <AppointmentHistory />
           </TabsContent>
         </Tabs>
       </CardContent>
