@@ -1,174 +1,108 @@
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React, { useEffect } from 'react';
+import { useUser } from "@supabase/auth-helpers-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, X, Trash2 } from "lucide-react";
+import { useAppointments } from "@/hooks/useAppointments";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Search, Calendar } from "lucide-react";
-import type { Appointment } from "@/integrations/supabase/types/appointments";
-
-interface FilterOptions {
-  status: string;
-  startDate: string;
-  endDate: string;
-  searchTerm: string;
-}
 
 export const AppointmentHistory = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [filters, setFilters] = useState<FilterOptions>({
-    status: "all",
-    startDate: "",
-    endDate: "",
-    searchTerm: "",
-  });
-  const [loading, setLoading] = useState(false);
+  const user = useUser();
+  const { appointments, loading, fetchAppointments, updateAppointmentStatus, deleteAppointment } = useAppointments(user?.id);
 
   useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  const fetchAppointments = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          *,
-          profiles!appointments_student_id_fkey (email)
-        `)
-        .eq("conseiller_id", user.id)
-        .order("date", { ascending: false });
-
-      if (error) throw error;
-
-      setAppointments(data.map(apt => ({
-        ...apt,
-        student_email: apt.profiles?.email
-      })));
-    } catch (error) {
-      console.error("Erreur lors de la récupération de l'historique:", error);
-      toast.error("Erreur lors du chargement de l'historique");
-    } finally {
-      setLoading(false);
+    if (user?.id) {
+      fetchAppointments();
     }
+  }, [user]);
+
+  const formatDate = (dateStr: string) => {
+    return format(new Date(dateStr), 'PP', { locale: fr });
   };
 
-  const filteredAppointments = appointments.filter(apt => {
-    if (filters.status !== "all" && apt.status !== filters.status) return false;
-    
-    if (filters.startDate && apt.date < filters.startDate) return false;
-    if (filters.endDate && apt.date > filters.endDate) return false;
-    
-    if (filters.searchTerm) {
-      const searchLower = filters.searchTerm.toLowerCase();
-      return (
-        apt.student_email?.toLowerCase().includes(searchLower) ||
-        apt.notes?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    return true;
-  });
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Historique des rendez-vous</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label>Statut</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="confirmed">Confirmé</SelectItem>
-                  <SelectItem value="cancelled">Annulé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label>Date début</Label>
-              <Input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-              />
-            </div>
-            
-            <div>
-              <Label>Date fin</Label>
-              <Input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-              />
-            </div>
-            
-            <div>
-              <Label>Recherche</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Rechercher..."
-                  value={filters.searchTerm}
-                  onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="divide-y">
-            {filteredAppointments.map((apt) => (
-              <div key={apt.id} className="py-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium">{apt.student_email}</p>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {format(new Date(apt.date), "d MMMM yyyy", { locale: fr })} à {apt.time}
-                    </div>
-                    <Badge variant={
-                      apt.status === "confirmed" ? "default" :
-                      apt.status === "cancelled" ? "destructive" : 
-                      "secondary"
-                    }>
-                      {apt.status}
-                    </Badge>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Voir détails
-                  </Button>
-                </div>
-                {apt.notes && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    {apt.notes}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      <CardContent className="p-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Heure</TableHead>
+              <TableHead>Étudiant</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {appointments.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  Aucun rendez-vous trouvé
+                </TableCell>
+              </TableRow>
+            ) : (
+              appointments.map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell>{formatDate(appointment.date)}</TableCell>
+                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>
+                    {appointment.profiles?.email || "Email non disponible"}
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                      ${appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                      appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'}`}>
+                      {appointment.status === 'confirmed' ? 'Confirmé' :
+                       appointment.status === 'cancelled' ? 'Annulé' : 'En attente'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="flex gap-2">
+                    {appointment.status === 'pending' && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteAppointment(appointment.id)}
+                      className="text-gray-600 hover:text-gray-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
