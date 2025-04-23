@@ -1,16 +1,17 @@
 
 import { useState, useCallback } from "react";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConseillerStats } from "@/hooks/useConseillerStats";
 import { handleError } from "@/utils/errorHandler";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useUser } from "@supabase/auth-helpers-react";
-import { AppointmentManagementTab } from "./tabs/AppointmentManagementTab";
+import { ConseillersAppointments } from "./ConseillersAppointments";
+import { ConseillerAvailability } from "./ConseillerAvailability";
 import { StudentsTab } from "./tabs/StudentsTab";
 import { ReportsTab } from "./tabs/ReportsTab";
-import { AvailabilityTab } from "./tabs/AvailabilityTab";
+import { Calendar, Users, FileText, Clock } from "lucide-react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,14 +55,30 @@ export const ConseillerDashboard = () => {
 
         <Tabs defaultValue="appointments" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="appointments">Rendez-vous</TabsTrigger>
-            <TabsTrigger value="students">Mes Étudiants</TabsTrigger>
-            <TabsTrigger value="reports">Rapports</TabsTrigger>
-            <TabsTrigger value="availability">Disponibilité</TabsTrigger>
+            <TabsTrigger value="appointments" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Rendez-vous
+            </TabsTrigger>
+            <TabsTrigger value="availability" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Disponibilités
+            </TabsTrigger>
+            <TabsTrigger value="students" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Mes Étudiants
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Rapports
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="appointments">
-            <AppointmentManagementTab />
+            <ConseillersAppointments />
+          </TabsContent>
+
+          <TabsContent value="availability">
+            <ConseillerAvailability />
           </TabsContent>
 
           <TabsContent value="students">
@@ -70,10 +87,6 @@ export const ConseillerDashboard = () => {
 
           <TabsContent value="reports">
             <ReportsTab />
-          </TabsContent>
-
-          <TabsContent value="availability">
-            <AvailabilityTab />
           </TabsContent>
         </Tabs>
       </div>
