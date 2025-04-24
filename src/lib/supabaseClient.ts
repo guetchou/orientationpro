@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Get environment variables
@@ -7,3 +6,24 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Mise à jour du type CmsContent pour y ajouter des champs
+export type CmsContent = {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+  image_url?: string;
+  category?: string;
+};
+
+// Enable realtime subscriptions for the appointments table
+supabase
+  .from('appointments')
+  .on('*', () => {})
+  .subscribe();
+
+export default supabase;
