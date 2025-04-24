@@ -9,8 +9,20 @@ interface AppointmentTimeslotsProps {
   date: Date;
 }
 
+// Update the ProfileData interface to match what we're getting from the database
+interface ProfileData {
+  email: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+// Update the Appointment type to include the correct profiles structure
+interface AppointmentWithProfile extends Appointment {
+  profiles?: ProfileData;
+}
+
 export const AppointmentTimeslots = ({ date }: AppointmentTimeslotsProps) => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentWithProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const user = useUser();
 
