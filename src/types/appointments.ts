@@ -12,5 +12,7 @@ export interface Appointment {
   updated_at: string | null;
   profiles?: {
     email: string;
+    first_name?: string;
+    last_name?: string;
   };
 }

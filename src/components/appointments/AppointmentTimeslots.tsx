@@ -4,25 +4,14 @@ import { useUser } from "@supabase/auth-helpers-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Appointment } from "@/types/appointments";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface AppointmentTimeslotsProps {
   date: Date;
 }
 
-// Update the ProfileData interface to match what we're getting from the database
-interface ProfileData {
-  email: string;
-  first_name?: string;
-  last_name?: string;
-}
-
-// Update the Appointment type to include the correct profiles structure
-interface AppointmentWithProfile extends Appointment {
-  profiles?: ProfileData;
-}
-
 export const AppointmentTimeslots = ({ date }: AppointmentTimeslotsProps) => {
-  const [appointments, setAppointments] = useState<AppointmentWithProfile[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
   const user = useUser();
 
@@ -80,6 +69,10 @@ export const AppointmentTimeslots = ({ date }: AppointmentTimeslotsProps) => {
     }
   };
 
+  const formatTime = (time: string) => {
+    return time.slice(0, 5); // Format HH:mm from HH:mm:ss
+  };
+
   return (
     <div className="space-y-4">
       {loading ? (
@@ -96,7 +89,7 @@ export const AppointmentTimeslots = ({ date }: AppointmentTimeslotsProps) => {
             <li key={appointment.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-medium">{appointment.time}</p>
+                  <p className="font-medium">{formatTime(appointment.time)}</p>
                   <p className="text-sm text-gray-600">
                     {appointment.profiles?.first_name || ''} {appointment.profiles?.last_name || ''}
                     {!appointment.profiles?.first_name && !appointment.profiles?.last_name && appointment.profiles?.email}
