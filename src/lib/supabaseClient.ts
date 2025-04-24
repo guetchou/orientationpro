@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Get environment variables
@@ -21,9 +22,10 @@ export type CmsContent = {
 };
 
 // Enable realtime subscriptions for the appointments table
-supabase
-  .from('appointments')
-  .on('*', () => {})
+// Using the correct channel API instead of PostgrestQueryBuilder
+const channel = supabase.channel('public:appointments');
+channel
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {})
   .subscribe();
 
 export default supabase;
