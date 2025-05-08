@@ -98,14 +98,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Connexion avec email/mot de passe - mode simplifié sans vérification
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password?: string) => {
     try {
-      // Modification: Authentification sans vérification du mot de passe
-      // Utilisons une connexion magique qui contourne la vérification
+      // Utiliser la connexion par lien magique (OTP)
       const { data, error } = await supabase.auth.signInWithOtp({ 
         email,
         options: {
-          shouldCreateUser: true 
+          shouldCreateUser: true,
+          emailRedirectTo: window.location.origin + '/dashboard'
         }
       });
       
@@ -120,14 +120,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Inscription avec email/mot de passe - simplifié
-  const signUp = async (email: string, password: string, userData = {}) => {
+  const signUp = async (email: string, password?: string, userData = {}) => {
     try {
-      // Modification: Inscription simplifiée avec OTP
+      // Inscription simplifiée avec OTP
       const { data, error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
-          data: userData
+          data: userData,
+          emailRedirectTo: window.location.origin + '/dashboard'
         }
       });
       

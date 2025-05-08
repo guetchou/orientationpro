@@ -31,8 +31,8 @@ export interface AuthContextProps {
   user: User | null;
   profile: ProfileData | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, userData?: any) => Promise<any>;
+  signIn: (email: string, password?: string) => Promise<any>;
+  signUp: (email: string, password?: string, userData?: any) => Promise<any>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
   refreshProfile: () => Promise<void>;
