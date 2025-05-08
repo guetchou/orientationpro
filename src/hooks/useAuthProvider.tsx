@@ -97,34 +97,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Connexion avec email/mot de passe
+  // Connexion avec email/mot de passe - mode simplifié sans vérification
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // Modification: Authentification sans vérification du mot de passe
+      // Utilisons une connexion magique qui contourne la vérification
+      const { data, error } = await supabase.auth.signInWithOtp({ 
+        email,
+        options: {
+          shouldCreateUser: true 
+        }
+      });
       
       if (error) throw error;
       
-      toast.success('Connexion réussie');
-      return { user: data.user, token: data.session };
+      toast.success('Connexion en cours... Vérifiez vos emails pour le lien de connexion');
+      return { user: null, token: null };
     } catch (error: any) {
       toast.error(error.message || 'Échec de la connexion');
       throw error;
     }
   };
 
-  // Inscription avec email/mot de passe
+  // Inscription avec email/mot de passe - simplifié
   const signUp = async (email: string, password: string, userData = {}) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Modification: Inscription simplifiée avec OTP
+      const { data, error } = await supabase.auth.signInWithOtp({
         email,
-        password,
-        options: { data: userData }
+        options: {
+          shouldCreateUser: true,
+          data: userData
+        }
       });
       
       if (error) throw error;
       
-      toast.success('Inscription réussie! Vérifiez votre email pour confirmer votre compte.');
-      return { user: data.user, token: data.session };
+      toast.success('Un lien de connexion a été envoyé à votre email.');
+      return { user: null, token: null };
     } catch (error: any) {
       toast.error(error.message || 'Échec de l\'inscription');
       throw error;

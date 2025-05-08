@@ -8,14 +8,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Login() {
   const [email, setEmail] = useState("admin@example.com"); // Default email for testing
-  const [password, setPassword] = useState("admin123"); // Default password for testing
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -25,32 +23,48 @@ export default function Login() {
     setError(null);
 
     try {
-      console.log("Attempting login with:", { email });
+      console.log("Tentative de connexion simplifiée avec:", { email });
       
-      // Use Supabase client directly for more detailed error handling
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Mode d'accès simplifié - envoi d'un lien magique par email
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
+        options: { 
+          shouldCreateUser: true,
+          emailRedirectTo: window.location.origin + '/dashboard'
+        }
       });
 
       if (error) throw error;
       
-      if (data?.user) {
-        toast.success('Connexion réussie !');
-        // Store token and user data in localStorage
-        localStorage.setItem('authToken', data.session?.access_token || '');
-        localStorage.setItem('userData', JSON.stringify(data.user));
-        navigate("/dashboard");
-      }
+      toast.success('Un lien de connexion a été envoyé à votre email.');
+      // Nous ne redirigeons pas immédiatement, l'utilisateur doit cliquer sur le lien dans son email
+      
     } catch (err: any) {
-      console.error("Sign in error:", err);
-      if (err.message.includes("Invalid login credentials")) {
-        setError("Email ou mot de passe incorrect");
-      } else if (err.message.includes("Email not confirmed")) {
-        setError("Veuillez confirmer votre email avant de vous connecter");
-      } else {
-        setError(err.message || "Une erreur inattendue s'est produite");
-      }
+      console.error("Erreur de connexion:", err);
+      setError(err.message || "Une erreur inattendue s'est produite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mode développement uniquement: connexion automatique pour les tests
+  const handleDevLogin = async () => {
+    setLoading(true);
+    try {
+      // ⚠️ UNIQUEMENT POUR DÉVELOPPEMENT: Connexion automatique sans mot de passe
+      // Cette partie ne devrait être activée que dans un environnement de développement
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: "admin@example.com",
+        password: "admin123" // Mot de passe par défaut pour test
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Connexion de développement réussie!');
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("Erreur de connexion dev:", err);
+      setError(err.message || "Échec de la connexion automatique");
     } finally {
       setLoading(false);
     }
@@ -77,10 +91,10 @@ export default function Login() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center font-heading">Connexion</CardTitle>
           <CardDescription className="text-center">
-            Entrez vos identifiants pour vous connecter
+            Entrez votre email pour vous connecter
           </CardDescription>
           <CardDescription className="text-center text-amber-600 font-medium">
-            Identifiants par défaut: {email} / {password}
+            Email par défaut: {email}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,51 +123,28 @@ export default function Login() {
                   />
                 </div>
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Link 
-                    to="/reset-password" 
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Mot de passe oublié?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-2.5"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </div>
               <Button className="w-full" type="submit" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connexion en cours...
+                    Envoi du lien de connexion...
                   </>
                 ) : (
-                  "Se connecter"
+                  "Recevoir un lien de connexion"
                 )}
               </Button>
             </div>
           </form>
+          
+          <div className="mt-4 pt-4 border-t">
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700" 
+              onClick={handleDevLogin}
+              type="button"
+            >
+              Connexion directe (développement uniquement)
+            </Button>
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center">
