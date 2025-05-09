@@ -1,4 +1,5 @@
 
+// Import explicitement React et ses hooks nécessaires
 import React, { useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { User, ProfileData, AuthContextProps } from './useAuthTypes';
