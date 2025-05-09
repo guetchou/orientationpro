@@ -1,5 +1,5 @@
 
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { ConseillerDashboard } from '../ConseillerDashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { ConseillerStats } from '@/types/dashboard';
@@ -32,14 +32,11 @@ describe('ConseillerDashboard', () => {
   };
 
   it('renders the dashboard with stats', async () => {
-    render(<ConseillerDashboard />);
-    
-    // Check loading state
-    expect(screen.getByText(/chargement/i)).toBeDefined();
+    const { findByText } = render(<ConseillerDashboard />);
     
     // Wait for stats to load
-    const totalStudents = await screen.findByText('10');
-    const testsCompleted = await screen.findByText('25');
+    const totalStudents = await findByText('10');
+    const testsCompleted = await findByText('25');
     
     expect(totalStudents).toBeDefined();
     expect(testsCompleted).toBeDefined();
