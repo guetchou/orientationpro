@@ -5,7 +5,8 @@ import { ModeToggle } from '@/components/ui/ModeToggle';
 import { Button } from '@/components/ui/button';
 import { 
   Menu, X, User, LogIn, LogOut, 
-  Briefcase, Search, Book, School, BarChart 
+  Briefcase, Search, Book, School, BarChart,
+  Users // Added Users icon for Conseillers
 } from 'lucide-react';
 
 interface NavItem {
@@ -39,6 +40,7 @@ const Navbar = () => {
   const mainNavItems: NavItem[] = [
     { name: 'Accueil', path: '/' },
     { name: 'Tests', path: '/tests', icon: <BarChart size={18} /> },
+    { name: 'Conseillers', path: '/conseillers', icon: <Users size={18} /> }, // Added Conseillers link
     { name: 'Établissements', path: '/establishments', icon: <School size={18} /> },
     { name: 'Ressources', path: '/resources', icon: <Book size={18} /> },
     { name: 'Contact', path: '/contact', icon: <Search size={18} /> },

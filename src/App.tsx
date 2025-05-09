@@ -19,6 +19,8 @@ import NoDiplomaCareerTest from "@/pages/NoDiplomaCareerTest";
 import SeniorEmploymentTest from "@/pages/SeniorEmploymentTest";
 import EntrepreneurialTest from "@/pages/EntrepreneurialTest";
 import Establishments from "@/pages/Establishments";
+import Resources from "@/pages/Resources";
+import Conseillers from "@/pages/Conseillers";
 import Contact from "@/pages/Contact";
 import Impressum from "@/pages/Impressum";
 import DataProtection from "@/pages/DataProtection";
@@ -48,6 +50,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/conseillers" element={<Conseillers />} /> {/* Ensure route exists */}
+          <Route path="/resources" element={<Resources />} /> {/* Ensure route exists */}
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/recrutement" element={<Recrutement />} />

@@ -12,6 +12,7 @@ import { PartnersSection } from "@/components/home/PartnersSection";
 import { FaqSection } from "@/components/home/FaqSection";
 import { ContactSection } from "@/components/home/ContactSection";
 import { ChatBot } from "@/components/chat/ChatBot";
+import { ATSSection } from "@/components/home/ATSSection"; // Import the new ATS Section
 import { motion, useScroll, useSpring } from "framer-motion";
 import { ScrollToTop } from "@/components/home/ScrollToTop";
 import { AnimatedBackground } from "@/components/home/AnimatedBackground";
@@ -50,6 +51,7 @@ export default function Index() {
         <HorizontalCarousel />
         <StepsSection />
         <TestsSection />
+        <ATSSection /> {/* Add the ATS Section here */}
         <CTASection />
         <StatisticsSection />
         <TestimonialsSection />
