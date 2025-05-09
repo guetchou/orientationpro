@@ -35,6 +35,7 @@ import SuperAdmin from "@/pages/admin/SuperAdmin";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "sonner";
+import Appointment from "@/pages/Appointment";
 
 function App() {
   return (
@@ -50,11 +51,12 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/conseillers" element={<Conseillers />} /> {/* Ensure route exists */}
-          <Route path="/resources" element={<Resources />} /> {/* Ensure route exists */}
+          <Route path="/conseillers" element={<Conseillers />} />
+          <Route path="/resources" element={<Resources />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/recrutement" element={<Recrutement />} />
+          <Route path="/appointment" element={<Appointment />} />
           
           {/* Test Routes */}
           <Route path="/test-riasec" element={<RiasecTest />} />

@@ -16,6 +16,16 @@ export default function Conseillers() {
     specialty: "all",
     availability: "all",
   });
+  // Add state variables for the filter props
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([
+    "Orientation scolaire",
+    "Reconversion",
+    "Insertion professionnelle",
+    "Bilan de compétences",
+    "Coaching carrière"
+  ]);
 
   useEffect(() => {
     const fetchCounselors = async () => {
@@ -40,13 +50,35 @@ export default function Conseillers() {
     fetchCounselors();
   }, []);
 
-  // Filter counselors based on selected filters
-  const filteredCounselors = counselors.filter(counselor => {
+  // Handle specialty toggle
+  const handleSpecialtyToggle = (specialty: string) => {
+    setSelectedSpecialties(prev => {
+      if (prev.includes(specialty)) {
+        return prev.filter(s => s !== specialty);
+      } else {
+        return [...prev, specialty];
+      }
+    });
+  };
+
+  // Filter counselors based on selected filters and search term
+  const filteredCounselors = counselors.filter((counselor: any) => {
+    // Filter by search term
+    if (searchTerm && !`${counselor.first_name} ${counselor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !counselor.department?.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Filter by specialties
+    if (selectedSpecialties.length > 0 && !selectedSpecialties.includes(counselor.department)) {
+      return false;
+    }
+    
     // Apply specialty filter if not "all"
     if (filters.specialty !== "all" && counselor.department !== filters.specialty) {
       return false;
     }
-    // More filters could be added here
+    
     return true;
   });
 
@@ -71,7 +103,12 @@ export default function Conseillers() {
 
         <div className="mb-8">
           <CounselorFilter 
-            onFilterChange={(newFilters) => setFilters({...filters, ...newFilters})} 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedSpecialties={selectedSpecialties}
+            onSpecialtyToggle={handleSpecialtyToggle}
+            availableSpecialties={availableSpecialties}
+            onFilterChange={(newFilters) => setFilters({...filters, ...newFilters})}
             currentFilters={filters}
           />
         </div>

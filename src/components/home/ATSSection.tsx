@@ -1,9 +1,8 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button"; 
 import { Link } from "react-router-dom";
-import { Briefcase, Award, Users, TrendingUp } from "lucide-react";
+import { Briefcase, Award, Users, TrendingUp, Search } from "lucide-react";
 
 export const ATSSection = () => {
   return (

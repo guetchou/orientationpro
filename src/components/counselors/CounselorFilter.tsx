@@ -11,6 +11,8 @@ interface CounselorFilterProps {
   selectedSpecialties: string[];
   onSpecialtyToggle: (specialty: string) => void;
   availableSpecialties: string[];
+  onFilterChange?: (newFilters: any) => void;
+  currentFilters?: { specialty: string; availability: string };
 }
 
 export const CounselorFilter = ({
@@ -18,7 +20,9 @@ export const CounselorFilter = ({
   onSearchChange,
   selectedSpecialties,
   onSpecialtyToggle,
-  availableSpecialties
+  availableSpecialties,
+  onFilterChange,
+  currentFilters
 }: CounselorFilterProps) => {
   return (
     <div className="space-y-6">

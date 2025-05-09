@@ -3,13 +3,12 @@ import React, { useState } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
-import { mockCounselors } from './Conseillers';
 import { useSearchParams } from 'react-router-dom';
 
 export default function Appointment() {
   const [searchParams] = useSearchParams();
-  const counselorId = searchParams.get('counselorId') || mockCounselors[0]?.id;
-  const counselorName = searchParams.get('counselorName') || mockCounselors[0]?.name;
+  const counselorId = searchParams.get('counselorId') || '';
+  const counselorName = searchParams.get('counselorName') || '';
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
