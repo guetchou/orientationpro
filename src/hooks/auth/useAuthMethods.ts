@@ -103,20 +103,18 @@ export const useAuthMethods = (
       
       if (error) throw error;
       
-      // Correction des erreurs TS2560 - Nous créons d'abord les nouveaux objets
-      setProfile((prev) => {
-        if (prev) {
-          return { ...prev, ...profileData };
-        }
-        return null;
-      });
+      // Récupérer le profil complet après mise à jour pour assurer la cohérence
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
       
-      setProfileData((prev) => {
-        if (prev) {
-          return { ...prev, ...profileData };
-        }
-        return null;
-      });
+      // Utiliser directement les objets, pas des fonctions updater
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+        setProfileData(updatedProfile);
+      }
       
       toast.success('Profil mis à jour avec succès');
     } catch (error: any) {

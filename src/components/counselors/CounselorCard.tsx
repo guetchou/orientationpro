@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Mail, Phone, Award } from "lucide-react";
+import { Calendar, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -31,7 +31,11 @@ export const CounselorCard: React.FC<CounselorCardProps> = ({ counselor }) => {
         <div className="flex flex-col items-center mb-4">
           <Avatar className="h-24 w-24 mb-3">
             {counselor.avatar_url ? (
-              <AvatarImage src={counselor.avatar_url} alt={fullName} />
+              <AvatarImage 
+                src={counselor.avatar_url} 
+                alt={fullName}
+                className="object-cover"
+              />
             ) : (
               <AvatarFallback className="text-lg bg-primary/10 text-primary">
                 {initials}
@@ -50,7 +54,7 @@ export const CounselorCard: React.FC<CounselorCardProps> = ({ counselor }) => {
         
         <div className="space-y-3 mb-6">
           {counselor.bio && (
-            <p className="text-gray-600 text-sm line-clamp-3">
+            <p className="text-gray-600 text-sm">
               {counselor.bio}
             </p>
           )}
