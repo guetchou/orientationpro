@@ -1,89 +1,121 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Calendar, Mail, Phone, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "lucide-react";
+import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
-
-export interface Counselor {
-  id: string;
-  name: string;
-  title: string;
-  specialties: string[];
-  avatar?: string;
-  experience: string;
-  rating: number;
-  availableSlots: number;
-  description: string;
-}
 
 interface CounselorCardProps {
-  counselor: Counselor;
+  counselor: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email?: string;
+    avatar_url?: string;
+    phone?: string;
+    department?: string;
+    specialties?: string[];
+    bio?: string;
+  };
 }
 
-export const CounselorCard = ({ counselor }: CounselorCardProps) => {
+export const CounselorCard: React.FC<CounselorCardProps> = ({ counselor }) => {
+  const fullName = `${counselor.first_name} ${counselor.last_name}`;
+  const initials = `${counselor.first_name?.[0] || ''}${counselor.last_name?.[0] || ''}`;
+  
   return (
-    <Card className="h-full hover:shadow-lg transition-all duration-300">
-      <CardHeader className="pb-4">
-        <div className="flex items-start gap-4">
-          <Avatar className="w-16 h-16">
-            <AvatarImage src={counselor.avatar} alt={counselor.name} />
-            <AvatarFallback>{counselor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+    <Card className="overflow-hidden transition-all bg-white hover:shadow-lg">
+      <div className="p-6">
+        <div className="flex flex-col items-center mb-4">
+          <Avatar className="h-24 w-24 mb-3">
+            {counselor.avatar_url ? (
+              <AvatarImage src={counselor.avatar_url} alt={fullName} />
+            ) : (
+              <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
+            )}
           </Avatar>
-          <div className="flex-1">
-            <CardTitle className="text-xl mb-1">{counselor.name}</CardTitle>
-            <CardDescription className="text-sm mb-2">{counselor.title}</CardDescription>
-            <div className="flex flex-wrap gap-2">
-              {counselor.specialties.map((specialty, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {specialty}
-                </Badge>
-              ))}
-            </div>
+          
+          <h3 className="text-xl font-semibold text-center">{fullName}</h3>
+          
+          {counselor.department && (
+            <Badge variant="outline" className="mt-2">
+              {counselor.department}
+            </Badge>
+          )}
+        </div>
+        
+        <div className="space-y-3 mb-6">
+          {counselor.bio && (
+            <p className="text-gray-600 text-sm line-clamp-3">
+              {counselor.bio}
+            </p>
+          )}
+          
+          <div className="flex flex-wrap gap-1">
+            {counselor.specialties?.map((specialty, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {specialty}
+              </Badge>
+            ))}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">{counselor.description}</p>
         
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Expérience</span>
-          <span className="font-medium">{counselor.experience}</span>
-        </div>
-        
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Note moyenne</span>
-          <div className="flex items-center">
-            <span className="font-medium mr-1">{counselor.rating}</span>
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <svg
-                  key={i}
-                  className={`w-4 h-4 ${
-                    i < Math.floor(counselor.rating)
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+        <div className="space-y-3">
+          <Button 
+            asChild 
+            size="sm" 
+            className="w-full"
+          >
+            <Link 
+              to={`/appointment?counselorId=${counselor.id}&counselorName=${encodeURIComponent(fullName)}`}
+              className="flex items-center justify-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Prendre rendez-vous
+            </Link>
+          </Button>
+          
+          <div className="flex gap-2">
+            {counselor.email && (
+              <Button 
+                asChild
+                size="sm" 
+                variant="outline" 
+                className="flex-1"
+              >
+                <a 
+                  href={`mailto:${counselor.email}`}
+                  className="flex items-center justify-center gap-1"
                 >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
+                  <Mail className="h-4 w-4" />
+                  Email
+                </a>
+              </Button>
+            )}
+            
+            {counselor.phone && (
+              <Button 
+                asChild
+                size="sm" 
+                variant="outline" 
+                className="flex-1"
+              >
+                <a 
+                  href={`tel:${counselor.phone}`}
+                  className="flex items-center justify-center gap-1"
+                >
+                  <Phone className="h-4 w-4" />
+                  Appeler
+                </a>
+              </Button>
+            )}
           </div>
         </div>
-
-        <div className="pt-4">
-          <Link to={`/appointment/${counselor.id}`}>
-            <Button className="w-full">
-              <Calendar className="w-4 h-4 mr-2" />
-              Prendre RDV ({counselor.availableSlots} créneaux)
-            </Button>
-          </Link>
-        </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };

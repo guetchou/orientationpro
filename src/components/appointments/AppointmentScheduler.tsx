@@ -1,104 +1,220 @@
 
-import { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { fr } from 'date-fns/locale';
-import { format } from "date-fns";
-import { Clock } from "lucide-react";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { Calendar as CalendarIcon, Clock, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
-const timeSlots = [
-  "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"
-];
+interface AppointmentSchedulerProps {
+  counselorId: string;
+  counselorName: string;
+}
 
-export const AppointmentScheduler = ({ counselorId, counselorName }) => {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
+interface TimeSlot {
+  id: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+}
 
-  const handleScheduleAppointment = () => {
-    if (!selectedDate || !selectedTime) {
-      toast.error("Veuillez sélectionner une date et une heure");
+export const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({ 
+  counselorId, 
+  counselorName 
+}) => {
+  const { user } = useAuth();
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (date && counselorId) {
+      fetchAvailableSlots();
+    }
+  }, [date, counselorId]);
+
+  const fetchAvailableSlots = async () => {
+    if (!date) return;
+    
+    setIsLoading(true);
+    try {
+      const formattedDate = date.toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('availability')
+        .select('*')
+        .eq('counselor_id', counselorId)
+        .eq('date', formattedDate)
+        .eq('is_available', true);
+      
+      if (error) throw error;
+      
+      setAvailableSlots(data || []);
+    } catch (error) {
+      console.error('Error fetching available slots:', error);
+      toast.error('Impossible de charger les créneaux disponibles');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBookAppointment = async () => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour prendre rendez-vous');
       return;
     }
+    
+    if (!selectedSlot) {
+      toast.error('Veuillez sélectionner un créneau horaire');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      // Insérer le rendez-vous
+      const { error } = await supabase
+        .from('appointments')
+        .insert({
+          user_id: user.id,
+          counselor_id: counselorId,
+          date: date?.toISOString().split('T')[0],
+          start_time: selectedSlot.start_time,
+          end_time: selectedSlot.end_time,
+          status: 'confirmed'
+        });
+      
+      if (error) throw error;
+      
+      // Mettre à jour la disponibilité
+      await supabase
+        .from('availability')
+        .update({ is_available: false })
+        .eq('id', selectedSlot.id);
+      
+      toast.success('Rendez-vous confirmé avec succès');
+      setSelectedSlot(null);
+      fetchAvailableSlots();
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      toast.error("Erreur lors de la prise de rendez-vous");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    // Ici nous simulerons la réservation
-    toast.success(`Rendez-vous confirmé avec ${counselorName} le ${format(selectedDate, 'dd/MM/yyyy')} à ${selectedTime}`);
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <div className="grid md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5 text-primary" />
+            Sélectionner une date
+          </CardTitle>
+          <CardDescription>
+            Choisissez une date pour voir les créneaux disponibles
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="rounded-md border"
+            disabled={{ before: new Date() }}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Sélectionnez une date</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Conseiller sélectionné
+            </CardTitle>
+            <CardDescription>
+              {counselorName || "Aucun conseiller sélectionné"}
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              locale={fr}
-              disabled={(date) => 
-                date < new Date() || 
-                date.getDay() === 0 || 
-                date.getDay() === 6
-              }
-            />
-          </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Sélectionnez un horaire</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Créneaux disponibles
+            </CardTitle>
+            <CardDescription>
+              {date ? `Créneaux pour le ${date.toLocaleDateString('fr-FR')}` : "Veuillez sélectionner une date"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              {timeSlots.map((time) => (
-                <Button
-                  key={time}
-                  variant={selectedTime === time ? "default" : "outline"}
-                  onClick={() => setSelectedTime(time)}
-                  className="flex items-center gap-2"
-                >
-                  <Clock className="w-4 h-4" />
-                  {time}
-                </Button>
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+              </div>
+            ) : availableSlots.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {availableSlots.map((slot) => (
+                  <Button
+                    key={slot.id}
+                    variant={selectedSlot?.id === slot.id ? "default" : "outline"}
+                    onClick={() => setSelectedSlot(slot)}
+                    className="text-sm"
+                  >
+                    {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500">
+                Aucun créneau disponible pour cette date
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            <Button
-              className="w-full mt-6"
-              onClick={handleScheduleAppointment}
-              disabled={!selectedDate || !selectedTime}
+        <div className="mt-8 space-y-4">
+          {user ? (
+            <Button 
+              onClick={handleBookAppointment} 
+              className="w-full" 
+              disabled={!selectedSlot || isSubmitting}
             >
-              Confirmer le rendez-vous
+              {isSubmitting ? 'Réservation en cours...' : 'Confirmer le rendez-vous'}
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {selectedDate && selectedTime && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Résumé du rendez-vous</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p>
-                <span className="font-semibold">Conseiller :</span> {counselorName}
+          ) : (
+            <div className="space-y-4 text-center">
+              <p className="text-gray-600">
+                Connectez-vous pour prendre rendez-vous
               </p>
-              <p>
-                <span className="font-semibold">Date :</span>{' '}
-                {format(selectedDate, 'dd MMMM yyyy', { locale: fr })}
-              </p>
-              <p>
-                <span className="font-semibold">Heure :</span> {selectedTime}
-              </p>
+              <div className="flex gap-3 justify-center">
+                <Button asChild variant="outline">
+                  <Link to="/login">Connexion</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/register">Inscription</Link>
+                </Button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+      </div>
     </div>
   );
 };
+
+// Export aussi comme default pour compatibilité avec les imports existants
+export default AppointmentScheduler;
