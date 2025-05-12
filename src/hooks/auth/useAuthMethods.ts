@@ -103,8 +103,21 @@ export const useAuthMethods = (
       
       if (error) throw error;
       
-      setProfile(prev => prev ? { ...prev, ...profileData } : null);
-      setProfileData(prev => prev ? { ...prev, ...profileData } : null);
+      // Correction des erreurs TS2560 - Nous créons d'abord les nouveaux objets
+      setProfile((prev) => {
+        if (prev) {
+          return { ...prev, ...profileData };
+        }
+        return null;
+      });
+      
+      setProfileData((prev) => {
+        if (prev) {
+          return { ...prev, ...profileData };
+        }
+        return null;
+      });
+      
       toast.success('Profil mis à jour avec succès');
     } catch (error: any) {
       toast.error(error.message || 'Erreur lors de la mise à jour du profil');
