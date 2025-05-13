@@ -1,208 +1,403 @@
 
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BookOpen, Video, Download, ExternalLink } from "lucide-react";
-import { motion } from "framer-motion";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
-export default function Resources() {
-  const categories = [
-    { id: "guides", name: "Guides" },
-    { id: "videos", name: "Vidéos" },
-    { id: "articles", name: "Articles" },
-    { id: "tests", name: "Tests" },
-  ];
-
-  const resources = {
-    guides: [
-      {
-        title: "Guide des études supérieures au Congo",
-        description: "Ce guide complet vous aide à naviguer dans le système éducatif supérieur congolais. Découvrez les différentes universités, instituts et écoles supérieures, leurs conditions d'admission, frais de scolarité et perspectives de carrière. Inclut également des conseils sur les bourses disponibles et les procédures d'inscription.",
-        type: "PDF",
-        url: "#",
-        icon: <FileText className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Choisir son orientation professionnelle",
-        description: "Un guide pratique pour définir votre projet professionnel en fonction de vos aptitudes, intérêts et du marché de l'emploi congolais. Apprenez à identifier vos forces, à explorer les différents secteurs professionnels et à élaborer un plan d'action pour atteindre vos objectifs de carrière.",
-        type: "PDF",
-        url: "#",
-        icon: <FileText className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Les métiers d'avenir au Congo",
-        description: "Analyse approfondie des secteurs porteurs et des compétences recherchées dans l'économie congolaise. Ce guide détaille les métiers en croissance dans les domaines du numérique, de l'énergie, de l'agriculture, du tourisme et des services, avec des témoignages de professionnels et des conseils pour se former.",
-        type: "PDF",
-        url: "#",
-        icon: <FileText className="h-10 w-10 text-primary" />,
-      },
-    ],
-    videos: [
-      {
-        title: "Témoignages d'étudiants",
-        description: "Série de vidéos où des étudiants congolais de différentes filières partagent leur parcours académique, leurs difficultés, leurs réussites et leurs conseils pour les nouveaux étudiants. Une ressource précieuse pour comprendre la réalité des études supérieures.",
-        type: "Vidéo",
-        url: "#",
-        icon: <Video className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Interview avec des professionnels",
-        description: "Collection d'entretiens avec des professionnels congolais établis dans divers secteurs. Ils partagent leurs parcours, les défis de leurs métiers, et offrent des conseils précieux pour les jeunes qui souhaitent suivre leurs traces.",
-        type: "Vidéo",
-        url: "#",
-        icon: <Video className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Comment réussir son orientation",
-        description: "Webinaire animé par des experts en orientation professionnelle qui présentent les méthodologies et outils pour faire des choix éclairés. Apprenez à évaluer vos compétences, à rechercher efficacement des informations sur les métiers et à prendre des décisions alignées avec vos aspirations.",
-        type: "Vidéo",
-        url: "#",
-        icon: <Video className="h-10 w-10 text-primary" />,
-      },
-    ],
-    articles: [
-      {
-        title: "Les compétences du 21ème siècle",
-        description: "Cet article analyse les compétences essentielles pour réussir dans l'économie mondiale et locale actuelle. Focus sur la pensée critique, la créativité, la communication, la collaboration, la littératie numérique et l'apprentissage continu, avec des conseils pratiques pour les développer.",
-        type: "Article",
-        url: "#",
-        icon: <BookOpen className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "L'entrepreneuriat au Congo",
-        description: "Panorama des opportunités et défis pour les entrepreneurs au Congo. L'article couvre l'écosystème entrepreneurial local, les secteurs prometteurs, les sources de financement disponibles, les incubateurs et accélérateurs, ainsi que des témoignages de réussite d'entrepreneurs locaux.",
-        type: "Article",
-        url: "#",
-        icon: <BookOpen className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Les bourses d'études disponibles",
-        description: "Guide complet des bourses nationales et internationales accessibles aux étudiants congolais. L'article détaille les critères d'éligibilité, les processus de candidature, les montants, et propose des conseils pour maximiser vos chances d'obtention de financement pour vos études.",
-        type: "Article",
-        url: "#",
-        icon: <BookOpen className="h-10 w-10 text-primary" />,
-      },
-    ],
-    tests: [
-      {
-        title: "Test RIASEC complet",
-        description: "Découvrez votre profil d'intérêts professionnels selon la méthode RIASEC (Réaliste, Investigateur, Artistique, Social, Entreprenant, Conventionnel). Ce test scientifiquement validé vous aide à identifier les domaines professionnels qui correspondent le mieux à votre personnalité.",
-        type: "Test",
-        url: "/test-riasec",
-        icon: <FileText className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Test d'intelligence émotionnelle",
-        description: "Évaluez vos compétences émotionnelles à travers cinq dimensions: conscience de soi, maîtrise de soi, motivation, empathie et aptitudes sociales. Découvrez vos forces et points d'amélioration pour développer votre intelligence émotionnelle, un facteur clé de réussite professionnelle.",
-        type: "Test",
-        url: "/test-emotional",
-        icon: <FileText className="h-10 w-10 text-primary" />,
-      },
-      {
-        title: "Test des intelligences multiples",
-        description: "Basé sur la théorie d'Howard Gardner, ce test vous permet d'identifier vos types d'intelligence dominants parmi les huit intelligences: linguistique, logico-mathématique, spatiale, musicale, corporelle-kinesthésique, interpersonnelle, intrapersonnelle et naturaliste.",
-        type: "Test",
-        url: "/test-multiple",
-        icon: <FileText className="h-10 w-10 text-primary" />,
-      },
-    ],
-  };
-
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-  };
-
+const Resources = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="background-pattern"></div>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      
-      <main className="pt-28 pb-16">
-        <div className="container px-4 mx-auto">
-          <motion.div 
-            className="max-w-3xl mx-auto text-center mb-16"
-            initial="hidden"
-            animate="visible"
-            variants={fadeIn}
-          >
-            <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">
-              Ressources pour votre orientation
-            </h1>
-            <p className="text-lg text-gray-600">
-              Découvrez notre collection de ressources gratuites pour vous aider dans votre parcours d'orientation et votre développement professionnel.
-            </p>
-          </motion.div>
-
-          <Tabs defaultValue="guides" className="mb-16">
-            <div className="flex justify-center mb-8">
-              <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {categories.map((category) => (
-                  <TabsTrigger key={category.id} value={category.id} className="px-6">
-                    {category.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-
-            {Object.entries(resources).map(([category, items]) => (
-              <TabsContent key={category} value={category} className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {items.map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                      <Card className="h-full feature-card">
-                        <CardHeader className="flex flex-row items-center gap-4">
-                          {item.icon}
-                          <div>
-                            <CardTitle className="text-xl">{item.title}</CardTitle>
-                            <CardDescription>{item.type}</CardDescription>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-gray-600 mb-6">{item.description}</p>
-                          <Button 
-                            asChild
-                            className="w-full flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                          >
-                            <a href={item.url}>
-                              {item.type === "PDF" ? (
-                                <><Download className="h-4 w-4" /> Télécharger</>
-                              ) : (
-                                <><ExternalLink className="h-4 w-4" /> Accéder</>
-                              )}
-                            </a>
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-
-          <div className="max-w-4xl mx-auto p-8 rounded-xl bg-white shadow-md">
-            <h2 className="text-2xl font-bold text-center mb-6">Besoin d'autres ressources ?</h2>
-            <p className="text-center text-gray-600 mb-6">
-              Notre équipe met régulièrement à jour les ressources disponibles. Si vous cherchez une information spécifique, n'hésitez pas à nous contacter.
-            </p>
-            <div className="flex justify-center">
-              <Button asChild className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                <a href="/contact">Contactez-nous</a>
-              </Button>
+      <main className="flex-grow">
+        <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl font-bold mb-6">Ressources d'Orientation</h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Une sélection d'outils, guides et ressources pour vous aider dans votre
+                parcours d'orientation professionnelle.
+              </p>
             </div>
           </div>
-        </div>
-      </main>
+        </section>
 
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">Guides et Tutoriels</h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <Card className="overflow-hidden">
+                <div className="h-48 bg-blue-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                  </svg>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2">Guide de rédaction de CV</h3>
+                  <p className="text-gray-600 mb-4">
+                    Apprenez à rédiger un CV percutant qui mettra en valeur vos compétences
+                    et expériences pour maximiser vos chances de décrocher un entretien.
+                  </p>
+                  <Button variant="outline" className="w-full">Télécharger le guide</Button>
+                </div>
+              </Card>
+              
+              <Card className="overflow-hidden">
+                <div className="h-48 bg-green-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2">Se préparer à un entretien</h3>
+                  <p className="text-gray-600 mb-4">
+                    Techniques et conseils pour aborder sereinement vos entretiens d'embauche
+                    et mettre toutes les chances de votre côté.
+                  </p>
+                  <Button variant="outline" className="w-full">Consulter le guide</Button>
+                </div>
+              </Card>
+              
+              <Card className="overflow-hidden">
+                <div className="h-48 bg-purple-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2">Financer sa formation</h3>
+                  <p className="text-gray-600 mb-4">
+                    Un guide complet sur les différents dispositifs de financement pour votre
+                    formation ou reconversion (CPF, Transition Pro, Pôle Emploi...).
+                  </p>
+                  <Button variant="outline" className="w-full">Consulter le guide</Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">Outils d'Auto-Évaluation</h2>
+            
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <Card className="p-6 border-l-4 border-primary">
+                <h3 className="text-xl font-bold mb-3">Tests de personnalité</h3>
+                <p className="text-gray-600 mb-4">
+                  Nos tests psychométriques vous aident à mieux vous connaître et à identifier
+                  vos forces, valeurs et préférences professionnelles.
+                </p>
+                <Link to="/tests">
+                  <Button variant="default" className="w-full">Découvrir nos tests</Button>
+                </Link>
+              </Card>
+              
+              <Card className="p-6 border-l-4 border-secondary">
+                <h3 className="text-xl font-bold mb-3">Questionnaires d'intérêts</h3>
+                <p className="text-gray-600 mb-4">
+                  Ces questionnaires vous permettent d'explorer vos centres d'intérêt et de les
+                  relier à des domaines professionnels correspondants.
+                </p>
+                <Button variant="default" className="w-full">Accéder aux questionnaires</Button>
+              </Card>
+              
+              <Card className="p-6 border-l-4 border-green-500">
+                <h3 className="text-xl font-bold mb-3">Fiches métiers interactives</h3>
+                <p className="text-gray-600 mb-4">
+                  Explorez notre base de données de métiers avec des descriptions détaillées,
+                  les qualifications requises et les perspectives d'emploi.
+                </p>
+                <Button variant="default" className="w-full">Explorer les métiers</Button>
+              </Card>
+              
+              <Card className="p-6 border-l-4 border-amber-500">
+                <h3 className="text-xl font-bold mb-3">Auto-évaluation des compétences</h3>
+                <p className="text-gray-600 mb-4">
+                  Cet outil vous aide à identifier et évaluer vos compétences techniques et
+                  transversales pour mieux les valoriser.
+                </p>
+                <Button variant="default" className="w-full">Évaluer mes compétences</Button>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">Ressources par Profil</h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Lycéens & Étudiants</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Guide Parcoursup</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Choisir sa filière d'études</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Réussir son premier stage</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Voir toutes les ressources</Button>
+              </Card>
+              
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">En Reconversion</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Bilan de compétences</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Dispositifs de financement</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Métiers qui recrutent</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Voir toutes les ressources</Button>
+              </Card>
+              
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Demandeurs d'Emploi</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Techniques de recherche d'emploi</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Aides à la formation</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Préparation aux entretiens</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Voir toutes les ressources</Button>
+              </Card>
+              
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="h-14 w-14 rounded-full bg-purple-100 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Jeunes Diplômés</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Premier emploi</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Réseaux professionnels</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Négocier son salaire</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Voir toutes les ressources</Button>
+              </Card>
+              
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="h-14 w-14 rounded-full bg-pink-100 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-600">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Entrepreneurs</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Création d'entreprise</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Business plan</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Aides et financement</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Voir toutes les ressources</Button>
+              </Card>
+              
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Seniors</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Emploi après 50 ans</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Préparation à la retraite</span>
+                  </li>
+                  <li className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    <span>Valoriser son expérience</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Voir toutes les ressources</Button>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 bg-primary/5">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">Liens Utiles</h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              <Card className="p-4 hover:shadow-md transition-shadow">
+                <h3 className="font-bold mb-2">Orientation</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-primary hover:underline">ONISEP</a></li>
+                  <li><a href="#" className="text-primary hover:underline">France Travail</a></li>
+                  <li><a href="#" className="text-primary hover:underline">Mon Compte Formation</a></li>
+                  <li><a href="#" className="text-primary hover:underline">CIDJ</a></li>
+                </ul>
+              </Card>
+              
+              <Card className="p-4 hover:shadow-md transition-shadow">
+                <h3 className="font-bold mb-2">Formation</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-primary hover:underline">AFPA</a></li>
+                  <li><a href="#" className="text-primary hover:underline">CNAM</a></li>
+                  <li><a href="#" className="text-primary hover:underline">Transition Pro</a></li>
+                  <li><a href="#" className="text-primary hover:underline">Certificat CléA</a></li>
+                </ul>
+              </Card>
+              
+              <Card className="p-4 hover:shadow-md transition-shadow">
+                <h3 className="font-bold mb-2">Emploi</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-primary hover:underline">France Travail</a></li>
+                  <li><a href="#" className="text-primary hover:underline">APEC</a></li>
+                  <li><a href="#" className="text-primary hover:underline">Indeed</a></li>
+                  <li><a href="#" className="text-primary hover:underline">LinkedIn</a></li>
+                </ul>
+              </Card>
+              
+              <Card className="p-4 hover:shadow-md transition-shadow">
+                <h3 className="font-bold mb-2">Entrepreneuriat</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-primary hover:underline">BPI France</a></li>
+                  <li><a href="#" className="text-primary hover:underline">CCI</a></li>
+                  <li><a href="#" className="text-primary hover:underline">Auto-entrepreneur</a></li>
+                  <li><a href="#" className="text-primary hover:underline">ADIE</a></li>
+                </ul>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 bg-gradient-to-t from-blue-50 to-white">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-6">Besoin d'un accompagnement personnalisé ?</h2>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Nos conseillers sont à votre disposition pour vous guider dans votre orientation
+              professionnelle et vous aider à trouver les ressources les plus adaptées à votre situation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/conseillers">
+                <Button size="lg">Consulter un conseiller</Button>
+              </Link>
+              <Link to="/contact">
+                <Button variant="outline" size="lg">Nous contacter</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
       <Footer />
     </div>
   );
-}
+};
+
+export default Resources;
