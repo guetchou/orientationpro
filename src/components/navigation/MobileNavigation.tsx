@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { NavItem } from './NavItem';
+import { LogOut } from 'lucide-react';
 
 interface NavItemType {
   name: string;
@@ -75,5 +76,3 @@ export const MobileNavigation = ({
     </div>
   );
 };
-
-import { LogOut } from 'lucide-react';

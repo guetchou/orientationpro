@@ -1,124 +1,75 @@
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
-import { createAppError, AppError } from '@/utils/errorHandler';
+import { toast } from "sonner";
 
-type ErrorWithCode = Error & { code?: string; details?: any; };
-
-interface UseErrorHandlerOptions {
+interface ErrorHandlingOptions {
   showToast?: boolean;
   logToConsole?: boolean;
-  captureToAnalytics?: boolean;
+  captureToSentry?: boolean;
 }
 
 /**
- * Hook pour standardiser la gestion des erreurs dans l'application
+ * Hook personnalisé pour gérer les erreurs de manière standardisée
  */
-export const useErrorHandler = (defaultOptions: UseErrorHandlerOptions = {
-  showToast: true,
-  logToConsole: true,
-  captureToAnalytics: false,
-}) => {
-  const [error, setError] = useState<ErrorWithCode | null>(null);
-  const [isError, setIsError] = useState(false);
-
-  /**
-   * Fonction pour gérer une erreur
-   */
-  const handleError = useCallback((
-    err: unknown, 
-    message?: string,
-    options?: UseErrorHandlerOptions
-  ) => {
-    // Fusionner les options par défaut avec celles fournies
-    const mergedOptions = { ...defaultOptions, ...options };
-    const { showToast, logToConsole, captureToAnalytics } = mergedOptions;
-    
-    // Convertir l'erreur en objet standard
-    let standardError: ErrorWithCode;
-    
-    if (err instanceof AppError) {
-      standardError = err;
-    } else if (err instanceof Error) {
-      standardError = err;
-    } else if (typeof err === 'string') {
-      standardError = new Error(err);
-    } else {
-      standardError = new Error(message || 'Une erreur inattendue est survenue');
-      if (err && typeof err === 'object') {
-        standardError.details = err;
-      }
-    }
-    
-    // Afficher un toast si demandé
-    if (showToast) {
-      toast.error(message || standardError.message);
-    }
-    
-    // Logger l'erreur si demandé
-    if (logToConsole) {
-      console.error('Error handled by useErrorHandler:', standardError);
-      if (standardError.details) {
-        console.error('Error details:', standardError.details);
-      }
-    }
-    
-    // Envoyer à un service d'analyse si demandé
-    if (captureToAnalytics) {
-      // Ici, vous pourriez intégrer un service comme Sentry
-      console.log('Error would be sent to analytics service');
-    }
-    
-    // Mettre à jour l'état local
-    setError(standardError);
-    setIsError(true);
-    
-    return standardError;
-  }, [defaultOptions]);
-
-  /**
-   * Fonction pour effacer l'erreur
-   */
-  const clearError = useCallback(() => {
-    setError(null);
-    setIsError(false);
-  }, []);
-
-  /**
-   * Fonction pour créer une fonction try/catch autour d'une fonction asynchrone
-   */
-  const withErrorHandling = useCallback(<T extends (...args: any[]) => Promise<any>>(
-    fn: T,
-    errorMessage?: string,
-    options?: UseErrorHandlerOptions
-  ) => {
-    return async (...args: Parameters<T>): Promise<ReturnType<T>> => {
-      try {
-        return await fn(...args);
-      } catch (err) {
-        handleError(err, errorMessage, options);
-        throw err; // Propager l'erreur pour permettre une gestion supplémentaire
-      }
-    };
-  }, [handleError]);
-
-  /**
-   * Fonction utilitaire pour créer une erreur typée
-   */
-  const createError = useCallback((
-    message: string,
-    code?: string,
-    details?: unknown
-  ): AppError => {
-    return createAppError(message, code, details);
-  }, []);
-
-  return {
-    error,
-    isError,
-    handleError,
-    clearError,
-    withErrorHandling,
-    createError
+export const useErrorHandler = () => {
+  const defaultOptions: ErrorHandlingOptions = {
+    showToast: true,
+    logToConsole: true,
+    captureToSentry: false,
   };
+
+  /**
+   * Gère une erreur de manière standardisée
+   * @param error L'erreur à gérer
+   * @param message Message d'erreur à afficher (remplace le message d'erreur par défaut)
+   * @param options Options de gestion de l'erreur
+   */
+  const handleError = (
+    error: any,
+    message?: string,
+    options?: Partial<ErrorHandlingOptions>
+  ) => {
+    const mergedOptions = { ...defaultOptions, ...options };
+    const errorMessage = message || getErrorMessage(error);
+
+    // Afficher dans la console
+    if (mergedOptions.logToConsole) {
+      console.error("Error handled:", error);
+    }
+
+    // Afficher une notification toast
+    if (mergedOptions.showToast) {
+      toast.error(errorMessage);
+    }
+
+    // Capture dans Sentry (à implémenter si nécessaire)
+    if (mergedOptions.captureToSentry) {
+      // Intégration future avec Sentry
+      // captureException(error);
+    }
+
+    return errorMessage;
+  };
+
+  /**
+   * Extrait un message d'erreur lisible à partir d'un objet d'erreur
+   */
+  const getErrorMessage = (error: any): string => {
+    if (!error) return "Une erreur inconnue s'est produite";
+
+    // Si c'est une erreur Supabase
+    if (error.error_description) return error.error_description;
+    if (error.message) return error.message;
+    
+    // Si c'est une erreur Axios
+    if (error.response?.data?.message) return error.response.data.message;
+    if (error.response?.data?.error) return error.response.data.error;
+    
+    // Si c'est une chaîne de caractères
+    if (typeof error === "string") return error;
+
+    // Erreur par défaut
+    return "Une erreur inattendue s'est produite";
+  };
+
+  return { handleError, getErrorMessage };
 };
