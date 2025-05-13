@@ -47,12 +47,13 @@ const Navbar = () => {
     { name: 'Contact', path: '/contact', icon: <Search size={18} /> },
   ];
 
-  const authNavItems: NavItem[] = user ? [
-    { name: 'Tableau de bord', path: '/dashboard', icon: <Briefcase size={18} /> },
-    { name: 'Profil', path: '/profile', icon: <User size={18} /> },
+  // Ajouter la propriété isActive pour chaque élément
+  const authNavItems = user ? [
+    { name: 'Tableau de bord', path: '/dashboard', icon: <Briefcase size={18} />, isActive: location.pathname === '/dashboard' },
+    { name: 'Profil', path: '/profile', icon: <User size={18} />, isActive: location.pathname === '/profile' },
   ] : [
-    { name: 'Connexion', path: '/login', icon: <LogIn size={18} /> },
-    { name: 'Inscription', path: '/register', icon: <User size={18} /> },
+    { name: 'Connexion', path: '/login', icon: <LogIn size={18} />, isActive: location.pathname === '/login' },
+    { name: 'Inscription', path: '/register', icon: <User size={18} />, isActive: location.pathname === '/register' },
   ];
 
   const styles = getNavbarStyles(scrolled);

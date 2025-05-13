@@ -10,18 +10,18 @@ interface RequireAuthProps {
 }
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth(); // Changé de loading à isLoading
   const location = useLocation();
   const { warning } = useToast();
   
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !user) { // Changé de loading à isLoading
       warning("Connexion requise pour accéder à cette page");
     }
-  }, [loading, user, warning]);
+  }, [isLoading, user, warning]); // Changé de loading à isLoading
 
   // If still loading, show a loading indicator
-  if (loading) {
+  if (isLoading) { // Changé de loading à isLoading
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50/50 to-white">
         <motion.div

@@ -1,11 +1,13 @@
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import Navbar from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Footer } from '@/components/Footer'; // Correction de l'import
+import { MapPin, Phone, Mail, Clock, Send, Loader2 } from 'lucide-react';
 
 const Contact = () => {
   return (

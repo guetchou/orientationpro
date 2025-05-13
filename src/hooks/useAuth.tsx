@@ -1,21 +1,30 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+
+// Export User type to fix the error in useAuthMethods
+export type User = {
+  id: string;
+  email: string;
+  photoURL?: string; // Added to fix Profile.tsx errors
+  displayName?: string; // Added to fix Profile.tsx errors
+  role?: string;
+};
 
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   profile: any | null;
   isSuperAdmin: boolean;
-  isLoading: boolean;
+  isLoading: boolean; // Renamed from loading to match usage in RequireAuth
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, metadata?: object) => Promise<any>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<any>;
   updatePassword: (password: string) => Promise<any>;
   updateProfile: (data: object) => Promise<any>;
+  isMasterAdmin?: boolean; // Added to fix UserCredentials.tsx error
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,7 +34,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isMasterAdmin, setIsMasterAdmin] = useState<boolean>(false); // Added for compatibility
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Renamed for consistency
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -188,7 +198,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     session,
     profile,
     isSuperAdmin,
-    isLoading,
+    isMasterAdmin, // Added to the context value
+    isLoading, // Renamed for consistency
     signIn,
     signUp,
     signOut,

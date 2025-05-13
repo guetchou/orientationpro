@@ -30,24 +30,31 @@ export function useQueryWithErrorHandling<
     ...queryOptions 
   } = options || {};
 
+  // Récupérer les callbacks spécifiés par l'utilisateur
+  const userOnError = queryOptions.meta?.onError || queryOptions.meta?.onSettled;
+  const userOnSuccess = queryOptions.meta?.onSuccess || queryOptions.meta?.onSettled;
+
   return useQuery({
     queryKey,
     queryFn,
     ...queryOptions,
-    onError: (error) => {
-      handleError(error, errorMessage, { showToast: showErrorToast });
-      if (queryOptions.onError) {
-        queryOptions.onError(error);
+    meta: {
+      ...queryOptions.meta,
+      onError: (error: TError) => {
+        handleError(error, errorMessage, { showToast: showErrorToast });
+        if (userOnError && typeof userOnError === 'function') {
+          userOnError(error);
+        }
+      },
+      onSuccess: (data: TData) => {
+        if (showSuccessToast && successMessage) {
+          toast.success(successMessage);
+        }
+        if (userOnSuccess && typeof userOnSuccess === 'function') {
+          userOnSuccess(data);
+        }
       }
-    },
-    onSuccess: (data) => {
-      if (showSuccessToast && successMessage) {
-        toast.success(successMessage);
-      }
-      if (queryOptions.onSuccess) {
-        queryOptions.onSuccess(data);
-      }
-    },
+    }
   });
 }
 
@@ -112,13 +119,15 @@ export const createStandardQueryClient = () => {
   });
 };
 
+interface StandardQueryClientProviderProps {
+  children: React.ReactNode;
+  client?: QueryClient;
+}
+
 /**
  * Fournit un contexte React Query standardisé avec gestion d'erreur
  */
-export const StandardQueryClientProvider: React.FC<{
-  children: React.ReactNode;
-  client?: QueryClient;
-}> = ({ children, client }) => {
+export const StandardQueryClientProvider: React.FC<StandardQueryClientProviderProps> = ({ children, client }) => {
   const standardClient = client || createStandardQueryClient();
   
   return (

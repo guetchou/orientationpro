@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Footer } from '@/components/Footer'; // Correction de l'import
+import { Download, FileText, Video, BookOpen, Search } from 'lucide-react';
 
 const Resources = () => {
   return (

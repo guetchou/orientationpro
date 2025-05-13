@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { motion } from 'framer-motion';
+import Navbar from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Footer } from '@/components/Footer'; // Correction de l'import
+import { CheckCircle, Users, Briefcase, FileCheck, BarChart } from 'lucide-react';
 
 const Recrutement = () => {
   return (

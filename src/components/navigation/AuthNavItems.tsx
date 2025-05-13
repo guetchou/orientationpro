@@ -8,7 +8,7 @@ interface AuthNavItemProps {
   name: string;
   path: string;
   icon?: React.ReactNode;
-  isActive: boolean;
+  isActive: boolean; // Cette propriété est maintenant explicite
 }
 
 interface AuthNavItemsProps {
