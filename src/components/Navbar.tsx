@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ModeToggle } from '@/components/ui/ModeToggle';
-import { Menu, X, User, LogIn, Briefcase, Search, Book, School, BarChart, Users } from 'lucide-react';
+import { Menu, X, User, LogIn, Briefcase, Search, Book, School, BarChart, Users, Info, Compass } from 'lucide-react';
 import { NavLogo } from './navigation/NavLogo';
 import { DesktopNavigation } from './navigation/DesktopNavigation';
 import { AuthNavItems } from './navigation/AuthNavItems';
@@ -37,9 +37,13 @@ const Navbar = () => {
   const mainNavItems: NavItem[] = [
     { name: 'Accueil', path: '/' },
     { name: 'Tests', path: '/tests', icon: <BarChart size={18} /> },
+    { name: 'Orientation', path: '/orientation-services', icon: <Compass size={18} /> },
     { name: 'Conseillers', path: '/conseillers', icon: <Users size={18} /> },
     { name: 'Établissements', path: '/establishments', icon: <School size={18} /> },
     { name: 'Ressources', path: '/resources', icon: <Book size={18} /> },
+    { name: 'Recrutement', path: '/recrutement', icon: <Briefcase size={18} /> },
+    { name: 'Blog', path: '/blog', icon: <Book size={18} /> },
+    { name: 'À Propos', path: '/about', icon: <Info size={18} /> },
     { name: 'Contact', path: '/contact', icon: <Search size={18} /> },
   ];
 
