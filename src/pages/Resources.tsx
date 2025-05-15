@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom'; // Ajout de l'import manquant
-import { DownloadIcon, BookOpen, FileText, Video, Presentation } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { DownloadIcon, BookOpen, FileText, Video, Presentation, Users } from 'lucide-react';
 
 const Resources = () => {
   return (

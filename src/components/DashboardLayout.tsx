@@ -1,7 +1,8 @@
+
 import { useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardNav } from "./DashboardNav";
+import DashboardNav from "./DashboardNav";
 import { toast } from "sonner";
 
 export const DashboardLayout = () => {

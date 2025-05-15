@@ -31,6 +31,7 @@ import BlogPost from "@/pages/BlogPost";
 import BlogAdmin from "@/pages/admin/BlogAdmin";
 import Recrutement from "@/pages/Recrutement";
 import ATSAdmin from "@/pages/admin/ATSAdmin";
+import CandidateDetails from "@/pages/admin/CandidateDetails";
 import SuperAdmin from "@/pages/admin/SuperAdmin";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -79,6 +80,7 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin/blog" element={<RequireAuth><BlogAdmin /></RequireAuth>} />
             <Route path="/admin/ats" element={<RequireAuth><ATSAdmin /></RequireAuth>} />
+            <Route path="/admin/candidate/:id" element={<RequireAuth><CandidateDetails /></RequireAuth>} />
             <Route path="/admin/super-admin" element={<RequireAuth><SuperAdmin /></RequireAuth>} />
             
             {/* Static Pages */}

@@ -12,7 +12,7 @@ import {
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function DashboardNav() {
+const DashboardNav = () => {
   const { isSuperAdmin, profile } = useAuth();
 
   const navItems = [
@@ -46,4 +46,7 @@ export default function DashboardNav() {
       </nav>
     </div>
   );
-}
+};
+
+export default DashboardNav;
+export { DashboardNav };
