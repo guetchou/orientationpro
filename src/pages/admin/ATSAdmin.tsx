@@ -123,8 +123,9 @@ const ATSAdmin = () => {
     // Calculer le taux de conversion (pourcentage d'offres sur le total)
     const totalOffers = byStatus.offer || 0;
     const totalRejected = byStatus.rejected || 0;
+    // Fix: Convert each operand to a number first
     const conversionRate = candidateData.length > 0 
-      ? Math.round((totalOffers / (totalOffers + totalRejected)) * 100) || 0
+      ? Math.round((Number(totalOffers) / (Number(totalOffers) + Number(totalRejected))) * 100) || 0
       : 0;
 
     setStats({
@@ -250,7 +251,8 @@ const ATSAdmin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.byStatus.interview || 0}</div>
+                    {/* Fix: Added optional chaining to safely access the interview property */}
+                    <div className="text-2xl font-bold">{stats.byStatus?.interview || 0}</div>
                   </CardContent>
                 </Card>
                 
