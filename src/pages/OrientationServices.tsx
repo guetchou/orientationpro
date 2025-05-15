@@ -1,312 +1,240 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
-import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Footer } from '@/components/Footer'; // Correction de l'import
-import { CheckCircle, Users, Calendar, FileText, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom'; // Ajout de l'import manquant
+import Navbar from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { CheckCircle } from 'lucide-react';
 
 const OrientationServices = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow">
-        <section className="bg-gradient-to-b from-blue-50 to-white py-16">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl font-bold mb-6">Nos Services d'Orientation</h1>
-              <p className="text-xl text-gray-600 mb-8">
-                Découvrez nos services personnalisés pour vous accompagner dans votre parcours professionnel
-                et vous aider à prendre les meilleures décisions pour votre avenir.
-              </p>
-              <Link to="/appointment">
-                <Button size="lg" className="font-medium">
-                  Prendre rendez-vous
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Nos Programmes d'Orientation</h2>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <Card className="p-6 hover:shadow-lg transition-shadow">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                    <path d="M6 12v5c0 2 1 3 3 3h6c2 0 3-1 3-3v-5"></path>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3">Orientation Scolaire</h3>
-                <p className="text-gray-600 mb-4">
-                  Accompagnement personnalisé pour les collégiens et lycéens dans leurs choix d'orientation, 
-                  de filières et d'études supérieures.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Bilan d'orientation complet
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Tests d'aptitudes et d'intérêts
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Conseil pour Parcoursup
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full">En savoir plus</Button>
-              </Card>
-              
-              <Card className="p-6 hover:shadow-lg transition-shadow">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3">Reconversion Professionnelle</h3>
-                <p className="text-gray-600 mb-4">
-                  Accompagnement sur-mesure pour les adultes souhaitant changer de métier 
-                  ou de secteur d'activité.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Bilan de compétences
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Analyse de transférabilité
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Plan d'action personnalisé
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full">En savoir plus</Button>
-              </Card>
-              
-              <Card className="p-6 hover:shadow-lg transition-shadow">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="8.5" cy="7" r="4"></circle>
-                    <polyline points="17 11 19 13 23 9"></polyline>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3">Coaching Professionnel</h3>
-                <p className="text-gray-600 mb-4">
-                  Accompagnement individuel pour développer votre potentiel, 
-                  surmonter les obstacles et atteindre vos objectifs de carrière.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Définition d'objectifs SMART
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Développement du leadership
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Suivi personnalisé
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full">En savoir plus</Button>
-              </Card>
-              
-              <Card className="p-6 hover:shadow-lg transition-shadow">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                    <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                    <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3">Orientation pour Jeunes Diplômés</h3>
-                <p className="text-gray-600 mb-4">
-                  Aide à l'insertion professionnelle pour les étudiants et jeunes diplômés 
-                  entrant sur le marché du travail.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Optimisation du CV
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Préparation aux entretiens
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Stratégie de recherche d'emploi
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full">En savoir plus</Button>
-              </Card>
-              
-              <Card className="p-6 hover:shadow-lg transition-shadow">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 4V2c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    <line x1="12" y1="11" x2="12" y2="17"></line>
-                    <line x1="9" y1="14" x2="15" y2="14"></line>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3">Bilan de Compétences</h3>
-                <p className="text-gray-600 mb-4">
-                  Analyse approfondie de vos compétences, motivations et aspirations 
-                  pour définir un projet professionnel réaliste et réalisable.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Tests psychométriques
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Synthèse écrite détaillée
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Éligible CPF
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full">En savoir plus</Button>
-              </Card>
-              
-              <Card className="p-6 hover:shadow-lg transition-shadow">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M5.52 19c.64-2.2 1.84-3 3.22-3h6.52c1.38 0 2.58.8 3.22 3"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3">Conseil en Évolution Professionnelle</h3>
-                <p className="text-gray-600 mb-4">
-                  Service gratuit d'accompagnement personnalisé pour tous les actifs, 
-                  pour faire le point sur votre situation et vos perspectives d'évolution.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Information sur les dispositifs
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Définition de projet
-                  </li>
-                  <li className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Service 100% gratuit
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full">En savoir plus</Button>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 bg-gradient-to-b from-white to-blue-50">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-6">Nos Outils d'Évaluation</h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Découvrez nos tests psychométriques validés scientifiquement pour vous aider 
-                à mieux vous connaître et faire les bons choix d'orientation.
-              </p>
-              <Link to="/tests">
-                <Button variant="secondary" size="lg">
-                  Découvrir nos tests
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16">
+        <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-center mb-12">Témoignages</h2>
+              <div className="text-center mb-12">
+                <h1 className="text-4xl font-bold mb-6">Services d'Orientation</h1>
+                <p className="text-xl text-gray-600">
+                  Découvrez nos services d'orientation personnalisés pour vous aider à faire les meilleurs choix pour votre avenir professionnel.
+                </p>
+              </div>
               
-              <div className="grid md:grid-cols-2 gap-8">
-                <Card className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-                    <div>
-                      <h4 className="font-bold">Marie L.</h4>
-                      <p className="text-gray-500 text-sm">Étudiante, 19 ans</p>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 italic">
-                    "Grâce à l'orientation scolaire, j'ai pu trouver ma voie. Les conseillers 
-                    ont su m'écouter et m'aider à identifier mes forces. Je suis maintenant 
-                    dans une formation qui me passionne !"
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">Un accompagnement sur mesure</h2>
+                  <p className="text-gray-600 mb-6">
+                    Nos conseillers d'orientation certifiés vous accompagnent à chaque étape de votre parcours, 
+                    de l'exploration de vos intérêts à la définition de votre projet professionnel.
                   </p>
-                </Card>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button asChild size="lg">
+                      <Link to="/contact">Prendre rendez-vous</Link>
+                    </Button>
+                    <Button variant="outline" size="lg">En savoir plus</Button>
+                  </div>
+                </div>
                 
-                <Card className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-                    <div>
-                      <h4 className="font-bold">François D.</h4>
-                      <p className="text-gray-500 text-sm">Cadre en reconversion, 42 ans</p>
+                <div className="rounded-lg overflow-hidden shadow-xl">
+                  <img 
+                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                    alt="Conseiller d'orientation" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Nos services</h2>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-6 hover:shadow-lg transition-shadow rounded-lg bg-white">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M12 2v20M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"></path>
+                    <path d="M19 17h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Bilans d'orientation</h3>
+                <p className="text-gray-600">
+                  Faites le point sur vos compétences, vos intérêts et vos valeurs pour définir un projet professionnel qui vous ressemble.
+                </p>
+              </div>
+              
+              <div className="p-6 hover:shadow-lg transition-shadow rounded-lg bg-white">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Tests psychométriques</h3>
+                <p className="text-gray-600">
+                  Évaluez vos aptitudes, votre personnalité et vos motivations grâce à des tests validés scientifiquement.
+                </p>
+              </div>
+              
+              <div className="p-6 hover:shadow-lg transition-shadow rounded-lg bg-white">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <line x1="12" y1="2" x2="12" y2="22"></line>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Entretiens individuels</h3>
+                <p className="text-gray-600">
+                  Bénéficiez de conseils personnalisés lors d'entretiens avec nos conseillers, en présentiel ou à distance.
+                </p>
+              </div>
+              
+              <div className="p-6 hover:shadow-lg transition-shadow rounded-lg bg-white">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Ateliers thématiques</h3>
+                <p className="text-gray-600">
+                  Participez à des ateliers en groupe pour explorer des thématiques spécifiques liées à l'orientation et à l'insertion professionnelle.
+                </p>
+              </div>
+              
+              <div className="p-6 hover:shadow-lg transition-shadow rounded-lg bg-white">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <line x1="12" y1="2" x2="12" y2="22"></line>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Accompagnement à la recherche d'emploi</h3>
+                <p className="text-gray-600">
+                  Bénéficiez d'un accompagnement personnalisé pour optimiser votre CV, rédiger des lettres de motivation percutantes et réussir vos entretiens.
+                </p>
+              </div>
+              
+              <div className="p-6 hover:shadow-lg transition-shadow rounded-lg bg-white">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Suivi personnalisé</h3>
+                <p className="text-gray-600">
+                  Restez en contact avec votre conseiller pour bénéficier d'un suivi régulier et atteindre vos objectifs professionnels.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-12">Comment ça marche</h2>
+              
+              <div className="space-y-12">
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                  <div className="md:w-1/2">
+                    <div className="bg-white rounded-lg p-6 shadow-md">
+                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold mb-4">1</div>
+                      <h3 className="text-xl font-bold mb-3">Prenez contact avec un conseiller</h3>
+                      <p className="text-gray-600">
+                        Choisissez le conseiller qui correspond le mieux à vos besoins et prenez rendez-vous en ligne.
+                      </p>
                     </div>
                   </div>
-                  <p className="text-gray-600 italic">
-                    "Le bilan de compétences a été une révélation pour moi. J'étais perdu 
-                    après 15 ans dans le même secteur. Aujourd'hui, j'ai retrouvé la motivation 
-                    et je me suis lancé dans un domaine qui correspond vraiment à mes valeurs."
-                  </p>
-                </Card>
+                  <div className="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1543123848-ca984e4454fa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Contact conseiller" className="rounded-lg shadow-md" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
+                  <div className="md:w-1/2">
+                    <div className="bg-white rounded-lg p-6 shadow-md">
+                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold mb-4">2</div>
+                      <h3 className="text-xl font-bold mb-3">Réalisez un bilan d'orientation</h3>
+                      <p className="text-gray-600">
+                        Répondez à un questionnaire détaillé pour évaluer vos compétences, vos intérêts et vos valeurs.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Bilan orientation" className="rounded-lg shadow-md" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                  <div className="md:w-1/2">
+                    <div className="bg-white rounded-lg p-6 shadow-md">
+                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold mb-4">3</div>
+                      <h3 className="text-xl font-bold mb-3">Définissez votre projet professionnel</h3>
+                      <p className="text-gray-600">
+                        Avec l'aide de votre conseiller, identifiez les métiers et les formations qui correspondent à votre profil.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Projet professionnel" className="rounded-lg shadow-md" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
+                  <div className="md:w-1/2">
+                    <div className="bg-white rounded-lg p-6 shadow-md">
+                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold mb-4">4</div>
+                      <h3 className="text-xl font-bold mb-3">Mettez en œuvre votre plan d'action</h3>
+                      <p className="text-gray-600">
+                        Bénéficiez d'un accompagnement personnalisé pour trouver un emploi, une formation ou créer votre entreprise.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1542744166-e35c9a306541?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Plan d'action" className="rounded-lg shadow-md" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Témoignages</h2>
+            
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg p-6 shadow-md">
+                <p className="text-gray-600 italic mb-4">
+                  "Grâce à l'accompagnement de mon conseiller, j'ai pu trouver ma voie et me lancer dans une formation qui me passionne."
+                </p>
+                <div className="flex items-center">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b2933e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=64&h=64&q=80" alt="Témoignage 1" className="rounded-full w-12 h-12 mr-4" />
+                  <div>
+                    <p className="font-bold">Sophie Martin</p>
+                    <p className="text-sm text-gray-500">Étudiante</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 shadow-md">
+                <p className="text-gray-600 italic mb-4">
+                  "Les tests psychométriques m'ont permis de mieux comprendre mes forces et mes faiblesses, et de choisir un métier qui correspond à ma personnalité."
+                </p>
+                <div className="flex items-center">
+                  <img src="https://images.unsplash.com/photo-1570295999680-5e27cac9d2ca?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=64&h=64&q=80" alt="Témoignage 2" className="rounded-full w-12 h-12 mr-4" />
+                  <div>
+                    <p className="font-bold">Pierre Dubois</p>
+                    <p className="text-sm text-gray-500">Salarié</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -314,22 +242,17 @@ const OrientationServices = () => {
 
         <section className="py-16 bg-primary text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6">Prêt à démarrer votre parcours d'orientation ?</h2>
+            <h2 className="text-3xl font-bold mb-6">Prêt à prendre votre avenir en main ?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Nos conseillers sont disponibles pour vous accompagner dans votre démarche d'orientation 
-              ou de reconversion professionnelle.
+              Contactez-nous dès aujourd'hui pour bénéficier d'un accompagnement personnalisé et construire le projet professionnel qui vous ressemble.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/appointment">
-                <Button variant="secondary" size="lg" className="font-medium">
-                  Prendre rendez-vous
-                </Button>
-              </Link>
-              <Link to="/contact">
-                <Button variant="outline" size="lg" className="font-medium bg-transparent border-white text-white hover:bg-white/10">
-                  Nous contacter
-                </Button>
-              </Link>
+              <Button asChild variant="secondary" size="lg" className="font-medium">
+                <Link to="/contact">Prendre rendez-vous</Link>
+              </Button>
+              <Button variant="outline" size="lg" className="font-medium bg-transparent border-white text-white hover:bg-white/10">
+                En savoir plus
+              </Button>
             </div>
           </div>
         </section>

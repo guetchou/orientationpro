@@ -76,7 +76,6 @@ const Navbar = () => {
             items={authNavItems}
             user={user}
             onLogout={signOut}
-            isActive={(path: string) => location.pathname === path}
           />
           
           <ModeToggle />

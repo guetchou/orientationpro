@@ -1,14 +1,17 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Footer } from '@/components/Footer'; // Correction de l'import
+import { Footer } from '@/components/Footer';
 import { CheckCircle, Users, Briefcase, FileCheck, BarChart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import CandidatureForm from '@/components/recrutement/CandidatureForm';
 
 const Recrutement = () => {
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -361,6 +364,71 @@ const Recrutement = () => {
               <Button variant="outline" size="lg" className="font-medium bg-transparent border-white text-white hover:bg-white/10">
                 Demander une démo
               </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Add a new Candidature section */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-12">Postuler maintenant</h2>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-2xl font-bold mb-6">Rejoignez notre équipe</h3>
+                  <p className="text-gray-600 mb-6">
+                    Nous recherchons des talents passionnés pour nous aider à développer notre plateforme
+                    d'orientation et accompagner nos utilisateurs dans leur parcours professionnel.
+                  </p>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Environnement de travail stimulant</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Équipe dynamique et collaborative</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Missions à impact social positif</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Opportunités d'évolution</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8">
+                    <Link to="/contact">
+                      <Button variant="outline">Nous contacter pour plus d'informations</Button>
+                    </Link>
+                  </div>
+                </div>
+                
+                <CandidatureForm />
+              </div>
             </div>
           </div>
         </section>
