@@ -1,20 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Mail, Phone, Calendar, Star, Briefcase, Loader2, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { CandidateHeader } from '@/components/admin/ats/CandidateHeader';
+import { CandidateInfo } from '@/components/admin/ats/CandidateInfo';
+import { CandidateTabs } from '@/components/admin/ats/CandidateTabs';
+import { motion } from 'framer-motion';
 
 interface Candidate {
   id: string;
@@ -112,109 +111,58 @@ const CandidateDetails = () => {
       setSaving(false);
     }
   };
-
-  const renderRatingStars = () => {
-    return Array(5).fill(0).map((_, index) => (
-      <Star
-        key={index}
-        className={`h-5 w-5 cursor-pointer ${index < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-        onClick={() => setRating(index + 1)}
-      />
-    ));
-  };
-
-  const renderLoadingState = () => (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center mb-6">
-        <Skeleton className="h-10 w-40" />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32 mb-2" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-center mb-6">
-                <Skeleton className="h-24 w-24 rounded-full" />
-              </div>
-              
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="flex items-center">
-                    <Skeleton className="h-4 w-4 mr-2" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <Skeleton className="h-5 w-24 mb-2" />
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-5 w-5 mr-1" />
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <Skeleton className="h-5 w-20 mb-2" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-10 w-full" />
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="md:col-span-2">
-          <Skeleton className="h-10 w-full mb-4" />
-          <Skeleton className="h-64 w-full rounded-lg" />
-        </div>
-      </div>
-    </div>
-  );
   
   // État d'erreur 
   if (error) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <Button variant="ghost" onClick={() => navigate('/admin/ats')} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste
-        </Button>
+      <motion.div 
+        className="container mx-auto py-8 px-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <Button variant="ghost" onClick={() => navigate('/admin/ats')} className="mb-4">
+            <Loader2 className="mr-2 h-4 w-4" /> Retour à la liste
+          </Button>
+          <ThemeToggle />
+        </div>
         
         <Card className="border-red-300 shadow-lg">
-          <CardHeader className="bg-red-50">
+          <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-t-lg">
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <CardTitle className="text-red-700">Erreur</CardTitle>
+              <h2 className="text-xl font-semibold text-red-700 dark:text-red-400">Erreur</h2>
             </div>
-            <CardDescription className="text-red-600">
+            <p className="text-red-600 dark:text-red-300 mt-1">
               {error}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center py-6">
-            <p className="mb-4">Impossible de charger les informations du candidat.</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>
+            </p>
+          </div>
+          <div className="text-center py-6 px-4">
+            <p className="mb-4 dark:text-gray-300">Impossible de charger les informations du candidat.</p>
+            <Button variant="outline" onClick={() => window.location.reload()} className="transition-all duration-300 hover:bg-primary hover:text-white">
               Réessayer
             </Button>
-          </CardContent>
+          </div>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
   if (loading) {
-    return renderLoadingState();
+    return (
+      <div className="container mx-auto py-8 px-4 flex items-center justify-center h-64">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <span className="ml-3 text-lg">Chargement du profil...</span>
+      </div>
+    );
   }
 
   if (!candidate) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold mb-2">Candidat non trouvé</h2>
-        <Button variant="outline" onClick={() => navigate('/admin/ats')}>
+        <h2 className="text-xl font-semibold mb-2 dark:text-white">Candidat non trouvé</h2>
+        <Button variant="outline" onClick={() => navigate('/admin/ats')} className="transition-colors hover:bg-primary hover:text-white">
           Retour à la liste
         </Button>
       </div>
@@ -228,189 +176,60 @@ const CandidateDetails = () => {
   });
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate('/admin/ats')} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste
-        </Button>
-        <h1 className="text-3xl font-bold">{candidate.full_name}</h1>
-        <div className="flex items-center mt-2">
-          <Badge variant="secondary" className={statusColors[candidate.status]}>
-            {candidate.status}
-          </Badge>
-          <span className="text-sm text-gray-500 ml-4">Candidature reçue le {createdDate}</span>
+    <motion.div 
+      className="container mx-auto py-8 px-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex justify-between items-center">
+        <div className="flex-1">
+          <CandidateHeader 
+            name={candidate.full_name}
+            status={candidate.status}
+            statusColors={statusColors}
+            createdDate={createdDate}
+          />
         </div>
+        <ThemeToggle />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informations</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-center mb-6">
-                <Avatar className="h-24 w-24">
-                  <AvatarFallback className="text-2xl bg-primary text-white">
-                    {candidate.full_name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                  <a href={`mailto:${candidate.email}`} className="text-blue-600 hover:underline">
-                    {candidate.email}
-                  </a>
-                </div>
-                
-                <div className="flex items-center">
-                  <Phone className="h-4 w-4 mr-2 text-gray-500" />
-                  <a href={`tel:${candidate.phone}`} className="text-blue-600 hover:underline">
-                    {candidate.phone}
-                  </a>
-                </div>
-                
-                <div className="flex items-center">
-                  <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
-                  <span>{candidate.position}</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                  <span>{createdDate}</span>
-                </div>
-              </div>
+        <motion.div 
+          className="md:col-span-1"
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <CandidateInfo 
+            candidate={candidate}
+            createdDate={createdDate}
+            status={status}
+            setStatus={setStatus}
+            rating={rating}
+            setRating={setRating}
+            onSave={handleSave}
+            saving={saving}
+          />
+        </motion.div>
 
-              <div className="pt-4 border-t border-gray-200">
-                <h4 className="font-medium mb-2">Évaluation</h4>
-                <div className="flex items-center">
-                  {renderRatingStars()}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <h4 className="font-medium mb-2">Statut</h4>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">Nouveau</SelectItem>
-                    <SelectItem value="screening">Présélection</SelectItem>
-                    <SelectItem value="interview">Entretien</SelectItem>
-                    <SelectItem value="offer">Offre</SelectItem>
-                    <SelectItem value="rejected">Rejeté</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={handleSave} 
-                className="w-full" 
-                disabled={saving}
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  "Enregistrer les modifications"
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="md:col-span-2">
-          <Tabs defaultValue="profile">
-            <TabsList className="mb-4 w-full overflow-x-auto">
-              <TabsTrigger value="profile">Profil</TabsTrigger>
-              <TabsTrigger value="experience">Expérience</TabsTrigger>
-              <TabsTrigger value="motivation">Motivation</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="profile" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>À propos du candidat</CardTitle>
-                  <CardDescription>Résumé du profil du candidat</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose max-w-none">
-                    <p>Candidature pour le poste de : <strong>{candidate.position}</strong></p>
-                    <p>Candidat depuis : <strong>{createdDate}</strong></p>
-                    <p>Statut actuel : <strong>{candidate.status}</strong></p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="experience" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Expérience professionnelle</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose max-w-none">
-                    <p>{candidate.experience || "Aucune expérience mentionnée."}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="motivation" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lettre de motivation</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose max-w-none">
-                    <p>{candidate.motivation || "Aucune lettre de motivation fournie."}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="notes" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notes internes</CardTitle>
-                  <CardDescription>Notes privées concernant ce candidat</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Ajouter des notes concernant ce candidat..."
-                    rows={8}
-                  />
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    onClick={handleSave}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enregistrement...
-                      </>
-                    ) : (
-                      "Enregistrer les notes"
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+        <motion.div 
+          className="md:col-span-2"
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <CandidateTabs 
+            candidate={candidate}
+            createdDate={createdDate}
+            notes={notes}
+            setNotes={setNotes}
+            onSave={handleSave}
+            saving={saving}
+          />
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

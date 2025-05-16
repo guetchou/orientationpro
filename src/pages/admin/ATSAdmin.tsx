@@ -1,34 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-import { Search, UserPlus, Download, Filter, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import DashboardNav from '@/components/DashboardNav';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { CandidateStatsCards } from '@/components/admin/ats/CandidateStatsCards';
+import { CandidateCharts } from '@/components/admin/ats/CandidateCharts';
+import { CandidateSearch } from '@/components/admin/ats/CandidateSearch';
+import { CandidatesList } from '@/components/admin/ats/CandidatesList';
+import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { motion } from 'framer-motion';
 
 interface CandidateStats {
   total: number;
@@ -61,8 +47,6 @@ const statusColors: Record<string, string> = {
   rejected: "bg-red-500 border-red-600"
 };
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-
 const ATSAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -75,6 +59,7 @@ const ATSAdmin = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('candidates');
   const [stats, setStats] = useState<CandidateStats>({
     total: 0,
     byStatus: {},
@@ -153,7 +138,7 @@ const ATSAdmin = () => {
     const totalOffers = byStatus.offer || 0;
     const totalRejected = byStatus.rejected || 0;
     const conversionRate = candidateData.length > 0 
-      ? Math.round((totalOffers / (totalOffers + totalRejected)) * 100) || 0
+      ? Math.round((totalOffers / (totalOffers + totalRejected || 1)) * 100)
       : 0;
 
     setStats({
@@ -231,48 +216,17 @@ const ATSAdmin = () => {
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);  // Top 5 positions
 
-  // Chargement des statistiques
-  const renderStatsLoading = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      {[1, 2, 3, 4].map((key) => (
-        <Card key={key}>
-          <CardHeader className="pb-2">
-            <Skeleton className="h-5 w-24" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-8 w-16" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-
-  // Chargement des graphiques
-  const renderChartsLoading = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="h-96">
-        <CardHeader>
-          <Skeleton className="h-6 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-64 w-full rounded-lg" />
-        </CardContent>
-      </Card>
-      
-      <Card className="h-96">
-        <CardHeader>
-          <Skeleton className="h-6 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-64 w-full rounded-lg" />
-        </CardContent>
-      </Card>
-    </div>
-  );
-
   return (
-    <div className="container mx-auto p-4 md:p-6">
-      <h1 className="text-3xl font-bold mb-6">Système de suivi des candidatures</h1>
+    <motion.div 
+      className="container mx-auto p-4 md:p-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold mb-6 dark:text-white">Système de suivi des candidatures</h1>
+        <ThemeToggle />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Navigation latérale - masquée sur mobile et remplacée par une barre en haut */}
@@ -281,318 +235,51 @@ const ATSAdmin = () => {
         </div>
         
         {/* Navigation mobile simplifiée */}
-        <div className="md:hidden col-span-1 mb-4 overflow-x-auto">
-          <div className="flex space-x-2 pb-2 w-full">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/admin')}
-              className="whitespace-nowrap"
-            >
-              Dashboard
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm"
-              className="whitespace-nowrap"
-            >
-              Candidats
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/admin/blog')}
-              className="whitespace-nowrap"
-            >
-              Blog
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/admin/cms')}
-              className="whitespace-nowrap"
-            >
-              CMS
-            </Button>
-          </div>
-        </div>
+        <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
         
         <div className="md:col-span-3">
-          <Tabs defaultValue="candidates">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4 w-full justify-start overflow-x-auto">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <TabsTrigger value="dashboard" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Tableau de bord
               </TabsTrigger>
-              <TabsTrigger value="candidates" className="flex items-center gap-2">
+              <TabsTrigger value="candidates" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Candidats
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="dashboard" className="space-y-6">
-              {statsLoading ? renderStatsLoading() : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">
-                        Total Candidats
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.total}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">
-                        Nouveaux cette semaine
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.newThisWeek}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">
-                        En cours d'entretien
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.byStatus?.interview || 0}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-500">
-                        Taux de conversion
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.conversionRate}%</div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              
-              {statsLoading ? renderChartsLoading() : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="h-96">
-                    <CardHeader>
-                      <CardTitle>Candidats par statut</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                          <Pie
-                            data={statusChartData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {statusChartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="h-96">
-                    <CardHeader>
-                      <CardTitle>Top postes demandés</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={positionChartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="value" fill="#8884d8" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+              <CandidateStatsCards stats={stats} loading={statsLoading} />
+              <CandidateCharts 
+                statusChartData={statusChartData} 
+                positionChartData={positionChartData} 
+                loading={statsLoading} 
+              />
             </TabsContent>
             
             <TabsContent value="candidates" className="space-y-6">
-              <div className="flex flex-col gap-4 mb-4">
-                {/* Recherche et filtres - version adaptative */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                  <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-                    <Input 
-                      placeholder="Rechercher un candidat..." 
-                      className="pl-10" 
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-full">
-                      <div className="flex items-center gap-2">
-                        <Filter size={18} />
-                        <SelectValue placeholder="Filtrer par statut" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="new">Nouveaux</SelectItem>
-                      <SelectItem value="screening">Présélection</SelectItem>
-                      <SelectItem value="interview">Entretien</SelectItem>
-                      <SelectItem value="offer">Offre</SelectItem>
-                      <SelectItem value="rejected">Rejetés</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Boutons d'action - version adaptative */}
-                <div className="flex gap-2 justify-end">
-                  <Button onClick={() => navigate('/recrutement')} variant="outline">
-                    {!isMobile && <UserPlus className="mr-2 h-4 w-4" />}
-                    {isMobile ? "+" : "Nouveau"}
-                  </Button>
-                  <Button onClick={handleExportCSV} variant="outline">
-                    {!isMobile && <Download className="mr-2 h-4 w-4" />}
-                    {isMobile ? "CSV" : "Exporter"}
-                  </Button>
-                </div>
-              </div>
+              <CandidateSearch 
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
+                onExport={handleExportCSV}
+                isMobile={isMobile}
+                onAddNew={() => navigate('/recrutement')}
+              />
               
-              {loading ? (
-                <div className="bg-white overflow-hidden shadow rounded-lg p-6">
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <span className="ml-2 text-lg">Chargement des candidats...</span>
-                  </div>
-                </div>
-              ) : filteredCandidates.length > 0 ? (
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Candidat
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                            Poste
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                            Date
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Statut
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredCandidates.map((candidate) => {
-                          const createdDate = new Date(candidate.created_at).toLocaleDateString('fr-FR');
-                          const initials = candidate.full_name.split(' ').map(n => n[0]).join('');
-                          
-                          return (
-                            <tr 
-                              key={candidate.id} 
-                              className="hover:bg-gray-50 cursor-pointer"
-                              onClick={() => navigate(`/admin/candidate/${candidate.id}`)}
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <Avatar className="h-8 w-8 mr-3">
-                                    <AvatarFallback className="bg-primary/10 text-primary">
-                                      {initials}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className="font-medium">{candidate.full_name}</div>
-                                    <div className="text-sm text-gray-500">{candidate.email}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                                {candidate.position}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                                {createdDate}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${statusColors[candidate.status]}`}>
-                                  {candidate.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                    <Button variant="ghost" size="sm">Statut</Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStatusChange(candidate.id, "new");
-                                    }}>
-                                      Nouveau
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStatusChange(candidate.id, "screening");
-                                    }}>
-                                      Présélection
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStatusChange(candidate.id, "interview");
-                                    }}>
-                                      Entretien
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStatusChange(candidate.id, "offer");
-                                    }}>
-                                      Offre
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStatusChange(candidate.id, "rejected");
-                                    }}>
-                                      Rejeté
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-10 bg-white shadow rounded-lg">
-                  <p className="text-gray-500">Aucun candidat trouvé</p>
-                </div>
-              )}
+              <CandidatesList 
+                candidates={filteredCandidates}
+                loading={loading}
+                statusColors={statusColors}
+                onStatusChange={handleStatusChange}
+                onViewDetails={(id) => navigate(`/admin/candidate/${id}`)}
+              />
             </TabsContent>
           </Tabs>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
