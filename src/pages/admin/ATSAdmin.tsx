@@ -19,15 +19,41 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Search, UserPlus, Download, Filter } from 'lucide-react';
+import { Search, UserPlus, Download, Filter, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import DashboardNav from '@/components/DashboardNav';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
-const statusColors = {
+interface CandidateStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byPosition: Record<string, number>;
+  newThisWeek: number;
+  conversionRate: number;
+}
+
+interface Candidate {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  position: string;
+  status: string;
+  created_at: string;
+  updated_at?: string;
+  notes?: string;
+  rating?: number;
+  experience?: string;
+  motivation?: string;
+}
+
+const statusColors: Record<string, string> = {
   new: "bg-blue-500 border-blue-600",
   screening: "bg-yellow-500 border-yellow-600",
   interview: "bg-purple-500 border-purple-600",
@@ -40,12 +66,16 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 const ATSAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [candidates, setCandidates] = useState([]);
-  const [filteredCandidates, setFilteredCandidates] = useState([]);
+  const { handleError } = useErrorHandler();
+  const isMobile = useIsMobile();
+  
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [stats, setStats] = useState<CandidateStats>({
     total: 0,
     byStatus: {},
     byPosition: {},
@@ -79,6 +109,8 @@ const ATSAdmin = () => {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
+      setStatsLoading(true);
+      
       const { data, error } = await supabase
         .from('candidates')
         .select('*')
@@ -86,29 +118,26 @@ const ATSAdmin = () => {
 
       if (error) throw error;
       
-      setCandidates(data || []);
-      setFilteredCandidates(data || []);
-      calculateStats(data || []);
+      const candidateData = data as Candidate[] || [];
+      setCandidates(candidateData);
+      setFilteredCandidates(candidateData);
+      calculateStats(candidateData);
     } catch (error) {
-      console.error('Erreur lors du chargement des candidats:', error);
-      toast({
-        title: "Erreur de chargement",
-        description: "Impossible de charger la liste des candidats",
-        variant: "destructive"
-      });
+      handleError(error, "Erreur lors du chargement des candidats");
     } finally {
       setLoading(false);
+      setTimeout(() => setStatsLoading(false), 500); // Délai pour montrer les skeletons
     }
   };
 
-  const calculateStats = (candidateData) => {
+  const calculateStats = (candidateData: Candidate[]) => {
     // Calculer les statistiques globales
-    const byStatus = candidateData.reduce((acc, c) => {
+    const byStatus = candidateData.reduce<Record<string, number>>((acc, c) => {
       acc[c.status] = (acc[c.status] || 0) + 1;
       return acc;
     }, {});
 
-    const byPosition = candidateData.reduce((acc, c) => {
+    const byPosition = candidateData.reduce<Record<string, number>>((acc, c) => {
       acc[c.position] = (acc[c.position] || 0) + 1;
       return acc;
     }, {});
@@ -123,9 +152,8 @@ const ATSAdmin = () => {
     // Calculer le taux de conversion (pourcentage d'offres sur le total)
     const totalOffers = byStatus.offer || 0;
     const totalRejected = byStatus.rejected || 0;
-    // Fix: Convert each operand to a number first
     const conversionRate = candidateData.length > 0 
-      ? Math.round((Number(totalOffers) / (Number(totalOffers) + Number(totalRejected))) * 100) || 0
+      ? Math.round((totalOffers / (totalOffers + totalRejected)) * 100) || 0
       : 0;
 
     setStats({
@@ -137,7 +165,7 @@ const ATSAdmin = () => {
     });
   };
 
-  const handleStatusChange = async (candidateId, newStatus) => {
+  const handleStatusChange = async (candidateId: string, newStatus: string) => {
     try {
       const { error } = await supabase
         .from('candidates')
@@ -159,42 +187,41 @@ const ATSAdmin = () => {
         description: "Le statut du candidat a été modifié avec succès.",
       });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut du candidat",
-        variant: "destructive",
-      });
+      handleError(error, "Impossible de mettre à jour le statut du candidat");
     }
   };
 
   const handleExportCSV = () => {
-    // Convertir les données en CSV
-    const headers = ['Nom', 'Email', 'Téléphone', 'Poste', 'Statut', 'Date de candidature'];
-    
-    const csvData = [
-      headers.join(','),
-      ...filteredCandidates.map(c => {
-        const date = new Date(c.created_at).toLocaleDateString();
-        return `"${c.full_name}","${c.email}","${c.phone}","${c.position}","${c.status}","${date}"`;
-      })
-    ].join('\n');
-    
-    // Créer un blob et télécharger
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'candidats.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Convertir les données en CSV
+      const headers = ['Nom', 'Email', 'Téléphone', 'Poste', 'Statut', 'Date de candidature'];
+      
+      const csvData = [
+        headers.join(','),
+        ...filteredCandidates.map(c => {
+          const date = new Date(c.created_at).toLocaleDateString();
+          return `"${c.full_name}","${c.email}","${c.phone}","${c.position}","${c.status}","${date}"`;
+        })
+      ].join('\n');
+      
+      // Créer un blob et télécharger
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'candidats.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    toast({
-      title: "Export réussi",
-      description: "Le fichier CSV a été généré et téléchargé.",
-    });
+      toast({
+        title: "Export réussi",
+        description: "Le fichier CSV a été généré et téléchargé.",
+      });
+    } catch (error) {
+      handleError(error, "Erreur lors de l'exportation des données");
+    }
   };
 
   // Préparer les données pour les graphiques
@@ -204,122 +231,207 @@ const ATSAdmin = () => {
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);  // Top 5 positions
 
+  // Chargement des statistiques
+  const renderStatsLoading = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map((key) => (
+        <Card key={key}>
+          <CardHeader className="pb-2">
+            <Skeleton className="h-5 w-24" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-16" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  // Chargement des graphiques
+  const renderChartsLoading = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card className="h-96">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+      
+      <Card className="h-96">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 md:p-6">
       <h1 className="text-3xl font-bold mb-6">Système de suivi des candidatures</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-1">
+        {/* Navigation latérale - masquée sur mobile et remplacée par une barre en haut */}
+        <div className="md:col-span-1 hidden md:block">
           <DashboardNav />
+        </div>
+        
+        {/* Navigation mobile simplifiée */}
+        <div className="md:hidden col-span-1 mb-4 overflow-x-auto">
+          <div className="flex space-x-2 pb-2 w-full">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/admin')}
+              className="whitespace-nowrap"
+            >
+              Dashboard
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              Candidats
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/admin/blog')}
+              className="whitespace-nowrap"
+            >
+              Blog
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/admin/cms')}
+              className="whitespace-nowrap"
+            >
+              CMS
+            </Button>
+          </div>
         </div>
         
         <div className="md:col-span-3">
           <Tabs defaultValue="candidates">
-            <TabsList className="mb-4">
-              <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
-              <TabsTrigger value="candidates">Candidats</TabsTrigger>
+            <TabsList className="mb-4 w-full justify-start overflow-x-auto">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                Tableau de bord
+              </TabsTrigger>
+              <TabsTrigger value="candidates" className="flex items-center gap-2">
+                Candidats
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="dashboard" className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      Total Candidats
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.total}</div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      Nouveaux cette semaine
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.newThisWeek}</div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      En cours d'entretien
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Fix: Added optional chaining to safely access the interview property */}
-                    <div className="text-2xl font-bold">{stats.byStatus?.interview || 0}</div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      Taux de conversion
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.conversionRate}%</div>
-                  </CardContent>
-                </Card>
-              </div>
+              {statsLoading ? renderStatsLoading() : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">
+                        Total Candidats
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats.total}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">
+                        Nouveaux cette semaine
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats.newThisWeek}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">
+                        En cours d'entretien
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats.byStatus?.interview || 0}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">
+                        Taux de conversion
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats.conversionRate}%</div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="h-96">
-                  <CardHeader>
-                    <CardTitle>Candidats par statut</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={statusChartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        >
-                          {statusChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-                
-                <Card className="h-96">
-                  <CardHeader>
-                    <CardTitle>Top postes demandés</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={positionChartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="value" fill="#8884d8" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
+              {statsLoading ? renderChartsLoading() : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="h-96">
+                    <CardHeader>
+                      <CardTitle>Candidats par statut</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={statusChartData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {statusChartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="h-96">
+                    <CardHeader>
+                      <CardTitle>Top postes demandés</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={positionChartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="value" fill="#8884d8" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="candidates" className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  <div className="relative w-full sm:w-auto sm:min-w-[320px]">
+              <div className="flex flex-col gap-4 mb-4">
+                {/* Recherche et filtres - version adaptative */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                  <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
                     <Input 
                       placeholder="Rechercher un candidat..." 
@@ -330,7 +442,7 @@ const ATSAdmin = () => {
                   </div>
                   
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectTrigger className="w-full">
                       <div className="flex items-center gap-2">
                         <Filter size={18} />
                         <SelectValue placeholder="Filtrer par statut" />
@@ -347,33 +459,39 @@ const ATSAdmin = () => {
                   </Select>
                 </div>
                 
-                <div className="flex gap-2">
+                {/* Boutons d'action - version adaptative */}
+                <div className="flex gap-2 justify-end">
                   <Button onClick={() => navigate('/recrutement')} variant="outline">
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Nouveau
+                    {!isMobile && <UserPlus className="mr-2 h-4 w-4" />}
+                    {isMobile ? "+" : "Nouveau"}
                   </Button>
                   <Button onClick={handleExportCSV} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Exporter
+                    {!isMobile && <Download className="mr-2 h-4 w-4" />}
+                    {isMobile ? "CSV" : "Exporter"}
                   </Button>
                 </div>
               </div>
               
               {loading ? (
-                <div className="text-center py-10">Chargement des candidats...</div>
+                <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-2 text-lg">Chargement des candidats...</span>
+                  </div>
+                </div>
               ) : filteredCandidates.length > 0 ? (
                 <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="min-w-full divide-y divide-gray-200">
+                  <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Candidat
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                             Poste
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                             Date
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -408,10 +526,10 @@ const ATSAdmin = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                                 {candidate.position}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                                 {createdDate}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -422,7 +540,7 @@ const ATSAdmin = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                    <Button variant="ghost" size="sm">Changer statut</Button>
+                                    <Button variant="ghost" size="sm">Statut</Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={(e) => {

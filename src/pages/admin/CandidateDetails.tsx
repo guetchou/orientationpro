@@ -8,12 +8,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Mail, Phone, Calendar, Star, Briefcase } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, Star, Briefcase, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const statusColors = {
+interface Candidate {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  position: string;
+  status: string;
+  created_at: string;
+  updated_at?: string;
+  notes?: string;
+  rating?: number;
+  experience?: string;
+  motivation?: string;
+}
+
+const statusColors: Record<string, string> = {
   new: "bg-blue-500",
   screening: "bg-yellow-500",
   interview: "bg-purple-500",
@@ -22,19 +40,26 @@ const statusColors = {
 };
 
 const CandidateDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [candidate, setCandidate] = useState(null);
+  const { handleError } = useErrorHandler();
+  const isMobile = useIsMobile();
+  
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState('');
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCandidate = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         const { data, error } = await supabase
           .from('candidates')
           .select('*')
@@ -43,27 +68,28 @@ const CandidateDetails = () => {
 
         if (error) throw error;
         
-        setCandidate(data);
+        setCandidate(data as Candidate);
         setNotes(data.notes || '');
         setStatus(data.status);
         setRating(data.rating || 0);
       } catch (error) {
-        console.error('Erreur lors du chargement du candidat:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les données du candidat",
-          variant: "destructive",
-        });
+        const errorMessage = "Impossible de charger les données du candidat";
+        handleError(error, errorMessage);
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
     if (id) fetchCandidate();
-  }, [id, toast]);
+  }, [id, handleError]);
 
   const handleSave = async () => {
+    if (!id) return;
+    
     try {
+      setSaving(true);
+      
       const { error } = await supabase
         .from('candidates')
         .update({
@@ -81,12 +107,9 @@ const CandidateDetails = () => {
         description: "Les informations du candidat ont été mises à jour",
       });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour les informations",
-        variant: "destructive",
-      });
+      handleError(error, "Impossible de mettre à jour les informations");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -100,8 +123,91 @@ const CandidateDetails = () => {
     ));
   };
 
+  const renderLoadingState = () => (
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center mb-6">
+        <Skeleton className="h-10 w-40" />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32 mb-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-center mb-6">
+                <Skeleton className="h-24 w-24 rounded-full" />
+              </div>
+              
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex items-center">
+                    <Skeleton className="h-4 w-4 mr-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <Skeleton className="h-5 w-24 mb-2" />
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Skeleton key={i} className="h-5 w-5 mr-1" />
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <Skeleton className="h-5 w-20 mb-2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Skeleton className="h-10 w-full" />
+            </CardFooter>
+          </Card>
+        </div>
+
+        <div className="md:col-span-2">
+          <Skeleton className="h-10 w-full mb-4" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+  
+  // État d'erreur 
+  if (error) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <Button variant="ghost" onClick={() => navigate('/admin/ats')} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste
+        </Button>
+        
+        <Card className="border-red-300 shadow-lg">
+          <CardHeader className="bg-red-50">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              <CardTitle className="text-red-700">Erreur</CardTitle>
+            </div>
+            <CardDescription className="text-red-600">
+              {error}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center py-6">
+            <p className="mb-4">Impossible de charger les informations du candidat.</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Réessayer
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Chargement...</div>;
+    return renderLoadingState();
   }
 
   if (!candidate) {
@@ -201,14 +307,27 @@ const CandidateDetails = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleSave} className="w-full">Enregistrer les modifications</Button>
+              <Button 
+                onClick={handleSave} 
+                className="w-full" 
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  "Enregistrer les modifications"
+                )}
+              </Button>
             </CardFooter>
           </Card>
         </div>
 
         <div className="md:col-span-2">
           <Tabs defaultValue="profile">
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 w-full overflow-x-auto">
               <TabsTrigger value="profile">Profil</TabsTrigger>
               <TabsTrigger value="experience">Expérience</TabsTrigger>
               <TabsTrigger value="motivation">Motivation</TabsTrigger>
@@ -272,7 +391,19 @@ const CandidateDetails = () => {
                   />
                 </CardContent>
                 <CardFooter>
-                  <Button onClick={handleSave}>Enregistrer les notes</Button>
+                  <Button 
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      "Enregistrer les notes"
+                    )}
+                  </Button>
                 </CardFooter>
               </Card>
             </TabsContent>
