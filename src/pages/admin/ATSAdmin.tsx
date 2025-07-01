@@ -33,6 +33,9 @@ import { ManualCandidateForm } from '@/components/admin/ats/ManualCandidateForm'
 import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
+import { AdvancedCandidateSearch } from '@/components/admin/ats/AdvancedCandidateSearch';
+import { PipelineStage, PipelineCandidate } from '@/types/pipeline';
+
 interface Candidate {
   id: string;
   full_name: string;
@@ -56,6 +59,8 @@ const ATSAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  const [searchFilters, setSearchFilters] = useState<any>(null);
 
   useEffect(() => {
     fetchCandidates();
@@ -123,6 +128,18 @@ const ATSAdmin = () => {
     setActiveTab('candidates');
   };
 
+  const handleAdvancedSearch = (filters: any) => {
+    setSearchFilters(filters);
+    console.log('Advanced search filters:', filters);
+    // TODO: Implement advanced filtering logic
+  };
+
+  const handleResetSearch = () => {
+    setSearchFilters(null);
+    setSearchTerm('');
+    setFilterStatus('all');
+  };
+
   const handleViewDetails = (id: string) => {
     navigate(`/admin/candidate/${id}`);
   };
@@ -145,6 +162,7 @@ const ATSAdmin = () => {
   };
 
   const filteredCandidates = candidates.filter(candidate => {
+    // Basic filters
     const searchTermLower = searchTerm.toLowerCase();
     const fullNameLower = candidate.full_name.toLowerCase();
   
@@ -153,6 +171,20 @@ const ATSAdmin = () => {
                            candidate.position.toLowerCase().includes(searchTermLower);
   
     const matchesStatus = filterStatus === 'all' || candidate.status === filterStatus;
+
+    // Advanced filters
+    if (searchFilters) {
+      const matchesAdvancedSearch = !searchFilters.searchTerm ||
+        fullNameLower.includes(searchFilters.searchTerm.toLowerCase()) ||
+        candidate.email.toLowerCase().includes(searchFilters.searchTerm.toLowerCase()) ||
+        candidate.position.toLowerCase().includes(searchFilters.searchTerm.toLowerCase());
+
+      const matchesAdvancedStatus = searchFilters.status === 'all' || candidate.status === searchFilters.status;
+      const matchesPosition = !searchFilters.position || candidate.position === searchFilters.position;
+      const matchesRating = !searchFilters.rating || candidate.rating >= searchFilters.rating[0];
+
+      return matchesAdvancedSearch && matchesAdvancedStatus && matchesPosition && matchesRating;
+    }
   
     return matchesSearch && matchesStatus;
   });
@@ -186,35 +218,70 @@ const ATSAdmin = () => {
     ]
   };
 
-  const pipelineStages = [
+  const pipelineStages: PipelineStage[] = [
     {
       id: 'new',
       name: 'Nouveau',
-      candidates: filteredCandidates.filter(c => c.status === 'new'),
+      candidates: filteredCandidates.filter(c => c.status === 'new').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating,
+        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      })),
       color: 'bg-blue-500'
     },
     {
       id: 'screening',
       name: 'Présélection',
-      candidates: filteredCandidates.filter(c => c.status === 'screening'),
+      candidates: filteredCandidates.filter(c => c.status === 'screening').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating,
+        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      })),
       color: 'bg-yellow-500'
     },
     {
       id: 'interview',
       name: 'Entretien',
-      candidates: filteredCandidates.filter(c => c.status === 'interview'),
+      candidates: filteredCandidates.filter(c => c.status === 'interview').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating,
+        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      })),
       color: 'bg-purple-500'
     },
     {
       id: 'offer',
       name: 'Offre',
-      candidates: filteredCandidates.filter(c => c.status === 'offer'),
+      candidates: filteredCandidates.filter(c => c.status === 'offer').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating,
+        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      })),
       color: 'bg-green-500'
     },
     {
       id: 'rejected',
       name: 'Rejeté',
-      candidates: filteredCandidates.filter(c => c.status === 'rejected'),
+      candidates: filteredCandidates.filter(c => c.status === 'rejected').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating,
+        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      })),
       color: 'bg-red-500'
     }
   ];
@@ -258,7 +325,6 @@ const ATSAdmin = () => {
           <MobileNavigation 
             activeTab={activeTab} 
             onTabChange={setActiveTab}
-            candidatesCount={candidates.length}
           />
         )}
 
@@ -386,14 +452,10 @@ const ATSAdmin = () => {
 
                 {/* Onglet Liste des candidats */}
                 <TabsContent value="candidates" className="space-y-6">
-                  <CandidateSearch
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    filterStatus={filterStatus}
-                    setFilterStatus={setFilterStatus}
-                    onExport={handleExport}
-                    isMobile={isMobile}
-                    onAddNew={() => setShowManualForm(true)}
+                  <AdvancedCandidateSearch
+                    onSearch={handleAdvancedSearch}
+                    onReset={handleResetSearch}
+                    candidateCount={filteredCandidates.length}
                   />
                   
                   <CandidatesList
