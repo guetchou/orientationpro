@@ -18,7 +18,8 @@ import {
   Filter,
   BarChart3,
   Target,
-  Zap
+  Zap,
+  Mail
 } from 'lucide-react';
 
 // Import des composants ATS
@@ -35,6 +36,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 import { AdvancedCandidateSearch } from '@/components/admin/ats/AdvancedCandidateSearch';
 import { PipelineStage, PipelineCandidate } from '@/types/pipeline';
+import { CommunicationCenter } from '@/components/admin/ats/CommunicationCenter';
 
 interface Candidate {
   id: string;
@@ -309,7 +311,7 @@ const ATSAdmin = () => {
               ATS - Système de Recrutement
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Gestion intelligente des candidatures
+              Gestion intelligente des candidatures avec IA
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -335,6 +337,7 @@ const ATSAdmin = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
+          
           <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-4">
@@ -402,7 +405,7 @@ const ATSAdmin = () => {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             {!isMobile && (
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                 <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Zap className="h-4 w-4" />
                   Upload CV
@@ -414,6 +417,10 @@ const ATSAdmin = () => {
                 <TabsTrigger value="pipeline" className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
                   Pipeline
+                </TabsTrigger>
+                <TabsTrigger value="communication" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Communication
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
@@ -473,6 +480,33 @@ const ATSAdmin = () => {
                     stages={pipelineStages}
                     onCandidateMove={handleCandidateMove}
                     onCandidateClick={handleViewDetails}
+                  />
+                </TabsContent>
+
+                {/* Onglet Communication */}
+                <TabsContent value="communication" className="space-y-6">
+                  <CommunicationCenter
+                    onSendEmail={(template, recipients) => {
+                      console.log('Sending email:', template, recipients);
+                      toast({
+                        title: "Email envoyé",
+                        description: `Template "${template.name}" envoyé à ${recipients.length} destinataire(s)`,
+                      });
+                    }}
+                    onSendSMS={(message, recipients) => {
+                      console.log('Sending SMS:', message, recipients);
+                      toast({
+                        title: "SMS envoyé",
+                        description: `Message envoyé à ${recipients.length} destinataire(s)`,
+                      });
+                    }}
+                    onScheduleEmail={(template, recipients, date) => {
+                      console.log('Scheduling email:', template, recipients, date);
+                      toast({
+                        title: "Email programmé",
+                        description: `Email programmé pour le ${date.toLocaleDateString()}`,
+                      });
+                    }}
                   />
                 </TabsContent>
 
