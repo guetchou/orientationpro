@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, BarChart3, Users, Zap, GitBranch } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DashboardNav from '@/components/DashboardNav';
@@ -12,6 +11,9 @@ import { CandidateStatsCards } from '@/components/admin/ats/CandidateStatsCards'
 import { CandidateCharts } from '@/components/admin/ats/CandidateCharts';
 import { CandidateSearch } from '@/components/admin/ats/CandidateSearch';
 import { CandidatesList } from '@/components/admin/ats/CandidatesList';
+import { CandidateAnalytics } from '@/components/admin/ats/CandidateAnalytics';
+import { CandidateActionCenter } from '@/components/admin/ats/CandidateActionCenter';
+import { CandidatePipeline } from '@/components/admin/ats/CandidatePipeline';
 import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
@@ -209,12 +211,98 @@ const ATSAdmin = () => {
     }
   };
 
-  // Préparer les données pour les graphiques
+  // Mock data for new components
+  const analyticsData = {
+    conversionRate: 23.5,
+    averageTimeToHire: 18,
+    sourceEffectiveness: [
+      { source: 'LinkedIn', candidates: 45, hired: 12 },
+      { source: 'Site Web', candidates: 32, hired: 8 },
+      { source: 'Recommandations', candidates: 28, hired: 15 },
+      { source: 'Indeed', candidates: 25, hired: 4 }
+    ],
+    monthlyTrends: []
+  };
+
+  const pipelineStages = [
+    {
+      id: 'new',
+      name: 'Nouveaux',
+      color: 'bg-blue-500',
+      candidates: candidates.filter(c => c.status === 'new').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating || 0,
+        daysInStage: Math.floor((new Date().getTime() - new Date(c.created_at).getTime()) / (1000 * 3600 * 24))
+      }))
+    },
+    {
+      id: 'screening',
+      name: 'Présélection',
+      color: 'bg-yellow-500',
+      candidates: candidates.filter(c => c.status === 'screening').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating || 0,
+        daysInStage: Math.floor((new Date().getTime() - new Date(c.created_at).getTime()) / (1000 * 3600 * 24))
+      })),
+      limit: 10
+    },
+    {
+      id: 'interview',
+      name: 'Entretien',
+      color: 'bg-purple-500',
+      candidates: candidates.filter(c => c.status === 'interview').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating || 0,
+        daysInStage: Math.floor((new Date().getTime() - new Date(c.created_at).getTime()) / (1000 * 3600 * 24))
+      })),
+      limit: 5
+    },
+    {
+      id: 'offer',
+      name: 'Offre',
+      color: 'bg-green-500',
+      candidates: candidates.filter(c => c.status === 'offer').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating || 0,
+        daysInStage: Math.floor((new Date().getTime() - new Date(c.created_at).getTime()) / (1000 * 3600 * 24))
+      }))
+    },
+    {
+      id: 'rejected',
+      name: 'Rejetés',
+      color: 'bg-red-500',
+      candidates: candidates.filter(c => c.status === 'rejected').map(c => ({
+        id: c.id,
+        name: c.full_name,
+        email: c.email,
+        position: c.position,
+        rating: c.rating || 0,
+        daysInStage: Math.floor((new Date().getTime() - new Date(c.created_at).getTime()) / (1000 * 3600 * 24))
+      }))
+    }
+  ];
+
   const statusChartData = Object.entries(stats.byStatus).map(([name, value]) => ({ name, value }));
   const positionChartData = Object.entries(stats.byPosition)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);  // Top 5 positions
+
+  const handleCandidateMove = async (candidateId: string, fromStage: string, toStage: string) => {
+    await handleStatusChange(candidateId, toStage);
+  };
 
   return (
     <motion.div 
@@ -224,27 +312,39 @@ const ATSAdmin = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold mb-6 dark:text-white">Système de suivi des candidatures</h1>
+        <h1 className="text-3xl font-bold mb-6 dark:text-white">ATS Ultra-Moderne</h1>
         <ThemeToggle />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Navigation latérale - masquée sur mobile et remplacée par une barre en haut */}
         <div className="md:col-span-1 hidden md:block">
           <DashboardNav />
         </div>
         
-        {/* Navigation mobile simplifiée */}
         <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
         
         <div className="md:col-span-3">
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4 w-full justify-start overflow-x-auto">
-              <TabsTrigger value="dashboard" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                Tableau de bord
+              <TabsTrigger value="dashboard" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Dashboard
               </TabsTrigger>
-              <TabsTrigger value="candidates" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger value="pipeline" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2">
+                <GitBranch className="h-4 w-4" />
+                Pipeline
+              </TabsTrigger>
+              <TabsTrigger value="candidates" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2">
+                <Users className="h-4 w-4" />
                 Candidats
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="actions" className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Actions
               </TabsTrigger>
             </TabsList>
             
@@ -254,6 +354,14 @@ const ATSAdmin = () => {
                 statusChartData={statusChartData} 
                 positionChartData={positionChartData} 
                 loading={statsLoading} 
+              />
+            </TabsContent>
+
+            <TabsContent value="pipeline" className="space-y-6">
+              <CandidatePipeline
+                stages={pipelineStages}
+                onCandidateMove={handleCandidateMove}
+                onCandidateClick={(id) => navigate(`/admin/candidate/${id}`)}
               />
             </TabsContent>
             
@@ -274,6 +382,18 @@ const ATSAdmin = () => {
                 statusColors={statusColors}
                 onStatusChange={handleStatusChange}
                 onViewDetails={(id) => navigate(`/admin/candidate/${id}`)}
+              />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6">
+              <CandidateAnalytics data={analyticsData} loading={statsLoading} />
+            </TabsContent>
+
+            <TabsContent value="actions" className="space-y-6">
+              <CandidateActionCenter 
+                onActionComplete={(action, details) => {
+                  console.log('Action completed:', action, details);
+                }}
               />
             </TabsContent>
           </Tabs>
