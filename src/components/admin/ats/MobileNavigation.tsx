@@ -9,7 +9,9 @@ import {
   Zap, 
   TrendingUp, 
   Upload,
-  Mail
+  Mail,
+  Bell,
+  PieChart
 } from 'lucide-react';
 
 interface MobileNavigationProps {
@@ -25,18 +27,14 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     { id: 'upload', label: 'Upload', icon: Upload },
     { id: 'candidates', label: 'Candidats', icon: Users },
     { id: 'pipeline', label: 'Pipeline', icon: Target },
-    { id: 'communication', label: 'Communication', icon: Mail },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'actions', label: 'Actions', icon: Zap },
-    { id: 'reports', label: 'Rapports', icon: TrendingUp }
+    { id: 'communication', label: 'Messages', icon: Mail },
+    { id: 'analytics', label: 'Analytics', icon: PieChart },
+    { id: 'notifications', label: 'Alertes', icon: Bell }
   ];
-
-  // Afficher seulement les 6 premiers sur mobile pour l'espace
-  const visibleTabs = tabs.slice(0, 6);
 
   return (
     <div className="grid grid-cols-3 gap-2 mb-6">
-      {visibleTabs.map((tab) => {
+      {tabs.map((tab) => {
         const Icon = tab.icon;
         return (
           <Button

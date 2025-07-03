@@ -19,7 +19,9 @@ import {
   BarChart3,
   Target,
   Zap,
-  Mail
+  Mail,
+  Bell,
+  PieChart
 } from 'lucide-react';
 
 // Import des composants ATS
@@ -33,10 +35,11 @@ import { CVUploadZone } from '@/components/admin/ats/CVUploadZone';
 import { ManualCandidateForm } from '@/components/admin/ats/ManualCandidateForm';
 import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
-
 import { AdvancedCandidateSearch } from '@/components/admin/ats/AdvancedCandidateSearch';
 import { PipelineStage, PipelineCandidate } from '@/types/pipeline';
 import { CommunicationCenter } from '@/components/admin/ats/CommunicationCenter';
+import { AnalyticsDashboard } from '@/components/admin/ats/AnalyticsDashboard';
+import { NotificationCenter } from '@/components/admin/ats/NotificationCenter';
 
 interface Candidate {
   id: string;
@@ -58,6 +61,7 @@ const ATSAdmin = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [activeTab, setActiveTab] = useState('upload');
   const [showManualForm, setShowManualForm] = useState(false);
+  const [analyticsTimeRange, setAnalyticsTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -133,7 +137,6 @@ const ATSAdmin = () => {
   const handleAdvancedSearch = (filters: any) => {
     setSearchFilters(filters);
     console.log('Advanced search filters:', filters);
-    // TODO: Implement advanced filtering logic
   };
 
   const handleResetSearch = () => {
@@ -147,7 +150,6 @@ const ATSAdmin = () => {
   };
 
   const handleExport = () => {
-    // Implémenter l'export CSV ici
     toast({
       title: "Info",
       description: "Fonction d'export CSV à implémenter",
@@ -155,7 +157,6 @@ const ATSAdmin = () => {
   };
 
   const handleCandidateMove = (candidateId: string, fromStage: string, toStage: string) => {
-    // Implémenter le déplacement du candidat entre les étapes
     console.log(`Moving candidate ${candidateId} from ${fromStage} to ${toStage}`);
     toast({
       title: "Info",
@@ -164,7 +165,6 @@ const ATSAdmin = () => {
   };
 
   const filteredCandidates = candidates.filter(candidate => {
-    // Basic filters
     const searchTermLower = searchTerm.toLowerCase();
     const fullNameLower = candidate.full_name.toLowerCase();
   
@@ -174,7 +174,6 @@ const ATSAdmin = () => {
   
     const matchesStatus = filterStatus === 'all' || candidate.status === filterStatus;
 
-    // Advanced filters
     if (searchFilters) {
       const matchesAdvancedSearch = !searchFilters.searchTerm ||
         fullNameLower.includes(searchFilters.searchTerm.toLowerCase()) ||
@@ -308,10 +307,10 @@ const ATSAdmin = () => {
         >
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              ATS - Système de Recrutement
+              ATS - Système de Recrutement Intelligent
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Gestion intelligente des candidatures avec IA
+              Gestion complète avec IA, automation et analytiques avancées
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -337,7 +336,6 @@ const ATSAdmin = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          
           <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-4">
@@ -405,7 +403,7 @@ const ATSAdmin = () => {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             {!isMobile && (
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                 <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Zap className="h-4 w-4" />
                   Upload CV
@@ -423,15 +421,19 @@ const ATSAdmin = () => {
                   Communication
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
+                  <PieChart className="h-4 w-4" />
                   Analytics
                 </TabsTrigger>
                 <TabsTrigger value="actions" className="flex items-center gap-2">
                   <Zap className="h-4 w-4" />
                   Actions
                 </TabsTrigger>
+                <TabsTrigger value="notifications" className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notifications
+                </TabsTrigger>
                 <TabsTrigger value="reports" className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <BarChart3 className="h-4 w-4" />
                   Rapports
                 </TabsTrigger>
               </TabsList>
@@ -445,7 +447,6 @@ const ATSAdmin = () => {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {/* Onglet Upload CV */}
                 <TabsContent value="upload" className="space-y-6">
                   {showManualForm ? (
                     <ManualCandidateForm
@@ -457,7 +458,6 @@ const ATSAdmin = () => {
                   )}
                 </TabsContent>
 
-                {/* Onglet Liste des candidats */}
                 <TabsContent value="candidates" className="space-y-6">
                   <AdvancedCandidateSearch
                     onSearch={handleAdvancedSearch}
@@ -474,7 +474,6 @@ const ATSAdmin = () => {
                   />
                 </TabsContent>
 
-                {/* Onglet Pipeline */}
                 <TabsContent value="pipeline" className="space-y-6">
                   <CandidatePipeline
                     stages={pipelineStages}
@@ -483,7 +482,6 @@ const ATSAdmin = () => {
                   />
                 </TabsContent>
 
-                {/* Onglet Communication */}
                 <TabsContent value="communication" className="space-y-6">
                   <CommunicationCenter
                     onSendEmail={(template, recipients) => {
@@ -510,15 +508,13 @@ const ATSAdmin = () => {
                   />
                 </TabsContent>
 
-                {/* Onglet Analytics */}
                 <TabsContent value="analytics" className="space-y-6">
-                  <CandidateAnalytics
-                    data={analyticsData}
-                    loading={loading}
+                  <AnalyticsDashboard
+                    timeRange={analyticsTimeRange}
+                    onTimeRangeChange={setAnalyticsTimeRange}
                   />
                 </TabsContent>
 
-                {/* Onglet Actions */}
                 <TabsContent value="actions" className="space-y-6">
                   <CandidateActionCenter
                     onActionComplete={(action, details) => {
@@ -527,7 +523,10 @@ const ATSAdmin = () => {
                   />
                 </TabsContent>
 
-                {/* Onglet Rapports */}
+                <TabsContent value="notifications" className="space-y-6">
+                  <NotificationCenter />
+                </TabsContent>
+
                 <TabsContent value="reports" className="space-y-6">
                   <CandidateCharts
                     statusChartData={statusChartData}
