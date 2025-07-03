@@ -1,556 +1,205 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
-  Plus,
-  Search,
-  Filter,
-  BarChart3,
-  Target,
-  Zap,
-  Mail,
-  Bell,
-  PieChart,
-  Calendar
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Bell, Settings, Users } from 'lucide-react';
 
 // Import des composants ATS
-import { CandidateSearch } from '@/components/admin/ats/CandidateSearch';
-import { CandidatesList } from '@/components/admin/ats/CandidatesList';
-import { CandidateCharts } from '@/components/admin/ats/CandidateCharts';
-import { CandidateAnalytics } from '@/components/admin/ats/CandidateAnalytics';
-import { CandidateActionCenter } from '@/components/admin/ats/CandidateActionCenter';
-import { CandidatePipeline } from '@/components/admin/ats/CandidatePipeline';
 import { CVUploadZone } from '@/components/admin/ats/CVUploadZone';
-import { ManualCandidateForm } from '@/components/admin/ats/ManualCandidateForm';
-import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { AdvancedCandidateSearch } from '@/components/admin/ats/AdvancedCandidateSearch';
-import { PipelineStage, PipelineCandidate } from '@/types/pipeline';
+import { CandidatesList } from '@/components/admin/ats/CandidatesList';
+import { CandidatePipeline } from '@/components/admin/ats/CandidatePipeline';
 import { CommunicationCenter } from '@/components/admin/ats/CommunicationCenter';
+import { IntegratedCalendar } from '@/components/admin/ats/IntegratedCalendar';
 import { AnalyticsDashboard } from '@/components/admin/ats/AnalyticsDashboard';
 import { NotificationCenter } from '@/components/admin/ats/NotificationCenter';
-import { IntegratedCalendar } from '@/components/admin/ats/IntegratedCalendar';
+import { AIMatchingEngine } from '@/components/admin/ats/AIMatchingEngine';
+import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
 
-interface Candidate {
-  id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  position: string;
-  status: string;
-  created_at: string;
-  updated_at?: string;
-  notes?: string;
-  rating?: number;
-}
+// Import des types
+import { PipelineStage } from '@/types/pipeline';
 
-const ATSAdmin = () => {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+export default function ATSAdmin() {
   const [activeTab, setActiveTab] = useState('upload');
-  const [showManualForm, setShowManualForm] = useState(false);
-  const [analyticsTimeRange, setAnalyticsTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
-  const [searchFilters, setSearchFilters] = useState<any>(null);
-
-  useEffect(() => {
-    fetchCandidates();
-  }, []);
-
-  const fetchCandidates = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('candidates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching candidates:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les candidats",
-          variant: "destructive"
-        });
-      } else {
-        setCandidates(data || []);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleStatusChange = async (id: string, status: string) => {
-    try {
-      const { error } = await supabase
-        .from('candidates')
-        .update({ status })
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error updating status:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour le statut",
-          variant: "destructive"
-        });
-      } else {
-        setCandidates(prev =>
-          prev.map(c => (c.id === id ? { ...c, status } : c))
-        );
-        toast({
-          title: "Succès",
-          description: "Statut mis à jour avec succès",
-        });
-      }
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCandidateCreated = (newCandidate: Candidate) => {
-    setCandidates(prev => [newCandidate, ...prev]);
-    setShowManualForm(false);
-    setActiveTab('candidates');
-  };
-
-  const handleAdvancedSearch = (filters: any) => {
-    setSearchFilters(filters);
-    console.log('Advanced search filters:', filters);
-  };
-
-  const handleResetSearch = () => {
-    setSearchFilters(null);
-    setSearchTerm('');
-    setFilterStatus('all');
-  };
-
-  const handleViewDetails = (id: string) => {
-    navigate(`/admin/candidate/${id}`);
-  };
-
-  const handleExport = () => {
-    toast({
-      title: "Info",
-      description: "Fonction d'export CSV à implémenter",
-    });
-  };
-
-  const handleCandidateMove = (candidateId: string, fromStage: string, toStage: string) => {
-    console.log(`Moving candidate ${candidateId} from ${fromStage} to ${toStage}`);
-    toast({
-      title: "Info",
-      description: "Fonction de déplacement à implémenter",
-    });
-  };
-
-  const filteredCandidates = candidates.filter(candidate => {
-    const searchTermLower = searchTerm.toLowerCase();
-    const fullNameLower = candidate.full_name.toLowerCase();
-  
-    const matchesSearch = fullNameLower.includes(searchTermLower) ||
-                           candidate.email.toLowerCase().includes(searchTermLower) ||
-                           candidate.position.toLowerCase().includes(searchTermLower);
-  
-    const matchesStatus = filterStatus === 'all' || candidate.status === filterStatus;
-
-    if (searchFilters) {
-      const matchesAdvancedSearch = !searchFilters.searchTerm ||
-        fullNameLower.includes(searchFilters.searchTerm.toLowerCase()) ||
-        candidate.email.toLowerCase().includes(searchFilters.searchTerm.toLowerCase()) ||
-        candidate.position.toLowerCase().includes(searchFilters.searchTerm.toLowerCase());
-
-      const matchesAdvancedStatus = searchFilters.status === 'all' || candidate.status === searchFilters.status;
-      const matchesPosition = !searchFilters.position || candidate.position === searchFilters.position;
-      const matchesRating = !searchFilters.rating || candidate.rating >= searchFilters.rating[0];
-
-      return matchesAdvancedSearch && matchesAdvancedStatus && matchesPosition && matchesRating;
-    }
-  
-    return matchesSearch && matchesStatus;
-  });
-
-  const statusChartData = Object.entries(
-    candidates.reduce((acc: Record<string, number>, candidate) => {
-      acc[candidate.status] = (acc[candidate.status] || 0) + 1;
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name, value }));
-
-  const positionChartData = Object.entries(
-    candidates.reduce((acc: Record<string, number>, candidate) => {
-      acc[candidate.position] = (acc[candidate.position] || 0) + 1;
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name, value }));
-
-  const analyticsData = {
-    conversionRate: 15,
-    averageTimeToHire: 45,
-    sourceEffectiveness: [
-      { source: 'LinkedIn', candidates: 120, hired: 20 },
-      { source: 'Indeed', candidates: 100, hired: 15 },
-      { source: 'Recommandation', candidates: 80, hired: 25 }
-    ],
-    monthlyTrends: [
-      { month: 'Jan', applications: 50, hires: 8 },
-      { month: 'Fév', applications: 55, hires: 10 },
-      { month: 'Mar', applications: 60, hires: 12 }
-    ]
-  };
-
+  // Données simulées pour le pipeline
   const pipelineStages: PipelineStage[] = [
     {
       id: 'new',
-      name: 'Nouveau',
-      candidates: filteredCandidates.filter(c => c.status === 'new').map(c => ({
-        id: c.id,
-        name: c.full_name,
-        email: c.email,
-        position: c.position,
-        rating: c.rating,
-        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      })),
-      color: 'bg-blue-500'
+      name: 'Nouveaux',
+      color: '#3B82F6',
+      candidates: [
+        {
+          id: '1',
+          name: 'Marie Dubois',
+          email: 'marie.dubois@email.com',
+          position: 'Développeur React',
+          rating: 4.5,
+          daysInStage: 2
+        },
+        {
+          id: '2',
+          name: 'Pierre Martin',
+          email: 'pierre.martin@email.com',
+          position: 'Designer UX',
+          rating: 4.2,
+          daysInStage: 1
+        }
+      ]
     },
     {
       id: 'screening',
       name: 'Présélection',
-      candidates: filteredCandidates.filter(c => c.status === 'screening').map(c => ({
-        id: c.id,
-        name: c.full_name,
-        email: c.email,
-        position: c.position,
-        rating: c.rating,
-        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      })),
-      color: 'bg-yellow-500'
+      color: '#EAB308',
+      candidates: [
+        {
+          id: '3',
+          name: 'Sophie Laurent',
+          email: 'sophie.laurent@email.com',
+          position: 'Chef de Projet',
+          rating: 4.8,
+          daysInStage: 5
+        }
+      ]
     },
     {
       id: 'interview',
       name: 'Entretien',
-      candidates: filteredCandidates.filter(c => c.status === 'interview').map(c => ({
-        id: c.id,
-        name: c.full_name,
-        email: c.email,
-        position: c.position,
-        rating: c.rating,
-        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      })),
-      color: 'bg-purple-500'
+      color: '#8B5CF6',
+      candidates: [
+        {
+          id: '4',
+          name: 'Thomas Moreau',
+          email: 'thomas.moreau@email.com',
+          position: 'Développeur Python',
+          rating: 4.3,
+          daysInStage: 3
+        }
+      ]
     },
     {
       id: 'offer',
       name: 'Offre',
-      candidates: filteredCandidates.filter(c => c.status === 'offer').map(c => ({
-        id: c.id,
-        name: c.full_name,
-        email: c.email,
-        position: c.position,
-        rating: c.rating,
-        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      })),
-      color: 'bg-green-500'
+      color: '#10B981',
+      candidates: []
     },
     {
-      id: 'rejected',
-      name: 'Rejeté',
-      candidates: filteredCandidates.filter(c => c.status === 'rejected').map(c => ({
-        id: c.id,
-        name: c.full_name,
-        email: c.email,
-        position: c.position,
-        rating: c.rating,
-        daysInStage: Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      })),
-      color: 'bg-red-500'
+      id: 'hired',
+      name: 'Embauché',
+      color: '#059669',
+      candidates: []
     }
   ];
 
-  const statusColors: Record<string, string> = {
-    new: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-    screening: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-    interview: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-    offer: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-    rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+  const handleCandidateMove = (candidateId: string, fromStage: string, toStage: string) => {
+    console.log(`Moving candidate ${candidateId} from ${fromStage} to ${toStage}`);
+    // Logique de déplacement des candidats
+  };
+
+  const handleCandidateClick = (candidateId: string) => {
+    console.log(`Viewing candidate ${candidateId}`);
+    // Navigation vers le détail du candidat
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'upload':
+        return <CVUploadZone />;
+      case 'candidates':
+        return <CandidatesList />;
+      case 'pipeline':
+        return (
+          <CandidatePipeline 
+            stages={pipelineStages}
+            onCandidateMove={handleCandidateMove}
+            onCandidateClick={handleCandidateClick}
+          />
+        );
+      case 'matching':
+        return <AIMatchingEngine />;
+      case 'communication':
+        return <CommunicationCenter />;
+      case 'calendar':
+        return <IntegratedCalendar />;
+      case 'analytics':
+        return (
+          <AnalyticsDashboard 
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+          />
+        );
+      case 'notifications':
+        return <NotificationCenter />;
+      default:
+        return <CVUploadZone />;
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto p-4 space-y-6">
-        {/* Header avec thème toggle */}
-        <motion.div 
-          className="flex justify-between items-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              ATS - Système de Recrutement Intelligent
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Gestion complète avec IA, automation et analytiques avancées
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Badge variant="outline" className="px-3 py-1">
-              {candidates.length} candidats
-            </Badge>
-            <ThemeToggle />
-          </div>
-        </motion.div>
-
+    <div className="min-h-screen bg-gray-50/30">
+      <div className="container mx-auto p-6">
         {/* Navigation mobile */}
-        {isMobile && (
+        <div className="block md:hidden mb-6">
           <MobileNavigation 
             activeTab={activeTab} 
-            onTabChange={setActiveTab}
+            onTabChange={setActiveTab} 
           />
-        )}
+        </div>
 
-        {/* Statistiques rapides */}
-        <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-                  <p className="text-2xl font-bold text-blue-600">{candidates.length}</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* En-tête */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Système ATS Intelligent
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Gestion avancée des candidatures avec IA
+            </p>
+          </div>
+          <div className="hidden md:flex items-center gap-4">
+            <Badge variant="outline" className="px-3 py-1">
+              42 candidats actifs
+            </Badge>
+            <Button variant="outline" size="sm">
+              <Bell className="h-4 w-4 mr-2" />
+              Notifications
+            </Button>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Paramètres
+            </Button>
+          </div>
+        </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Nouveaux</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {candidates.filter(c => c.status === 'new').length}
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Entretiens</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {candidates.filter(c => c.status === 'interview').length}
-                  </p>
-                </div>
-                <Clock className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Embauchés</p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {candidates.filter(c => c.status === 'offer').length}
-                  </p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Contenu principal avec onglets */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        {/* Navigation desktop */}
+        <div className="hidden md:block">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            {!isMobile && (
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-                <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                  <Zap className="h-4 w-4" />
-                  Upload CV
-                </TabsTrigger>
-                <TabsTrigger value="candidates" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Candidats
-                </TabsTrigger>
-                <TabsTrigger value="pipeline" className="flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  Pipeline
-                </TabsTrigger>
-                <TabsTrigger value="communication" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Communication
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Calendrier
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center gap-2">
-                  <PieChart className="h-4 w-4" />
-                  Analytics
-                </TabsTrigger>
-                <TabsTrigger value="actions" className="flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  Actions
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  Notifications
-                </TabsTrigger>
-                <TabsTrigger value="reports" className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Rapports
-                </TabsTrigger>
-              </TabsList>
-            )}
+            <TabsList className="grid grid-cols-8 w-full">
+              <TabsTrigger value="upload" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Upload CV
+              </TabsTrigger>
+              <TabsTrigger value="candidates">Candidats</TabsTrigger>
+              <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+              <TabsTrigger value="matching">Matching IA</TabsTrigger>
+              <TabsTrigger value="communication">Messages</TabsTrigger>
+              <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="notifications">Alertes</TabsTrigger>
+            </TabsList>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <TabsContent value="upload" className="space-y-6">
-                  {showManualForm ? (
-                    <ManualCandidateForm
-                      onCandidateCreated={handleCandidateCreated}
-                      onCancel={() => setShowManualForm(false)}
-                    />
-                  ) : (
-                    <CVUploadZone onCandidateCreated={handleCandidateCreated} />
-                  )}
-                </TabsContent>
-
-                <TabsContent value="candidates" className="space-y-6">
-                  <AdvancedCandidateSearch
-                    onSearch={handleAdvancedSearch}
-                    onReset={handleResetSearch}
-                    candidateCount={filteredCandidates.length}
-                  />
-                  
-                  <CandidatesList
-                    candidates={filteredCandidates}
-                    loading={loading}
-                    statusColors={statusColors}
-                    onStatusChange={handleStatusChange}
-                    onViewDetails={handleViewDetails}
-                  />
-                </TabsContent>
-
-                <TabsContent value="pipeline" className="space-y-6">
-                  <CandidatePipeline
-                    stages={pipelineStages}
-                    onCandidateMove={handleCandidateMove}
-                    onCandidateClick={handleViewDetails}
-                  />
-                </TabsContent>
-
-                <TabsContent value="communication" className="space-y-6">
-                  <CommunicationCenter
-                    onSendEmail={(template, recipients) => {
-                      console.log('Sending email:', template, recipients);
-                      toast({
-                        title: "Email envoyé",
-                        description: `Template "${template.name}" envoyé à ${recipients.length} destinataire(s)`,
-                      });
-                    }}
-                    onSendSMS={(message, recipients) => {
-                      console.log('Sending SMS:', message, recipients);
-                      toast({
-                        title: "SMS envoyé",
-                        description: `Message envoyé à ${recipients.length} destinataire(s)`,
-                      });
-                    }}
-                    onScheduleEmail={(template, recipients, date) => {
-                      console.log('Scheduling email:', template, recipients, date);
-                      toast({
-                        title: "Email programmé",
-                        description: `Email programmé pour le ${date.toLocaleDateString()}`,
-                      });
-                    }}
-                  />
-                </TabsContent>
-
-                <TabsContent value="calendar" className="space-y-6">
-                  <IntegratedCalendar />
-                </TabsContent>
-
-                <TabsContent value="analytics" className="space-y-6">
-                  <AnalyticsDashboard
-                    timeRange={analyticsTimeRange}
-                    onTimeRangeChange={setAnalyticsTimeRange}
-                  />
-                </TabsContent>
-
-                <TabsContent value="actions" className="space-y-6">
-                  <CandidateActionCenter
-                    onActionComplete={(action, details) => {
-                      console.log('Action completed:', action, details);
-                    }}
-                  />
-                </TabsContent>
-
-                <TabsContent value="notifications" className="space-y-6">
-                  <NotificationCenter />
-                </TabsContent>
-
-                <TabsContent value="reports" className="space-y-6">
-                  <CandidateCharts
-                    statusChartData={statusChartData}
-                    positionChartData={positionChartData}
-                    loading={loading}
-                  />
-                </TabsContent>
-              </motion.div>
-            </AnimatePresence>
+            <div className="mt-6">
+              {renderTabContent()}
+            </div>
           </Tabs>
-        </motion.div>
+        </div>
+
+        {/* Contenu mobile */}
+        <div className="block md:hidden">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );
-};
-
-export default ATSAdmin;
+}
