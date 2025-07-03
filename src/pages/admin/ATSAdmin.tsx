@@ -23,6 +23,34 @@ export default function ATSAdmin() {
   const [activeTab, setActiveTab] = useState('upload');
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
+  // Données simulées pour les candidats
+  const mockCandidates = [
+    {
+      id: '1',
+      name: 'Marie Dubois',
+      email: 'marie.dubois@email.com',
+      position: 'Développeur React',
+      rating: 4.5,
+      status: 'new'
+    },
+    {
+      id: '2',
+      name: 'Pierre Martin',
+      email: 'pierre.martin@email.com',
+      position: 'Designer UX',
+      rating: 4.2,
+      status: 'screening'
+    }
+  ];
+
+  const statusColors = {
+    new: '#3B82F6',
+    screening: '#EAB308',
+    interview: '#8B5CF6',
+    offer: '#10B981',
+    hired: '#059669'
+  };
+
   // Données simulées pour le pipeline
   const pipelineStages: PipelineStage[] = [
     {
@@ -94,20 +122,38 @@ export default function ATSAdmin() {
 
   const handleCandidateMove = (candidateId: string, fromStage: string, toStage: string) => {
     console.log(`Moving candidate ${candidateId} from ${fromStage} to ${toStage}`);
-    // Logique de déplacement des candidats
   };
 
   const handleCandidateClick = (candidateId: string) => {
     console.log(`Viewing candidate ${candidateId}`);
-    // Navigation vers le détail du candidat
+  };
+
+  const handleCandidateCreated = (candidate: any) => {
+    console.log('New candidate created:', candidate);
+  };
+
+  const handleStatusChange = (candidateId: string, newStatus: string) => {
+    console.log(`Changing status for candidate ${candidateId} to ${newStatus}`);
+  };
+
+  const handleViewDetails = (candidateId: string) => {
+    console.log(`Viewing details for candidate ${candidateId}`);
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'upload':
-        return <CVUploadZone />;
+        return <CVUploadZone onCandidateCreated={handleCandidateCreated} />;
       case 'candidates':
-        return <CandidatesList />;
+        return (
+          <CandidatesList 
+            candidates={mockCandidates}
+            loading={false}
+            statusColors={statusColors}
+            onStatusChange={handleStatusChange}
+            onViewDetails={handleViewDetails}
+          />
+        );
       case 'pipeline':
         return (
           <CandidatePipeline 
@@ -132,7 +178,7 @@ export default function ATSAdmin() {
       case 'notifications':
         return <NotificationCenter />;
       default:
-        return <CVUploadZone />;
+        return <CVUploadZone onCandidateCreated={handleCandidateCreated} />;
     }
   };
 

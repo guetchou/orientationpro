@@ -33,6 +33,7 @@ import Recrutement from "@/pages/Recrutement";
 import ATSAdmin from "@/pages/admin/ATSAdmin";
 import CandidateDetails from "@/pages/admin/CandidateDetails";
 import SuperAdmin from "@/pages/admin/SuperAdmin";
+import MediaManager from "@/pages/admin/MediaManager";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "sonner";
@@ -82,6 +83,7 @@ function App() {
             <Route path="/admin/ats" element={<RequireAuth><ATSAdmin /></RequireAuth>} />
             <Route path="/admin/candidate/:id" element={<RequireAuth><CandidateDetails /></RequireAuth>} />
             <Route path="/admin/super-admin" element={<RequireAuth><SuperAdmin /></RequireAuth>} />
+            <Route path="/admin/media" element={<RequireAuth><MediaManager /></RequireAuth>} />
             
             {/* Static Pages */}
             <Route path="/establishments" element={<Establishments />} />
