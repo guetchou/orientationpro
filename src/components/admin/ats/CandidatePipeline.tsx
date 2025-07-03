@@ -1,10 +1,27 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Star } from 'lucide-react';
+import { 
+  Users, 
+  Star, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  MoreVertical,
+  Search,
+  Filter,
+  ArrowRight
+} from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { PipelineStage, PipelineCandidate } from '@/types/pipeline';
 
 interface CandidatePipelineProps {
@@ -18,116 +35,156 @@ export const CandidatePipeline: React.FC<CandidatePipelineProps> = ({
   onCandidateMove,
   onCandidateClick
 }) => {
-  const handleDragStart = (e: React.DragEvent, candidate: PipelineCandidate, stageId: string) => {
-    e.dataTransfer.setData('candidateId', candidate.id);
-    e.dataTransfer.setData('fromStage', stageId);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [draggedCandidate, setDraggedCandidate] = useState<PipelineCandidate | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+
+  const handleDragStart = (candidate: PipelineCandidate) => {
+    setDraggedCandidate(candidate);
   };
 
-  const handleDrop = (e: React.DragEvent, toStage: string) => {
+  const handleDragEnd = () => {
+    setDraggedCandidate(null);
+    setDragOverStage(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, stageId: string) => {
     e.preventDefault();
-    const candidateId = e.dataTransfer.getData('candidateId');
-    const fromStage = e.dataTransfer.getData('fromStage');
-    
-    if (candidateId && fromStage !== toStage) {
-      onCandidateMove(candidateId, fromStage, toStage);
+    setDragOverStage(stageId);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStageId: string) => {
+    e.preventDefault();
+    if (draggedCandidate) {
+      const sourceStage = stages.find(stage => 
+        stage.candidates.some(c => c.id === draggedCandidate.id)
+      );
+      if (sourceStage && sourceStage.id !== targetStageId) {
+        onCandidateMove(draggedCandidate.id, sourceStage.id, targetStageId);
+      }
     }
+    setDragOverStage(null);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
+  const filteredStages = stages.map(stage => ({
+    ...stage,
+    candidates: stage.candidates.filter(candidate =>
+      candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.position.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }));
 
   return (
     <div className="space-y-6">
+      {/* Header and Search */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Pipeline de Recrutement</h2>
-        <Badge variant="outline">
-          {stages.reduce((acc, stage) => acc + stage.candidates.length, 0)} candidats actifs
-        </Badge>
+        <h2 className="text-2xl font-bold">Pipeline des Candidats</h2>
+        <Input
+          type="search"
+          placeholder="Rechercher un candidat..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md"
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 min-h-[600px]">
-        {stages.map((stage) => (
-          <Card
+      {/* Pipeline stages */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 h-[600px] overflow-x-auto">
+        {filteredStages.map((stage, index) => (
+          <motion.div
             key={stage.id}
-            className="border-t-4 hover:shadow-lg transition-shadow duration-300"
-            style={{ borderTopColor: stage.color.replace('bg-', '#') }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-white dark:bg-gray-800 rounded-lg border-2 transition-all duration-200 ${
+              dragOverStage === stage.id ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700'
+            }`}
+            onDragOver={(e) => handleDragOver(e, stage.id)}
             onDrop={(e) => handleDrop(e, stage.id)}
-            onDragOver={handleDragOver}
           >
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-sm">
-                <span>{stage.name}</span>
-                <Badge variant="secondary" className="text-xs">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {stage.name}
+                </h3>
+                <Badge variant="outline" className="text-xs">
                   {stage.candidates.length}
                 </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+              </div>
+            </div>
+
+            <div className="p-4 space-y-3 h-[500px] overflow-y-auto">
               <AnimatePresence>
-                {stage.candidates.map((candidate, index) => {
-                  const initials = candidate.name.split(' ').map(n => n[0]).join('');
-                  
-                  return (
-                    <motion.div
-                      key={candidate.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                      className="bg-white dark:bg-gray-800 rounded-lg border p-3 cursor-move hover:shadow-md transition-all duration-200"
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, candidate, stage.id)}
-                      onClick={() => onCandidateClick(candidate.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">
-                            {candidate.name}
-                          </h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                            {candidate.email}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500 truncate mt-1">
-                            {candidate.position}
-                          </p>
-                          
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Clock className="h-3 w-3" />
-                              {candidate.daysInStage}j
-                            </div>
-                            
-                            {candidate.rating && candidate.rating > 0 && (
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                <span className="text-xs">{candidate.rating}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                {stage.candidates.map((candidate, candidateIndex) => (
+                  <motion.div
+                    key={candidate.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: candidateIndex * 0.05 }}
+                    draggable
+                    onDragStart={() => handleDragStart(candidate)}
+                    onDragEnd={handleDragEnd}
+                    className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 cursor-move hover:shadow-md transition-all duration-200 group"
+                    onClick={() => onCandidateClick(candidate.id)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {candidate.name}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          {candidate.position}
+                        </p>
                       </div>
-                    </motion.div>
-                  );
-                })}
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Ouvrir le menu</span>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onCandidateClick(candidate.id)}>
+                            <Users className="h-4 w-4 mr-2" />
+                            Voir le profil
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Envoyer un email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Phone className="h-4 w-4 mr-2" />
+                            Appeler
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                        <Calendar className="h-3 w-3" />
+                        {candidate.daysInStage} jours
+                      </div>
+                      
+                      {candidate.rating && (
+                        <div className="flex items-center gap-1 text-xs text-yellow-500">
+                          <Star className="h-3 w-3" />
+                          {candidate.rating}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
               </AnimatePresence>
-              
-              {stage.candidates.length === 0 && (
-                <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 mx-auto mb-2 flex items-center justify-center">
-                    <span className="text-2xl">📭</span>
-                  </div>
-                  Aucun candidat
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         ))}
       </div>
     </div>

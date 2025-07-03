@@ -11,7 +11,8 @@ import {
   Upload,
   Mail,
   Bell,
-  PieChart
+  PieChart,
+  Calendar
 } from 'lucide-react';
 
 interface MobileNavigationProps {
@@ -28,6 +29,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     { id: 'candidates', label: 'Candidats', icon: Users },
     { id: 'pipeline', label: 'Pipeline', icon: Target },
     { id: 'communication', label: 'Messages', icon: Mail },
+    { id: 'calendar', label: 'Calendrier', icon: Calendar },
     { id: 'analytics', label: 'Analytics', icon: PieChart },
     { id: 'notifications', label: 'Alertes', icon: Bell }
   ];

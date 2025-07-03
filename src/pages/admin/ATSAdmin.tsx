@@ -21,7 +21,8 @@ import {
   Zap,
   Mail,
   Bell,
-  PieChart
+  PieChart,
+  Calendar
 } from 'lucide-react';
 
 // Import des composants ATS
@@ -40,6 +41,7 @@ import { PipelineStage, PipelineCandidate } from '@/types/pipeline';
 import { CommunicationCenter } from '@/components/admin/ats/CommunicationCenter';
 import { AnalyticsDashboard } from '@/components/admin/ats/AnalyticsDashboard';
 import { NotificationCenter } from '@/components/admin/ats/NotificationCenter';
+import { IntegratedCalendar } from '@/components/admin/ats/IntegratedCalendar';
 
 interface Candidate {
   id: string;
@@ -403,7 +405,7 @@ const ATSAdmin = () => {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             {!isMobile && (
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                 <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Zap className="h-4 w-4" />
                   Upload CV
@@ -419,6 +421,10 @@ const ATSAdmin = () => {
                 <TabsTrigger value="communication" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   Communication
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Calendrier
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
                   <PieChart className="h-4 w-4" />
@@ -506,6 +512,10 @@ const ATSAdmin = () => {
                       });
                     }}
                   />
+                </TabsContent>
+
+                <TabsContent value="calendar" className="space-y-6">
+                  <IntegratedCalendar />
                 </TabsContent>
 
                 <TabsContent value="analytics" className="space-y-6">

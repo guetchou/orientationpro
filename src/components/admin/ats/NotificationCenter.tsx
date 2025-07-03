@@ -20,7 +20,8 @@ import {
   Settings,
   Zap,
   Users,
-  Target
+  Target,
+  BarChart3
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
