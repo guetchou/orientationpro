@@ -23,23 +23,35 @@ export default function ATSAdmin() {
   const [activeTab, setActiveTab] = useState('upload');
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
-  // Données simulées pour les candidats
+  // Données simulées pour les candidats - corrigées pour correspondre au type Candidate
   const mockCandidates = [
     {
       id: '1',
-      name: 'Marie Dubois',
+      full_name: 'Marie Dubois',
       email: 'marie.dubois@email.com',
+      phone: '+33 6 12 34 56 78',
       position: 'Développeur React',
+      experience: '5 ans',
+      motivation: 'Passionnée par le développement frontend',
       rating: 4.5,
-      status: 'new'
+      status: 'new',
+      resume_url: null,
+      notes: null,
+      created_at: new Date().toISOString()
     },
     {
       id: '2',
-      name: 'Pierre Martin',
+      full_name: 'Pierre Martin',
       email: 'pierre.martin@email.com',
+      phone: '+33 6 98 76 54 32',
       position: 'Designer UX',
+      experience: '3 ans',
+      motivation: 'Expert en expérience utilisateur',
       rating: 4.2,
-      status: 'screening'
+      status: 'screening',
+      resume_url: null,
+      notes: null,
+      created_at: new Date().toISOString()
     }
   ];
 
