@@ -1,244 +1,240 @@
 
-import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { motion } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
 import { 
   Upload, 
-  Image as ImageIcon, 
+  Image, 
   Video, 
-  FileImage, 
+  FileText, 
+  Settings, 
+  Eye, 
+  EyeOff, 
+  Download, 
   Trash2, 
-  Edit, 
-  Download,
-  Eye,
-  Settings,
-  Star,
+  Edit,
   Search,
   Filter,
-  Grid,
-  List,
-  Palette,
-  Crop,
-  Monitor,
-  Smartphone,
+  BarChart3,
+  Zap,
   Globe,
-  Home,
-  Users,
-  FileText,
-  Calendar,
-  MessageCircle,
-  Target,
-  Award,
-  Zap
+  Smartphone,
+  Monitor,
+  Camera,
+  Film,
+  FileImage,
+  Music,
+  Archive
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MediaFile {
   id: string;
   name: string;
-  type: 'image' | 'video' | 'logo' | 'favicon' | 'icon';
-  url: string;
+  type: string;
   size: number;
-  uploadDate: Date;
+  url: string;
   category: string;
   tags: string[];
-  isActive?: boolean;
-  usedIn?: string[];
-  dimensions?: { width: number; height: number };
+  isActive: boolean;
+  siteSection: string;
+  optimized: boolean;
+  responsive: boolean;
+  uploadedAt: Date;
+  lastModified: Date;
 }
 
-interface SiteSection {
-  id: string;
-  name: string;
-  icon: React.ComponentType;
-  mediaCount: number;
-  lastUpdated: Date;
+interface SiteStats {
+  totalFiles: number;
+  totalSize: number;
+  activeFiles: number;
+  optimizedFiles: number;
+  responsiveFiles: number;
+  categoryCounts: Record<string, number>;
 }
 
 export default function MediaManager() {
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const { user } = useAuth();
+  const [files, setFiles] = useState<MediaFile[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState('library');
-
-  // Sections du site avec leurs médias
-  const siteSections: SiteSection[] = [
-    {
-      id: 'homepage',
-      name: 'Page d\'accueil',
-      icon: Home,
-      mediaCount: 12,
-      lastUpdated: new Date('2024-01-15')
-    },
-    {
-      id: 'about',
-      name: 'À propos',
-      icon: Users,
-      mediaCount: 8,
-      lastUpdated: new Date('2024-01-12')
-    },
-    {
-      id: 'blog',
-      name: 'Blog',
-      icon: FileText,
-      mediaCount: 25,
-      lastUpdated: new Date('2024-01-10')
-    },
-    {
-      id: 'tests',
-      name: 'Tests',
-      icon: Target,
-      mediaCount: 15,
-      lastUpdated: new Date('2024-01-08')
-    },
-    {
-      id: 'resources',
-      name: 'Ressources',
-      icon: Award,
-      mediaCount: 18,
-      lastUpdated: new Date('2024-01-05')
-    }
-  ];
-
-  // Données simulées des médias avec usage détaillé
-  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([
-    {
-      id: '1',
-      name: 'logo-principal.png',
-      type: 'logo',
-      url: '/images/carousel/orientation-1.png',
-      size: 245760,
-      uploadDate: new Date('2024-01-15'),
-      category: 'branding',
-      tags: ['logo', 'principal', 'brand'],
-      isActive: true,
-      usedIn: ['header', 'footer', 'favicon'],
-      dimensions: { width: 300, height: 100 }
-    },
-    {
-      id: '2',
-      name: 'hero-background.jpg',
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7',
-      size: 1048576,
-      uploadDate: new Date('2024-01-10'),
-      category: 'hero',
-      tags: ['background', 'hero', 'accueil'],
-      usedIn: ['homepage-hero'],
-      dimensions: { width: 1920, height: 1080 }
-    },
-    {
-      id: '3',
-      name: 'favicon.ico',
-      type: 'favicon',
-      url: '/favicon.ico',
-      size: 4096,
-      uploadDate: new Date('2024-01-01'),
-      category: 'branding',
-      tags: ['favicon', 'icon'],
-      isActive: true,
-      usedIn: ['site-wide'],
-      dimensions: { width: 32, height: 32 }
-    },
-    {
-      id: '4',
-      name: 'testimonial-video.mp4',
-      type: 'video',
-      url: 'https://example.com/video.mp4',
-      size: 15728640,
-      uploadDate: new Date('2024-01-05'),
-      category: 'testimonials',
-      tags: ['video', 'témoignage', 'client'],
-      usedIn: ['homepage-testimonials'],
-      dimensions: { width: 1280, height: 720 }
-    }
-  ]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSection, setSelectedSection] = useState('all');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [siteStats, setSiteStats] = useState<SiteStats>({
+    totalFiles: 0,
+    totalSize: 0,
+    activeFiles: 0,
+    optimizedFiles: 0,
+    responsiveFiles: 0,
+    categoryCounts: {}
+  });
 
   const categories = [
-    { value: 'all', label: 'Tous les médias', count: mediaFiles.length },
-    { value: 'branding', label: 'Branding', count: 2 },
-    { value: 'hero', label: 'Section Hero', count: 1 },
-    { value: 'gallery', label: 'Galerie', count: 0 },
-    { value: 'carousel', label: 'Carrousel', count: 0 },
-    { value: 'testimonials', label: 'Témoignages', count: 1 },
-    { value: 'blog', label: 'Blog', count: 0 },
-    { value: 'icons', label: 'Icônes', count: 0 }
+    'images', 'videos', 'logos', 'icons', 'documents', 
+    'audio', 'favicons', 'thumbnails', 'backgrounds'
   ];
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setSelectedFiles(files);
-    if (files.length > 0) {
-      setShowUploadDialog(true);
+  const siteSections = [
+    'header', 'footer', 'home', 'about', 'services', 
+    'blog', 'contact', 'admin', 'ats', 'dashboard'
+  ];
+
+  useEffect(() => {
+    loadFiles();
+    calculateStats();
+  }, []);
+
+  const loadFiles = async () => {
+    setLoading(true);
+    try {
+      // Simuler le chargement des fichiers depuis Supabase Storage
+      const mockFiles: MediaFile[] = [
+        {
+          id: '1',
+          name: 'logo-principal.png',
+          type: 'image/png',
+          size: 45000,
+          url: '/placeholder.svg',
+          category: 'logos',
+          tags: ['logo', 'principal', 'header'],
+          isActive: true,
+          siteSection: 'header',
+          optimized: true,
+          responsive: true,
+          uploadedAt: new Date(),
+          lastModified: new Date()
+        },
+        {
+          id: '2',
+          name: 'hero-banner.jpg',
+          type: 'image/jpeg',
+          size: 180000,
+          url: '/placeholder.svg',
+          category: 'images',
+          tags: ['hero', 'banner', 'home'],
+          isActive: true,
+          siteSection: 'home',
+          optimized: false,
+          responsive: true,
+          uploadedAt: new Date(),
+          lastModified: new Date()
+        }
+      ];
+      setFiles(mockFiles);
+    } catch (error) {
+      console.error('Erreur lors du chargement des fichiers:', error);
+      toast.error('Erreur lors du chargement des fichiers');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpload = async (files: File[], category: string, tags: string[], usedIn: string[]) => {
-    // Simulation d'upload avec détails complets
-    const newFiles: MediaFile[] = files.map((file, index) => {
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-      
-      return {
-        id: `new-${Date.now()}-${index}`,
-        name: file.name,
-        type: isVideo ? 'video' : isImage ? 'image' : 'icon',
-        url: URL.createObjectURL(file),
-        size: file.size,
-        uploadDate: new Date(),
-        category: category,
-        tags: tags,
-        usedIn: usedIn,
-        dimensions: isImage ? { width: 1920, height: 1080 } : undefined
-      };
+  const calculateStats = () => {
+    const stats: SiteStats = {
+      totalFiles: files.length,
+      totalSize: files.reduce((acc, file) => acc + file.size, 0),
+      activeFiles: files.filter(f => f.isActive).length,
+      optimizedFiles: files.filter(f => f.optimized).length,
+      responsiveFiles: files.filter(f => f.responsive).length,
+      categoryCounts: {}
+    };
+
+    categories.forEach(cat => {
+      stats.categoryCounts[cat] = files.filter(f => f.category === cat).length;
     });
 
-    setMediaFiles(prev => [...prev, ...newFiles]);
-    setShowUploadDialog(false);
-    setSelectedFiles([]);
-
-    toast({
-      title: "Upload réussi",
-      description: `${files.length} fichier(s) uploadé(s) et intégré(s) au site.`
-    });
+    setSiteStats(stats);
   };
 
-  const handleDelete = (fileId: string) => {
-    const file = mediaFiles.find(f => f.id === fileId);
-    setMediaFiles(prev => prev.filter(file => file.id !== fileId));
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = event.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    setLoading(true);
+    setUploadProgress(0);
+
+    try {
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        
+        // Simuler l'upload vers Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('resumes')
+          .upload(`media/${file.name}`, file);
+
+        if (error) throw error;
+
+        // Mettre à jour le progrès
+        setUploadProgress(((i + 1) / selectedFiles.length) * 100);
+      }
+
+      toast.success(`${selectedFiles.length} fichier(s) uploadé(s) avec succès`);
+      await loadFiles();
+    } catch (error) {
+      console.error('Erreur lors de l\'upload:', error);
+      toast.error('Erreur lors de l\'upload des fichiers');
+    } finally {
+      setLoading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const toggleFileStatus = (fileId: string) => {
+    setFiles(prevFiles =>
+      prevFiles.map(file =>
+        file.id === fileId ? { ...file, isActive: !file.isActive } : file
+      )
+    );
+    toast.success('Statut du fichier mis à jour');
+  };
+
+  const deleteFile = async (fileId: string) => {
+    try {
+      const file = files.find(f => f.id === fileId);
+      if (!file) return;
+
+      // Supprimer de Supabase Storage
+      const { error } = await supabase.storage
+        .from('resumes')
+        .remove([`media/${file.name}`]);
+
+      if (error) throw error;
+
+      setFiles(prevFiles => prevFiles.filter(f => f.id !== fileId));
+      toast.success('Fichier supprimé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression du fichier');
+    }
+  };
+
+  const optimizeFile = async (fileId: string) => {
+    setFiles(prevFiles =>
+      prevFiles.map(file =>
+        file.id === fileId ? { ...file, optimized: true } : file
+      )
+    );
+    toast.success('Fichier optimisé avec succès');
+  };
+
+  const filteredFiles = files.filter(file => {
+    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         file.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || file.category === selectedCategory;
+    const matchesSection = selectedSection === 'all' || file.siteSection === selectedSection;
     
-    toast({
-      title: "Fichier supprimé",
-      description: file?.usedIn?.length ? 
-        `Attention: ce fichier était utilisé dans ${file.usedIn.join(', ')}` :
-        "Le fichier a été supprimé avec succès."
-    });
-  };
-
-  const handleSetActive = (fileId: string, type: string) => {
-    setMediaFiles(prev => prev.map(file => ({
-      ...file,
-      isActive: file.type === type ? file.id === fileId : file.isActive
-    })));
-    
-    toast({
-      title: "Fichier activé",
-      description: "Le fichier est maintenant utilisé sur le site."
-    });
-  };
+    return matchesSearch && matchesCategory && matchesSection;
+  });
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -249,304 +245,306 @@ export default function MediaManager() {
   };
 
   const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'video': return Video;
-      case 'logo': return Star;
-      case 'favicon': return Settings;
-      case 'icon': return Zap;
-      default: return ImageIcon;
-    }
+    if (type.startsWith('image/')) return <FileImage className="h-5 w-5" />;
+    if (type.startsWith('video/')) return <Film className="h-5 w-5" />;
+    if (type.startsWith('audio/')) return <Music className="h-5 w-5" />;
+    return <FileText className="h-5 w-5" />;
   };
-
-  const filteredFiles = mediaFiles.filter(file => {
-    const matchesCategory = selectedCategory === 'all' || file.category === selectedCategory;
-    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         file.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
 
   return (
     <div className="min-h-screen bg-gray-50/30">
       <div className="container mx-auto p-6">
-        {/* En-tête avec statistiques */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Gestionnaire de Médias Complet
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Gérez tous les médias de votre site web en un seul endroit
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Télécharger
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*,video/*,.ico"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
+        {/* En-tête */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Gestionnaire de Médias
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Gérez tous les médias de votre site web
+            </p>
           </div>
-
-          {/* Statistiques rapides */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <p className="text-sm text-gray-600">Images</p>
-                    <p className="text-2xl font-bold">{mediaFiles.filter(f => f.type === 'image').length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Video className="h-5 w-5 text-green-500" />
-                  <div>
-                    <p className="text-sm text-gray-600">Vidéos</p>
-                    <p className="text-2xl font-bold">{mediaFiles.filter(f => f.type === 'video').length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  <div>
-                    <p className="text-sm text-gray-600">Logos</p>
-                    <p className="text-2xl font-bold">{mediaFiles.filter(f => f.type === 'logo').length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-5 w-5 text-purple-500" />
-                  <div>
-                    <p className="text-sm text-gray-600">Actifs</p>
-                    <p className="text-2xl font-bold">{mediaFiles.filter(f => f.isActive).length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex items-center gap-4">
+            <Badge variant="outline" className="px-3 py-1">
+              {siteStats.totalFiles} fichiers
+            </Badge>
+            <Badge variant="outline" className="px-3 py-1">
+              {formatFileSize(siteStats.totalSize)}
+            </Badge>
           </div>
         </div>
 
-        {/* Onglets principaux */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="library">Bibliothèque Médias</TabsTrigger>
-            <TabsTrigger value="sections">Sections du Site</TabsTrigger>
+        {/* Statistiques rapides */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total</p>
+                  <p className="text-2xl font-bold">{siteStats.totalFiles}</p>
+                </div>
+                <Archive />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Actifs</p>
+                  <p className="text-2xl font-bold text-green-600">{siteStats.activeFiles}</p>
+                </div>
+                <Eye />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Optimisés</p>
+                  <p className="text-2xl font-bold text-blue-600">{siteStats.optimizedFiles}</p>
+                </div>
+                <Zap />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Responsifs</p>
+                  <p className="text-2xl font-bold text-purple-600">{siteStats.responsiveFiles}</p>
+                </div>
+                <Smartphone />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Taille</p>
+                  <p className="text-lg font-bold">{formatFileSize(siteStats.totalSize)}</p>
+                </div>
+                <BarChart3 />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="library" className="space-y-6">
+          <TabsList className="grid grid-cols-3 w-full max-w-md">
+            <TabsTrigger value="library">Bibliothèque</TabsTrigger>
+            <TabsTrigger value="sections">Sections Site</TabsTrigger>
             <TabsTrigger value="optimization">Optimisation</TabsTrigger>
           </TabsList>
 
           {/* Onglet Bibliothèque */}
           <TabsContent value="library" className="space-y-6">
+            {/* Zone d'upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Upload de Fichiers
+                </CardTitle>
+                <CardDescription>
+                  Glissez-déposez vos fichiers ou cliquez pour les sélectionner
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-lg font-medium text-gray-900 mb-2">
+                      Cliquez pour upload ou glissez-déposez
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Images, vidéos, documents (Max 10MB par fichier)
+                    </p>
+                  </label>
+                </div>
+                
+                {uploadProgress > 0 && (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-sm text-gray-600 mb-2">
+                      <span>Upload en cours...</span>
+                      <span>{Math.round(uploadProgress)}%</span>
+                    </div>
+                    <Progress value={uploadProgress} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Filtres et recherche */}
             <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="relative flex-1 max-w-md">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
-                        placeholder="Rechercher des fichiers..."
+                        placeholder="Rechercher par nom ou tags..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
                     </div>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="w-48">
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(category => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label} ({category.count})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setViewMode('grid')}
-                    >
-                      <Grid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les catégories</SelectItem>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedSection} onValueChange={setSelectedSection}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les sections</SelectItem>
+                      {siteSections.map(section => (
+                        <SelectItem key={section} value={section}>
+                          {section.charAt(0).toUpperCase() + section.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Grille des médias */}
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-              {filteredFiles.map((file) => {
-                const IconComponent = getFileIcon(file.type);
-                return (
-                  <motion.div
-                    key={file.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                  >
-                    <Card className={`group hover:shadow-lg transition-all duration-300 ${file.isActive ? 'ring-2 ring-primary' : ''}`}>
-                      <CardContent className="p-4">
-                        <div className="relative mb-4">
-                          {file.type === 'video' ? (
-                            <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                              <Video className="h-12 w-12 text-gray-400" />
-                            </div>
-                          ) : (
-                            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                              <img
-                                src={file.url}
-                                alt={file.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=400&q=80';
-                                }}
-                              />
-                            </div>
-                          )}
-                          {file.isActive && (
-                            <Badge className="absolute top-2 right-2 bg-green-500">
-                              <Star className="h-3 w-3 mr-1" />
-                              Actif
+            {/* Liste des fichiers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredFiles.map((file) => (
+                <Card key={file.id} className="group hover:shadow-lg transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                      {file.type.startsWith('image/') ? (
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="text-gray-400">
+                          {getFileIcon(file.type)}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-sm truncate" title={file.name}>
+                        {file.name}
+                      </h3>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{formatFileSize(file.size)}</span>
+                        <Badge variant={file.isActive ? "default" : "secondary"} size="sm">
+                          {file.isActive ? "Actif" : "Inactif"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1">
+                        {file.tags.slice(0, 2).map(tag => (
+                          <Badge key={tag} variant="outline" size="sm">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {file.tags.length > 2 && (
+                          <Badge variant="outline" size="sm">
+                            +{file.tags.length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-1">
+                          {file.optimized && (
+                            <Badge variant="secondary" size="sm">
+                              <Zap className="h-3 w-3 mr-1" />
+                              Opt
                             </Badge>
                           )}
-                          <div className="absolute top-2 left-2">
-                            <Badge variant="secondary" className="flex items-center gap-1">
-                              <IconComponent className="h-3 w-3" />
-                              {file.type}
+                          {file.responsive && (
+                            <Badge variant="secondary" size="sm">
+                              <Smartphone className="h-3 w-3 mr-1" />
+                              Resp
                             </Badge>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h3 className="font-medium truncate" title={file.name}>
-                            {file.name}
-                          </h3>
-                          <div className="flex items-center justify-between text-sm text-gray-500">
-                            <span>{formatFileSize(file.size)}</span>
-                            <span>{file.uploadDate.toLocaleDateString()}</span>
-                          </div>
-                          {file.dimensions && (
-                            <div className="text-xs text-gray-500">
-                              {file.dimensions.width} × {file.dimensions.height}px
-                            </div>
-                          )}
-                          <div className="flex flex-wrap gap-1">
-                            {file.tags.slice(0, 2).map(tag => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                            {file.tags.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{file.tags.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                          {file.usedIn && file.usedIn.length > 0 && (
-                            <div className="text-xs text-blue-600">
-                              Utilisé dans: {file.usedIn.slice(0, 2).join(', ')}
-                              {file.usedIn.length > 2 && ` +${file.usedIn.length - 2}`}
-                            </div>
                           )}
                         </div>
-
-                        <div className="flex items-center gap-2 mt-4">
+                        
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedFile(file)}
-                            className="flex-1"
+                            variant="ghost"
+                            onClick={() => toggleFileStatus(file.id)}
                           >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Voir
+                            {file.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
-                          {!file.isActive && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleSetActive(file.id, file.type)}
-                              className="flex-1"
-                            >
-                              <Star className="h-3 w-3 mr-1" />
-                              Activer
-                            </Button>
-                          )}
                           <Button
                             size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(file.id)}
+                            variant="ghost"
+                            onClick={() => deleteFile(file.id)}
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
-          {/* Onglet Sections du Site */}
+          {/* Onglet Sections Site */}
           <TabsContent value="sections" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {siteSections.map((section) => {
-                const IconComponent = section.icon;
+              {siteSections.map(section => {
+                const sectionFiles = files.filter(f => f.siteSection === section);
                 return (
-                  <Card key={section.id} className="hover:shadow-lg transition-shadow">
+                  <Card key={section}>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <IconComponent className="h-5 w-5" />
-                        {section.name}
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="capitalize">{section}</span>
+                        <Badge variant="outline">
+                          {sectionFiles.length} fichiers
+                        </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Médias utilisés</span>
-                          <span className="font-medium">{section.mediaCount}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Dernière mise à jour</span>
-                          <span className="font-medium">{section.lastUpdated.toLocaleDateString()}</span>
-                        </div>
-                        <Button className="w-full" variant="outline">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Gérer les médias
-                        </Button>
+                      <div className="space-y-2">
+                        {sectionFiles.slice(0, 3).map(file => (
+                          <div key={file.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                            {getFileIcon(file.type)}
+                            <span className="text-sm truncate flex-1">{file.name}</span>
+                            <Badge variant={file.isActive ? "default" : "secondary"} size="sm">
+                              {file.isActive ? "On" : "Off"}
+                            </Badge>
+                          </div>
+                        ))}
+                        {sectionFiles.length > 3 && (
+                          <p className="text-xs text-gray-500 text-center">
+                            +{sectionFiles.length - 3} autres fichiers
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -557,39 +555,44 @@ export default function MediaManager() {
 
           {/* Onglet Optimisation */}
           <TabsContent value="optimization" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Monitor className="h-5 w-5" />
-                    Optimisation des Images
+                    <Zap />
+                    Optimisation Automatique
                   </CardTitle>
+                  <CardDescription>
+                    Optimisez automatiquement vos images pour de meilleures performances
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Format de compression</Label>
-                    <Select defaultValue="webp">
+                    <Label>Qualité de compression</Label>
+                    <Select defaultValue="80">
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="webp">WebP (recommandé)</SelectItem>
-                        <SelectItem value="jpeg">JPEG</SelectItem>
-                        <SelectItem value="png">PNG</SelectItem>
+                        <SelectItem value="60">60% (Haute compression)</SelectItem>
+                        <SelectItem value="80">80% (Équilibré)</SelectItem>
+                        <SelectItem value="90">90% (Haute qualité)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label>Qualité de compression</Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">0%</span>
-                      <input type="range" min="0" max="100" defaultValue="80" className="flex-1" />
-                      <span className="text-sm">100%</span>
+                    <Label>Formats de sortie</Label>
+                    <div className="flex gap-2">
+                      <Badge variant="outline">WebP</Badge>
+                      <Badge variant="outline">AVIF</Badge>
+                      <Badge variant="outline">JPEG</Badge>
                     </div>
                   </div>
+                  
                   <Button className="w-full">
                     <Zap className="h-4 w-4 mr-2" />
-                    Optimiser toutes les images
+                    Optimiser tous les fichiers
                   </Button>
                 </CardContent>
               </Card>
@@ -597,293 +600,69 @@ export default function MediaManager() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Smartphone className="h-5 w-5" />
-                    Versions Responsives
+                    <Monitor />
+                    Images Responsives
                   </CardTitle>
+                  <CardDescription>
+                    Générez automatiquement des versions adaptées aux différents écrans
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Générer automatiquement</Label>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="mobile" defaultChecked />
-                      <label htmlFor="mobile" className="text-sm">Version mobile (375px)</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="tablet" defaultChecked />
-                      <label htmlFor="tablet" className="text-sm">Version tablette (768px)</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="desktop" defaultChecked />
-                      <label htmlFor="desktop" className="text-sm">Version desktop (1920px)</label>
+                    <Label>Tailles d'écran</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Badge variant="outline">Mobile (480px)</Badge>
+                      <Badge variant="outline">Tablet (768px)</Badge>
+                      <Badge variant="outline">Desktop (1200px)</Badge>
+                      <Badge variant="outline">4K (1920px)</Badge>
                     </div>
                   </div>
-                  <Button className="w-full">
-                    <Crop className="h-4 w-4 mr-2" />
-                    Générer les versions
+                  
+                  <Button className="w-full" variant="outline">
+                    <Smartphone className="h-4 w-4 mr-2" />
+                    Générer versions responsives
                   </Button>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Fichiers non optimisés */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Fichiers nécessitant une optimisation</CardTitle>
+                <CardDescription>
+                  Ces fichiers peuvent être optimisés pour améliorer les performances
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {files.filter(f => !f.optimized).map(file => (
+                    <div key={file.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {getFileIcon(file.type)}
+                        <div>
+                          <p className="font-medium text-sm">{file.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(file.size)} • {file.category}
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={() => optimizeFile(file.id)}
+                        className="bg-yellow-600 hover:bg-yellow-700"
+                      >
+                        <Zap className="h-4 w-4 mr-1" />
+                        Optimiser
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Dialog d'upload amélioré */}
-        <EnhancedUploadDialog
-          open={showUploadDialog}
-          onOpenChange={setShowUploadDialog}
-          files={selectedFiles}
-          onUpload={handleUpload}
-          categories={categories}
-          siteSections={siteSections}
-        />
-
-        {/* Dialog de preview amélioré */}
-        <EnhancedPreviewDialog
-          file={selectedFile}
-          onClose={() => setSelectedFile(null)}
-        />
       </div>
     </div>
   );
-}
-
-// Composant Dialog d'upload amélioré
-interface EnhancedUploadDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  files: File[];
-  onUpload: (files: File[], category: string, tags: string[], usedIn: string[]) => void;
-  categories: { value: string; label: string; count: number }[];
-  siteSections: SiteSection[];
-}
-
-function EnhancedUploadDialog({ open, onOpenChange, files, onUpload, categories, siteSections }: EnhancedUploadDialogProps) {
-  const [selectedCategory, setSelectedCategory] = useState('gallery');
-  const [tags, setTags] = useState('');
-  const [selectedSections, setSelectedSections] = useState<string[]>([]);
-
-  const handleSubmit = () => {
-    const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-    onUpload(files, selectedCategory, tagArray, selectedSections);
-    setTags('');
-    setSelectedCategory('gallery');
-    setSelectedSections([]);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Télécharger et intégrer des fichiers</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          <div>
-            <Label>Fichiers sélectionnés ({files.length})</Label>
-            <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-              {files.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm text-gray-600 p-2 bg-gray-50 rounded">
-                  <FileImage className="h-4 w-4" />
-                  <span className="truncate flex-1">{file.name}</span>
-                  <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="category">Catégorie</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.filter(cat => cat.value !== 'all').map(category => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="tags">Tags (séparés par des virgules)</Label>
-              <Input
-                id="tags"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="hero, background, accueil"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label>Utiliser dans les sections</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {siteSections.map(section => {
-                const IconComponent = section.icon;
-                return (
-                  <div key={section.id} className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id={section.id}
-                      checked={selectedSections.includes(section.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSections([...selectedSections, section.id]);
-                        } else {
-                          setSelectedSections(selectedSections.filter(id => id !== section.id));
-                        }
-                      }}
-                    />
-                    <label htmlFor={section.id} className="text-sm flex items-center gap-2">
-                      <IconComponent className="h-3 w-3" />
-                      {section.name}
-                    </label>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-              Annuler
-            </Button>
-            <Button onClick={handleSubmit} className="flex-1">
-              <Upload className="h-4 w-4 mr-2" />
-              Télécharger et intégrer
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Composant Dialog de preview amélioré
-interface EnhancedPreviewDialogProps {
-  file: MediaFile | null;
-  onClose: () => void;
-}
-
-function EnhancedPreviewDialog({ file, onClose }: EnhancedPreviewDialogProps) {
-  if (!file) return null;
-
-  return (
-    <Dialog open={!!file} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {file.name}
-            {file.isActive && (
-              <Badge className="bg-green-500">
-                <Star className="h-3 w-3 mr-1" />
-                Actif
-              </Badge>
-            )}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          <div className="flex justify-center">
-            {file.type === 'video' ? (
-              <video
-                src={file.url}
-                controls
-                className="max-w-full max-h-96 rounded-lg"
-              />
-            ) : (
-              <img
-                src={file.url}
-                alt={file.name}
-                className="max-w-full max-h-96 rounded-lg object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=800&q=80';
-                }}
-              />
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <Label className="font-medium">Taille</Label>
-              <p className="text-gray-600">{formatFileSize(file.size)}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Dimensions</Label>
-              <p className="text-gray-600">
-                {file.dimensions ? 
-                  `${file.dimensions.width} × ${file.dimensions.height}px` : 
-                  'N/A'
-                }
-              </p>
-            </div>
-            <div>
-              <Label className="font-medium">Date d'upload</Label>
-              <p className="text-gray-600">{file.uploadDate.toLocaleDateString()}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Catégorie</Label>
-              <p className="text-gray-600">{file.category}</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <Label className="font-medium">Tags</Label>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {file.tags.map(tag => (
-                  <Badge key={tag} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {file.usedIn && file.usedIn.length > 0 && (
-              <div>
-                <Label className="font-medium">Utilisé dans</Label>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {file.usedIn.map(usage => (
-                    <Badge key={usage} variant="secondary">
-                      {usage}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Button variant="outline" className="flex-1">
-              <Download className="h-4 w-4 mr-2" />
-              Télécharger
-            </Button>
-            <Button variant="outline" className="flex-1">
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
-            <Button variant="outline" className="flex-1">
-              <Crop className="h-4 w-4 mr-2" />
-              Recadrer
-            </Button>
-            <Button variant="outline" className="flex-1">
-              <Palette className="h-4 w-4 mr-2" />
-              Filtres
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

@@ -4,18 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2, User, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Login() {
-  const [email, setEmail] = useState("admin@example.com"); // Default email for testing
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("admin123");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginMode, setLoginMode] = useState<'user' | 'admin'>('user');
+  
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const location = useLocation();
+  const { signIn, user } = useAuth();
+
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,145 +38,259 @@ export default function Login() {
     setError(null);
 
     try {
-      console.log("Tentative de connexion simplifiée avec:", { email });
+      console.log("Tentative de connexion:", { email, loginMode });
       
-      // Mode d'accès simplifié - envoi d'un lien magique par email
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { 
-          shouldCreateUser: true,
-          emailRedirectTo: window.location.origin + '/dashboard'
-        }
-      });
+      if (loginMode === 'admin') {
+        // Connexion admin via backend
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password, role: 'admin' })
+        });
 
-      if (error) throw error;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erreur de connexion admin');
+        }
+
+        const { token, user: adminUser } = await response.json();
+        
+        // Stocker le token admin
+        localStorage.setItem('adminToken', token);
+        localStorage.setItem('adminUser', JSON.stringify(adminUser));
+        
+        toast.success('Connexion admin réussie!');
+        navigate('/admin/super-admin');
+      } else {
+        // Connexion utilisateur via Supabase
+        await signIn(email, password);
+        toast.success('Connexion réussie!');
+        navigate(from);
+      }
       
-      toast.success('Un lien de connexion a été envoyé à votre email.');
-      // Nous ne redirigeons pas immédiatement, l'utilisateur doit cliquer sur le lien dans son email
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
       
     } catch (err: any) {
       console.error("Erreur de connexion:", err);
       setError(err.message || "Une erreur inattendue s'est produite");
+      toast.error(err.message || "Échec de la connexion");
     } finally {
       setLoading(false);
     }
   };
 
-  // Mode développement uniquement: connexion automatique pour les tests
-  const handleDevLogin = async () => {
-    setLoading(true);
-    try {
-      // ⚠️ UNIQUEMENT POUR DÉVELOPPEMENT: Connexion automatique sans mot de passe
-      // Cette partie ne devrait être activée que dans un environnement de développement
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: "admin@example.com",
-        password: "admin123" // Mot de passe par défaut pour test
-      });
-      
-      if (error) throw error;
-      
-      toast.success('Connexion de développement réussie!');
-      navigate("/dashboard");
-    } catch (err: any) {
-      console.error("Erreur de connexion dev:", err);
-      setError(err.message || "Échec de la connexion automatique");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Check if user is already logged in
+  // Charger l'email mémorisé au démarrage
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session) {
-        navigate("/dashboard");
-      }
-    };
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleModeSwitch = (mode: 'user' | 'admin') => {
+    setLoginMode(mode);
+    setError(null);
     
-    checkSession();
-  }, [navigate]);
+    if (mode === 'admin') {
+      setEmail('admin@example.com');
+      setPassword('admin123');
+    } else {
+      setEmail('user@example.com');
+      setPassword('password123');
+    }
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-4">
-      <div className="absolute inset-0 -z-10 backdrop-blur-[80px]"></div>
-      <div className="absolute inset-0 -z-10 bg-grid-white/10 bg-[size:20px_20px]"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4">
+      <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px]"></div>
       
-      <Card className="w-full max-w-md border-0 shadow-lg bg-white/90 backdrop-blur">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center font-heading">Connexion</CardTitle>
-          <CardDescription className="text-center">
-            Entrez votre email pour vous connecter
-          </CardDescription>
-          <CardDescription className="text-center text-amber-600 font-medium">
-            Email par défaut: {email}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="bg-red-50 p-3 rounded-md mb-4">
-              <p className="text-sm text-red-700 flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                {error}
-              </p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10"
+      >
+        <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm border-0">
+          <CardHeader className="space-y-4 text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <Lock className="h-8 w-8 text-white" />
             </div>
-          )}
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+            <div>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Connexion
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                Accédez à votre espace personnel
+              </CardDescription>
+            </div>
+            
+            {/* Sélecteur de mode */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+              <Button
+                type="button"
+                variant={loginMode === 'user' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleModeSwitch('user')}
+                className="flex-1 gap-2"
+              >
+                <User className="h-4 w-4" />
+                Utilisateur
+              </Button>
+              <Button
+                type="button"
+                variant={loginMode === 'admin' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleModeSwitch('admin')}
+                className="flex-1 gap-2"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="bg-red-50 border border-red-200 p-3 rounded-md mb-4"
+              >
+                <p className="text-sm text-red-700 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  {error}
+                </p>
+              </motion.div>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email {loginMode === 'admin' && '(Admin)'}
+                </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m.dupont@exemple.com"
+                    placeholder={loginMode === 'admin' ? 'admin@example.com' : 'votre@email.com'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
               </div>
-              <Button className="w-full" type="submit" disabled={loading}>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Mot de passe
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Votre mot de passe"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePassword}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  />
+                  <Label htmlFor="remember" className="text-sm text-gray-600">
+                    Se souvenir de moi
+                  </Label>
+                </div>
+                <Link
+                  to="/reset-password"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
+                disabled={loading}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Envoi du lien de connexion...
+                    Connexion en cours...
                   </>
                 ) : (
-                  "Recevoir un lien de connexion"
+                  <>
+                    Se connecter {loginMode === 'admin' && '(Admin)'}
+                  </>
                 )}
               </Button>
+            </form>
+            
+            {/* Informations de test */}
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-xs text-blue-700 font-medium mb-1">
+                Comptes de test disponibles:
+              </p>
+              <div className="text-xs text-blue-600 space-y-1">
+                <div>👤 Utilisateur: user@example.com / password123</div>
+                <div>🛡️ Admin: admin@example.com / admin123</div>
+              </div>
             </div>
-          </form>
+          </CardContent>
           
-          <div className="mt-4 pt-4 border-t">
-            <Button 
-              className="w-full bg-green-600 hover:bg-green-700" 
-              onClick={handleDevLogin}
-              type="button"
-            >
-              Connexion directe (développement uniquement)
-            </Button>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center">
-            <span className="text-sm text-gray-500">
-              Pas encore de compte?{" "}
-              <Link to="/register" className="text-primary hover:underline">
+          <CardFooter className="flex flex-col space-y-4 border-t bg-gray-50">
+            <p className="text-sm text-gray-600 text-center">
+              Pas encore de compte ?{" "}
+              <Link
+                to="/register"
+                className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+              >
                 S'inscrire
               </Link>
-            </span>
-          </div>
-          <div className="text-center">
-            <Link to="/admin/super-admin" className="text-sm text-primary hover:underline">
-              Créer un compte super administrateur
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+            </p>
+            
+            {loginMode === 'user' && (
+              <div className="text-center">
+                <Link
+                  to="/admin/super-admin"
+                  className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+                >
+                  Accès administrateur
+                </Link>
+              </div>
+            )}
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 }

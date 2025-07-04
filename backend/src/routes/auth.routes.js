@@ -13,6 +13,9 @@ router.post('/update-password', authController.updatePassword);
 // Super Admin creation
 router.post('/create-super-admin', authController.createSuperAdmin);
 
+// Admin verification
+router.get('/verify-admin', authController.verifyAdmin);
+
 // Profile routes - make sure these handle string IDs properly
 router.get('/profile/:id', authenticate, authController.getProfile);
 router.put('/profile/:id', authenticate, authController.updateProfile);

@@ -56,30 +56,45 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
+    
+    console.log('Login attempt:', { email, requestedRole: role });
     
     // Get user
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     
     if (users.length === 0) {
-      return res.status(400).json({ message: 'Invalid login credentials' });
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
     
     const user = users[0];
+    
+    // Check if admin access is requested but user is not admin/superadmin
+    if (role === 'admin' && !['admin', 'superadmin'].includes(user.role)) {
+      return res.status(403).json({ message: 'Accès administrateur requis' });
+    }
     
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Invalid login credentials' });
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
     
-    // Generate token
+    // Generate token with appropriate role
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        isAdmin: ['admin', 'superadmin'].includes(user.role),
+        isSuperAdmin: user.role === 'superadmin'
+      },
       process.env.JWT_SECRET || 'your_jwt_secret_key',
       { expiresIn: '24h' }
     );
+    
+    console.log('Login successful for:', { email, role: user.role });
     
     res.status(200).json({
       message: 'Login successful',
@@ -89,7 +104,9 @@ const login = async (req, res) => {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
+        isAdmin: ['admin', 'superadmin'].includes(user.role),
+        isSuperAdmin: user.role === 'superadmin'
       }
     });
   } catch (error) {
@@ -200,7 +217,13 @@ const createSuperAdmin = async (req, res) => {
     
     // Generate token
     const token = jwt.sign(
-      { userId: result.insertId, email, role: 'superadmin' },
+      { 
+        userId: result.insertId, 
+        email, 
+        role: 'superadmin',
+        isAdmin: true,
+        isSuperAdmin: true
+      },
       process.env.JWT_SECRET || 'your_jwt_secret_key',
       { expiresIn: '24h' }
     );
@@ -213,7 +236,9 @@ const createSuperAdmin = async (req, res) => {
         email,
         firstName,
         lastName,
-        role: 'superadmin'
+        role: 'superadmin',
+        isAdmin: true,
+        isSuperAdmin: true
       }
     });
   } catch (error) {
@@ -222,10 +247,118 @@ const createSuperAdmin = async (req, res) => {
   }
 };
 
+// New method to verify admin token
+const verifyAdmin = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Token manquant' });
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
+    const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [decoded.userId]);
+    
+    if (users.length === 0) {
+      return res.status(401).json({ message: 'Utilisateur non trouvé' });
+    }
+    
+    const user = users[0];
+    
+    if (!['admin', 'superadmin'].includes(user.role)) {
+      return res.status(403).json({ message: 'Accès administrateur requis' });
+    }
+    
+    res.status(200).json({
+      valid: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+        isAdmin: true,
+        isSuperAdmin: user.role === 'superadmin'
+      }
+    });
+  } catch (error) {
+    console.error('Admin verification error:', error.message);
+    res.status(401).json({ message: 'Token invalide' });
+  }
+};
+
+// Get profile with proper ID handling
+const getProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    
+    // Allow users to get their own profile or admins to get any profile
+    if (id !== userId.toString() && !['admin', 'superadmin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Accès non autorisé' });
+    }
+    
+    const [profiles] = await pool.query(
+      'SELECT p.*, u.role FROM profiles p LEFT JOIN users u ON p.user_id = u.id WHERE p.user_id = ?',
+      [id]
+    );
+    
+    if (profiles.length === 0) {
+      return res.status(404).json({ message: 'Profil non trouvé' });
+    }
+    
+    res.status(200).json(profiles[0]);
+  } catch (error) {
+    console.error('Get profile error:', error.message);
+    res.status(500).json({ message: 'Erreur serveur lors de la récupération du profil' });
+  }
+};
+
+// Update profile with proper ID handling
+const updateProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const updateData = req.body;
+    
+    // Allow users to update their own profile or admins to update any profile
+    if (id !== userId.toString() && !['admin', 'superadmin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Accès non autorisé' });
+    }
+    
+    // Remove sensitive fields that shouldn't be updated via this endpoint
+    delete updateData.user_id;
+    delete updateData.is_super_admin;
+    delete updateData.role;
+    
+    const updateFields = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+    const updateValues = Object.values(updateData);
+    
+    await pool.query(
+      `UPDATE profiles SET ${updateFields} WHERE user_id = ?`,
+      [...updateValues, id]
+    );
+    
+    // Get updated profile
+    const [profiles] = await pool.query('SELECT * FROM profiles WHERE user_id = ?', [id]);
+    
+    res.status(200).json({
+      message: 'Profil mis à jour avec succès',
+      profile: profiles[0]
+    });
+  } catch (error) {
+    console.error('Update profile error:', error.message);
+    res.status(500).json({ message: 'Erreur serveur lors de la mise à jour du profil' });
+  }
+};
+
 module.exports = {
   register,
   login,
   resetPassword,
   updatePassword,
-  createSuperAdmin
+  createSuperAdmin,
+  verifyAdmin,
+  getProfile,
+  updateProfile
 };
