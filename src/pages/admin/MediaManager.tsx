@@ -456,19 +456,19 @@ export default function MediaManager() {
                       </h3>
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span>{formatFileSize(file.size)}</span>
-                        <Badge variant={file.isActive ? "default" : "secondary"} size="sm">
+                        <Badge variant={file.isActive ? "default" : "secondary"}>
                           {file.isActive ? "Actif" : "Inactif"}
                         </Badge>
                       </div>
                       
                       <div className="flex flex-wrap gap-1">
                         {file.tags.slice(0, 2).map(tag => (
-                          <Badge key={tag} variant="outline" size="sm">
+                          <Badge key={tag} variant="outline">
                             {tag}
                           </Badge>
                         ))}
                         {file.tags.length > 2 && (
-                          <Badge variant="outline" size="sm">
+                          <Badge variant="outline">
                             +{file.tags.length - 2}
                           </Badge>
                         )}
@@ -477,13 +477,13 @@ export default function MediaManager() {
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-1">
                           {file.optimized && (
-                            <Badge variant="secondary" size="sm">
+                            <Badge variant="secondary">
                               <Zap className="h-3 w-3 mr-1" />
                               Opt
                             </Badge>
                           )}
                           {file.responsive && (
-                            <Badge variant="secondary" size="sm">
+                            <Badge variant="secondary">
                               <Smartphone className="h-3 w-3 mr-1" />
                               Resp
                             </Badge>
@@ -535,7 +535,7 @@ export default function MediaManager() {
                           <div key={file.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
                             {getFileIcon(file.type)}
                             <span className="text-sm truncate flex-1">{file.name}</span>
-                            <Badge variant={file.isActive ? "default" : "secondary"} size="sm">
+                            <Badge variant={file.isActive ? "default" : "secondary"}>
                               {file.isActive ? "On" : "Off"}
                             </Badge>
                           </div>

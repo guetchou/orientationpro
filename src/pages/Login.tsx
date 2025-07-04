@@ -41,18 +41,36 @@ export default function Login() {
       console.log("Tentative de connexion:", { email, loginMode });
       
       if (loginMode === 'admin') {
-        // Connexion admin via backend
-        const response = await fetch('/api/auth/login', {
+        // Connexion admin via backend - utiliser l'URL complète
+        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${backendUrl}/api/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({ email, password, role: 'admin' })
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur de connexion admin');
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erreur de connexion admin');
+          } else {
+            // Si ce n'est pas du JSON, c'est probablement du HTML (page d'erreur)
+            const htmlContent = await response.text();
+            console.error('Réponse HTML reçue au lieu de JSON:', htmlContent.substring(0, 200));
+            throw new Error('Le serveur backend n\'est pas accessible. Vérifiez que le serveur est démarré sur le port 3000.');
+          }
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Réponse invalide du serveur (format non-JSON)');
         }
 
         const { token, user: adminUser } = await response.json();
@@ -78,8 +96,17 @@ export default function Login() {
       
     } catch (err: any) {
       console.error("Erreur de connexion:", err);
-      setError(err.message || "Une erreur inattendue s'est produite");
-      toast.error(err.message || "Échec de la connexion");
+      let errorMessage = err.message || "Une erreur inattendue s'est produite";
+      
+      // Messages d'erreur personnalisés
+      if (errorMessage.includes('fetch')) {
+        errorMessage = "Impossible de contacter le serveur. Vérifiez votre connexion.";
+      } else if (errorMessage.includes('JSON')) {
+        errorMessage = "Erreur de communication avec le serveur.";
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -265,6 +292,16 @@ export default function Login() {
                 <div>🛡️ Admin: admin@example.com / admin123</div>
               </div>
             </div>
+
+            {/* Message d'aide pour l'admin */}
+            {loginMode === 'admin' && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs text-yellow-700">
+                  <strong>Note:</strong> La connexion admin nécessite que le serveur backend soit démarré sur le port 3000.
+                  Si vous obtenez une erreur, vérifiez que le serveur est accessible.
+                </p>
+              </div>
+            )}
           </CardContent>
           
           <CardFooter className="flex flex-col space-y-4 border-t bg-gray-50">
