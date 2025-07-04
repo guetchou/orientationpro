@@ -18,7 +18,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loginMode, setLoginMode] = useState<'user' | 'admin'>('user');
+  const [loginMode, setLoginMode] = useState<'user' | 'admin'>('admin');
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,77 +32,111 @@ export default function Login() {
     }
   }, [user, navigate, from]);
 
+  const testBackendConnection = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/test/health');
+      const data = await response.json();
+      console.log('Test backend:', data);
+      return response.ok;
+    } catch (error) {
+      console.error('Backend non accessible:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      console.log("Tentative de connexion:", { email, loginMode });
+      console.log("Mode de connexion:", loginMode);
+      console.log("Données:", { email, password: password ? "***" : "vide" });
       
       if (loginMode === 'admin') {
-        // Connexion admin via backend - utiliser l'URL complète
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        const response = await fetch(`${backendUrl}/api/auth/login`, {
+        // Test de la connexion backend d'abord
+        const backendConnected = await testBackendConnection();
+        
+        if (!backendConnected) {
+          throw new Error('Le serveur backend n\'est pas accessible. Assurez-vous qu\'il est démarré sur le port 3000.');
+        }
+
+        // Connexion admin via backend
+        const response = await fetch('http://localhost:3000/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          body: JSON.stringify({ email, password, role: 'admin' })
+          body: JSON.stringify({ 
+            email, 
+            password, 
+            role: 'admin' 
+          })
         });
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
+        console.log('Réponse du serveur:', response.status, response.statusText);
 
         if (!response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
+          let errorMessage = 'Erreur de connexion';
+          
+          try {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'Erreur de connexion admin');
-          } else {
-            // Si ce n'est pas du JSON, c'est probablement du HTML (page d'erreur)
-            const htmlContent = await response.text();
-            console.error('Réponse HTML reçue au lieu de JSON:', htmlContent.substring(0, 200));
-            throw new Error('Le serveur backend n\'est pas accessible. Vérifiez que le serveur est démarré sur le port 3000.');
+            errorMessage = errorData.message || errorMessage;
+          } catch (parseError) {
+            // Si la réponse n'est pas du JSON, c'est probablement du HTML
+            const textResponse = await response.text();
+            console.error('Réponse non-JSON:', textResponse.substring(0, 200));
+            errorMessage = 'Le serveur a retourné une réponse inattendue. Vérifiez que le backend est correctement configuré.';
           }
+          
+          throw new Error(errorMessage);
         }
 
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Réponse invalide du serveur (format non-JSON)');
+        const result = await response.json();
+        console.log('Résultat de la connexion:', result);
+
+        if (!result.success) {
+          throw new Error(result.message || 'Connexion échouée');
         }
 
-        const { token, user: adminUser } = await response.json();
-        
-        // Stocker le token admin
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminUser', JSON.stringify(adminUser));
+        // Stocker les informations d'authentification admin
+        localStorage.setItem('adminToken', result.token);
+        localStorage.setItem('adminUser', JSON.stringify(result.user));
         
         toast.success('Connexion admin réussie!');
         navigate('/admin/super-admin');
+        
       } else {
         // Connexion utilisateur via Supabase
-        await signIn(email, password);
-        toast.success('Connexion réussie!');
-        navigate(from);
+        try {
+          await signIn(email, password);
+          toast.success('Connexion utilisateur réussie!');
+          navigate(from);
+        } catch (supabaseError: any) {
+          throw new Error(supabaseError.message || 'Erreur de connexion utilisateur');
+        }
       }
       
+      // Gestion du "se souvenir de moi"
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberedMode', loginMode);
       } else {
         localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberedMode');
       }
       
     } catch (err: any) {
-      console.error("Erreur de connexion:", err);
+      console.error("Erreur de connexion complète:", err);
+      
       let errorMessage = err.message || "Une erreur inattendue s'est produite";
       
       // Messages d'erreur personnalisés
-      if (errorMessage.includes('fetch')) {
-        errorMessage = "Impossible de contacter le serveur. Vérifiez votre connexion.";
-      } else if (errorMessage.includes('JSON')) {
-        errorMessage = "Erreur de communication avec le serveur.";
+      if (errorMessage.includes('fetch') || errorMessage.includes('NetworkError')) {
+        errorMessage = "Impossible de contacter le serveur. Vérifiez que le backend est démarré.";
+      } else if (errorMessage.includes('JSON') || errorMessage.includes('Unexpected token')) {
+        errorMessage = "Erreur de communication avec le serveur. Le backend semble retourner du HTML au lieu de JSON.";
       }
       
       setError(errorMessage);
@@ -112,12 +146,18 @@ export default function Login() {
     }
   };
 
-  // Charger l'email mémorisé au démarrage
+  // Charger les préférences sauvegardées
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('rememberedEmail');
+    const rememberedMode = localStorage.getItem('rememberedMode') as 'user' | 'admin';
+    
     if (rememberedEmail) {
       setEmail(rememberedEmail);
       setRememberMe(true);
+    }
+    
+    if (rememberedMode) {
+      setLoginMode(rememberedMode);
     }
   }, []);
 
@@ -211,7 +251,7 @@ export default function Login() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder={loginMode === 'admin' ? 'admin@example.com' : 'votre@email.com'}
+                    placeholder={loginMode === 'admin' ? 'admin@example.com' : 'user@example.com'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -285,7 +325,7 @@ export default function Login() {
             {/* Informations de test */}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-xs text-blue-700 font-medium mb-1">
-                Comptes de test disponibles:
+                🧪 Comptes de test :
               </p>
               <div className="text-xs text-blue-600 space-y-1">
                 <div>👤 Utilisateur: user@example.com / password123</div>
@@ -293,15 +333,16 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Message d'aide pour l'admin */}
-            {loginMode === 'admin' && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-xs text-yellow-700">
-                  <strong>Note:</strong> La connexion admin nécessite que le serveur backend soit démarré sur le port 3000.
-                  Si vous obtenez une erreur, vérifiez que le serveur est accessible.
-                </p>
+            {/* Instructions de démarrage */}
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-xs text-yellow-700">
+                <strong>⚠️ Important:</strong> Pour la connexion admin, le serveur backend doit être démarré :
+              </p>
+              <div className="text-xs text-yellow-600 mt-1 font-mono">
+                <div>cd backend && npm start</div>
+                <div>ou node src/server.js</div>
               </div>
-            )}
+            </div>
           </CardContent>
           
           <CardFooter className="flex flex-col space-y-4 border-t bg-gray-50">
@@ -315,16 +356,14 @@ export default function Login() {
               </Link>
             </p>
             
-            {loginMode === 'user' && (
-              <div className="text-center">
-                <Link
-                  to="/admin/super-admin"
-                  className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
-                >
-                  Accès administrateur
-                </Link>
-              </div>
-            )}
+            <div className="text-center">
+              <Link
+                to="/admin/super-admin"
+                className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+              >
+                Accès direct administrateur
+              </Link>
+            </div>
           </CardFooter>
         </Card>
       </motion.div>
