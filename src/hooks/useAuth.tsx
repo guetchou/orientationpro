@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 export interface User {
@@ -164,8 +164,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const newUser: User = {
           id: data.user.id,
           email: data.user.email || '',
-          displayName: userData.firstName && userData.lastName 
-            ? `${userData.firstName} ${userData.lastName}` 
+          displayName: (userData as any).firstName && (userData as any).lastName 
+            ? `${(userData as any).firstName} ${(userData as any).lastName}` 
             : undefined
         };
         
