@@ -1,7 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import Navbar from '@/components/Navbar';
+import { ProfessionalHeader } from '@/components/layout/ProfessionalHeader';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -39,7 +39,7 @@ export const AppRouter = () => {
   return (
     <Router>
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <ProfessionalHeader />
         <Routes>
           {/* Routes publiques */}
           <Route path="/" element={<Index />} />

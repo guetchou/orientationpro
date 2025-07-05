@@ -1,5 +1,4 @@
 
-import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { StepsSection } from "@/components/home/StepsSection";
@@ -12,7 +11,7 @@ import { PartnersSection } from "@/components/home/PartnersSection";
 import { FaqSection } from "@/components/home/FaqSection";
 import { ContactSection } from "@/components/home/ContactSection";
 import { ChatBot } from "@/components/chat/ChatBot";
-import { ATSSection } from "@/components/home/ATSSection"; // Import the new ATS Section
+import { ATSSection } from "@/components/home/ATSSection";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { ScrollToTop } from "@/components/home/ScrollToTop";
 import { AnimatedBackground } from "@/components/home/AnimatedBackground";
@@ -39,8 +38,6 @@ export default function Index() {
         style={{ scaleX }}
       />
       
-      <Navbar />
-      
       <motion.main 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -51,7 +48,7 @@ export default function Index() {
         <HorizontalCarousel />
         <StepsSection />
         <TestsSection />
-        <ATSSection /> {/* Add the ATS Section here */}
+        <ATSSection />
         <CTASection />
         <StatisticsSection />
         <TestimonialsSection />
