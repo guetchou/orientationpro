@@ -28,21 +28,14 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      navigate(from, { replace: true });
+      // Redirection basée sur le rôle
+      if (user.role === 'admin' || localStorage.getItem('adminToken')) {
+        navigate('/admin/super-admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
   }, [user, navigate, from]);
-
-  const testBackendConnection = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/api/test/health');
-      const data = await response.json();
-      console.log('Test backend:', data);
-      return response.ok;
-    } catch (error) {
-      console.error('Backend non accessible:', error);
-      return false;
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,93 +43,22 @@ export default function Login() {
     setError(null);
 
     try {
-      console.log("Mode de connexion:", loginMode);
-      console.log("Données:", { email, password: password ? "***" : "vide" });
+      console.log("Tentative de connexion:", { email, mode: loginMode });
       
-      if (loginMode === 'admin') {
-        // Test de la connexion backend d'abord
-        const backendConnected = await testBackendConnection();
-        
-        if (!backendConnected) {
-          throw new Error('Le serveur backend n\'est pas accessible. Assurez-vous qu\'il est démarré sur le port 3000.');
-        }
-
-        // Connexion admin via backend
-        const response = await fetch('http://localhost:3000/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({ 
-            email, 
-            password, 
-            role: 'admin' 
-          })
-        });
-
-        console.log('Réponse du serveur:', response.status, response.statusText);
-
-        if (!response.ok) {
-          let errorMessage = 'Erreur de connexion';
-          
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
-          } catch (parseError) {
-            // Si la réponse n'est pas du JSON, c'est probablement du HTML
-            const textResponse = await response.text();
-            console.error('Réponse non-JSON:', textResponse.substring(0, 200));
-            errorMessage = 'Le serveur a retourné une réponse inattendue. Vérifiez que le backend est correctement configuré.';
-          }
-          
-          throw new Error(errorMessage);
-        }
-
-        const result = await response.json();
-        console.log('Résultat de la connexion:', result);
-
-        if (!result.success) {
-          throw new Error(result.message || 'Connexion échouée');
-        }
-
-        // Stocker les informations d'authentification admin
-        localStorage.setItem('adminToken', result.token);
-        localStorage.setItem('adminUser', JSON.stringify(result.user));
-        
-        toast.success('Connexion admin réussie!');
-        navigate('/admin/super-admin');
-        
-      } else {
-        // Connexion utilisateur via Supabase
-        try {
-          await signIn(email, password);
-          toast.success('Connexion utilisateur réussie!');
-          navigate(from);
-        } catch (supabaseError: any) {
-          throw new Error(supabaseError.message || 'Erreur de connexion utilisateur');
-        }
-      }
+      await signIn(email, password);
       
-      // Gestion du "se souvenir de moi"
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
-        localStorage.setItem('rememberedMode', loginMode);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('rememberedMode');
-      }
+      // La redirection est gérée dans useEffect
       
     } catch (err: any) {
-      console.error("Erreur de connexion complète:", err);
+      console.error("Erreur de connexion:", err);
       
       let errorMessage = err.message || "Une erreur inattendue s'est produite";
       
       // Messages d'erreur personnalisés
       if (errorMessage.includes('fetch') || errorMessage.includes('NetworkError')) {
         errorMessage = "Impossible de contacter le serveur. Vérifiez que le backend est démarré.";
-      } else if (errorMessage.includes('JSON') || errorMessage.includes('Unexpected token')) {
-        errorMessage = "Erreur de communication avec le serveur. Le backend semble retourner du HTML au lieu de JSON.";
+      } else if (errorMessage.includes('Invalid login credentials')) {
+        errorMessage = "Email ou mot de passe incorrect";
       }
       
       setError(errorMessage);
