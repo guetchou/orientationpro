@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { wordpressService } from "@/services/wordpressService";
+import { localBlogService } from "@/services/localBlogService";
 import { WordPressPost } from "@/types/wordpress";
 import { ArrowLeft, Calendar, Share2, User } from "lucide-react";
 import { format } from "date-fns";
@@ -28,7 +26,7 @@ export default function BlogPost() {
   const fetchPost = async (postSlug: string) => {
     try {
       setLoading(true);
-      const data = await wordpressService.getPostBySlug(postSlug);
+      const data = await localBlogService.getPostBySlug(postSlug);
       setPost(data);
     } catch (error) {
       console.error("Erreur lors du chargement de l'article:", error);
@@ -58,35 +56,12 @@ export default function BlogPost() {
     }
   };
 
-  // Get categories from _embedded if available
-  const getCategories = () => {
-    if (post?._embedded && post._embedded["wp:term"]) {
-      return post._embedded["wp:term"][0] || [];
-    }
-    return [];
-  };
-
-  // Get author if available
-  const getAuthor = () => {
-    if (post?._embedded && post._embedded["author"] && post._embedded["author"][0]) {
-      return post._embedded["author"][0].name;
-    }
-    return "Auteur inconnu";
-  };
-
-  // Get featured image if available
-  const getFeaturedImage = () => {
-    if (post?._embedded && post._embedded["wp:featuredmedia"] && post._embedded["wp:featuredmedia"][0]) {
-      return post._embedded["wp:featuredmedia"][0].source_url;
-    }
-    return "/placeholder.svg";
-  };
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <div className="absolute inset-0 -z-10 backdrop-blur-[80px]"></div>
+      <div className="absolute inset-0 -z-10 bg-grid-white/10 bg-[size:20px_20px]"></div>
       
-      <main className="flex-1 container mx-auto px-4 py-12">
+      <main className="flex-1 container mx-auto px-4 py-20">
         <div className="mb-8">
           <Button variant="ghost" asChild className="mb-4">
             <Link to="/blog">
@@ -108,14 +83,14 @@ export default function BlogPost() {
             <article className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="relative h-64 md:h-96">
                 <img 
-                  src={getFeaturedImage()} 
+                  src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url || "/placeholder.svg"} 
                   alt={post.title.rendered}
                   className="w-full h-full object-cover" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
                   <div className="p-6 text-white">
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {getCategories().map((category: any) => (
+                      {post._embedded?.['wp:term']?.[0]?.map((category: any) => (
                         <Badge key={category.id} className="bg-primary/80 hover:bg-primary">
                           {category.name}
                         </Badge>
@@ -133,7 +108,7 @@ export default function BlogPost() {
                 <div className="flex justify-between items-center text-sm text-gray-500 mb-6 border-b border-gray-100 pb-4">
                   <div className="flex items-center">
                     <User className="w-4 h-4 mr-2" />
-                    <span>{getAuthor()}</span>
+                    <span>{post._embedded?.author?.[0]?.name || "Auteur inconnu"}</span>
                   </div>
                   <div className="flex items-center">
                     <Calendar className="w-4 h-4 mr-2" />

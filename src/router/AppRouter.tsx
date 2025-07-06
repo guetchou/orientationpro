@@ -17,6 +17,8 @@ import RequireAuth from '@/components/auth/RequireAuth';
 import Recrutement from '@/pages/Recrutement';
 import Conseillers from '@/pages/Conseillers';
 import SeniorEmploymentTest from '@/pages/SeniorEmploymentTest';
+import Blog from '@/pages/Blog';
+import BlogPost from '@/pages/BlogPost';
 
 // Composant pour protéger les routes admin
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -61,6 +63,8 @@ export const AppRouter = () => {
           <Route path="/conseiller" element={<Conseillers />} />
           <Route path="/recrutement" element={<Recrutement />} />
           <Route path="/orientation-services" element={<Tests />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           
           {/* Routes protégées utilisateur */}
           <Route path="/dashboard" element={

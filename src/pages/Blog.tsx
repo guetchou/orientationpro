@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ChatBot } from "@/components/chat/ChatBot";
-import { wordpressService } from "@/services/wordpressService";
+import { localBlogService } from "@/services/localBlogService";
 import { WordPressPost } from "@/types/wordpress";
 import { toast } from "sonner";
 import { BlogHeader } from "@/components/blog/BlogHeader";
@@ -34,12 +32,12 @@ export default function Blog() {
   const fetchBlogPosts = async () => {
     try {
       setLoading(true);
-      const data = await wordpressService.getPosts(currentPage, postsPerPage, searchTerm);
+      const data = await localBlogService.getPosts(currentPage, postsPerPage, searchTerm);
       
-      // Get total pages - now the totalPages should be available on the data
-      if ((data as any).totalPages) {
-        setTotalPages((data as any).totalPages);
-      }
+      // Get total pages from the local service
+      const totalPosts = await localBlogService.getTotalPosts(searchTerm);
+      const calculatedTotalPages = Math.ceil(totalPosts / postsPerPage);
+      setTotalPages(calculatedTotalPages);
       
       setPosts(data);
     } catch (error) {
@@ -64,8 +62,6 @@ export default function Blog() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/10 via-background to-secondary/10">
       <div className="absolute inset-0 -z-10 backdrop-blur-[80px]"></div>
       <div className="absolute inset-0 -z-10 bg-grid-white/10 bg-[size:20px_20px]"></div>
-      
-      <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-20">
         <BlogHeader 
