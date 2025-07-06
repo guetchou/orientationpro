@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TestsSection } from "@/components/home/TestsSection";
 import { ChatBot } from "@/components/chat/ChatBot";
@@ -10,7 +9,6 @@ import { ArrowRight, Brain, Heart, Lightbulb, BookOpen, RefreshCw, Award, Briefc
 export default function Tests() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Navbar />
       <main className="pt-20">
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-4xl font-bold text-gray-900 text-center mb-4">
