@@ -102,32 +102,6 @@ export const ProfessionalHeader = () => {
                 </Link>
               );
             })}
-
-            {/* Menu Admin */}
-            {isAdmin && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Administration</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {adminItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <DropdownMenuItem key={item.path} asChild>
-                        <Link to={item.path} className="flex items-center space-x-2">
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </nav>
 
           {/* Actions utilisateur */}
@@ -158,6 +132,28 @@ export const ProfessionalHeader = () => {
                       <span>Paramètres</span>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  {/* Menu Admin - seulement pour les admins */}
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Administration
+                      </div>
+                      {adminItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <DropdownMenuItem key={item.path} asChild>
+                            <Link to={item.path} className="flex items-center space-x-2">
+                              <Icon className="h-4 w-4" />
+                              <span>{item.name}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </>
+                  )}
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                     <LogOut className="h-4 w-4 mr-2" />
@@ -216,31 +212,52 @@ export const ProfessionalHeader = () => {
                 );
               })}
 
-              {/* Menu Admin Mobile */}
-              {isAdmin && (
-                <>
-                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Administration
-                  </div>
-                  {adminItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <Icon className="h-5 w-5" />
-                        <span>{item.name}</span>
-                      </Link>
-                    );
-                  })}
-                </>
-              )}
-
               {/* Actions utilisateur mobile */}
-              {!user && (
+              {user ? (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="px-4 space-y-2">
+                    <Button variant="ghost" asChild className="w-full justify-start text-gray-600">
+                      <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                        <Briefcase className="h-5 w-5 mr-3" />
+                        Tableau de bord
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" asChild className="w-full justify-start text-gray-600">
+                      <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                        <Settings className="h-5 w-5 mr-3" />
+                        Paramètres
+                      </Link>
+                    </Button>
+                    
+                    {/* Menu Admin Mobile - seulement pour les admins */}
+                    {isAdmin && (
+                      <>
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Administration
+                        </div>
+                        {adminItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Button key={item.path} variant="ghost" asChild className="w-full justify-start text-gray-600">
+                              <Link to={item.path} onClick={() => setIsMenuOpen(false)}>
+                                <Icon className="h-5 w-5 mr-3" />
+                                {item.name}
+                              </Link>
+                            </Button>
+                          );
+                        })}
+                      </>
+                    )}
+                    
+                    <Button variant="ghost" asChild className="w-full justify-start text-red-600" onClick={handleLogout}>
+                      <div className="flex items-center">
+                        <LogOut className="h-5 w-5 mr-3" />
+                        Déconnexion
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
                 <div className="pt-4 border-t border-gray-200">
                   <div className="px-4 space-y-2">
                     <Button variant="ghost" asChild className="w-full justify-start text-gray-600">
