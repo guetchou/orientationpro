@@ -14,6 +14,9 @@ import MediaManager from '@/pages/admin/MediaManager';
 import Tests from '@/pages/Tests';
 import RiasecTest from '@/pages/RiasecTest';
 import RequireAuth from '@/components/auth/RequireAuth';
+import Recrutement from '@/pages/Recrutement';
+import Conseillers from '@/pages/Conseillers';
+import SeniorEmploymentTest from '@/pages/SeniorEmploymentTest';
 
 // Composant pour protéger les routes admin
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -47,6 +50,17 @@ export const AppRouter = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/tests" element={<Tests />} />
           <Route path="/tests/riasec" element={<RiasecTest />} />
+          <Route path="/tests/emotional" element={<RiasecTest />} />
+          <Route path="/tests/learning" element={<RiasecTest />} />
+          <Route path="/tests/multiple" element={<RiasecTest />} />
+          <Route path="/tests/career-transition" element={<RiasecTest />} />
+          <Route path="/tests/no-diploma" element={<RiasecTest />} />
+          <Route path="/tests/senior-employment" element={<SeniorEmploymentTest />} />
+          <Route path="/tests/entrepreneurial" element={<RiasecTest />} />
+          <Route path="/ats" element={<Recrutement />} />
+          <Route path="/conseiller" element={<Conseillers />} />
+          <Route path="/recrutement" element={<Recrutement />} />
+          <Route path="/orientation-services" element={<Tests />} />
           
           {/* Routes protégées utilisateur */}
           <Route path="/dashboard" element={

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,13 +37,11 @@ const Navbar = () => {
     { name: 'Accueil', path: '/' },
     { name: 'Tests', path: '/tests', icon: <BarChart size={18} /> },
     { name: 'Orientation', path: '/orientation-services', icon: <Compass size={18} /> },
-    { name: 'Conseillers', path: '/conseillers', icon: <Users size={18} /> },
-    { name: 'Établissements', path: '/establishments', icon: <School size={18} /> },
-    { name: 'Ressources', path: '/resources', icon: <Book size={18} /> },
+    { name: 'Conseillers', path: '/conseiller', icon: <Users size={18} /> },
     { name: 'Recrutement', path: '/recrutement', icon: <Briefcase size={18} /> },
-    { name: 'Blog', path: '/blog', icon: <Book size={18} /> },
-    { name: 'À Propos', path: '/about', icon: <Info size={18} /> },
-    { name: 'Contact', path: '/contact', icon: <Search size={18} /> },
+    { name: 'Ressources', path: '/tests', icon: <Book size={18} /> },
+    { name: 'À Propos', path: '/', icon: <Info size={18} /> },
+    { name: 'Contact', path: '/', icon: <Search size={18} /> },
   ];
 
   // Ajouter la propriété isActive pour chaque élément

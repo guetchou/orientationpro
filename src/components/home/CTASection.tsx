@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Users, BookOpen } from 'lucide-react';
 
 export const CTASection = () => {
@@ -19,13 +19,17 @@ export const CTASection = () => {
             <h2 className="text-2xl md:text-3xl font-bold mb-3 font-heading text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Besoin d'accompagnement personnalisé ?</h2>
             <p className="text-gray-600 mb-4">Nos conseillers d'orientation sont disponibles pour vous guider à chaque étape de votre parcours.</p>
             <div className="flex flex-wrap gap-4">
-              <Button className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg shadow-primary/20 transition-all duration-300 hover:translate-y-[-2px]">
-                <Users size={18} />
-                Voir nos conseillers
+              <Button asChild className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg shadow-primary/20 transition-all duration-300 hover:translate-y-[-2px]">
+                <Link to="/conseiller">
+                  <Users size={18} />
+                  Voir nos conseillers
+                </Link>
               </Button>
-              <Button variant="outline" className="gap-2 border-primary/20 hover:bg-primary/10 transition-all duration-300">
-                <BookOpen size={18} />
-                Ressources gratuites
+              <Button asChild variant="outline" className="gap-2 border-primary/20 hover:bg-primary/10 transition-all duration-300">
+                <Link to="/tests">
+                  <BookOpen size={18} />
+                  Ressources gratuites
+                </Link>
               </Button>
             </div>
           </div>

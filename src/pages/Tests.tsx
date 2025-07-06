@@ -1,4 +1,3 @@
-
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TestsSection } from "@/components/home/TestsSection";
@@ -36,7 +35,7 @@ export default function Tests() {
                 Découvrez vos intérêts professionnels dominants selon la théorie des types de personnalité RIASEC de John Holland.
               </p>
               <Link 
-                to="/test-riasec" 
+                to="/tests/riasec" 
                 className="inline-flex items-center text-indigo-700 font-medium hover:text-indigo-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -58,7 +57,7 @@ export default function Tests() {
                 Évaluez votre capacité à comprendre et gérer vos émotions et celles des autres pour améliorer vos relations professionnelles.
               </p>
               <Link 
-                to="/test-emotional" 
+                to="/tests/emotional" 
                 className="inline-flex items-center text-pink-700 font-medium hover:text-pink-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -80,7 +79,7 @@ export default function Tests() {
                 Découvrez votre façon préférée d'apprendre et de traiter l'information pour optimiser votre développement professionnel.
               </p>
               <Link 
-                to="/test-learning" 
+                to="/tests/learning" 
                 className="inline-flex items-center text-green-700 font-medium hover:text-green-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -102,7 +101,7 @@ export default function Tests() {
                 Identifiez vos types d'intelligence dominants selon la théorie de Gardner pour mieux orienter votre parcours professionnel.
               </p>
               <Link 
-                to="/test-multiple" 
+                to="/tests/multiple" 
                 className="inline-flex items-center text-purple-700 font-medium hover:text-purple-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -124,7 +123,7 @@ export default function Tests() {
                 Évaluez votre préparation à une reconversion et identifiez les domaines professionnels qui correspondent le mieux à vos compétences transférables.
               </p>
               <Link 
-                to="/test-career-transition" 
+                to="/tests/career-transition" 
                 className="inline-flex items-center text-blue-700 font-medium hover:text-blue-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -146,7 +145,7 @@ export default function Tests() {
                 Découvrez les opportunités professionnelles adaptées à vos compétences et à votre personnalité, même sans diplôme ou qualification formelle.
               </p>
               <Link 
-                to="/test-no-diploma" 
+                to="/tests/no-diploma" 
                 className="inline-flex items-center text-teal-700 font-medium hover:text-teal-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -169,7 +168,7 @@ export default function Tests() {
                 et expériences pour vous orienter vers les meilleures opportunités adaptées à votre situation.
               </p>
               <Link 
-                to="/test-senior-employment" 
+                to="/tests/senior-employment" 
                 className="inline-flex items-center text-amber-700 font-medium hover:text-amber-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
@@ -192,7 +191,7 @@ export default function Tests() {
                 ou si vous préférez un mode de vie plus libre. Ce test vous aide à comprendre vos préférences fondamentales.
               </p>
               <Link 
-                to="/test-entrepreneurial" 
+                to="/tests/entrepreneurial" 
                 className="inline-flex items-center text-amber-700 font-medium hover:text-amber-800"
               >
                 Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
