@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
 
@@ -62,6 +62,13 @@ const Profile = () => {
     );
   }
 
+  // Calculer le nom d'affichage
+  const displayName = user.displayName || 
+    (profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Utilisateur');
+  
+  // Calculer l'initiale pour l'avatar
+  const avatarInitial = displayName.charAt(0) || user.email?.charAt(0) || 'U';
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white">
       <div className="container mx-auto py-8 px-4">
@@ -83,14 +90,14 @@ const Profile = () => {
                   <div className="flex flex-col items-center text-center mb-6 pt-4">
                     <div className="relative mb-3">
                       <Avatar className="h-24 w-24 border-4 border-white shadow-md">
-                        <AvatarImage src={user.photoURL || "https://github.com/shadcn.png"} />
-                        <AvatarFallback className="text-xl bg-primary text-primary-foreground">{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={profile?.avatar_url || user.photoURL || "https://github.com/shadcn.png"} />
+                        <AvatarFallback className="text-xl bg-primary text-primary-foreground">{avatarInitial}</AvatarFallback>
                       </Avatar>
                       <Button variant="outline" size="icon" className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow bg-white">
                         <Camera size={14} />
                       </Button>
                     </div>
-                    <h2 className="text-xl font-bold">{user.displayName || 'Utilisateur'}</h2>
+                    <h2 className="text-xl font-bold">{displayName}</h2>
                     <p className="text-sm text-gray-500 mb-2">{user.email}</p>
                     <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Compte Premium</Badge>
                   </div>
@@ -158,11 +165,11 @@ const Profile = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="firstName">Prénom</Label>
-                            <Input id="firstName" defaultValue={user.displayName?.split(' ')[0] || ''} />
+                            <Input id="firstName" defaultValue={profile?.first_name || displayName.split(' ')[0] || ''} />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="lastName">Nom</Label>
-                            <Input id="lastName" defaultValue={user.displayName?.split(' ')[1] || ''} />
+                            <Input id="lastName" defaultValue={profile?.last_name || displayName.split(' ')[1] || ''} />
                           </div>
                         </div>
 
@@ -183,13 +190,13 @@ const Profile = () => {
                             <Label htmlFor="phone">Téléphone</Label>
                             <div className="flex">
                               <Phone size={18} className="mr-2 text-gray-400 self-center" />
-                              <Input id="phone" placeholder="+33 6 12 34 56 78" defaultValue="+33 6 98 76 54 32" />
+                              <Input id="phone" placeholder="+33 6 12 34 56 78" defaultValue={profile?.phone || ""} />
                             </div>
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="birthday">Date de naissance</Label>
-                            <Input id="birthday" type="date" defaultValue="1990-01-01" />
+                            <Input id="birthday" type="date" defaultValue="" />
                           </div>
                         </div>
 
@@ -199,7 +206,7 @@ const Profile = () => {
                             id="bio"
                             className="w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder="Parlez-nous de vous..."
-                            defaultValue="Étudiant en reconversion professionnelle, passionné par le développement web et la psychologie."
+                            defaultValue={profile?.bio || ""}
                           />
                         </div>
                       </CardContent>

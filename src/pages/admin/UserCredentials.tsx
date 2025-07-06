@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,9 @@ import { UserPlus, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserTable } from "@/components/admin/UserTable";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
+import type { ProfileData } from "@/hooks/useAuth";
 
-interface User {
+interface UserProfile {
   id: string;
   email: string;
   first_name?: string;
@@ -22,9 +22,9 @@ interface User {
 }
 
 export default function UserCredentials() {
-  const { isSuperAdmin, isMasterAdmin } = useAuth();
+  const { user, isSuperAdmin, isMasterAdmin } = useAuth();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -37,6 +37,13 @@ export default function UserCredentials() {
   });
 
   useEffect(() => {
+    // Vérifier si l'utilisateur est connecté et a les autorisations
+    if (!user) {
+      toast.error("Vous devez être connecté pour accéder à cette page.");
+      navigate("/login");
+      return;
+    }
+
     // Vérifier si l'utilisateur est un super admin ou master admin
     if (!isSuperAdmin && !isMasterAdmin) {
       toast.error("Vous n'avez pas les autorisations nécessaires.");
@@ -45,7 +52,7 @@ export default function UserCredentials() {
     }
 
     fetchUsers();
-  }, [isSuperAdmin, isMasterAdmin, navigate]);
+  }, [user, isSuperAdmin, isMasterAdmin, navigate]);
 
   const fetchUsers = async () => {
     try {
@@ -190,6 +197,17 @@ export default function UserCredentials() {
       department: value 
     }));
   };
+
+  // Si l'utilisateur n'est pas connecté, afficher un message de chargement
+  if (!user) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center">
+          <p>Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">

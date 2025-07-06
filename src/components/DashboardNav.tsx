@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   LayoutDashboard,
@@ -13,7 +12,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 const DashboardNav = () => {
-  const { isSuperAdmin, profile } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
 
   const navItems = [
     { href: "/dashboard", label: "Tableau de bord", icon: <LayoutDashboard size={16} /> },
@@ -22,7 +21,7 @@ const DashboardNav = () => {
   ];
   
   // Ajouter les options administrateur si l'utilisateur est super admin
-  if (isSuperAdmin || profile?.is_super_admin) {
+  if (isSuperAdmin || user?.role === 'super_admin') {
     navItems.push(
       { href: "/admin/cms", label: "Gestion de contenu", icon: <FileText size={16} /> },
       { href: "/admin/user-management", label: "Gestion des utilisateurs", icon: <Users size={16} /> },
