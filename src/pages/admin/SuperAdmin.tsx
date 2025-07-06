@@ -1,118 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlertCircle, ArrowLeft, CheckCircle, Shield, User, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function SuperAdmin() {
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("admin123");
-  const [firstName, setFirstName] = useState("Super");
-  const [lastName, setLastName] = useState("Admin");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  // Check if we already have super admin accounts
-  useEffect(() => {
-    const checkSuperAdmins = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('is_super_admin', true)
-          .limit(1);
-          
-        if (error) {
-          throw error;
-        }
-        
-        // If super admin accounts already exist, warn the user
-        if (data && data.length > 0) {
-          toast.warning("Des comptes super administrateur existent déjà");
-        }
-      } catch (err) {
-        console.error("Erreur lors de la vérification des super admins:", err);
-      }
-    };
-    
-    checkSuperAdmins();
-  }, []);
-
-  const handleCreateSuperAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    
-    // Basic validation
-    if (!email || !password || !firstName || !lastName) {
-      setError("Veuillez remplir tous les champs");
-      setLoading(false);
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères");
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      console.log("Creating super admin:", email);
-      
-      // Create the user account with Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            is_super_admin: true
-          }
-        }
-      });
-      
-      if (error) throw error;
-      
-      // Update the profile to mark as super admin
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            is_super_admin: true,
-            is_master_admin: false
-          });
-        
-        if (profileError) throw profileError;
-      }
-      
-      toast.success("Compte super administrateur créé avec succès !");
-      
-      // Store the credentials in localStorage for easy reference
-      localStorage.setItem('defaultAdminEmail', email);
-      localStorage.setItem('defaultAdminPassword', password);
-      
-      // Redirect to login
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    } catch (err: any) {
-      console.error("Erreur inattendue:", err);
-      setError(err.message || "Une erreur est survenue");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 p-4">
@@ -129,88 +23,71 @@ export default function SuperAdmin() {
       
       <div className="flex-1 flex items-center justify-center">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-xl">Création du compte super administrateur</CardTitle>
-            <p className="text-amber-600 font-medium mt-1">
-              Identifiants par défaut: {email} / {password}
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-8 w-8 text-white" />
+            </div>
+            <CardTitle className="text-xl">Compte administrateur disponible</CardTitle>
+            <p className="text-gray-600 mt-2">
+              Le compte administrateur est déjà configuré et prêt à être utilisé.
             </p>
           </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="bg-red-50 p-3 rounded-md mb-4">
-                <p className="text-sm text-red-700 flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  {error}
-                </p>
+          
+          <CardContent className="space-y-6">
+            {/* Informations du compte */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Identifiants administrateur
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-blue-600" />
+                  <span className="text-blue-700">Email :</span>
+                  <code className="bg-blue-100 px-2 py-1 rounded text-blue-800">admin@example.com</code>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-blue-600" />
+                  <span className="text-blue-700">Mot de passe :</span>
+                  <code className="bg-blue-100 px-2 py-1 rounded text-blue-800">admin123</code>
+                </div>
               </div>
-            )}
-            
-            <form onSubmit={handleCreateSuperAdmin}>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Prénom</Label>
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Nom</Label>
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    minLength={6}
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Minimum 6 caractères
-                  </p>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Création en cours...
-                    </>
-                  ) : (
-                    "Créer le super administrateur"
-                  )}
-                </Button>
-              </div>
-            </form>
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-2">Comment se connecter :</h3>
+              <ol className="text-sm text-green-700 space-y-1 list-decimal list-inside">
+                <li>Allez sur la page de connexion</li>
+                <li>Sélectionnez le mode "Admin"</li>
+                <li>Utilisez les identifiants ci-dessus</li>
+                <li>Cliquez sur "Se connecter (Admin)"</li>
+              </ol>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="space-y-3">
+              <Button 
+                onClick={() => navigate("/login")}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Se connecter en tant qu'admin
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/")}
+                className="w-full"
+              >
+                Retour à l'accueil
+              </Button>
+            </div>
           </CardContent>
+          
           <CardFooter>
             <p className="text-xs text-center w-full text-gray-500">
-              Ce compte aura tous les droits d'administration sur la plateforme.
+              Ce compte a tous les droits d'administration sur la plateforme.
             </p>
           </CardFooter>
         </Card>

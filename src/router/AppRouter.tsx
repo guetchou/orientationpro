@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfessionalHeader } from '@/components/layout/ProfessionalHeader';
@@ -8,6 +7,7 @@ import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
 import TestResults from '@/pages/TestResults';
 import SuperAdmin from '@/pages/admin/SuperAdmin';
+import AdminDashboard from '@/pages/admin/Dashboard';
 import ATSAdmin from '@/pages/admin/ATSAdmin';
 import BlogAdmin from '@/pages/admin/BlogAdmin';
 import MediaManager from '@/pages/admin/MediaManager';
@@ -61,6 +61,11 @@ export const AppRouter = () => {
           } />
           
           {/* Routes admin protégées */}
+          <Route path="/admin/dashboard" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
           <Route path="/admin/super-admin" element={
             <AdminRoute>
               <SuperAdmin />

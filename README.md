@@ -1,4 +1,3 @@
-
 # Welcome to your Lovable project
 
 ## Project info
@@ -13,22 +12,37 @@ Pour déployer l'application en local avec Docker, suivez ces étapes :
 
 2. Créez un fichier `.env` à la racine du projet avec les variables suivantes :
 ```env
-# Frontend
-VITE_SUPABASE_URL=votre_url_supabase
-VITE_SUPABASE_ANON_KEY=votre_clé_anonyme_supabase
+# Frontend Configuration
+VITE_API_URL=http://localhost:3000/api
 
-# Backend
+# Backend Configuration
+NODE_ENV=production
+JWT_SECRET=your_jwt_secret_here
+
+# Database Configuration
 DB_HOST=db
-MYSQL_USER=user
-MYSQL_PASSWORD=password
-MYSQL_DATABASE=app_db
-MYSQL_ROOT_PASSWORD=rootpassword
-JWT_SECRET=your_jwt_secret_key
-NODE_ENV=development
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=orientationpro
+DB_PORT=3306
 
-# Feature flags
-FEATURE_CHATBOT=true
-FEATURE_ANALYTICS=true
+# MySQL Configuration
+MYSQL_ROOT_PASSWORD=password
+MYSQL_DATABASE=orientationpro
+MYSQL_USER=orientationpro
+MYSQL_PASSWORD=password
+
+# phpMyAdmin Configuration
+PMA_HOST=db
+PMA_PORT=3306
+PMA_USER=root
+PMA_PASSWORD=password
+
+# Ports Configuration
+FRONTEND_PORT=7474
+BACKEND_PORT=3000
+DATABASE_PORT=3310
+PHPMYADMIN_PORT=8282
 ```
 
 3. Construisez et démarrez les conteneurs :
@@ -36,7 +50,10 @@ FEATURE_ANALYTICS=true
 docker-compose up --build
 ```
 
-4. L'application sera accessible à l'adresse : http://localhost:8080
+4. Accédez aux services :
+   - Frontend : http://localhost:7474
+   - Backend API : http://localhost:3000
+   - phpMyAdmin : http://localhost:8282
 
 Pour arrêter l'application :
 ```bash
@@ -103,10 +120,10 @@ Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/guetchou/orientationpro
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd orientationpro
 
 # Step 3: Install the necessary dependencies.
 npm i

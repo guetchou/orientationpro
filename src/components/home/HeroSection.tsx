@@ -1,7 +1,21 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { GraduationCap, ArrowRight, PlayCircle, ChevronRight, Check } from "lucide-react";
+import { 
+  ArrowRight, 
+  Play, 
+  Download, 
+  Star, 
+  Users, 
+  Target, 
+  TrendingUp,
+  CheckCircle,
+  Sparkles,
+  Globe,
+  BookOpen,
+  Briefcase,
+  GraduationCap,
+  Check
+} from "lucide-react";
 import { ImageCarousel } from "./ImageCarousel";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -23,150 +37,305 @@ export const HeroSection = () => {
     show: { y: 0, opacity: 1, transition: { duration: 0.5 } }
   };
 
-  return (
-    <section className="relative py-20 md:py-28 lg:py-32 overflow-hidden">
-      {/* Arrière-plan animé */}
-      <div className="absolute top-40 left-10 w-72 h-72 bg-primary/20 rounded-full filter blur-[100px] opacity-70 animate-pulse-slow" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full filter blur-[100px] opacity-70 animate-pulse-slow animation-delay-2000" />
-      <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] z-0" />
+  const stats = [
+    { icon: Users, value: "2,500+", label: "Étudiants orientés" },
+    { icon: Target, value: "95%", label: "CV passent ATS" },
+    { icon: Star, value: "4.8/5", label: "Satisfaction" },
+    { icon: TrendingUp, value: "150+", label: "Partenaires" }
+  ];
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+  const features = [
+    { icon: BookOpen, text: "Tests RIASEC scientifiquement validés" },
+    { icon: Briefcase, text: "Optimisation CV pour recrutement ATS" },
+    { icon: Globe, text: "Conseils d'orientation personnalisés" },
+    { icon: Sparkles, text: "Accompagnement jusqu'à l'emploi" }
+  ];
+
+  return (
+    <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 overflow-hidden">
+      {/* Image de fond humaine avec overlay */}
+      <div className="absolute inset-0">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `linear-gradient(rgba(46, 134, 193, 0.6), rgba(30, 132, 73, 0.4)), url('/images/carousel/orientation-1.png')`,
+            filter: 'blur(1px)'
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white/90 to-green-50/80"></div>
+      </div>
+
+      {/* Arrière-plan avec motifs animés */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Bannière promo */}
+      <motion.div 
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-2"
+      >
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center space-x-2 text-sm font-medium">
+            <Sparkles className="h-4 w-4" />
+            <span>🔍 95% des CV optimisés passent les filtres ATS !</span>
+            <Sparkles className="h-4 w-4" />
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="relative z-10 container mx-auto px-4 py-16 lg:py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Côté gauche - Contenu */}
           <motion.div 
             variants={container}
             initial="hidden"
             animate="show"
             className="space-y-8"
           >
-            <motion.div variants={item} className="flex items-center gap-2">
-              <Badge variant="outline" className="py-2 px-4 bg-white/80 backdrop-blur-sm border-primary/20 flex items-center gap-2 font-medium text-primary">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                </span>
-                Plateforme d'orientation professionnelle
+            {/* Badge */}
+            <motion.div variants={item}>
+              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 px-4 py-2 text-sm font-medium">
+                <Globe className="h-4 w-4 mr-2" />
+                Leader de l'orientation au Congo
               </Badge>
             </motion.div>
 
-            <motion.h1 variants={item} className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-blue-600 to-secondary bg-clip-text text-transparent drop-shadow-sm animate-gradient">
-                Construisez votre avenir professionnel
-              </span>
-            </motion.h1>
+            {/* Titre principal */}
+            <motion.div variants={item} className="space-y-4">
+              <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Votre avenir{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
+                  commence ici !
+                </span>
+              </h1>
+              
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Tests RIASEC, optimisation ATS et conseils personnalisés pour réussir au Congo.
+              </p>
+            </motion.div>
 
-            <motion.p variants={item} className="text-xl text-gray-700 leading-relaxed max-w-xl">
-              Découvrez votre voie grâce à nos tests d'orientation et conseils personnalisés. 
-              Prenez les bonnes décisions pour votre carrière.
-            </motion.p>
+            {/* Fonctionnalités */}
+            <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
+                  className="flex items-center space-x-3 text-gray-700"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <feature.icon className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium">{feature.text}</span>
+                </motion.div>
+              ))}
+            </motion.div>
 
-            {/* Boutons avec animations */}
-            <motion.div variants={item} className="flex flex-wrap gap-4">
-              <Link to="/register">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 gap-2 shadow-lg shadow-primary/20 transition-all duration-300 hover:translate-y-[-2px]">
-                  Commencer gratuitement
-                  <ArrowRight className="w-4 h-4" />
+            {/* Boutons CTA */}
+            <motion.div variants={item} className="flex flex-col sm:flex-row gap-4">
+              <Link to="/tests/riasec">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
+                >
+                  <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                  Démarrer mon test
+                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="gap-2 border-primary/20 backdrop-blur-sm hover:bg-primary/10 transition-all duration-300">
-                <PlayCircle className="w-5 h-5" />
-                Voir la démo
-              </Button>
+              
+              <Link to="/ats">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold px-8 py-4 text-lg transition-all duration-300 group"
+                >
+                  <Download className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                  Optimiser mon CV
+                </Button>
+              </Link>
             </motion.div>
 
-            {/* Preuves sociales */}
-            <motion.div variants={item} className="space-y-4">
-              <p className="text-sm font-medium text-gray-600">Des milliers d'étudiants nous font confiance</p>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { color: "bg-green-500", label: "Plus de 5000 utilisateurs" },
-                  { color: "bg-blue-500", label: "95% de satisfaction" },
-                  { color: "bg-secondary", label: "Résultats immédiats" }
-                ].map((el, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-100">
-                    <div className={`w-2 h-2 rounded-full ${el.color} animate-pulse`} />
-                    <span className="text-sm">{el.label}</span>
+            {/* Statistiques */}
+            <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-8 border-t border-gray-200">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.8 + index * 0.1 }}
+                  className="text-center"
+                >
+                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
+                    <stat.icon className="h-6 w-6 text-blue-600" />
                   </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Avantages */}
-            <motion.div variants={item} className="pt-6 border-t border-gray-100">
-              <h3 className="text-sm font-medium mb-3 text-gray-700">Avantages exclusifs</h3>
-              <div className="grid md:grid-cols-2 gap-3">
-                {[
-                  "Tests d'orientation complets",
-                  "Accompagnement personnalisé",
-                  "Suggestions de formations adaptées",
-                  "Ressources pédagogiques gratuites"
-                ].map((advantage, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <div className="mt-0.5 bg-green-100 p-1 rounded-full text-green-600">
-                      <Check size={12} />
-                    </div>
-                    <span className="text-sm text-gray-600">{advantage}</span>
-                  </div>
-                ))}
-              </div>
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
+                </motion.div>
+              ))}
             </motion.div>
           </motion.div>
 
-          {/* Côté carrousel */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="lg:block relative"
+          {/* Côté droit - Illustration */}
+          <motion.div 
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="relative"
           >
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 to-secondary/30 rounded-2xl transform rotate-6 scale-95 blur-xl opacity-30 animate-pulse-slow" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 border border-white/20 group hover:scale-[1.01] transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/10 backdrop-blur-sm z-10" />
-              <ImageCarousel />
-
-              {/* Call-to-action */}
+            {/* Illustration principale */}
+            <div className="relative">
+              {/* Carte principale */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.5, duration: 0.5 }}
-                className="absolute bottom-4 left-4 right-4 z-20 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40"
+                initial={{ rotate: -5, scale: 0.8 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ duration: 0.8, delay: 1.0 }}
+                className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/10 rounded-full">
-                    <GraduationCap className="w-6 h-6 text-primary" />
+                {/* En-tête de la carte */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
+                      <Target className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">Test RIASEC</h3>
+                      <p className="text-sm text-gray-500">Orientation Pro Congo</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-sm">Débutez votre parcours</h3>
-                    <p className="text-xs text-gray-500 mb-2">Passez votre premier test d'orientation</p>
-                    <Link to="/tests" className="inline-flex items-center text-xs font-medium text-primary hover:underline">
-                      Commencer maintenant
-                      <ChevronRight size={14} />
-                    </Link>
+                  <Badge className="bg-green-100 text-green-800">En cours</Badge>
+                </div>
+
+                {/* Graphique RIASEC simulé */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Réaliste</span>
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "85%" }}
+                        transition={{ duration: 1, delay: 2.0 }}
+                        className="h-full bg-blue-500 rounded-full"
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">85%</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Investigatif</span>
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "72%" }}
+                        transition={{ duration: 1, delay: 2.2 }}
+                        className="h-full bg-green-500 rounded-full"
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">72%</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Artistique</span>
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "68%" }}
+                        transition={{ duration: 1, delay: 2.4 }}
+                        className="h-full bg-purple-500 rounded-full"
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">68%</span>
                   </div>
                 </div>
+
+                {/* Bouton de progression */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 2.6 }}
+                  className="mt-6"
+                >
+                  <Link to="/tests/riasec">
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white">
+                      Continuer le test
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
+                </motion.div>
+              </motion.div>
+
+              {/* Éléments flottants */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 1.5 }}
+                className="absolute -top-4 -right-4 bg-yellow-100 rounded-full p-3 shadow-lg"
+              >
+                <CheckCircle className="h-6 w-6 text-yellow-600" />
+              </motion.div>
+
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 1.7 }}
+                className="absolute -bottom-4 -left-4 bg-green-100 rounded-full p-3 shadow-lg"
+              >
+                <TrendingUp className="h-6 w-6 text-green-600" />
               </motion.div>
             </div>
 
-            {/* Éléments décoratifs */}
-            <div className="absolute -top-6 -right-6 w-20 h-20 bg-secondary/30 rounded-full blur-xl" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/20 rounded-full blur-xl" />
-
-            {/* Badge flottant */}
+            {/* Avis client flottant */}
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2, duration: 0.5 }}
-              className="absolute -top-4 right-20 z-20"
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 2.0 }}
+              className="absolute -bottom-8 -right-8 bg-white rounded-lg shadow-lg p-4 border border-gray-100 max-w-xs"
             >
-              <div className="bg-white rounded-full px-3 py-1 shadow-lg flex items-center gap-2 text-sm font-medium text-primary border border-primary/20">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                Tests validés scientifiquement
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <span className="text-sm font-medium text-gray-900">4.8/5</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">
+                "Grâce à Orientation Pro, j'ai trouvé ma voie en informatique !"
+              </p>
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
+                <span className="text-xs text-gray-500">Marie K., Brazzaville</span>
               </div>
             </motion.div>
           </motion.div>
         </div>
+      </div>
+
+      {/* Vague décorative en bas */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-16">
+          <path 
+            d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" 
+            opacity=".25" 
+            className="fill-blue-100"
+          />
+          <path 
+            d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" 
+            opacity=".5" 
+            className="fill-green-100"
+          />
+          <path 
+            d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" 
+            className="fill-blue-200"
+          />
+        </svg>
       </div>
     </section>
   );

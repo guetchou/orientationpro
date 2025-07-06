@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,9 +26,19 @@ export default function Login() {
   const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
-    if (user) {
-      // Redirection basée sur le rôle
-      if (user.role === 'admin' || localStorage.getItem('adminToken')) {
+    // Vérifier les tokens de connexion
+    const adminToken = localStorage.getItem('adminToken');
+    const userToken = localStorage.getItem('userToken');
+    
+    if (adminToken) {
+      // Utilisateur admin connecté via backend
+      navigate('/admin/dashboard', { replace: true });
+    } else if (userToken) {
+      // Utilisateur normal connecté via backend
+      navigate('/dashboard', { replace: true });
+    } else if (user && !adminToken && !userToken) {
+      // Utilisateur connecté via Supabase
+      if (user.role === 'admin') {
         navigate('/admin/super-admin', { replace: true });
       } else {
         navigate(from, { replace: true });
@@ -45,9 +54,48 @@ export default function Login() {
     try {
       console.log("Tentative de connexion:", { email, mode: loginMode });
       
-      await signIn(email, password);
-      
-      // La redirection est gérée dans useEffect
+      // Connexion via le backend local pour tous les utilisateurs
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          role: loginMode === 'admin' ? 'admin' : 'user'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur de connexion');
+      }
+
+      if (data.success) {
+        if (loginMode === 'admin') {
+          // Stocker les informations admin dans localStorage
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+          
+          toast.success('Connexion admin réussie !');
+          
+          // Rediriger vers l'espace admin
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          // Stocker les informations utilisateur dans localStorage
+          localStorage.setItem('userToken', data.token);
+          localStorage.setItem('userData', JSON.stringify(data.user));
+          
+          toast.success('Connexion réussie !');
+          
+          // Rediriger vers le dashboard utilisateur
+          navigate('/dashboard', { replace: true });
+        }
+      } else {
+        throw new Error(data.message || 'Échec de la connexion');
+      }
       
     } catch (err: any) {
       console.error("Erreur de connexion:", err);

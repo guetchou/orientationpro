@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,7 +21,12 @@ import {
   Users,
   FileText,
   Shield,
-  Home
+  Home,
+  Search,
+  Sparkles,
+  Lightbulb,
+  BookOpen,
+  Target
 } from 'lucide-react';
 
 export const ProfessionalHeader = () => {
@@ -47,9 +51,11 @@ export const ProfessionalHeader = () => {
   };
 
   const navItems = [
-    { name: 'Accueil', path: '/', icon: Home },
-    { name: 'Tests', path: '/tests', icon: BarChart3 },
-    { name: 'Tableau de bord', path: '/dashboard', icon: Briefcase, protected: true },
+    { name: 'Accueil', path: '/', icon: Home, protected: false, highlight: false },
+    { name: '🔍 Tests RIASEC', path: '/tests', icon: Search, protected: false, highlight: true },
+    { name: '✨ Boost ATS', path: '/ats', icon: Sparkles, protected: false, highlight: true },
+    { name: '💡 Conseiller Pro', path: '/conseiller', icon: Lightbulb, protected: false, highlight: true },
+    { name: 'Blog', path: '/blog', icon: BookOpen, protected: false, highlight: false },
   ];
 
   const adminItems = [
@@ -59,21 +65,21 @@ export const ProfessionalHeader = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Briefcase className="h-5 w-5 text-white" />
+            <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
+              <Target className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Orientation Pro
+            <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              Orientation Pro Congo
             </span>
           </Link>
 
           {/* Navigation Desktop */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => {
               if (item.protected && !user) return null;
               const Icon = item.icon;
@@ -83,10 +89,12 @@ export const ProfessionalHeader = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                      : item.highlight
+                      ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 hover:shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -123,12 +131,12 @@ export const ProfessionalHeader = () => {
           </nav>
 
           {/* Actions utilisateur */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2">
-                    <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-white" />
                     </div>
                     <span className="hidden md:inline-block text-sm font-medium">
@@ -158,12 +166,12 @@ export const ProfessionalHeader = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link to="/login">Connexion</Link>
+              <div className="flex items-center space-x-3">
+                <Button variant="ghost" asChild className="text-gray-600 hover:text-gray-900">
+                  <Link to="/login">Se connecter</Link>
                 </Button>
-                <Button asChild>
-                  <Link to="/register">Inscription</Link>
+                <Button asChild className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+                  <Link to="/register">Essai gratuit</Link>
                 </Button>
               </div>
             )}
@@ -172,7 +180,7 @@ export const ProfessionalHeader = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -182,7 +190,7 @@ export const ProfessionalHeader = () => {
 
         {/* Menu mobile */}
         {isMenuOpen && (
-          <div className="md:hidden border-t bg-white">
+          <div className="lg:hidden border-t bg-white shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navItems.map((item) => {
                 if (item.protected && !user) return null;
@@ -193,10 +201,12 @@ export const ProfessionalHeader = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                       isActive 
                         ? 'bg-blue-100 text-blue-700' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        : item.highlight
+                        ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -205,10 +215,11 @@ export const ProfessionalHeader = () => {
                   </Link>
                 );
               })}
-              
+
+              {/* Menu Admin Mobile */}
               {isAdmin && (
                 <>
-                  <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Administration
                   </div>
                   {adminItems.map((item) => {
@@ -217,7 +228,7 @@ export const ProfessionalHeader = () => {
                       <Link
                         key={item.path}
                         to={item.path}
-                        className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                        className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <Icon className="h-5 w-5" />
@@ -226,6 +237,24 @@ export const ProfessionalHeader = () => {
                     );
                   })}
                 </>
+              )}
+
+              {/* Actions utilisateur mobile */}
+              {!user && (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="px-4 space-y-2">
+                    <Button variant="ghost" asChild className="w-full justify-start text-gray-600">
+                      <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                        Se connecter
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold">
+                      <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                        Essai gratuit
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

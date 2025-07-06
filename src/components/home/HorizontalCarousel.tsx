@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,55 +11,12 @@ import {
 import { Info, AlertCircle } from "lucide-react";
 
 export const HorizontalCarousel = () => {
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [showFallbackMessage, setShowFallbackMessage] = useState(false);
-
   const carouselImages = [1, 2, 3, 4, 5, 6];
 
-  // Vérifier si les images existent
-  useEffect(() => {
-    const checkImages = async () => {
-      try {
-        // Vérification simple pour voir si on peut accéder à au moins une image
-        const testImage = new Image();
-        testImage.src = "/images/carousel/orientation-1.png";
-        testImage.onload = () => {
-          console.log("Images du carrousel chargées avec succès");
-          setImagesLoaded(true);
-          setShowFallbackMessage(false);
-        };
-        testImage.onerror = () => {
-          console.error("Images du carrousel non trouvées");
-          setImagesLoaded(false);
-          setShowFallbackMessage(true);
-        };
-      } catch (error) {
-        console.error("Erreur lors de la vérification des images:", error);
-        setImagesLoaded(false);
-        setShowFallbackMessage(true);
-      }
-    };
-
-    checkImages();
-  }, []);
-  
   return (
     <section className="py-8 overflow-hidden bg-white">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-bold text-center mb-6 font-heading">Découvrez nos ressources d'orientation</h2>
-        
-        {showFallbackMessage && (
-          <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 flex items-start space-x-3">
-            <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />
-            <div>
-              <p className="text-sm text-yellow-700">
-                Les images du carousel ne sont pas disponibles. Des images de remplacement sont utilisées. 
-                Ajoutez vos images dans le dossier <code>/public/images/carousel/</code> avec les noms <code>orientation-1.png</code> à <code>orientation-6.png</code>.
-              </p>
-            </div>
-          </div>
-        )}
-        
         <Carousel className="mx-auto mb-6 max-w-5xl">
           <CarouselContent>
             {carouselImages.map((num) => (
@@ -90,7 +46,6 @@ export const HorizontalCarousel = () => {
           <CarouselPrevious className="left-1" />
           <CarouselNext className="right-1" />
         </Carousel>
-        
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

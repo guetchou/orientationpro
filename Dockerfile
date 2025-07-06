@@ -1,4 +1,3 @@
-
 # Build stage
 FROM node:20-alpine as build
 
@@ -6,7 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Copy source and build
 COPY . .

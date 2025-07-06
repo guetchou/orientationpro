@@ -1,6 +1,6 @@
-
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
+import { ConseillerSection } from "@/components/home/ConseillerSection";
 import { StepsSection } from "@/components/home/StepsSection";
 import { TestsSection } from "@/components/home/TestsSection";
 import { StatisticsSection } from "@/components/home/StatisticsSection";
@@ -45,6 +45,7 @@ export default function Index() {
         className="pt-20 relative z-10"
       >
         <HeroSection />
+        <ConseillerSection />
         <HorizontalCarousel />
         <StepsSection />
         <TestsSection />
@@ -52,8 +53,8 @@ export default function Index() {
         <CTASection />
         <StatisticsSection />
         <TestimonialsSection />
-        <ResourcesSection />
         <EventsSection />
+        <ResourcesSection />
         <PartnersSection />
         <FaqSection />
         <ContactSection />
