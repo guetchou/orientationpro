@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, Settings, Users } from 'lucide-react';
+import { Bell, Settings, Users, Globe, FileText, MessageSquare } from 'lucide-react';
 
 // Import des composants ATS
 import { CVUploadZone } from '@/components/admin/ats/CVUploadZone';
@@ -15,6 +14,11 @@ import { AnalyticsDashboard } from '@/components/admin/ats/AnalyticsDashboard';
 import { NotificationCenter } from '@/components/admin/ats/NotificationCenter';
 import { AIMatchingEngine } from '@/components/admin/ats/AIMatchingEngine';
 import { MobileNavigation } from '@/components/admin/ats/MobileNavigation';
+import { JobPostingManager } from '@/components/admin/ats/JobPostingManager';
+import { CVParsingEngine } from '@/components/admin/ats/CVParsingEngine';
+import { AssessmentCenter } from '@/components/admin/ats/AssessmentCenter';
+import { WhatsAppIntegration } from '@/components/admin/ats/WhatsAppIntegration';
+import { MultilingualSupport } from '@/components/admin/ats/MultilingualSupport';
 
 // Import des types
 import { PipelineStage } from '@/types/pipeline';
@@ -154,6 +158,10 @@ export default function ATSAdmin() {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'jobs':
+        return <JobPostingManager />;
+      case 'parsing':
+        return <CVParsingEngine />;
       case 'upload':
         return <CVUploadZone onCandidateCreated={handleCandidateCreated} />;
       case 'candidates':
@@ -176,6 +184,8 @@ export default function ATSAdmin() {
         );
       case 'matching':
         return <AIMatchingEngine />;
+      case 'assessments':
+        return <AssessmentCenter />;
       case 'communication':
         return <CommunicationCenter />;
       case 'calendar':
@@ -189,6 +199,10 @@ export default function ATSAdmin() {
         );
       case 'notifications':
         return <NotificationCenter />;
+      case 'whatsapp':
+        return <WhatsAppIntegration />;
+      case 'multilingual':
+        return <MultilingualSupport />;
       default:
         return <CVUploadZone onCandidateCreated={handleCandidateCreated} />;
     }
@@ -233,7 +247,15 @@ export default function ATSAdmin() {
         {/* Navigation desktop */}
         <div className="hidden md:block">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-8 w-full">
+            <TabsList className="grid grid-cols-13 w-full">
+              <TabsTrigger value="jobs" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Offres
+              </TabsTrigger>
+              <TabsTrigger value="parsing" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Parsing CV
+              </TabsTrigger>
               <TabsTrigger value="upload" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Upload CV
@@ -241,10 +263,19 @@ export default function ATSAdmin() {
               <TabsTrigger value="candidates">Candidats</TabsTrigger>
               <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
               <TabsTrigger value="matching">Matching IA</TabsTrigger>
+              <TabsTrigger value="assessments">Tests</TabsTrigger>
               <TabsTrigger value="communication">Messages</TabsTrigger>
               <TabsTrigger value="calendar">Calendrier</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="notifications">Alertes</TabsTrigger>
+              <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                WhatsApp
+              </TabsTrigger>
+              <TabsTrigger value="multilingual" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Multilingue
+              </TabsTrigger>
             </TabsList>
 
             <div className="mt-6">

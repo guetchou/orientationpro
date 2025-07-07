@@ -47,7 +47,7 @@ const localBlogPosts: WordPressPost[] = [
       }],
       'wp:featuredmedia': [{
         id: 1,
-        source_url: '/images/blog/baccalaureat-2025.jpg',
+        source_url: '/images/blog/baccalaureat-2025-thumb.png',
         media_details: {
           sizes: {
             thumbnail: { source_url: '/images/blog/baccalaureat-2025-thumb.jpg' },
@@ -122,7 +122,7 @@ const localBlogPosts: WordPressPost[] = [
       }],
       'wp:featuredmedia': [{
         id: 2,
-        source_url: '/images/blog/orientation-scolaire.jpg',
+        source_url: '/images/blog/orientation-scolaire.png',
         media_details: {
           sizes: {
             thumbnail: { source_url: '/images/blog/orientation-scolaire-thumb.jpg' },
@@ -199,7 +199,7 @@ const localBlogPosts: WordPressPost[] = [
       }],
       'wp:featuredmedia': [{
         id: 3,
-        source_url: '/images/blog/emploi-congo-2025.jpg',
+        source_url: '/images/blog/emploi-congo-2025.png',
         media_details: {
           sizes: {
             thumbnail: { source_url: '/images/blog/emploi-congo-2025-thumb.jpg' },
