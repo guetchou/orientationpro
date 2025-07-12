@@ -1,4 +1,3 @@
-
 const jwt = require('jsonwebtoken');
 
 const authenticate = (req, res, next) => {
@@ -33,8 +32,16 @@ const isSuperAdmin = (req, res, next) => {
   next();
 };
 
+const roleGuard = (allowedRoles) => (req, res, next) => {
+  if (!req.user || !allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({ message: 'Accès interdit : rôle insuffisant' });
+  }
+  next();
+};
+
 module.exports = {
   authenticate,
   isAdmin,
-  isSuperAdmin
+  isSuperAdmin,
+  roleGuard
 };

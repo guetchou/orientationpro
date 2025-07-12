@@ -88,19 +88,19 @@ export default function Conseillers() {
       <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-green-50">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="text-center mb-16"
-            >
+        >
               <Badge className="mb-4 bg-blue-100 text-blue-800 border-blue-200">
                 <Users className="w-3 h-3 mr-1" />
                 Équipe d'Experts
               </Badge>
               <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-                Nos Conseillers d'Orientation
-              </h1>
+            Nos Conseillers d'Orientation
+          </h1>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Rencontrez notre équipe de conseillers certifiés pour un accompagnement personnalisé 
                 dans votre parcours d'orientation scolaire et professionnelle.
@@ -165,24 +165,24 @@ export default function Conseillers() {
               <h2 className="text-3xl font-bold mb-4">Trouvez votre Conseiller</h2>
               <p className="text-gray-600">
                 Utilisez les filtres ci-dessous pour trouver le conseiller qui correspond le mieux à vos besoins
-              </p>
-            </motion.div>
-            
+          </p>
+        </motion.div>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              <CounselorFilter 
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                selectedSpecialties={selectedSpecialties}
-                onSpecialtyToggle={handleSpecialtyToggle}
-                availableSpecialties={availableSpecialties}
-                onFilterChange={(newFilters) => setFilters({...filters, ...newFilters})}
-                currentFilters={filters}
-              />
+          <CounselorFilter 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedSpecialties={selectedSpecialties}
+            onSpecialtyToggle={handleSpecialtyToggle}
+            availableSpecialties={availableSpecialties}
+            onFilterChange={(newFilters) => setFilters({...filters, ...newFilters})}
+            currentFilters={filters}
+          />
             </motion.div>
           </div>
         </div>
@@ -192,9 +192,9 @@ export default function Conseillers() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
-            {isLoading ? (
+        {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[...Array(6)].map((_, index) => (
+            {[...Array(6)].map((_, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
@@ -202,15 +202,15 @@ export default function Conseillers() {
                     transition={{ duration: 0.6, delay: index * 0.1 }}
                     className="bg-white rounded-xl p-6 shadow-lg animate-pulse"
                   >
-                    <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
-                    <div className="h-6 bg-gray-200 rounded mb-2 w-3/4 mx-auto"></div>
-                    <div className="h-4 bg-gray-200 rounded mb-4 w-1/2 mx-auto"></div>
-                    <div className="h-20 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-10 bg-gray-200 rounded"></div>
+                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                <div className="h-6 bg-gray-200 rounded mb-2 w-3/4 mx-auto"></div>
+                <div className="h-4 bg-gray-200 rounded mb-4 w-1/2 mx-auto"></div>
+                <div className="h-20 bg-gray-200 rounded mb-4"></div>
+                <div className="h-10 bg-gray-200 rounded"></div>
                   </motion.div>
-                ))}
-              </div>
-            ) : filteredCounselors.length > 0 ? (
+            ))}
+          </div>
+        ) : filteredCounselors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredCounselors.map((counselor, index) => (
                   <motion.div
@@ -221,9 +221,9 @@ export default function Conseillers() {
                   >
                     <CounselorCard counselor={counselor} />
                   </motion.div>
-                ))}
-              </div>
-            ) : (
+            ))}
+          </div>
+        ) : (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -237,9 +237,9 @@ export default function Conseillers() {
                     Essayez de modifier vos filtres ou contactez-nous pour plus d'informations
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button asChild variant="outline">
-                      <a href="/contact">Nous contacter</a>
-                    </Button>
+            <Button asChild variant="outline">
+              <a href="/contact">Nous contacter</a>
+            </Button>
                     <Button onClick={() => {
                       setSearchTerm("");
                       setSelectedSpecialties([]);
@@ -274,8 +274,8 @@ export default function Conseillers() {
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
                   <Calendar className="mr-2 h-5 w-5" />
-                  Demander une orientation
-                </Button>
+            Demander une orientation
+          </Button>
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                   <Phone className="mr-2 h-5 w-5" />
                   Nous appeler

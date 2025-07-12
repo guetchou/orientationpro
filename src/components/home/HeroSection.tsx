@@ -140,7 +140,7 @@ export const HeroSection = () => {
 
             {/* Boutons CTA */}
             <motion.div variants={item} className="flex flex-col sm:flex-row gap-4">
-              <Link to="/tests/riasec">
+              <Link to="/tests">
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
@@ -151,7 +151,7 @@ export const HeroSection = () => {
                 </Button>
               </Link>
               
-              <Link to="/ats">
+              <Link to="/cv-optimizer">
                 <Button 
                   variant="outline" 
                   size="lg"

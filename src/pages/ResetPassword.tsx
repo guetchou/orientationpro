@@ -14,7 +14,7 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://10.10.0.5:7474/api';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

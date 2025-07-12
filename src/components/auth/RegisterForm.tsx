@@ -1,144 +1,248 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2, Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react'
+import { useAuth } from './AuthProvider'
+import { Link, useNavigate } from 'react-router-dom'
 
-interface RegisterFormProps {
-  email: string;
-  password: string;
-  loading: boolean;
-  error: string | null;
-  isSupabaseConfigured: boolean;
-  handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handlePasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSubmit: (e: React.FormEvent) => void;
-}
+export const RegisterForm: React.FC = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    phone: ''
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-export function RegisterForm({
-  email,
-  password,
-  loading,
-  error,
-  isSupabaseConfigured,
-  handleEmailChange,
-  handlePasswordChange,
-  handleSubmit,
-}: RegisterFormProps) {
+  const { signUp } = useAuth()
+  const navigate = useNavigate()
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const validateForm = () => {
+    if (formData.password !== formData.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas')
+      return false
+    }
+    if (formData.password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères')
+      return false
+    }
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    if (!validateForm()) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const userData = {
+        full_name: formData.fullName,
+        phone: formData.phone
+      }
+
+      const { data, error } = await signUp(formData.email, formData.password, userData)
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setSuccess('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.')
+        // Rediriger vers la page de connexion après inscription
+        setTimeout(() => {
+          navigate('/login')
+        }, 3000)
+      }
+    } catch (err) {
+      setError('Une erreur inattendue s\'est produite')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-md bg-red-50 p-4"
-        >
-          <p className="text-sm text-red-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            {error}
-          </p>
-          {error.includes("existe déjà") && (
-            <p className="mt-2 text-sm text-red-700">
-              <Link
-                to="/login"
-                className="font-medium text-red-700 hover:text-red-600 underline"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center mb-4">
+            <User className="h-6 w-6 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Créer un compte
+          </CardTitle>
+          <CardDescription>
+            Rejoignez Orientation Pro Congo
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            {success && (
+              <Alert>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nom complet</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="Votre nom complet"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="votre@email.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="+242 06 123 4567"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Votre mot de passe"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="pl-10 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirmez votre mot de passe"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="pl-10 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Création du compte...
+                </>
+              ) : (
+                'Créer mon compte'
+              )}
+            </Button>
+
+            <div className="text-center text-sm text-gray-600">
+              Déjà un compte ?{' '}
+              <Link 
+                to="/login" 
+                className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                Connectez-vous ici
+                Se connecter
               </Link>
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      <div className="rounded-md space-y-4">
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Adresse email
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-              <Mail className="w-5 h-5" />
             </div>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={handleEmailChange}
-              placeholder="vous@exemple.com"
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Mot de passe
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-              <Lock className="w-5 h-5" />
-            </div>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={handlePasswordChange}
-              placeholder="Minimum 6 caractères"
-              className="pl-10"
-              minLength={6}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <Button
-          type="submit"
-          className="w-full relative"
-          disabled={loading || !isSupabaseConfigured}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Inscription en cours...
-            </>
-          ) : (
-            "S'inscrire"
-          )}
-        </Button>
-      </div>
-
-      <div className="text-center space-y-2">
-        <p className="text-sm text-gray-600">
-          Déjà inscrit ?{" "}
-          <Link
-            to="/login"
-            className="font-medium text-primary hover:text-primary/80"
-          >
-            Connectez-vous ici
-          </Link>
-        </p>
-        <p className="text-xs text-gray-500">
-          En vous inscrivant, vous acceptez nos{" "}
-          <a href="#" className="underline hover:text-gray-700">
-            conditions d'utilisation
-          </a>{" "}
-          et notre{" "}
-          <a href="#" className="underline hover:text-gray-700">
-            politique de confidentialité
-          </a>
-        </p>
-      </div>
-    </form>
-  );
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

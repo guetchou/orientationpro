@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, Settings, Users, Globe, FileText, MessageSquare } from 'lucide-react';
+import { Bell, Settings, Users, Globe, FileText, MessageSquare, Brain, Trophy, BarChart3, Shield, Palette } from 'lucide-react';
 
 // Import des composants ATS
 import { CVUploadZone } from '@/components/admin/ats/CVUploadZone';
@@ -19,6 +19,14 @@ import { CVParsingEngine } from '@/components/admin/ats/CVParsingEngine';
 import { AssessmentCenter } from '@/components/admin/ats/AssessmentCenter';
 import { WhatsAppIntegration } from '@/components/admin/ats/WhatsAppIntegration';
 import { MultilingualSupport } from '@/components/admin/ats/MultilingualSupport';
+import { AIAdvancedEngine } from '@/components/admin/ats/AIAdvancedEngine';
+import { PredictiveAnalytics } from '@/components/admin/ats/PredictiveAnalytics';
+import { MobileCandidateApp } from '@/components/admin/ats/MobileCandidateApp';
+import { ExternalIntegrations } from '@/components/admin/ats/ExternalIntegrations';
+import GamificationSystem from '@/components/admin/ats/GamificationSystem';
+import AdvancedReporting from '@/components/admin/ats/AdvancedReporting';
+import SecurityCompliance from '@/components/admin/ats/SecurityCompliance';
+import CustomizationThemes from '@/components/admin/ats/CustomizationThemes';
 
 // Import des types
 import { PipelineStage } from '@/types/pipeline';
@@ -203,6 +211,22 @@ export default function ATSAdmin() {
         return <WhatsAppIntegration />;
       case 'multilingual':
         return <MultilingualSupport />;
+      case 'aiAdvanced':
+        return <AIAdvancedEngine />;
+      case 'predictiveAnalytics':
+        return <PredictiveAnalytics />;
+      case 'mobileCandidateApp':
+        return <MobileCandidateApp />;
+      case 'externalIntegrations':
+        return <ExternalIntegrations />;
+      case 'gamification':
+        return <GamificationSystem />;
+      case 'advancedReporting':
+        return <AdvancedReporting />;
+      case 'securityCompliance':
+        return <SecurityCompliance />;
+      case 'customizationThemes':
+        return <CustomizationThemes />;
       default:
         return <CVUploadZone onCandidateCreated={handleCandidateCreated} />;
     }
@@ -247,7 +271,7 @@ export default function ATSAdmin() {
         {/* Navigation desktop */}
         <div className="hidden md:block">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-13 w-full">
+            <TabsList className="grid grid-cols-14 w-full">
               <TabsTrigger value="jobs" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 Offres
@@ -275,6 +299,38 @@ export default function ATSAdmin() {
               <TabsTrigger value="multilingual" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 Multilingue
+              </TabsTrigger>
+              <TabsTrigger value="aiAdvanced" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                IA Avancée
+              </TabsTrigger>
+              <TabsTrigger value="predictiveAnalytics" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Analyse Prédictive
+              </TabsTrigger>
+              <TabsTrigger value="mobileCandidateApp" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Mobile Candidate App
+              </TabsTrigger>
+              <TabsTrigger value="externalIntegrations" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Intégrations Externes
+              </TabsTrigger>
+              <TabsTrigger value="gamification" className="flex items-center gap-2">
+                <Trophy className="h-4 w-4" />
+                Gamification
+              </TabsTrigger>
+              <TabsTrigger value="advancedReporting" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Rapport Avancé
+              </TabsTrigger>
+              <TabsTrigger value="securityCompliance" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Sécurité
+              </TabsTrigger>
+              <TabsTrigger value="customizationThemes" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                Personnalisation
               </TabsTrigger>
             </TabsList>
 

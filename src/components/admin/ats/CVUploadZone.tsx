@@ -1,11 +1,9 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -58,6 +56,9 @@ export const CVUploadZone: React.FC<CVUploadZoneProps> = ({ onCandidateCreated }
   const [parsedData, setParsedData] = useState<ParsedCVData | null>(null);
   const [parsingProgress, setParsingProgress] = useState(0);
   const [confidence, setConfidence] = useState(0);
+  const [atsScore, setAtsScore] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [extractedText, setExtractedText] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -124,25 +125,43 @@ export const CVUploadZone: React.FC<CVUploadZoneProps> = ({ onCandidateCreated }
         });
       }, 200);
 
-      // Upload vers Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('resumes')
-        .upload(fileName, file);
+      // Upload vers l'API locale
+      const formData = new FormData();
+      formData.append('cv', file);
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      const response = await fetch('/api/cv/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
 
       setUploadProgress(100);
-      
-      // Convertir le fichier en base64 pour l'API de parsing
-      const fileContent = await fileToBase64(file);
-      
-      // Parsing avec l'API NLP
-      await parseCV(fileContent, file.name, file.type, fileName);
+      setParsingProgress(100);
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erreur lors de l\'analyse du CV');
+      }
+
+      setParsedData({
+        personalInfo: { name: '', email: '', phone: '' },
+        skills: [],
+        experience: [],
+        education: [],
+        languages: [],
+        summary: ''
+      });
+      setConfidence(100);
+      setAtsScore(data.ats_score);
+      setFeedback(data.feedback);
+      setExtractedText(data.extracted_text);
+
+      toast({
+        title: "CV analysé avec succès",
+        description: data.message,
+      });
+
+      // Appeler le callback si besoin
+      if (onCandidateCreated) onCandidateCreated(data);
 
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -154,119 +173,6 @@ export const CVUploadZone: React.FC<CVUploadZoneProps> = ({ onCandidateCreated }
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const parseCV = async (fileContent: string, fileName: string, fileType: string, storedFileName: string) => {
-    try {
-      // Simulation du progress de parsing
-      const parsingInterval = setInterval(() => {
-        setParsingProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(parsingInterval);
-            return 90;
-          }
-          return prev + 15;
-        });
-      }, 300);
-
-      console.log('Calling CV parser API...');
-      
-      const { data, error } = await supabase.functions.invoke('cv-parser', {
-        body: {
-          fileContent,
-          fileName,
-          fileType
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Parsing failed');
-      }
-
-      setParsingProgress(100);
-      setParsedData(data.data);
-      setConfidence(data.metadata.confidence);
-
-      // Créer automatiquement le candidat
-      await createCandidateFromParsedData(data.data, storedFileName);
-
-      toast({
-        title: "CV analysé avec succès",
-        description: `Données extraites avec ${data.metadata.confidence}% de confiance`,
-      });
-
-    } catch (error) {
-      console.error('Error parsing CV:', error);
-      toast({
-        title: "Erreur d'analyse",
-        description: "Impossible d'analyser le CV. Parsing manuel requis.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const createCandidateFromParsedData = async (data: ParsedCVData, resumeFileName: string) => {
-    try {
-      const { data: resumeUrl } = supabase.storage
-        .from('resumes')
-        .getPublicUrl(resumeFileName);
-
-      const candidateData = {
-        full_name: data.personalInfo.name,
-        email: data.personalInfo.email,
-        phone: data.personalInfo.phone || '',
-        position: data.experience[0]?.position || 'Poste non spécifié',
-        resume_url: resumeUrl.publicUrl,
-        motivation: data.summary || 'Motivation extraite automatiquement',
-        experience: data.experience.map(exp => 
-          `${exp.position} chez ${exp.company} (${exp.duration})`
-        ).join('; ') || 'Expérience non spécifiée',
-        status: 'new',
-        rating: Math.min(Math.max(Math.round(confidence / 20), 1), 5),
-        notes: `CV parsé automatiquement. Compétences détectées: ${data.skills.join(', ')}`
-      };
-
-      const { data: newCandidate, error } = await supabase
-        .from('candidates')
-        .insert([candidateData])
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      onCandidateCreated(newCandidate);
-      
-      toast({
-        title: "Candidat créé",
-        description: "Le candidat a été ajouté automatiquement à la base de données",
-      });
-
-    } catch (error) {
-      console.error('Error creating candidate:', error);
-      toast({
-        title: "Erreur de création",
-        description: "Impossible de créer le candidat. Veuillez le faire manuellement.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        resolve(base64.split(',')[1]); // Retirer le préfixe data:
-      };
-      reader.onerror = error => reject(error);
-    });
   };
 
   return (
@@ -483,6 +389,23 @@ export const CVUploadZone: React.FC<CVUploadZoneProps> = ({ onCandidateCreated }
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Rapport enrichi après analyse */}
+      {atsScore !== null && (
+        <div className="mt-8 p-6 bg-gray-50 rounded-lg shadow">
+          <h3 className="text-xl font-bold mb-2">Rapport d'analyse ATS</h3>
+          <div className="mb-2">
+            <span className="font-semibold">Score ATS :</span> <span className="text-blue-700 font-bold">{atsScore} / 100</span>
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold">Feedback :</span> <span className="text-gray-700">{feedback}</span>
+          </div>
+          <details className="mt-4">
+            <summary className="cursor-pointer font-semibold text-blue-600">Voir le texte extrait du CV</summary>
+            <pre className="mt-2 p-2 bg-white border rounded text-xs max-h-64 overflow-auto whitespace-pre-wrap">{extractedText}</pre>
+          </details>
+        </div>
+      )}
     </div>
   );
 };

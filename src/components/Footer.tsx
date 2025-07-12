@@ -133,19 +133,19 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/conseillers" className="hover:text-blue-400 transition-colors flex items-center">
+                <Link to="/conseiller" className="hover:text-blue-400 transition-colors flex items-center">
                   <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
                   Nos Conseillers
                 </Link>
               </li>
               <li>
-                <Link to="/resources" className="hover:text-blue-400 transition-colors flex items-center">
+                <Link to="/blog" className="hover:text-blue-400 transition-colors flex items-center">
                   <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
                   Ressources
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:text-blue-400 transition-colors flex items-center">
+                <Link to="/" className="hover:text-blue-400 transition-colors flex items-center">
                   <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
                   À Propos
                 </Link>

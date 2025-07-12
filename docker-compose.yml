@@ -9,7 +9,7 @@ services:
     ports:
       - "7474:80"
     environment:
-      - VITE_API_URL=http://localhost:3000/api
+      - VITE_API_URL=http://localhost:6464/api
     depends_on:
       - api
     volumes:
@@ -22,8 +22,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "6464:6464"
     environment:
+      - PORT=6464
       - NODE_ENV=production
       - JWT_SECRET=your_jwt_secret_here
       - DB_HOST=db
@@ -35,7 +36,6 @@ services:
       - db
     volumes:
       - ./backend:/app
-      - /app/node_modules
     restart: unless-stopped
 
   # Base de données MySQL

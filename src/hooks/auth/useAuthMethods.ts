@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+// [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
+// import { supabase } from '@/integrations/supabase/client';
 import type { AuthUser } from '@supabase/supabase-js';
 import { User, ProfileData } from '../useAuthTypes';
 
@@ -16,20 +17,21 @@ export const useAuthMethods = (
   // Récupération du profil utilisateur
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
+      // const { data, error } = await supabase
+      //   .from('profiles')
+      //   .select('*')
+      //   .eq('id', userId)
+      //   .single();
       
-      if (error) throw error;
+      // if (error) throw error;
       
-      setProfile(data);
-      setProfileData(data);
+      setProfile(null);
+      setProfileData(null);
       
       // Set admin status
-      setIsSuperAdmin(data?.is_super_admin || false);
-      setIsMasterAdmin(data?.is_master_admin || false);
+      setIsSuperAdmin(false);
+      setIsMasterAdmin(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -38,16 +40,16 @@ export const useAuthMethods = (
   // Connexion avec email/mot de passe - mode simplifié sans vérification
   const signIn = async (email: string, password?: string) => {
     try {
-      // Utiliser la connexion par lien magique (OTP)
-      const { data, error } = await supabase.auth.signInWithOtp({ 
-        email,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: window.location.origin + '/dashboard'
-        }
-      });
+      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
+      // const { data, error } = await supabase.auth.signInWithOtp({ 
+      //   email,
+      //   options: {
+      //     shouldCreateUser: true,
+      //     emailRedirectTo: window.location.origin + '/dashboard'
+      //   }
+      // });
       
-      if (error) throw error;
+      // if (error) throw error;
       
       toast.success('Connexion en cours... Vérifiez vos emails pour le lien de connexion');
       return { user: null, token: null };
@@ -60,17 +62,17 @@ export const useAuthMethods = (
   // Inscription avec email/mot de passe - simplifié
   const signUp = async (email: string, password?: string, userData = {}) => {
     try {
-      // Inscription simplifiée avec OTP
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: true,
-          data: userData,
-          emailRedirectTo: window.location.origin + '/dashboard'
-        }
-      });
+      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
+      // const { data, error } = await supabase.auth.signInWithOtp({
+      //   email,
+      //   options: {
+      //     shouldCreateUser: true,
+      //     data: userData,
+      //     emailRedirectTo: window.location.origin + '/dashboard'
+      //   }
+      // });
       
-      if (error) throw error;
+      // if (error) throw error;
       
       toast.success('Un lien de connexion a été envoyé à votre email.');
       return { user: null, token: null };
@@ -83,7 +85,25 @@ export const useAuthMethods = (
   // Déconnexion
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
+      // await supabase.auth.signOut();
+      
+      // Nettoyer tous les tokens et données
+      localStorage.removeItem('userToken');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('rememberedEmail');
+      localStorage.removeItem('rememberedMode');
+      
+      // Synchroniser l'état
+      setUser(null);
+      setProfile(null);
+      setProfileData(null);
+      setIsSuperAdmin(false);
+      setIsMasterAdmin(false);
+      
       toast.success('Déconnexion réussie');
     } catch (error: any) {
       toast.error(error.message || 'Erreur lors de la déconnexion');
@@ -93,28 +113,29 @@ export const useAuthMethods = (
   // Mise à jour du profil
   const updateProfile = async (profileData: Partial<ProfileData>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Utilisateur non connecté');
+      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
+      // const { data: { user } } = await supabase.auth.getUser();
+      // if (!user) throw new Error('Utilisateur non connecté');
       
-      const { error } = await supabase
-        .from('profiles')
-        .update(profileData)
-        .eq('id', user.id);
+      // const { error } = await supabase
+      //   .from('profiles')
+      //   .update(profileData)
+      //   .eq('id', user.id);
       
-      if (error) throw error;
+      // if (error) throw error;
       
       // Récupérer le profil complet après mise à jour pour assurer la cohérence
-      const { data: updatedProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // const { data: updatedProfile } = await supabase
+      //   .from('profiles')
+      //   .select('*')
+      //   .eq('id', user.id)
+      //   .single();
       
       // Utiliser directement les objets, pas des fonctions updater
-      if (updatedProfile) {
-        setProfile(updatedProfile);
-        setProfileData(updatedProfile);
-      }
+      // if (updatedProfile) {
+      //   setProfile(updatedProfile);
+      //   setProfileData(updatedProfile);
+      // }
       
       toast.success('Profil mis à jour avec succès');
     } catch (error: any) {

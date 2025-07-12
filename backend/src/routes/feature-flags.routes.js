@@ -1,10 +1,9 @@
-
 const express = require('express');
 const router = express.Router();
 const { authenticate, isAdmin } = require('../middleware/auth.middleware');
 const { pool } = require('../config/database');
 
-// Get all feature flags
+// Get all feature flags (public)
 router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM feature_flags');

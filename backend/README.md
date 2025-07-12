@@ -1,4 +1,3 @@
-
 # Backend - Application d'Orientation
 
 ## Installation et démarrage
@@ -38,3 +37,27 @@ npm run dev
 ## Serveur
 Le serveur démarre sur le port 3000 par défaut.
 URL : http://localhost:3000
+
+## Matrice d'accès par rôle (API Backend)
+
+| Méthode + Endpoint                | Public | Auth | Admin | Superadmin | Conseiller | Coach | Recruteur | RH | User | Commentaires |
+|-----------------------------------|--------|------|-------|------------|------------|-------|-----------|----|------|--------------|
+| POST   /api/auth/register         | ✅     |      |       |            |            |       |           |    |      | Inscription  |
+| POST   /api/auth/login            | ✅     |      |       |            |            |       |           |    |      | Connexion    |
+| POST   /api/auth/reset-password   | ✅     |      |       |            |            |       |           |    |      | Reset pass   |
+| POST   /api/auth/update-password  | ✅     |      |       |            |            |       |           |    |      | Update pass  |
+| POST   /api/auth/create-super-admin|       | ✅   | ✅    | ✅         |            |       |           |    |      | Création superadmin (admin/superadmin only) |
+| GET    /api/auth/verify-admin     |        | ✅   | ✅    | ✅         |            |       |           |    |      | Vérification admin (admin/superadmin only) |
+| GET    /api/auth/profile/:id      |        | ✅   | ✅*   | ✅*        |            |       |           |    | ✅*  | *Soit owner, soit admin/superadmin |
+| PUT    /api/auth/profile/:id      |        | ✅   | ✅*   | ✅*        |            |       |           |    | ✅*  | *Soit owner, soit admin/superadmin |
+| GET    /api/test/health           | ✅     |      |       |            |            |       |           |    |      | Santé        |
+| GET    /api/test/db               | ✅     |      |       |            |            |       |           |    |      | Test DB      |
+| GET    /api/feature-flags/        | ✅     |      |       |            |            |       |           |    |      | Liste flags  |
+| PATCH  /api/feature-flags/:id     |        | ✅   | ✅    | ✅         |            |       |           |    |      | MAJ flag (admin/superadmin only) |
+
+**Légende** :
+- ✅ = accès autorisé
+- Auth = authentification requise (JWT)
+- * = accès si owner OU admin/superadmin
+
+**À adapter selon l'évolution des routes et des rôles.**

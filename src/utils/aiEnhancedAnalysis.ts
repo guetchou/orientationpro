@@ -40,7 +40,8 @@ export const getAIEnhancedAnalysis = async (testType: string, results: any): Pro
     }
     
     // Fallback to backend API if Supabase Edge Function is not available
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    if (!backendUrl) throw new Error('VITE_BACKEND_URL doit être défini dans .env');
     
     const response = await axios.post(`${backendUrl}/api/ai-analysis/analyze`, {
       testType,

@@ -12,8 +12,9 @@ import { fadeIn } from "@/animations/transitions";
 import { Loader2, Dumbbell, Heart, Users, Target, Coffee } from "lucide-react";
 import TestBreadcrumb from "@/components/tests/TestBreadcrumb";
 
-// Récupère le backend URL depuis les variables d'environnement ou utilise une valeur par défaut
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+// FIXE: Toutes les requêtes backend sont forcées sur http://10.10.0.5:7474 même en développement, ne pas modifier sans raison métier.
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+if (!backendUrl) throw new Error('VITE_BACKEND_URL doit être défini dans .env');
 
 const retirementReadinessQuestions = [
   {

@@ -6,8 +6,9 @@ import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 
-// Get backend URL from environment variables or use a default value
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+// FIXE: Toutes les requêtes backend sont forcées sur http://10.10.0.5:7474 même en développement, ne pas modifier sans raison métier.
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+if (!backendUrl) throw new Error('VITE_BACKEND_URL doit être défini dans .env');
 
 // Interface pour les types de résultats qui ont un score de confiance
 interface WithConfidenceScore {

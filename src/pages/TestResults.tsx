@@ -9,7 +9,7 @@ import ResultsError from '@/components/test-results/ResultsError';
 import ResultsNotFound from '@/components/test-results/ResultsNotFound';
 import TestResultsView from '@/components/test-results/TestResultsView';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://10.10.0.5:7474';
 
 const TestResults = () => {
   const navigate = useNavigate();

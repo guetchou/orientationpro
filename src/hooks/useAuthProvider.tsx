@@ -1,10 +1,8 @@
-
 import React, { ReactNode } from 'react';
 import { AuthContext } from './useAuthContext';
 import { AuthContextProps } from './useAuthTypes';
 import { useAuthState } from './auth/useAuthState';
 import { useAuthMethods } from './auth/useAuthMethods';
-import { useAuthSession } from './auth/useAuthSession';
 
 export interface AuthProviderProps {
   children: ReactNode;
@@ -24,7 +22,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isMasterAdmin,
     setIsMasterAdmin,
     profileData,
-    setProfileData
+    setProfileData,
+    refreshAuthState,
+    syncAuthState
   } = useAuthState();
 
   // Méthodes d'authentification
@@ -43,17 +43,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsMasterAdmin
   );
 
-  // Gestion de la session
-  useAuthSession(
-    setUser,
-    setProfile,
-    setProfileData,
-    setIsSuperAdmin,
-    setIsMasterAdmin,
-    setLoading,
-    fetchProfile
-  );
-
   // Valeur du contexte
   const value: AuthContextProps = {
     user,
@@ -63,7 +52,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     signOut,
     updateProfile,
-    refreshProfile: () => user && fetchProfile(user.id),
+    refreshProfile: async () => {
+      if (user) {
+        await fetchProfile(user.id);
+      } else {
+        refreshAuthState();
+      }
+    },
     logout,
     profileData: profileData || undefined,
     isSuperAdmin,

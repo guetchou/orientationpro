@@ -9,7 +9,8 @@ import { fr } from "date-fns/locale";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+if (!backendUrl) throw new Error('VITE_BACKEND_URL doit être défini dans .env');
 
 interface TestResult {
   id: string;

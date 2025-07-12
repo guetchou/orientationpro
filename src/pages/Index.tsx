@@ -45,6 +45,9 @@ export default function Index() {
         className="pt-20 relative z-10"
       >
         <HeroSection />
+        {/* TODO: Ajouter ici <MosalaCarousel /> pour les offres d'emploi en vedette */}
+        {/* TODO: Ajouter ici <MosalaApplicationForm /> pour le formulaire de candidature */}
+        {/* TODO: Ajouter ici <MosalaStatsSection /> pour des statistiques dynamiques */}
         <ConseillerSection />
         <HorizontalCarousel />
         <StepsSection />

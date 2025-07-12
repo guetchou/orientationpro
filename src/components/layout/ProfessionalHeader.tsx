@@ -230,25 +230,25 @@ export const ProfessionalHeader = () => {
                     </Button>
                     
                     {/* Menu Admin Mobile - seulement pour les admins */}
-                    {isAdmin && (
-                      <>
-                        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                          Administration
-                        </div>
-                        {adminItems.map((item) => {
-                          const Icon = item.icon;
-                          return (
+              {isAdmin && (
+                <>
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Administration
+                  </div>
+                  {adminItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
                             <Button key={item.path} variant="ghost" asChild className="w-full justify-start text-gray-600">
                               <Link to={item.path} onClick={() => setIsMenuOpen(false)}>
                                 <Icon className="h-5 w-5 mr-3" />
                                 {item.name}
-                              </Link>
+                      </Link>
                             </Button>
-                          );
-                        })}
-                      </>
-                    )}
-                    
+                    );
+                  })}
+                </>
+              )}
+
                     <Button variant="ghost" asChild className="w-full justify-start text-red-600" onClick={handleLogout}>
                       <div className="flex items-center">
                         <LogOut className="h-5 w-5 mr-3" />

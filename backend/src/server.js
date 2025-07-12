@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -6,6 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth.routes');
 const testRoutes = require('./routes/test.routes');
+const cvRoutes = require('./routes/cv.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -57,6 +57,7 @@ app.use((req, res, next) => {
 // Routes API
 app.use('/api/test', testRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/cv', cvRoutes);
 
 // Route racine avec diagnostic complet
 app.get('/', (req, res) => {

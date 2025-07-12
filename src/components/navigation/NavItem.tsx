@@ -23,7 +23,7 @@ export const NavItem = ({ name, path, icon, isActive, onClick }: NavItemProps) =
       >
         {icon && (
           <span className="transition-transform duration-300 group-hover:scale-110">
-            {icon}
+        {icon}
           </span>
         )}
         {name}

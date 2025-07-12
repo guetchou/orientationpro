@@ -21,14 +21,14 @@ export const CTASection = () => {
             <div className="flex flex-wrap gap-4">
               <Button asChild className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg shadow-primary/20 transition-all duration-300 hover:translate-y-[-2px]">
                 <Link to="/conseiller">
-                  <Users size={18} />
-                  Voir nos conseillers
+                <Users size={18} />
+                Voir nos conseillers
                 </Link>
               </Button>
               <Button asChild variant="outline" className="gap-2 border-primary/20 hover:bg-primary/10 transition-all duration-300">
                 <Link to="/tests">
-                  <BookOpen size={18} />
-                  Ressources gratuites
+                <BookOpen size={18} />
+                Ressources gratuites
                 </Link>
               </Button>
             </div>

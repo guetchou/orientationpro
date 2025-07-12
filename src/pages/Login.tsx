@@ -7,12 +7,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2, User, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Login() {
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("admin@test.com");
+  const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export default function Login() {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, user } = useAuth();
+  const { signIn, user, signOut } = useAuth();
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -29,12 +30,60 @@ export default function Login() {
     // Vérifier les tokens de connexion
     const adminToken = localStorage.getItem('adminToken');
     const userToken = localStorage.getItem('userToken');
+    const userData = localStorage.getItem('userData');
     
+    // Si on a des données utilisateur, rediriger selon le rôle
+    if (userData) {
+      try {
+        const userInfo = JSON.parse(userData);
+        const userRole = userInfo.role;
+        
+        // Éviter les boucles en vérifiant si on est déjà sur la bonne page
+        const currentPath = window.location.pathname;
+        let shouldRedirect = false;
+        let targetPath = '';
+        
+        switch (userRole) {
+          case 'super_admin':
+            targetPath = '/admin/super-admin';
+            shouldRedirect = currentPath !== targetPath;
+            break;
+          case 'admin':
+            targetPath = '/admin/dashboard';
+            shouldRedirect = currentPath !== targetPath;
+            break;
+          case 'conseiller':
+            targetPath = '/conseiller/dashboard';
+            shouldRedirect = currentPath !== targetPath;
+            break;
+          case 'user':
+            targetPath = '/dashboard';
+            shouldRedirect = currentPath !== targetPath;
+            break;
+          default:
+            targetPath = '/dashboard';
+            shouldRedirect = currentPath !== targetPath;
+            break;
+        }
+        
+        if (shouldRedirect) {
+          navigate(targetPath, { replace: true });
+        }
+        return;
+      } catch (e) {
+        console.error('Erreur parsing userData:', e);
+        // Nettoyer les données corrompues
+        localStorage.removeItem('userData');
+        localStorage.removeItem('userToken');
+      }
+    }
+    
+    // Ancienne logique pour compatibilité
     if (adminToken) {
       // Utilisateur admin connecté via backend
       navigate('/admin/dashboard', { replace: true });
-    } else if (userToken) {
-      // Utilisateur normal connecté via backend
+    } else if (userToken && !userData) {
+      // Utilisateur normal connecté via backend (sans données de rôle)
       navigate('/dashboard', { replace: true });
     } else if (user && !adminToken && !userToken) {
       // Utilisateur connecté via Supabase
@@ -54,47 +103,168 @@ export default function Login() {
     try {
       console.log("Tentative de connexion:", { email, mode: loginMode });
       
-      // Connexion via le backend local pour tous les utilisateurs
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          role: loginMode === 'admin' ? 'admin' : 'user'
-        }),
-      });
+      // Vérifier les comptes de test Supabase
+      const testAccounts = {
+        'super_admin@test.com': { role: 'super_admin', password: 'password123' },
+        'admin@test.com': { role: 'admin', password: 'password123' },
+        'conseiller@test.com': { role: 'conseiller', password: 'password123' },
+        'user@test.com': { role: 'user', password: 'password123' }
+      };
 
-      const data = await response.json();
+      // Vérifier si c'est un compte de test
+      const testAccount = testAccounts[email];
+      if (testAccount && password === testAccount.password) {
+        // Connexion réussie pour un compte de test
+        const userData = {
+          id: `test-${Date.now()}`,
+          email: email,
+          role: testAccount.role,
+          full_name: email.split('@')[0].replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          is_super_admin: testAccount.role === 'super_admin'
+        };
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur de connexion');
+        // Stocker les informations utilisateur
+        localStorage.setItem('userToken', 'test-token-' + Date.now());
+        localStorage.setItem('userData', JSON.stringify(userData));
+        localStorage.setItem('userRole', testAccount.role);
+        
+        toast.success('Connexion réussie !');
+
+        // Redirection selon le rôle
+        switch (testAccount.role) {
+          case 'super_admin':
+            navigate('/admin/super-admin', { replace: true });
+            break;
+          case 'admin':
+            navigate('/admin/dashboard', { replace: true });
+            break;
+          case 'conseiller':
+            navigate('/conseiller/dashboard', { replace: true });
+            break;
+          case 'user':
+            navigate('/dashboard', { replace: true });
+            break;
+          default:
+            navigate('/dashboard', { replace: true });
+            break;
+        }
+        return;
       }
 
-      if (data.success) {
-        if (loginMode === 'admin') {
-          // Stocker les informations admin dans localStorage
-          localStorage.setItem('adminToken', data.token);
-          localStorage.setItem('adminUser', JSON.stringify(data.user));
-          
-          toast.success('Connexion admin réussie !');
-          
-          // Rediriger vers l'espace admin
-          navigate('/admin/dashboard', { replace: true });
-        } else {
+      // Si ce n'est pas un compte de test, essayer la connexion Supabase
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (data.user) {
+          // Récupérer le profil utilisateur depuis la base de données
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*, user_roles(role)')
+            .eq('email', email)
+            .single();
+
+          if (profileError) {
+            console.warn('Profil non trouvé, création d\'un profil par défaut');
+          }
+
+          const userData = {
+            id: data.user.id,
+            email: data.user.email,
+            role: profile?.user_roles?.[0]?.role || 'user',
+            full_name: profile?.full_name || email.split('@')[0],
+            is_super_admin: profile?.is_super_admin || false
+          };
+
+          // Stocker les informations utilisateur
+          localStorage.setItem('userToken', data.session?.access_token || 'supabase-token');
+          localStorage.setItem('userData', JSON.stringify(userData));
+          localStorage.setItem('userRole', userData.role);
+
+          toast.success('Connexion réussie !');
+
+          // Redirection selon le rôle
+          switch (userData.role) {
+            case 'super_admin':
+              navigate('/admin/super-admin', { replace: true });
+              break;
+            case 'admin':
+              navigate('/admin/dashboard', { replace: true });
+              break;
+            case 'conseiller':
+              navigate('/conseiller/dashboard', { replace: true });
+              break;
+            case 'user':
+              navigate('/dashboard', { replace: true });
+              break;
+            default:
+              navigate('/dashboard', { replace: true });
+              break;
+          }
+        }
+      } catch (supabaseError: any) {
+        // Si Supabase échoue, essayer le backend local comme fallback
+        console.log("Tentative de connexion via backend local...");
+        
+        const response = await fetch('http://10.10.0.5:7474/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            role: loginMode === 'admin' ? 'admin' : 'user'
+          }),
+        });
+
+        const backendData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(backendData.message || 'Échec de la connexion');
+        }
+
+        if (backendData.success) {
           // Stocker les informations utilisateur dans localStorage
-          localStorage.setItem('userToken', data.token);
-          localStorage.setItem('userData', JSON.stringify(data.user));
+          localStorage.setItem('userToken', backendData.token);
+          localStorage.setItem('userData', JSON.stringify(backendData.user));
+          localStorage.setItem('userRole', backendData.user.role);
           
           toast.success('Connexion réussie !');
-          
-          // Rediriger vers le dashboard utilisateur
-          navigate('/dashboard', { replace: true });
+
+          // Redirection dynamique selon le rôle
+          switch (backendData.user.role) {
+            case 'admin':
+              navigate('/admin/dashboard', { replace: true });
+              break;
+            case 'superadmin':
+              navigate('/superadmin/dashboard', { replace: true });
+              break;
+            case 'conseiller':
+              navigate('/conseiller/dashboard', { replace: true });
+              break;
+            case 'coach':
+              navigate('/coach/dashboard', { replace: true });
+              break;
+            case 'recruteur':
+              navigate('/recruteur/dashboard', { replace: true });
+              break;
+            case 'rh':
+              navigate('/rh/dashboard', { replace: true });
+              break;
+            default:
+              navigate('/dashboard', { replace: true });
+              break;
+          }
+        } else {
+          throw new Error(backendData.message || 'Échec de la connexion');
         }
-      } else {
-        throw new Error(data.message || 'Échec de la connexion');
       }
       
     } catch (err: any) {
@@ -104,9 +274,11 @@ export default function Login() {
       
       // Messages d'erreur personnalisés
       if (errorMessage.includes('fetch') || errorMessage.includes('NetworkError')) {
-        errorMessage = "Impossible de contacter le serveur. Vérifiez que le backend est démarré.";
-      } else if (errorMessage.includes('Invalid login credentials')) {
+        errorMessage = "Impossible de contacter le serveur. Vérifiez que Supabase est démarré.";
+      } else if (errorMessage.includes('Invalid login credentials') || errorMessage.includes('Invalid login')) {
         errorMessage = "Email ou mot de passe incorrect";
+      } else if (errorMessage.includes('Email not confirmed')) {
+        errorMessage = "Veuillez confirmer votre email avant de vous connecter";
       }
       
       setError(errorMessage);
@@ -140,12 +312,31 @@ export default function Login() {
     setError(null);
     
     if (mode === 'admin') {
-      setEmail('admin@example.com');
-      setPassword('admin123');
+      setEmail('admin@test.com');
+      setPassword('password123');
     } else {
-      setEmail('user@example.com');
+      setEmail('user@test.com');
       setPassword('password123');
     }
+  };
+
+  const handleLogout = () => {
+    // Nettoyer tous les tokens et données
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('rememberedEmail');
+    localStorage.removeItem('rememberedMode');
+    
+    // Déconnexion Supabase si nécessaire
+    if (signOut) {
+      signOut();
+    }
+    
+    // Recharger la page pour éviter les boucles
+    window.location.reload();
   };
 
   return (
@@ -170,6 +361,19 @@ export default function Login() {
               <CardDescription className="text-gray-600">
                 Accédez à votre espace personnel
               </CardDescription>
+              
+              {/* Bouton de déconnexion pour éviter les boucles */}
+              <div className="flex justify-center mt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-xs"
+                >
+                  Déconnexion (si bloqué)
+                </Button>
+              </div>
             </div>
             
             {/* Sélecteur de mode */}

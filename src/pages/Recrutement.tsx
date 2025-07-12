@@ -8,6 +8,27 @@ import { CheckCircle, Users, Briefcase, FileCheck, BarChart, Target, Zap, Shield
 import { Link } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import CandidatureForm from '@/components/recrutement/CandidatureForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AIMatchingEngine } from '@/components/admin/ats/AIMatchingEngine';
+import { CVParsingEngine } from '@/components/admin/ats/CVParsingEngine';
+import { CandidatePipeline } from '@/components/admin/ats/CandidatePipeline';
+import { AnalyticsDashboard } from '@/components/admin/ats/AnalyticsDashboard';
+import { CandidatesList } from '@/components/admin/ats/CandidatesList';
+import { CVUploadZone } from '@/components/admin/ats/CVUploadZone';
+import { AssessmentCenter } from '@/components/admin/ats/AssessmentCenter';
+import { CommunicationCenter } from '@/components/admin/ats/CommunicationCenter';
+import { IntegratedCalendar } from '@/components/admin/ats/IntegratedCalendar';
+import { NotificationCenter } from '@/components/admin/ats/NotificationCenter';
+import { WhatsAppIntegration } from '@/components/admin/ats/WhatsAppIntegration';
+import { MultilingualSupport } from '@/components/admin/ats/MultilingualSupport';
+import { AIAdvancedEngine } from '@/components/admin/ats/AIAdvancedEngine';
+import { PredictiveAnalytics } from '@/components/admin/ats/PredictiveAnalytics';
+import { MobileCandidateApp } from '@/components/admin/ats/MobileCandidateApp';
+import { ExternalIntegrations } from '@/components/admin/ats/ExternalIntegrations';
+import GamificationSystem from '@/components/admin/ats/GamificationSystem';
+import AdvancedReporting from '@/components/admin/ats/AdvancedReporting';
+import SecurityCompliance from '@/components/admin/ats/SecurityCompliance';
+import CustomizationThemes from '@/components/admin/ats/CustomizationThemes';
 
 const Recrutement = () => {
   
@@ -521,6 +542,58 @@ const Recrutement = () => {
                 </motion.div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Démo interactive ATS */}
+        <section id="ats-demo" className="py-20 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-8">Démo interactive ATS</h2>
+            <Tabs defaultValue="matching" className="space-y-6">
+              <TabsList className="grid grid-cols-6 w-full mb-6 overflow-x-auto">
+                <TabsTrigger value="matching">Matching IA</TabsTrigger>
+                <TabsTrigger value="parsing">Parsing CV</TabsTrigger>
+                <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                <TabsTrigger value="upload">Upload CV</TabsTrigger>
+                <TabsTrigger value="candidates">Candidats</TabsTrigger>
+                <TabsTrigger value="assessments">Tests</TabsTrigger>
+                <TabsTrigger value="communication">Communication</TabsTrigger>
+                <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+                <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+                <TabsTrigger value="multilingual">Multilingue</TabsTrigger>
+                <TabsTrigger value="aiAdvanced">IA Avancée</TabsTrigger>
+                <TabsTrigger value="predictiveAnalytics">Analyse Prédictive</TabsTrigger>
+                <TabsTrigger value="mobileCandidateApp">Mobile App</TabsTrigger>
+                <TabsTrigger value="externalIntegrations">Intégrations</TabsTrigger>
+                <TabsTrigger value="gamification">Gamification</TabsTrigger>
+                <TabsTrigger value="advancedReporting">Rapport Avancé</TabsTrigger>
+                <TabsTrigger value="securityCompliance">Sécurité</TabsTrigger>
+                <TabsTrigger value="customizationThemes">Personnalisation</TabsTrigger>
+              </TabsList>
+              <TabsContent value="matching"><AIMatchingEngine /></TabsContent>
+              <TabsContent value="parsing"><CVParsingEngine /></TabsContent>
+              <TabsContent value="pipeline"><CandidatePipeline /></TabsContent>
+              <TabsContent value="analytics"><AnalyticsDashboard /></TabsContent>
+              <TabsContent value="upload"><CVUploadZone /></TabsContent>
+              <TabsContent value="candidates"><CandidatesList candidates={[]} /></TabsContent>
+              <TabsContent value="assessments"><AssessmentCenter /></TabsContent>
+              <TabsContent value="communication"><CommunicationCenter /></TabsContent>
+              <TabsContent value="calendar"><IntegratedCalendar /></TabsContent>
+              <TabsContent value="notifications"><NotificationCenter /></TabsContent>
+              <TabsContent value="whatsapp"><WhatsAppIntegration /></TabsContent>
+              <TabsContent value="multilingual"><MultilingualSupport /></TabsContent>
+              <TabsContent value="aiAdvanced"><AIAdvancedEngine /></TabsContent>
+              <TabsContent value="predictiveAnalytics"><PredictiveAnalytics /></TabsContent>
+              <TabsContent value="mobileCandidateApp"><MobileCandidateApp /></TabsContent>
+              <TabsContent value="externalIntegrations"><ExternalIntegrations /></TabsContent>
+              <TabsContent value="gamification"><GamificationSystem /></TabsContent>
+              <TabsContent value="advancedReporting"><AdvancedReporting /></TabsContent>
+              <TabsContent value="securityCompliance"><SecurityCompliance /></TabsContent>
+              <TabsContent value="customizationThemes"><CustomizationThemes /></TabsContent>
+            </Tabs>
+            <div className="mt-4 text-sm text-gray-500">Certaines fonctionnalités sont en mode lecture seule pour la démo.</div>
           </div>
         </section>
       </main>

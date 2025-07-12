@@ -19,26 +19,20 @@ import Conseillers from '@/pages/Conseillers';
 import SeniorEmploymentTest from '@/pages/SeniorEmploymentTest';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
+import CVOptimizerPage from '@/pages/CVOptimizer';
+import CVHistoryPage from '@/pages/CVHistory';
+import ConseillerDashboard from '@/pages/conseiller/Dashboard';
+import Unauthorized from '@/pages/Unauthorized';
+import { 
+  PublicRoute, 
+  PrivateRoute, 
+  AdminRoute, 
+  SuperAdminRoute, 
+  ConseillerRoute, 
+  UserRoute 
+} from '@/components/auth/AuthGuard';
 
-// Composant pour protéger les routes admin
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  
-  // Vérifier si l'utilisateur est admin (via localStorage pour les comptes backend)
-  const adminToken = localStorage.getItem('adminToken');
-  const adminUser = localStorage.getItem('adminUser');
-  
-  if (adminToken && adminUser) {
-    return <>{children}</>;
-  }
-  
-  // Ou vérifier via Supabase pour les utilisateurs normaux avec rôle admin
-  if (user && (user as any).is_admin) {
-    return <>{children}</>;
-  }
-  
-  return <Navigate to="/login" replace />;
-};
+// Anciens composants supprimés - utilisation des nouveaux AuthGuard
 
 export const AppRouter = () => {
   return (
@@ -65,17 +59,20 @@ export const AppRouter = () => {
           <Route path="/orientation-services" element={<Tests />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/cv-optimizer" element={<CVOptimizerPage />} />
+          <Route path="/cv-history" element={<CVHistoryPage />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
           
           {/* Routes protégées utilisateur */}
           <Route path="/dashboard" element={
-            <RequireAuth>
+            <UserRoute>
               <Dashboard />
-            </RequireAuth>
+            </UserRoute>
           } />
           <Route path="/test-results" element={
-            <RequireAuth>
+            <UserRoute>
               <TestResults />
-            </RequireAuth>
+            </UserRoute>
           } />
           
           {/* Routes admin protégées */}
@@ -85,9 +82,9 @@ export const AppRouter = () => {
             </AdminRoute>
           } />
           <Route path="/admin/super-admin" element={
-            <AdminRoute>
+            <SuperAdminRoute>
               <SuperAdmin />
-            </AdminRoute>
+            </SuperAdminRoute>
           } />
           <Route path="/admin/ats" element={
             <AdminRoute>
@@ -103,6 +100,13 @@ export const AppRouter = () => {
             <AdminRoute>
               <MediaManager />
             </AdminRoute>
+          } />
+          
+          {/* Routes conseiller protégées */}
+          <Route path="/conseiller/dashboard" element={
+            <ConseillerRoute>
+              <ConseillerDashboard />
+            </ConseillerRoute>
           } />
           
           {/* Redirection pour toutes les autres routes */}

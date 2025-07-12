@@ -15,7 +15,7 @@ const UpdatePassword = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://10.10.0.5:7474/api';
   
   // Get reset token from URL params
   const searchParams = new URLSearchParams(location.search);

@@ -4,7 +4,8 @@ import { toast } from 'sonner';
 import { User } from './useAuth'; // Import corrigé
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL;
+if (!API_URL) throw new Error('VITE_API_URL doit être défini dans .env');
 
 export function useAuthMethods() {
   const [loading, setLoading] = useState(false);
