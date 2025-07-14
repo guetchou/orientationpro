@@ -4,8 +4,8 @@ export interface TestResult {
   id: string;
   user_id: string;
   test_type: string;
-  results: any;
-  answers: any[];
+  results: unknown; // Peut être affiné selon le test
+  answers: unknown[]; // Peut être affiné selon le test
   created_at: string;
   progress_score: number;
 }

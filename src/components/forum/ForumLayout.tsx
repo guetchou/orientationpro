@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Link } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { ForumSidebar } from './ForumSidebar';
 import { ForumHeader } from './ForumHeader';
 import { Button } from '@/components/ui/button';

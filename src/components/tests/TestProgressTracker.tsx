@@ -60,7 +60,7 @@ const TestProgressTracker = ({
           {currentStep === totalSteps ? (
             <motion.span
               initial={{ scale: 1 }}
-              animate={{ scale: [1, 1.1, 1] }}
+              animate={{ scale: [1, 1.1] }}
               transition={{ repeat: 3, duration: 0.5 }}
               className="text-green-500 font-medium"
             >

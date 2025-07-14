@@ -1,6 +1,6 @@
 
 import { LearningStyleResults, EmotionalTestResults, TestResult, RiasecResults, MultipleIntelligenceResults } from "@/types/dashboard";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export function analyzeLearningStyle(answers: Record<string, number>): LearningStyleResults {
   // Calculer les scores pour chaque style d'apprentissage

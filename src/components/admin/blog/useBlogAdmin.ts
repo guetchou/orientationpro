@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { BlogPost } from '@/types/blog'; // Import the unified BlogPost type
 
 // We'll remove the local BlogPost interface definition and use the imported one

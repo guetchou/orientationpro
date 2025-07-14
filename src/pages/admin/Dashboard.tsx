@@ -417,16 +417,23 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    // Nettoyer le localStorage
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    
-    // Afficher un message de confirmation
-    toast.success("Déconnexion réussie");
-    
-    // Rediriger vers la page de connexion
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      console.log('🔐 Déconnexion depuis AdminDashboard...');
+      
+      // Utiliser le système de déconnexion unifié
+      const { signOut } = useAuth();
+      await signOut();
+      
+      toast.success("Déconnexion réussie");
+      navigate("/login");
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      // Forcer le nettoyage même en cas d'erreur
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
   };
 
   // Données simulées pour le graphique d'activité

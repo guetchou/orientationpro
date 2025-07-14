@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { AIEnhancedAnalysis } from "@/types/test";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";

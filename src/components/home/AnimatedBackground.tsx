@@ -13,7 +13,7 @@ export const AnimatedBackground = () => {
       <motion.div 
         animate={{ 
           x: [0, 50, 0],
-          y: [0, 30, 0],
+          y: [0, 30],
         }}
         transition={{ 
           repeat: Infinity,
@@ -25,7 +25,7 @@ export const AnimatedBackground = () => {
       <motion.div 
         animate={{ 
           x: [0, -70, 0],
-          y: [0, 50, 0],
+          y: [0, 50],
         }}
         transition={{ 
           repeat: Infinity,
@@ -38,7 +38,7 @@ export const AnimatedBackground = () => {
       <motion.div 
         animate={{ 
           x: [0, 40, 0],
-          y: [0, -60, 0],
+          y: [0, -60],
         }}
         transition={{ 
           repeat: Infinity,

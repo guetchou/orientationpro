@@ -82,20 +82,27 @@ export const useAuthMethods = (
     }
   };
 
-  // Déconnexion
+  // Déconnexion unifiée
   const signOut = async () => {
     try {
-      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
-      // await supabase.auth.signOut();
+      console.log('🔐 Déconnexion en cours...');
       
-      // Nettoyer tous les tokens et données
-      localStorage.removeItem('userToken');
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('userData');
-      localStorage.removeItem('adminUser');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('rememberedEmail');
-      localStorage.removeItem('rememberedMode');
+      // Nettoyer TOUS les tokens et données possibles
+      const keysToRemove = [
+        'userToken', 'adminToken', 'userData', 'adminUser', 'userRole',
+        'rememberedEmail', 'rememberedMode', 'authToken', 'userData',
+        'supabase.auth.token', 'supabase.auth.refreshToken'
+      ];
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      
+      // Nettoyer les cookies si nécessaire
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
       
       // Synchroniser l'état
       setUser(null);
@@ -104,9 +111,22 @@ export const useAuthMethods = (
       setIsSuperAdmin(false);
       setIsMasterAdmin(false);
       
+      console.log('✅ Déconnexion réussie - données nettoyées');
       toast.success('Déconnexion réussie');
+      
+      // Recharger la page pour éviter les boucles
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+      
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la déconnexion');
+      console.error('❌ Erreur lors de la déconnexion:', error);
+      toast.error('Erreur lors de la déconnexion');
+      
+      // Forcer le nettoyage même en cas d'erreur
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
     }
   };
 

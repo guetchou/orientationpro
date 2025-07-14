@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ModeToggle } from '@/components/ui/ModeToggle';
 import { Menu, X, User, LogIn, Briefcase, Search, Book, School, BarChart, Users, Info, Compass } from 'lucide-react';
@@ -42,6 +42,7 @@ const Navbar = () => {
     { name: 'Ressources', path: '/tests', icon: <Book size={18} /> },
     { name: 'À Propos', path: '/', icon: <Info size={18} /> },
     { name: 'Contact', path: '/', icon: <Search size={18} /> },
+    { name: 'Guide 2024', path: '/guide-congo-2024', icon: <School size={18} /> },
   ];
 
   // Ajouter la propriété isActive pour chaque élément

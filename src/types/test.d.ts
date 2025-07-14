@@ -133,7 +133,7 @@ export interface TestResult {
   user_id: string;
   test_type: string;
   created_at: string;
-  answers: any[];
+  answers: unknown[]; // Peut être affiné selon le test
   progress_score: number;
-  results: any;
+  results: unknown; // Peut être affiné selon le test
 }

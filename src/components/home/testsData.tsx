@@ -26,7 +26,7 @@ export const testsData: TestType[] = [
       "Découvrez les métiers adaptés à votre profil",
       "Obtenez des recommandations de formations"
     ],
-    path: "/test-riasec",
+    path: "/tests/riasec",
     color: "bg-gradient-to-br from-primary-100 to-primary-50"
   },
   {
@@ -41,7 +41,7 @@ export const testsData: TestType[] = [
       "Identifiez vos forces et faiblesses émotionnelles",
       "Recevez des conseils pour développer votre intelligence émotionnelle"
     ],
-    path: "/test-emotional",
+    path: "/tests/emotional",
     color: "bg-gradient-to-br from-pink-100 to-pink-50"
   },
   {
@@ -56,7 +56,7 @@ export const testsData: TestType[] = [
       "Comprenez comment vous apprenez le mieux",
       "Identifiez les domaines professionnels adaptés à votre profil"
     ],
-    path: "/test-multiple",
+    path: "/tests/multiple",
     color: "bg-gradient-to-br from-purple-100 to-purple-50"
   },
   {
@@ -71,7 +71,7 @@ export const testsData: TestType[] = [
       "Recevez des conseils adaptés à votre façon d'apprendre",
       "Optimisez vos méthodes d'études et de travail"
     ],
-    path: "/test-learning",
+    path: "/tests/learning",
     color: "bg-gradient-to-br from-secondary-100 to-secondary-50"
   },
   {
@@ -86,7 +86,7 @@ export const testsData: TestType[] = [
       "Découvrez si vous êtes fait pour entreprendre",
       "Obtenez des recommandations adaptées à votre profil"
     ],
-    path: "/test-entrepreneurial",
+    path: "/tests/entrepreneurial",
     color: "bg-gradient-to-br from-amber-100 to-amber-50"
   }
 ];

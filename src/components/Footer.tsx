@@ -41,7 +41,7 @@ export const Footer = () => {
                   <div 
                     className="w-full h-64 md:h-80 rounded-2xl bg-cover bg-center shadow-2xl border-4 border-blue-500/20"
                     style={{
-                      backgroundImage: `url('/images/carousel/orientation-4.png')`
+                      backgroundImage: `url('public/images/staff-ai-genere-entreprise.jpg')`
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-transparent rounded-2xl" />
@@ -142,6 +142,12 @@ export const Footer = () => {
                 <Link to="/blog" className="hover:text-blue-400 transition-colors flex items-center">
                   <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
                   Ressources
+                </Link>
+              </li>
+              <li>
+                <Link to="/guide-congo-2024" className="hover:text-blue-400 transition-colors flex items-center">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                  Guide des Études Supérieures 2024
                 </Link>
               </li>
               <li>

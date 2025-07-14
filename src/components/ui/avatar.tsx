@@ -47,8 +47,8 @@ const Avatar = React.forwardRef<
         )}
         initial={{ scale: 0 }}
         animate={pulseAnimation && online ? {
-          scale: [1, 1.2, 1],
-          opacity: [1, 0.8, 1]
+          scale: [1, 1.2],
+          opacity: [1, 0.8]
         } : { scale: 1 }}
         transition={pulseAnimation ? {
           duration: 2,

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { ChatBot } from "@/components/chat/ChatBot";
 import { ActualitesList } from "@/components/actualites/ActualitesList";
 import { ActualitesHeader } from "@/components/actualites/ActualitesHeader";

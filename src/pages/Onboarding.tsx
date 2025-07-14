@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { ChevronRight, ChevronLeft, UserCircle2, BookOpen, GraduationCap, Building2, UserCog } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

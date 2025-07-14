@@ -1,7 +1,7 @@
 
 import { render } from '@testing-library/react';
 import { ConseillerDashboard } from '../ConseillerDashboard';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { ConseillerStats } from '@/types/dashboard';
 
 // Mock the supabase client

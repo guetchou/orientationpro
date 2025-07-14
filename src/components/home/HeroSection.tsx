@@ -52,7 +52,7 @@ export const HeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 overflow-hidden">
+    <section className="relative min-h-screen bg-blue-50 overflow-hidden">
       {/* Image de fond humaine avec overlay */}
       <div className="absolute inset-0">
         <div 
@@ -88,7 +88,7 @@ export const HeroSection = () => {
         </div>
       </motion.div>
 
-      <div className="relative z-10 container mx-auto px-4 py-16 lg:py-24">
+      <div className="relative z-10 w-full max-w-7xl px-4 py-16 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           {/* Côté gauche - Contenu */}
@@ -107,17 +107,18 @@ export const HeroSection = () => {
             </motion.div>
 
             {/* Titre principal */}
-            <motion.div variants={item} className="space-y-4">
-              <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Votre avenir{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
-                  commence ici !
-                </span>
+            <motion.div variants={item} className="space-y-6 text-left w-full">
+              <h1 className="text-8xl font-extrabold text-gray-900 leading-tight w-full">
               </h1>
-              
-              <p className="text-xl text-gray-600 leading-relaxed">
-                Tests RIASEC, optimisation ATS et conseils personnalisés pour réussir au Congo.
+              <h2 className="text-4xl font-bold text-blue-700 leading-tight w-full">
+                Votre réussite professionnelle commence ici
+              </h2>
+              <p className="text-2xl font-semibold text-gray-700 leading-relaxed w-full">
+                La plateforme accompagne la jeunesse congolaise vers l’emploi, l’innovation et l’inclusion.
               </p>
+              <blockquote className="text-2xl italic text-green-700 font-medium border-l-4 border-green-400 pl-6 mt-6 w-full">
+                "L’avenir appartient à ceux qui croient en la beauté de leurs rêves."
+              </blockquote>
             </motion.div>
 
             {/* Fonctionnalités */}
@@ -139,15 +140,14 @@ export const HeroSection = () => {
             </motion.div>
 
             {/* Boutons CTA */}
-            <motion.div variants={item} className="flex flex-col sm:flex-row gap-4">
+            <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 text-left w-full">
               <Link to="/tests">
                 <Button 
                   size="lg" 
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold px-12 py-6 text-2xl shadow-lg hover:shadow-xl transition-all duration-300 group w-full sm:w-auto text-left"
                 >
-                  <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                  Démarrer mon test
-                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  Commencer maintenant
+                  <ArrowRight className="h-8 w-8 ml-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               

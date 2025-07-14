@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 import { AIEnhancedAnalysis } from '@/types/test';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 
 const fallbackAnalysis: AIEnhancedAnalysis = {
   strengths: ["Auto-connaissance", "Capacité d'adaptation"],

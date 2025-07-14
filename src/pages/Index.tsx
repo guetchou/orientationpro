@@ -17,6 +17,8 @@ import { ScrollToTop } from "@/components/home/ScrollToTop";
 import { AnimatedBackground } from "@/components/home/AnimatedBackground";
 import { CTASection } from "@/components/home/CTASection";
 import { HorizontalCarousel } from "@/components/home/HorizontalCarousel";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function Index() {
   // Scroll progress indicator
@@ -48,6 +50,11 @@ export default function Index() {
         {/* TODO: Ajouter ici <MosalaCarousel /> pour les offres d'emploi en vedette */}
         {/* TODO: Ajouter ici <MosalaApplicationForm /> pour le formulaire de candidature */}
         {/* TODO: Ajouter ici <MosalaStatsSection /> pour des statistiques dynamiques */}
+        <div className="flex flex-wrap justify-center gap-4 mt-8">
+          <Button asChild size="lg" className="bg-gradient-to-r from-green-500 to-blue-500 text-white">
+            <Link to="/guide-congo-2024">Guide des Études Supérieures au Congo 2024</Link>
+          </Button>
+        </div>
         <ConseillerSection />
         <HorizontalCarousel />
         <StepsSection />

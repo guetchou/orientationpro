@@ -129,7 +129,10 @@ export const CVUploadZone: React.FC<CVUploadZoneProps> = ({ onCandidateCreated }
       const formData = new FormData();
       formData.append('cv', file);
 
-      const response = await fetch('/api/cv/upload', {
+      // Utiliser la variable d'environnement pour l'URL du backend
+      const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
+      if (!API_URL) throw new Error('VITE_API_URL ou VITE_BACKEND_URL doit être défini dans .env');
+      const response = await fetch(`${API_URL}/cv/upload`, {
         method: 'POST',
         body: formData
       });

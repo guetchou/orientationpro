@@ -41,12 +41,15 @@ export const ProfessionalHeader = () => {
 
   const handleLogout = async () => {
     try {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
+      console.log('🔐 Déconnexion depuis ProfessionalHeader...');
       await signOut();
       navigate('/');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
+      // Forcer le nettoyage même en cas d'erreur
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
     }
   };
 

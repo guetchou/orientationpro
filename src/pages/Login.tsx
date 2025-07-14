@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import supabase from "@/lib/supabaseClient";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2, User, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -321,22 +321,28 @@ export default function Login() {
   };
 
   const handleLogout = () => {
-    // Nettoyer tous les tokens et données
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('adminUser');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('rememberedEmail');
-    localStorage.removeItem('rememberedMode');
+    console.log('🔄 Nettoyage d\'urgence...');
     
-    // Déconnexion Supabase si nécessaire
-    if (signOut) {
-      signOut();
-    }
+    // Nettoyer TOUS les tokens et données
+    const keysToRemove = [
+      'userToken', 'adminToken', 'userData', 'adminUser', 'userRole',
+      'rememberedEmail', 'rememberedMode', 'authToken'
+    ];
     
-    // Recharger la page pour éviter les boucles
-    window.location.reload();
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+    
+    // Nettoyer les cookies
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    console.log('✅ Nettoyage terminé, rechargement...');
+    
+    // Recharger la page
+    window.location.href = '/';
   };
 
   return (
@@ -362,16 +368,16 @@ export default function Login() {
                 Accédez à votre espace personnel
               </CardDescription>
               
-              {/* Bouton de déconnexion pour éviter les boucles */}
+              {/* Bouton de déconnexion d'urgence */}
               <div className="flex justify-center mt-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-xs"
+                  className="text-xs text-red-600 hover:text-red-700"
                 >
-                  Déconnexion (si bloqué)
+                  🔄 Nettoyer et recharger
                 </Button>
               </div>
             </div>

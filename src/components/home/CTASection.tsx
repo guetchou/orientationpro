@@ -43,7 +43,7 @@ export const CTASection = () => {
               className="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl relative z-10 group-hover:scale-105 transition-transform duration-300"
             >
               <img 
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400&q=80" 
+                src="public/images/heureux-portrait-femme-affaires.jpg" 
                 alt="Conseiller d'orientation" 
                 className="w-full h-full object-cover"
               />

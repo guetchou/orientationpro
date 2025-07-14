@@ -26,6 +26,30 @@ async function extractText(filePath, mimeType) {
   }
 }
 
+// Fonction de détection des soft skills
+function detectSoftSkills(text) {
+  const softSkillsList = [
+    'communication',
+    'travail en équipe',
+    'adaptabilité',
+    'créativité',
+    'leadership',
+    'gestion du temps',
+    'résolution de problèmes',
+    'esprit critique',
+    'autonomie',
+    'empathie'
+  ];
+  const found = [];
+  for (const skill of softSkillsList) {
+    const regex = new RegExp(skill, 'i');
+    if (regex.test(text)) {
+      found.push(skill);
+    }
+  }
+  return found;
+}
+
 // Fonction de scoring ATS simple
 function scoreCV(text) {
   let score = 0;
@@ -36,7 +60,15 @@ function scoreCV(text) {
   if (/formation|education/i.test(text)) score += 20; else feedback.push('Ajoutez une section Formation.');
   if (/contact|email|téléphone|phone/i.test(text)) score += 20; else feedback.push('Ajoutez vos informations de contact.');
   if (text.length > 1000) score += 20; else feedback.push('Votre CV semble trop court.');
-  return { score, feedback: feedback.join(' ') };
+  // Détection des soft skills
+  const softSkills = detectSoftSkills(text);
+  if (softSkills.length > 0) {
+    score += 10; // Bonus si soft skills présents
+    feedback.push(`Soft skills détectés : ${softSkills.join(', ')}.`);
+  } else {
+    feedback.push('Aucune soft skill détectée, pensez à les mettre en avant.');
+  }
+  return { score, feedback: feedback.join(' '), softSkills };
 }
 
 // POST /api/cv/upload
@@ -52,8 +84,8 @@ const uploadCV = async (req, res) => {
     const userId = req.body.user_id ? parseInt(req.body.user_id, 10) : null;
     // Extraction intelligente
     const extractedText = await extractText(filePath, mimeType);
-    // Scoring ATS et feedback
-    const { score, feedback } = scoreCV(extractedText);
+    // Scoring ATS, feedback et soft skills
+    const { score, feedback, softSkills } = scoreCV(extractedText);
     // Stockage en base
     await pool.query(
       'INSERT INTO cv_analysis (user_id, file_name, extracted_text, ats_score, feedback) VALUES (?, ?, ?, ?, ?)',
@@ -65,7 +97,8 @@ const uploadCV = async (req, res) => {
       fileName,
       ats_score: score,
       feedback,
-      extracted_text: extractedText
+      extracted_text: extractedText,
+      soft_skills: softSkills
     });
   } catch (error) {
     console.error('Erreur upload CV:', error);

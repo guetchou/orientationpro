@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { ConseillerStats } from '@/types/dashboard';
 
 export const useConseillerStats = (conseillerId: string) => {

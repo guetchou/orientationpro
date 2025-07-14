@@ -39,8 +39,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Si l'utilisateur est connecté mais essaie d'accéder aux pages de connexion
-  if (!requireAuth && isAuthenticated) {
+  // Si l'utilisateur est connecté mais essaie d'accéder aux pages de connexion (login/register)
+  if (!requireAuth && isAuthenticated && (location.pathname === '/login' || location.pathname === '/register')) {
     return <Navigate to="/dashboard" replace />;
   }
 

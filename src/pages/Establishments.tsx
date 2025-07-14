@@ -6,6 +6,7 @@ import { EstablishmentFilters } from '@/components/home/map/EstablishmentFilters
 import { MobileToggleList } from '@/components/home/map/MobileToggleList';
 import { useEstablishmentData } from '@/components/home/map/useEstablishmentData';
 import { Establishment } from '@/types/establishments';
+import { Link } from 'react-router-dom';
 
 const Establishments = () => {
   const { establishments, loading, filterEstablishments, selectedType, setSelectedType, searchQuery, setSearchQuery } = useEstablishmentData();
@@ -66,6 +67,12 @@ const Establishments = () => {
           toggleView={toggleView} 
         />
         
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-8 rounded">
+          <h3 className="font-bold text-green-700 mb-1">Guide 2024 : Études supérieures au Congo</h3>
+          <p className="text-green-800 text-sm mb-2">Consultez le guide complet pour tout savoir sur les établissements, filières, démarches et conseils pratiques.</p>
+          <Link to="/guide-congo-2024" className="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-semibold">Accéder au guide</Link>
+        </div>
+
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className={`lg:col-span-1 ${!showList ? 'hidden lg:block' : ''}`}>
             <EstablishmentList 
