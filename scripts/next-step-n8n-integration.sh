@@ -1,0 +1,91 @@
+#!/bin/bash
+
+echo "🚀 ÉTAPE SUIVANTE : Intégration Complète N8N - Orientation Pro Congo"
+
+# Couleurs
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo ""
+echo -e "${YELLOW}📋 ÉTAPE ACTUELLE : Import des Workflows N8N${NC}"
+echo "=================================================="
+echo ""
+echo -e "${BLUE}🌐 Accédez à N8N:${NC}"
+echo "   http://localhost:5678"
+echo ""
+echo -e "${BLUE}🔐 Identifiants:${NC}"
+echo "   Utilisateur: admin"
+echo "   Mot de passe: orientationpro2024"
+echo ""
+
+echo -e "${YELLOW}📁 Fichiers de workflows à importer:${NC}"
+echo "   /opt/orientationpro/workflows/"
+echo "   • test-completion-workflow.json"
+echo "   • user-registration-workflow.json"
+echo "   • cv-analysis-workflow.json"
+echo "   • email-notifications-workflow.json"
+echo "   • appointment-reminder-workflow.json"
+echo ""
+
+echo -e "${GREEN}📋 Instructions détaillées:${NC}"
+echo "=================================="
+echo ""
+echo -e "${BLUE}1. Import des Workflows:${NC}"
+echo "   - Allez sur http://localhost:5678"
+echo "   - Connectez-vous avec admin/orientationpro2024"
+echo "   - Cliquez sur 'Workflows' dans le menu"
+echo "   - Cliquez sur 'Import from file'"
+echo "   - Sélectionnez les fichiers depuis /opt/orientationpro/workflows/"
+echo ""
+echo -e "${BLUE}2. Activation des Workflows:${NC}"
+echo "   - Ouvrez chaque workflow importé"
+echo "   - Cliquez sur le toggle 'Active' (en haut à droite)"
+echo "   - Le toggle devient vert quand le workflow est actif"
+echo "   - Sauvegardez les changements (Ctrl+S)"
+echo ""
+echo -e "${BLUE}3. Vérification:${NC}"
+echo "   - Exécutez: ./test-workflows-after-import.sh"
+echo "   - Tous les webhooks doivent retourner HTTP 200/201"
+echo ""
+
+echo -e "${YELLOW}🎯 Workflows à activer:${NC}"
+echo "   • Test Completion - Traitement automatique des résultats de tests"
+echo "   • User Registration - Automatisation de l'inscription des utilisateurs"
+echo "   • CV Analysis - Analyse automatique des CV"
+echo "   • Email Notifications - Gestion des emails"
+echo "   • Appointment Reminder - Rappels automatiques de rendez-vous"
+echo ""
+
+echo -e "${GREEN}🚀 Une fois activés, N8N automatiserá:${NC}"
+echo "   • Traitement des tests d'orientation"
+echo "   • Inscription automatique des utilisateurs"
+echo "   • Analyse automatique des CV"
+echo "   • Envoi d'emails automatiques"
+echo "   • Rappels de rendez-vous automatiques"
+echo ""
+
+echo -e "${BLUE}📚 Documentation complète:${NC}"
+echo "   /opt/orientationpro/docs/N8N_INTEGRATION.md"
+echo ""
+echo -e "${BLUE}🧪 Scripts de test disponibles:${NC}"
+echo "   • ./check-workflows-status.sh - Vérifier l'état des workflows"
+echo "   • ./test-workflows-after-import.sh - Tester les webhooks"
+echo "   • ./import-activate-workflows.sh - Instructions d'import"
+echo ""
+
+echo -e "${YELLOW}💡 Conseil:${NC}"
+echo "   Importez un workflow à la fois pour éviter les conflits"
+echo "   Vérifiez que chaque workflow est activé avant de passer au suivant"
+echo ""
+
+echo -e "${GREEN}🎉 Prêt à transformer Orientation Pro Congo en plateforme intelligente !${NC}"
+echo ""
+echo -e "${BLUE}📞 Prochaine étape:${NC}"
+echo "   Une fois les workflows importés et activés, nous pourrons:"
+echo "   • Intégrer N8N avec le frontend React"
+echo "   • Configurer les webhooks dans l'application"
+echo "   • Tester l'automatisation complète"
+echo "   • Optimiser les performances" 

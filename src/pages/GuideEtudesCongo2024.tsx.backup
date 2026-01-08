@@ -1,0 +1,563 @@
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+import { 
+  GraduationCap, 
+  BookOpen, 
+  Briefcase, 
+  Globe, 
+  Users, 
+  Info, 
+  ArrowRight,
+  Award,
+  MapPin,
+  Calendar,
+  Star,
+  CheckCircle,
+  ExternalLink,
+  Download,
+  Clock,
+  Target,
+  TrendingUp,
+  Shield,
+  Lightbulb
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+
+export default function GuideEtudesCongo2024() {
+  const getStatIcon = (type: string) => {
+    switch (type) {
+      case 'etablissements': return <Globe className="w-6 h-6" />;
+      case 'filieres': return <BookOpen className="w-6 h-6" />;
+      case 'insertion': return <TrendingUp className="w-6 h-6" />;
+      case 'experience': return <Award className="w-6 h-6" />;
+      default: return <Info className="w-6 h-6" />;
+    }
+  };
+
+  const getNavIcon = (type: string) => {
+    switch (type) {
+      case 'lmd': return <GraduationCap className="w-5 h-5" />;
+      case 'etablissements': return <Globe className="w-5 h-5" />;
+      case 'filieres': return <BookOpen className="w-5 h-5" />;
+      case 'procedures': return <Shield className="w-5 h-5" />;
+      case 'conseils': return <Lightbulb className="w-5 h-5" />;
+      case 'ressources': return <ExternalLink className="w-5 h-5" />;
+      default: return <Info className="w-5 h-5" />;
+    }
+  };
+
+  const getNoveltyIcon = (type: string) => {
+    switch (type) {
+      case 'numerique': return <TrendingUp className="w-6 h-6" />;
+      case 'licences': return <Award className="w-6 h-6" />;
+      case 'masters': return <Globe className="w-6 h-6" />;
+      default: return <Info className="w-6 h-6" />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-green-600 text-white overflow-hidden">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            opacity: 0.2
+          }}></div>
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center max-w-4xl mx-auto"
+            >
+              <Badge className="mb-6 bg-white/20 text-white border-white/30 hover:bg-white/30">
+                <Calendar className="w-4 h-4 mr-2" />
+                Édition 2024 - Mise à jour complète
+              </Badge>
+              
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                Guide des Études Supérieures
+              </h1>
+              <div className="flex items-center justify-center gap-2 mb-8">
+                <MapPin className="w-6 h-6 text-green-300" />
+                <span className="text-2xl md:text-3xl font-semibold text-green-100">République du Congo</span>
+              </div>
+              
+              <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Votre référence complète pour naviguer dans l'enseignement supérieur congolais. 
+                Découvrez les filières, établissements, procédures et opportunités qui façonneront votre avenir professionnel.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-semibold px-8 py-4 text-lg">
+                  <Download className="w-5 h-5 mr-2" />
+                  Télécharger le Guide PDF
+                </Button>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 font-semibold px-8 py-4 text-lg">
+                  <Target className="w-5 h-5 mr-2" />
+                  Commencer l'exploration
+                </Button>
+              </div>
+
+              {/* Navigation moderne */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
+                {[
+                  { href: "#systeme-lmd", iconType: "lmd", label: "Système LMD" },
+                  { href: "#etablissements", iconType: "etablissements", label: "Établissements" },
+                  { href: "#filieres", iconType: "filieres", label: "Filières" },
+                  { href: "#procedures", iconType: "procedures", label: "Procédures" },
+                  { href: "#conseils", iconType: "conseils", label: "Conseils" },
+                  { href: "#ressources", iconType: "ressources", label: "Ressources" }
+                ].map((item, index) => (
+                  <motion.a
+                    key={item.href}
+                    href={item.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:bg-white/20 transition-all duration-300 group text-center"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="text-white group-hover:scale-110 transition-transform">
+                        {getNavIcon(item.iconType)}
+                      </div>
+                      <span className="text-sm font-medium text-white/90 group-hover:text-white">
+                        {item.label}
+                      </span>
+                    </div>
+                  </motion.a>
+                ))}
+            </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Introduction - Statistiques et Points Clés */}
+        <section className="py-16 bg-gradient-to-b from-gray-50 to-white" id="introduction">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="text-center mb-12">
+                <Badge className="mb-4 bg-blue-100 text-blue-800 border-blue-200">
+                  <Info className="w-4 h-4 mr-2" />
+                  Panorama 2024
+                </Badge>
+                <h2 className="text-4xl font-bold mb-6 text-gray-900">
+                  L'Enseignement Supérieur Congolais en Chiffres
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                  Un écosystème éducatif en pleine transformation, adapté aux défis du 21ème siècle 
+                  et aux aspirations de la jeunesse congolaise.
+                </p>
+              </div>
+
+              {/* Statistiques Clés */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                {[
+                  { number: "50+", label: "Établissements accrédités", iconType: "etablissements" },
+                  { number: "200+", label: "Filières disponibles", iconType: "filieres" },
+                  { number: "85%", label: "Taux d'insertion", iconType: "insertion" },
+                  { number: "15", label: "Années d'expérience LMD", iconType: "experience" }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="text-center bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
+                  >
+                    <div className="text-blue-600 flex justify-center mb-3">
+                      {getStatIcon(stat.iconType)}
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
+                    <div className="text-sm text-gray-600 font-medium">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Points Clés */}
+              <div className="grid md:grid-cols-2 gap-8">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <CheckCircle className="w-6 h-6 text-blue-600" />
+                      </div>
+                      Nouveautés 2024
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {[
+                      "Réforme du système LMD avec nouvelles spécialisations",
+                      "Filières émergentes : IA, cybersécurité, énergies renouvelables",
+                      "Partenariats internationaux renforcés",
+                      "Digitalisation des procédures d'inscription"
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <Star className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <Target className="w-6 h-6 text-green-600" />
+                      </div>
+                      Opportunités
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {[
+                      "Bourses d'excellence nationales et internationales",
+                      "Programmes d'échanges avec l'Afrique et l'Europe",
+                      "Incubateurs d'entreprises dans les universités",
+                      "Stages obligatoires en entreprise"
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Système LMD */}
+        <section className="py-16 bg-white" id="systeme-lmd">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="max-w-6xl mx-auto"
+            >
+              <div className="text-center mb-12">
+                <Badge className="mb-4 bg-green-100 text-green-800 border-green-200">
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Système Harmonisé
+                </Badge>
+                <h2 className="text-4xl font-bold mb-6 text-gray-900">
+                  Le Système LMD au Congo
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Structure moderne de l'enseignement supérieur favorisant la mobilité, 
+                  la professionnalisation et l'harmonisation internationale.
+                </p>
+              </div>
+
+              {/* Structure LMD */}
+              <div className="grid md:grid-cols-3 gap-8 mb-12">
+                {[
+                  {
+                    level: "L",
+                    title: "Licence",
+                    duration: "3 ans",
+                    credits: "180 crédits ECTS",
+                    description: "Formation fondamentale avec spécialisation progressive",
+                    color: "blue",
+                    features: ["6 semestres", "Stage obligatoire", "Projet de fin d'études", "Insertion professionnelle"]
+                  },
+                  {
+                    level: "M",
+                    title: "Master",
+                    duration: "2 ans",
+                    credits: "120 crédits ECTS",
+                    description: "Approfondissement et spécialisation avancée",
+                    color: "green",
+                    features: ["4 semestres", "Recherche appliquée", "Mémoire de master", "Expertise métier"]
+                  },
+                  {
+                    level: "D",
+                    title: "Doctorat",
+                    duration: "3+ ans",
+                    credits: "Formation doctorale",
+                    description: "Recherche approfondie et innovation",
+                    color: "purple",
+                    features: ["École doctorale", "Thèse originale", "Publications", "Encadrement"]
+                  }
+                ].map((level, index) => (
+                  <motion.div
+                    key={level.level}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.2 }}
+                    viewport={{ once: true }}
+                  >
+                    <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+                      <CardHeader className="text-center pb-4">
+                        <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl font-bold text-white
+                          ${level.color === 'blue' ? 'bg-blue-600' : level.color === 'green' ? 'bg-green-600' : 'bg-purple-600'}
+                          group-hover:scale-110 transition-transform duration-300`}>
+                          {level.level}
+                        </div>
+                        <CardTitle className="text-2xl mb-2">{level.title}</CardTitle>
+                        <div className="space-y-1">
+                          <Badge variant="secondary" className="mr-2">{level.duration}</Badge>
+                          <Badge variant="outline">{level.credits}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600 mb-4 text-center">{level.description}</p>
+                        <div className="space-y-2">
+                          {level.features.map((feature, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-sm text-gray-700">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Nouveautés 2024 */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Nouveautés 2024</h3>
+                  <p className="text-gray-600">Évolutions majeures du système LMD congolais</p>
+                </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {[
+                    {
+                      iconType: "numerique",
+                      title: "Filières Numériques",
+                      description: "Renforcement des formations en IA, cybersécurité et data science"
+                    },
+                    {
+                      iconType: "licences",
+                      title: "Licences Professionnelles",
+                      description: "Nouvelles formations courtes orientées emploi direct"
+                    },
+                    {
+                      iconType: "masters",
+                      title: "Masters Spécialisés",
+                      description: "Ouverture de programmes en énergies renouvelables et santé publique"
+                    }
+                  ].map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="text-green-600 flex justify-center mb-3">
+                        {getNoveltyIcon(item.iconType)}
+                      </div>
+                      <h4 className="font-semibold text-gray-900 mb-2 text-center">{item.title}</h4>
+                      <p className="text-sm text-gray-600 text-center">{item.description}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Établissements */}
+        <section className="py-16 bg-gradient-to-b from-gray-50 to-white" id="etablissements">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-12">
+              <Badge className="mb-4 bg-blue-100 text-blue-800 border-blue-200">
+                <Globe className="w-4 h-4 mr-2" />
+                Écosystème Éducatif
+              </Badge>
+              <h2 className="text-4xl font-bold mb-6 text-gray-900">
+                Établissements d'Enseignement Supérieur
+              </h2>
+            <p className="mb-4 text-gray-700">Le Congo compte de nombreux établissements publics et privés : universités, instituts, écoles spécialisées…</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Université Marien Ngouabi (UMNG)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Facultés : Sciences, Lettres, Droit, Médecine, etc.</li>
+                    <li>Campus principal à Brazzaville</li>
+                    <li>www.umng.cg</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Université Denis Sassou Nguesso</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Filières scientifiques, technologiques et de gestion</li>
+                    <li>Pointe-Noire</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Institut Supérieur de Gestion (ISG)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Commerce, gestion, finance, marketing</li>
+                    <li>Brazzaville</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Écoles privées accréditées</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>ESGAE, ESG, ISTA, etc.</li>
+                    <li>Formations professionnalisantes</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+            <p className="mt-6 text-gray-700">Retrouvez la liste complète et les contacts sur <Link to="/establishments" className="text-blue-600 underline">l’annuaire des établissements</Link>.</p>
+          </div>
+        </section>
+
+        {/* Filières et débouchés */}
+        <section className="py-16 bg-white" id="filieres">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-12">
+              <Badge className="mb-4 bg-green-100 text-green-800 border-green-200">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Parcours Académiques
+              </Badge>
+              <h2 className="text-4xl font-bold mb-6 text-gray-900">
+                Filières & Débouchés
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Choisissez votre voie en tenant compte de vos intérêts, du marché de l'emploi 
+                et des perspectives d'évolution professionnelle.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader><CardTitle>Sciences & Technologies</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Informatique, génie civil, électronique, mathématiques</li>
+                    <li>Débouchés : ingénieur, développeur, technicien, enseignant</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Santé & Social</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Médecine, pharmacie, infirmier, travail social</li>
+                    <li>Débouchés : médecin, pharmacien, infirmier, assistant social</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Économie & Gestion</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Comptabilité, finance, management, marketing</li>
+                    <li>Débouchés : comptable, gestionnaire, chef de projet</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Sciences humaines & Lettres</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Droit, histoire, langues, communication</li>
+                    <li>Débouchés : juriste, enseignant, journaliste</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Filières émergentes</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="text-gray-700 text-sm list-disc ml-4">
+                    <li>Numérique, environnement, énergies renouvelables</li>
+                    <li>Débouchés : data analyst, expert environnement, etc.</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+            <p className="mt-6 text-gray-700">Pour vous aider à choisir, <Link to="/tests" className="text-green-600 underline">passez un test d’orientation</Link> ou consultez un <Link to="/conseillers" className="text-green-600 underline">conseiller</Link>.</p>
+          </div>
+        </section>
+
+        {/* Procédures d’inscription, bourses, financements */}
+        <section className="py-12 bg-white" id="procedures">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold mb-4 flex items-center"><Users className="w-6 h-6 mr-2 text-blue-600" /> Procédures, bourses & financements</h2>
+            <ul className="list-disc ml-6 text-gray-700 mb-4">
+              <li><b>Inscription</b> : Dossier, calendrier, frais, équivalences</li>
+              <li><b>Bourses</b> : Critères, démarches, bourses nationales et internationales</li>
+              <li><b>Financement</b> : Prêts étudiants, aides, jobs étudiants</li>
+              <li><b>Mobilité</b> : Programmes d’échange, partenariats Afrique/Europe</li>
+            </ul>
+            <p className="text-gray-700">Renseignez-vous auprès des établissements et du ministère pour les dernières modalités 2024.</p>
+          </div>
+        </section>
+
+        {/* Conseils pratiques */}
+        <section className="py-12 bg-gray-50" id="conseils">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold mb-4 flex items-center"><Briefcase className="w-6 h-6 mr-2 text-green-600" /> Conseils pratiques</h2>
+            <ul className="list-disc ml-6 text-gray-700 mb-4">
+              <li>Bien choisir sa filière selon ses intérêts et le marché</li>
+              <li>Préparer son dossier à l’avance</li>
+              <li>Se renseigner sur les logements étudiants</li>
+              <li>Participer aux forums, salons, journées portes ouvertes</li>
+              <li>Développer son réseau (stages, associations, alumni)</li>
+              <li>Prendre soin de sa santé mentale et physique</li>
+            </ul>
+            <p className="text-gray-700">N’hésitez pas à demander conseil à des étudiants, enseignants ou professionnels du secteur.</p>
+          </div>
+        </section>
+
+        {/* Ressources utiles */}
+        <section className="py-12 bg-white" id="ressources">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold mb-4 flex items-center"><ArrowRight className="w-6 h-6 mr-2 text-blue-600" /> Ressources utiles</h2>
+            <ul className="list-disc ml-6 text-gray-700 mb-4">
+              <li><a href="https://www.mesrs.gouv.cg/" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">Ministère de l’Enseignement Supérieur (MESRS)</a></li>
+              <li><a href="https://www.umng.cg/" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">Université Marien Ngouabi</a></li>
+              <li><a href="https://www.campusfrance.org/fr" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">Campus France</a></li>
+              <li><a href="https://www.auf.org/" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">Agence Universitaire de la Francophonie</a></li>
+              <li><Link to="/establishments" className="text-blue-600 underline">Annuaire des établissements</Link></li>
+              <li><Link to="/conseillers" className="text-blue-600 underline">Contacter un conseiller</Link></li>
+            </ul>
+            <p className="text-gray-700">Ce guide est mis à jour régulièrement pour refléter les évolutions du système congolais.</p>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+} 

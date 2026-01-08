@@ -1,0 +1,12 @@
+
+version: '3.8'
+
+services:
+  api:
+    environment:
+      - NODE_ENV=test
+      - JWT_SECRET=test_jwt_secret
+  
+  db:
+    environment:
+      - MYSQL_DATABASE=test_db

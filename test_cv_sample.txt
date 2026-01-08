@@ -1,0 +1,107 @@
+Jean-Paul MBEMBA
+Développeur Full Stack Senior
+Email: jp.mbemba@email.com
+Téléphone: +242 06 123 4567
+LinkedIn: linkedin.com/in/jp-mbemba
+GitHub: github.com/jp-mbemba
+Adresse: Brazzaville, Congo
+
+RÉSUMÉ PROFESSIONNEL
+Développeur Full Stack expérimenté avec 7 ans d'expérience dans le développement d'applications web modernes. Expert en JavaScript, React, Node.js et bases de données. Passionné par l'innovation technologique et le leadership d'équipe.
+
+EXPÉRIENCE PROFESSIONNELLE
+
+Senior Full Stack Developer | TechCongo Solutions | 2020 - Présent
+• Développement d'applications web avec React, TypeScript et Node.js
+• Management d'une équipe de 5 développeurs junior
+• Mise en place d'architectures microservices avec Docker et Kubernetes
+• Amélioration des performances applicatives de 40%
+• Technologies: JavaScript, React, Vue.js, Node.js, MongoDB, PostgreSQL
+
+Développeur Frontend | Digital Africa | 2018 - 2020
+• Création d'interfaces utilisateur responsives avec React et Angular
+• Intégration d'APIs REST et GraphQL
+• Collaboration avec les équipes UX/UI pour optimiser l'expérience utilisateur
+• Technologies: React, Angular, HTML5, CSS3, JavaScript, TypeScript
+
+Développeur Web Junior | StartupCongo | 2017 - 2018
+• Développement de sites web avec PHP et WordPress
+• Maintenance et optimisation de bases de données MySQL
+• Support technique et formation des utilisateurs
+• Technologies: PHP, MySQL, WordPress, jQuery
+
+FORMATION
+
+Master en Informatique | Université Marien Ngouabi | 2017
+Spécialisation: Génie Logiciel et Systèmes d'Information
+
+Licence en Mathématiques-Informatique | Université Marien Ngouabi | 2015
+
+COMPÉTENCES TECHNIQUES
+
+Langages de programmation:
+• JavaScript (Expert) - 7 ans
+• TypeScript (Avancé) - 4 ans  
+• Python (Intermédiaire) - 3 ans
+• PHP (Avancé) - 5 ans
+• Java (Intermédiaire) - 2 ans
+
+Frameworks et Librairies:
+• React (Expert) - 6 ans
+• Vue.js (Avancé) - 3 ans
+• Node.js (Expert) - 5 ans
+• Express.js (Avancé) - 5 ans
+• Angular (Intermédiaire) - 2 ans
+
+Bases de données:
+• MongoDB (Avancé) - 4 ans
+• PostgreSQL (Avancé) - 5 ans
+• MySQL (Expert) - 7 ans
+• Redis (Intermédiaire) - 2 ans
+
+DevOps et Outils:
+• Docker (Avancé) - 3 ans
+• Kubernetes (Intermédiaire) - 2 ans
+• Git (Expert) - 7 ans
+• AWS (Intermédiaire) - 2 ans
+• Jenkins (Intermédiaire) - 1 an
+
+SOFT SKILLS
+• Leadership et management d'équipe
+• Communication excellente en français et anglais
+• Résolution de problèmes complexes
+• Adaptabilité et apprentissage rapide
+• Esprit critique et analytique
+• Créativité et innovation
+• Gestion du temps et organisation
+• Travail en équipe collaboratif
+
+LANGUES
+• Français: Natif
+• Anglais: Courant (C1)
+• Lingala: Natif
+• Kikongo: Intermédiaire
+
+CERTIFICATIONS
+• AWS Certified Developer Associate (2022)
+• MongoDB Certified Developer (2021)
+• Scrum Master Certified (2020)
+
+PROJETS NOTABLES
+
+EcommerceCongo Platform (2022)
+• Plateforme e-commerce complète pour le marché congolais
+• Stack: React, Node.js, MongoDB, Stripe
+• 10,000+ utilisateurs actifs mensuels
+
+HealthTech Congo (2021)
+• Application de télémédecine pour les zones rurales
+• Stack: Vue.js, Express.js, PostgreSQL
+• Impact: 5,000+ consultations médicales à distance
+
+CENTRES D'INTÉRÊT
+• Contribution à l'open source (GitHub: 50+ repositories)
+• Mentorat de jeunes développeurs
+• Football et basketball
+• Lecture sur les nouvelles technologies
+• Entrepreneuriat technologique en Afrique

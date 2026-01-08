@@ -1,0 +1,130 @@
+openapi: 3.0.0
+info:
+  title: OrientationPro API
+  version: 1.0.0
+  description: >
+    Documentation de l'API OrientationPro avec matrice d'accès par rôle.
+servers:
+  - url: http://localhost:3000/api
+paths:
+  /auth/register:
+    post:
+      summary: Inscription utilisateur
+      tags: [Auth]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /auth/login:
+    post:
+      summary: Connexion utilisateur
+      tags: [Auth]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /auth/reset-password:
+    post:
+      summary: Réinitialisation du mot de passe
+      tags: [Auth]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /auth/update-password:
+    post:
+      summary: Mise à jour du mot de passe
+      tags: [Auth]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /auth/create-super-admin:
+    post:
+      summary: Création d'un superadmin
+      tags: [Auth]
+      responses:
+        '200': { description: Succès }
+      security:
+        - bearerAuth: []
+      x-roles: [admin, superadmin]
+  /auth/verify-admin:
+    get:
+      summary: Vérification admin
+      tags: [Auth]
+      responses:
+        '200': { description: Succès }
+      security:
+        - bearerAuth: []
+      x-roles: [admin, superadmin]
+  /auth/profile/{id}:
+    get:
+      summary: Récupérer un profil utilisateur
+      tags: [Auth]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Succès }
+      security:
+        - bearerAuth: []
+      x-roles: [user, admin, superadmin]
+    put:
+      summary: Mettre à jour un profil utilisateur
+      tags: [Auth]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Succès }
+      security:
+        - bearerAuth: []
+      x-roles: [user, admin, superadmin]
+  /test/health:
+    get:
+      summary: Test de santé du serveur
+      tags: [Test]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /test/db:
+    get:
+      summary: Test de connexion à la base de données
+      tags: [Test]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /feature-flags/:
+    get:
+      summary: Liste des feature flags
+      tags: [FeatureFlags]
+      responses:
+        '200': { description: Succès }
+      security: []
+      x-roles: [public]
+  /feature-flags/{id}:
+    patch:
+      summary: Mise à jour d'un feature flag
+      tags: [FeatureFlags]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Succès }
+      security:
+        - bearerAuth: []
+      x-roles: [admin, superadmin]
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
