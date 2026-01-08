@@ -1,0 +1,19 @@
+JEAN DUPONT
+Développeur Web
+jean.dupont@email.com | +242 06 123 4567
+
+EXPÉRIENCE
+• Développeur Junior - TechCorp (2022-2024)
+• Stage développement - WebAgency (2021)
+
+FORMATION
+• Licence Informatique - Université Marien Ngouabi (2019-2022)
+
+COMPÉTENCES
+• JavaScript, HTML, CSS
+• React, Node.js
+• Communication, Travail d'équipe
+
+LANGUES
+• Français: Natif
+• Anglais: Intermédiaire

@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Frontend (React/Vite)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_URL=http://5.196.22.149:6464
+        - VITE_API_URL=http://5.196.22.149:6464/api
+    # Ports supprimés - accès uniquement via nginx-proxy
+    expose:
+      - "80"
+    environment:
+      - VITE_API_URL=http://5.196.22.149:6464/api
+      - VITE_BACKEND_URL=http://5.196.22.149:6464
+    depends_on:
+      - api
+    volumes:
+      - ./public:/app/public
+    networks:
+      - proxy-net
+      - default
+    restart: unless-stopped
+
+  # Backend API (Node.js/Express)
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # Ports supprimés - accès uniquement via nginx-proxy
+    expose:
+      - "6464"
+    environment:
+      - PORT=6464
+      - NODE_ENV=production
+      - JWT_SECRET=your_jwt_secret_here
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=orientationpro
+      - DB_PORT=3306
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+    networks:
+      - proxy-net
+      - default
+    restart: unless-stopped
+
+  # Base de données MySQL
+  db:
+    image: mysql:8.0
+    ports:
+      - "3310:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=orientationpro
+      - MYSQL_USER=orientationpro
+      - MYSQL_PASSWORD=password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  # phpMyAdmin pour la gestion de la base de données
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8282:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=password
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  proxy-net:
+    external: true
+    name: proxy-net 

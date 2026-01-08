@@ -1,0 +1,61 @@
+MARIE KABA
+Développeuse Full-Stack Senior
+marie.kaba@email.com | +242 06 789 1234 | linkedin.com/in/marie-kaba | github.com/marie-kaba
+Brazzaville, République du Congo
+
+RÉSUMÉ PROFESSIONNEL
+Développeuse Full-Stack passionnée avec 8 ans d'expérience dans le développement d'applications web et mobiles. Expertise en JavaScript, React, Node.js et bases de données. Leadership technique prouvé dans la gestion d'équipes de 5-10 développeurs. Spécialiste en architecture microservices et déploiement cloud.
+
+EXPÉRIENCE PROFESSIONNELLE
+
+Lead Developer - TechCongo SARL (2022-2024)
+• Direction technique d'une équipe de 8 développeurs sur 15+ projets clients
+• Augmentation de la productivité équipe de 40% grâce à l'implémentation DevOps
+• Architecture et développement de 5 applications e-commerce (React/Node.js)
+• Réduction des bugs en production de 60% via l'implémentation de tests automatisés
+• Mentoring de 12 développeurs juniors avec 90% de rétention d'équipe
+
+Développeuse Senior - Digital Solutions Congo (2019-2022)
+• Développement de 20+ applications web responsives avec React et Vue.js
+• Optimisation des performances backend Node.js avec amélioration de 70% des temps de réponse
+• Intégration de systèmes de paiement mobile (Airtel Money, MTN Mobile Money)
+• Collaboration avec équipes UX/UI pour améliorer l'expérience utilisateur
+• Formation de 6 développeurs juniors aux bonnes pratiques de développement
+
+Développeuse Full-Stack - StartupCongo (2017-2019)
+• Création complète de la plateforme e-learning (MERN Stack) - 5000+ utilisateurs actifs
+• Développement d'API REST sécurisées avec authentification JWT
+• Implémentation de système de notifications en temps réel avec Socket.io
+• Optimisation SEO et performances web - amélioration PageSpeed de 85%
+
+FORMATION
+Master en Informatique - Université Marien Ngouabi (2015-2017)
+Licence en Mathématiques-Informatique - Université Marien Ngouabi (2012-2015)
+
+COMPÉTENCES TECHNIQUES
+Langages: JavaScript, TypeScript, Python, Java, PHP, SQL
+Frontend: React, Vue.js, Angular, HTML5, CSS3, SASS, Bootstrap, Tailwind
+Backend: Node.js, Express, Django, Spring Boot, Laravel
+Bases de données: MongoDB, PostgreSQL, MySQL, Redis
+Cloud & DevOps: AWS, Docker, Kubernetes, Jenkins, Git, CI/CD
+Mobile: React Native, Flutter
+Outils: VS Code, IntelliJ, Postman, Figma, Jira, Slack
+
+COMPÉTENCES PERSONNELLES
+Leadership technique, Communication interculturelle, Gestion d'équipe, Résolution de problèmes complexes, Adaptabilité, Esprit d'innovation, Mentoring, Gestion de projet agile, Travail collaboratif
+
+LANGUES
+Français: Natif
+Anglais: Courant (TOEIC 850)
+Lingala: Natif
+
+CERTIFICATIONS
+AWS Certified Solutions Architect (2023)
+Certified Scrum Master (2022)
+Google Cloud Professional Developer (2021)
+
+PROJETS NOTABLES
+• Plateforme E-commerce Congo: Architecture microservices, 50k+ utilisateurs
+• Application Mobile Banking: React Native, intégrations bancaires sécurisées  
+• Système de Gestion Scolaire: Full-stack, 200+ écoles utilisatrices
+• API Gateway Congo Gov: Infrastructure gouvernementale, haute disponibilité

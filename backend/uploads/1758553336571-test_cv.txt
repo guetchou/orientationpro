@@ -1,0 +1,56 @@
+CURRICULUM VITAE
+
+Jean MABIALA
+Développeur Full Stack
+
+CONTACT
+Email: jean.mabiala@email.com
+Téléphone: +242 06 123 4567
+Adresse: Brazzaville, République du Congo
+LinkedIn: linkedin.com/in/jean-mabiala
+
+PROFIL PROFESSIONNEL
+Développeur Full Stack expérimenté avec 5 ans d'expérience dans le développement d'applications web modernes. Expertise en React, Node.js, Python et bases de données. Passionné par les technologies émergentes et l'innovation.
+
+COMPÉTENCES TECHNIQUES
+- Langages: JavaScript, TypeScript, Python, PHP
+- Frontend: React, Vue.js, HTML5, CSS3, Tailwind CSS
+- Backend: Node.js, Express, Django, Laravel
+- Bases de données: MySQL, PostgreSQL, MongoDB
+- DevOps: Docker, AWS, Git, CI/CD
+
+EXPÉRIENCE PROFESSIONNELLE
+
+Développeur Senior | TechCorp Congo | 2022 - Présent
+- Développement d'applications web avec React et Node.js
+- Gestion de projets techniques et encadrement d'équipe
+- Optimisation des performances et mise en place de tests automatisés
+
+Développeur Full Stack | Digital Solutions | 2020 - 2022
+- Création d'applications e-commerce et de gestion
+- Intégration d'APIs et développement de services REST
+- Maintenance et évolution de systèmes existants
+
+Développeur Junior | StartupTech | 2019 - 2020
+- Développement de fonctionnalités frontend et backend
+- Participation aux revues de code et aux tests
+- Formation aux nouvelles technologies
+
+FORMATION
+Master en Informatique | Université Marien Ngouabi | 2019
+Licence en Informatique | Université Marien Ngouabi | 2017
+
+CERTIFICATIONS
+- AWS Certified Developer Associate (2023)
+- Google Cloud Professional Developer (2022)
+- Microsoft Azure Fundamentals (2021)
+
+LANGUES
+- Français: Langue maternelle
+- Anglais: Courant
+- Lingala: Intermédiaire
+
+PROJETS PERSONNELS
+- Plateforme de gestion de CV avec IA (2023)
+- Application mobile de livraison (2022)
+- Site web de e-learning (2021)

@@ -1,0 +1,39 @@
+{
+  "name": "orientation-backend",
+  "version": "1.0.0",
+  "description": "Backend pour l'application d'orientation professionnelle",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "orientation",
+    "backend",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cheerio": "^1.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.9.1",
+    "multer": "^2.0.1",
+    "mysql2": "^3.9.5",
+    "natural": "^8.1.0",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.6",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.17.1",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

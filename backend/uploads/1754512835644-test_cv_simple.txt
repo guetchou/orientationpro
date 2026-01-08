@@ -1,0 +1,31 @@
+CURRICULUM VITAE
+
+Jean-Paul MBEMBA
+Développeur Web Junior
+jp.mbemba@email.com
++242 06 123 4567
+linkedin.com/in/jp-mbemba
+github.com/jp-mbemba
+
+EXPÉRIENCE PROFESSIONNELLE
+
+Stagiaire Développeur - TechCongo (2023-2024)
+• Développement de sites web avec HTML, CSS, JavaScript
+• Collaboration avec l'équipe de développement
+• Tests et débogage d'applications web
+
+FORMATION
+Licence en Informatique - Université Marien Ngouabi (2020-2023)
+
+COMPÉTENCES
+• Langages: JavaScript, Python, HTML, CSS
+• Frameworks: React, Node.js
+• Outils: Git, VS Code
+• Bases de données: MySQL
+
+COMPÉTENCES PERSONNELLES
+Communication, Travail d'équipe, Adaptabilité
+
+LANGUES
+Français: Natif
+Anglais: Intermédiaire

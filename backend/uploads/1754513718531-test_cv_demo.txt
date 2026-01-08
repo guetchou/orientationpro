@@ -1,0 +1,74 @@
+MARIE KABA
+Développeuse Full-Stack Senior
+marie.kaba@email.com | +242 06 789 1234 
+LinkedIn: linkedin.com/in/marie-kaba | GitHub: github.com/marie-kaba
+
+PROFIL PROFESSIONNEL
+Développeuse passionnée avec 8 ans d'expérience dans le développement d'applications web et mobiles. 
+Expertise en JavaScript, React, Node.js et bases de données. Leadership technique et formation d'équipes.
+
+EXPÉRIENCE PROFESSIONNELLE
+
+Développeuse Senior Full-Stack | TechCongo Solutions | 2020 - Présent
+• Développement d'applications web complexes avec React, Node.js et MongoDB
+• Leadership technique d'une équipe de 5 développeurs
+• Optimisation des performances backend avec amélioration de 70% des temps de réponse
+• Mise en place d'architecture microservices et déploiement Docker/Kubernetes
+• Formation de 6 développeurs juniors aux bonnes pratiques de développement
+
+Développeuse Full-Stack | InnovTech Congo | 2018 - 2020
+• Création d'applications mobiles React Native pour clients locaux
+• Développement d'APIs REST avec Express.js et intégration de paiements mobiles
+• Collaboration avec équipes UX/UI pour optimiser l'expérience utilisateur
+• Maintenance et évolution de systèmes legacy PHP/MySQL
+
+Développeuse Junior | WebSolutions Brazzaville | 2016 - 2018
+• Développement frontend avec HTML, CSS, JavaScript et jQuery
+• Intégration de maquettes PSD vers sites web responsives
+• Maintenance de sites WordPress et développement de plugins personnalisés
+
+FORMATION
+Master en Informatique - Université Marien Ngouabi (2015-2017)
+Spécialisation: Génie Logiciel et Systèmes Distribués
+Projet de fin d'études: Plateforme e-learning pour écoles congolaises
+
+Licence en Mathématiques-Informatique - Université Marien Ngouabi (2012-2015)
+Major de promotion avec mention Très Bien
+
+COMPÉTENCES TECHNIQUES
+Frontend: JavaScript, React, Angular, Vue.js, HTML5, CSS3, Sass, TypeScript
+Backend: Node.js, Express, Django, Spring Boot, Laravel, PHP
+Bases de données: MySQL, PostgreSQL, MongoDB, Redis
+DevOps: Docker, Kubernetes, AWS, CI/CD, Git, Jenkins
+Mobile: React Native, Flutter
+Outils: Figma, JIRA, Slack, Postman, VS Code
+
+COMPÉTENCES PERSONNELLES
+• Communication interpersonnelle et présentation
+• Leadership et management d'équipe
+• Adaptabilité aux nouvelles technologies
+• Résolution de problèmes complexes
+• Esprit d'initiative et autonomie
+• Mentoring et formation
+
+LANGUES
+• Français: Langue maternelle
+• Anglais: Courant (niveau B2)
+• Lingala: Courant
+• Espagnol: Notions de base
+
+CERTIFICATIONS
+• AWS Certified Developer Associate (2023)
+• Certified Scrum Master (2022)
+• Google Analytics Certified (2021)
+
+PROJETS NOTABLES
+• Système de Gestion Scolaire: Full-stack, 200+ écoles utilisatrices
+• App Mobile Banking: React Native, 50k+ téléchargements
+• Plateforme E-commerce B2B: Node.js/React, 500+ entreprises clientes
+
+CENTRES D'INTÉRÊT
+• Contribution open-source (GitHub: 50+ repos publics)
+• Participation à des hackathons locaux
+• Formation de développeurs juniors bénévolement
+• Veille technologique et apprentissage continu

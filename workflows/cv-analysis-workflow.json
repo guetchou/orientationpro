@@ -1,0 +1,292 @@
+{
+  "name": "CV Analysis Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cv-upload",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "cv-upload-webhook",
+      "name": "CV Upload Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "cv-upload"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/ai-analysis/analyze-cv",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cvFile",
+              "value": "={{ $json.cvFile }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "analyze-cv",
+      "name": "Analyze CV Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/ai-analysis/match-jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cvAnalysis",
+              "value": "={{ $json.analysis }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "match-jobs",
+      "name": "Match with Job Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/ai-analysis/generate-recommendations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cvAnalysis",
+              "value": "={{ $json.analysis }}"
+            },
+            {
+              "name": "jobMatches",
+              "value": "={{ $json.matches }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "generate-recommendations",
+      "name": "Generate Career Recommendations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/database/save-cv-analysis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "analysisData",
+              "value": "={{ { userId: $json.userId, cvAnalysis: $json.analysis, jobMatches: $json.matches, recommendations: $json.recommendations, timestamp: new Date().toISOString() } }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "save-analysis",
+      "name": "Save CV Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/notifications/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            },
+            {
+              "name": "type",
+              "value": "cv_analysis_complete"
+            },
+            {
+              "name": "title",
+              "value": "Analyse de CV terminée"
+            },
+            {
+              "name": "message",
+              "value": "Votre CV a été analysé. {{ $json.matches.length }} opportunités d'emploi correspondent à votre profil."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-notification",
+      "name": "Send Analysis Complete Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, message: 'CV analysis completed successfully', analysis: $json.analysis, matches: $json.matches, recommendations: $json.recommendations } }}",
+        "options": {}
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "CV Upload Webhook": {
+      "main": [
+        [
+          {
+            "node": "Analyze CV Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze CV Content": {
+      "main": [
+        [
+          {
+            "node": "Match with Job Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match with Job Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Generate Career Recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Career Recommendations": {
+      "main": [
+        [
+          {
+            "node": "Save CV Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Analysis Complete Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save CV Analysis": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Analysis Complete Notification": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "cv-analysis-workflow",
+  "tags": ["orientation-pro", "cv-analysis", "job-matching"]
+} 

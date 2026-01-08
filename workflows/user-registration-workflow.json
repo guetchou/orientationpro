@@ -1,0 +1,263 @@
+{
+  "name": "User Registration Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-registration",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "registration-webhook",
+      "name": "User Registration Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "user-registration"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/auth/register",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "password",
+              "value": "={{ $json.password }}"
+            },
+            {
+              "name": "firstName",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "lastName",
+              "value": "={{ $json.lastName }}"
+            },
+            {
+              "name": "role",
+              "value": "user"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-user",
+      "name": "Create User Account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/database/create-user-profile",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            },
+            {
+              "name": "profileData",
+              "value": "={{ { firstName: $json.firstName, lastName: $json.lastName, email: $json.email, registrationDate: new Date().toISOString() } }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-profile",
+      "name": "Create User Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/email/send-welcome",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "firstName",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "template",
+              "value": "welcome"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-welcome-email",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:6464/api/notifications/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            },
+            {
+              "name": "type",
+              "value": "welcome"
+            },
+            {
+              "name": "title",
+              "value": "Bienvenue sur Orientation Pro Congo !"
+            },
+            {
+              "name": "message",
+              "value": "Votre compte a été créé avec succès. Commencez par passer un test d'orientation pour découvrir votre profil professionnel."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-notification",
+      "name": "Create Welcome Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, message: 'User registered successfully', userId: $json.userId } }}",
+        "options": {}
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "User Registration Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create User Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create User Account": {
+      "main": [
+        [
+          {
+            "node": "Create User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create User Profile": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Welcome Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Welcome Notification": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "user-registration-workflow",
+  "tags": ["orientation-pro", "user-management"]
+} 
