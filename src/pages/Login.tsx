@@ -24,7 +24,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, user, signOut, refreshAuthState } = useAuth();
-  const { isDemoMode } = useDemoMode ? useDemoMode() : { isDemoMode: false };
+  const { isDemoMode } = useDemoMode();
 
   const from = location.state?.from?.pathname || '/dashboard';
 

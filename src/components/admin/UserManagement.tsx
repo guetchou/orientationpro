@@ -87,15 +87,18 @@ export const UserManagement = () => {
         const userDate = new Date(user.created_at);
         const today = new Date();
         switch (filters.dateRange) {
-          case "week":
+          case "week": {
             const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             return matchesSearch && matchesDepartment && matchesStatus && userDate >= weekAgo;
-          case "month":
+          }
+          case "month": {
             const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
             return matchesSearch && matchesDepartment && matchesStatus && userDate >= monthAgo;
-          case "year":
+          }
+          case "year": {
             const yearAgo = new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
             return matchesSearch && matchesDepartment && matchesStatus && userDate >= yearAgo;
+          }
           default:
             return matchesSearch && matchesDepartment && matchesStatus;
         }

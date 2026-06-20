@@ -1,18 +1,13 @@
-name: Docker Image CI
+name: Deprecated Docker image workflow
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-
-  build:
-
+  disabled:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - run: echo "Disabled; image publishing requires a reviewed deployment design."

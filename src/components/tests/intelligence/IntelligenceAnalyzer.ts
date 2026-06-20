@@ -10,7 +10,7 @@ export const analyzeMultipleIntelligence = (responses: string[]): MultipleIntell
   let bodily = 30;
   let interpersonal = 30;
   let intrapersonal = 30;
-  let naturalist = 30;
+  const naturalist = 30;
 
   // Analyser les réponses pour ajuster les scores
   responses.forEach((response, index) => {
