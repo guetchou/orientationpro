@@ -1,0 +1,325 @@
+const crypto = require('node:crypto');
+const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const TOKEN_BYTES = 32;
+const VERIFICATION_TTL_MS = 30 * 60 * 1000;
+const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
+const REFRESH_COOKIE = 'orientationpro_refresh';
+
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const accountRoles = (account) => account.roles || (account.role ? [account.role] : []);
+const publicAccount = (account) => ({
+  id: account.id,
+  email: account.email,
+  status: account.status,
+  roles: accountRoles(account),
+});
+
+const readCookie = (req, name) => {
+  const header = req.headers.cookie || '';
+  const entry = header.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
+  return entry ? decodeURIComponent(entry.slice(name.length + 1)) : null;
+};
+const route = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+
+const createAuthRouter = ({ store, email, jwtSecret, cookieSecure = true }) => {
+  if (!store || !email) {
+    throw new Error('Auth store and email adapter are required');
+  }
+  if (typeof jwtSecret !== 'string' || jwtSecret.length < 32) {
+    throw new Error('JWT secret must contain at least 32 characters');
+  }
+
+  const router = express.Router();
+
+  router.post('/register', route(async (req, res) => {
+    const normalizedEmail = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || '');
+
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail) || password.length < 12) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_REGISTRATION',
+          message: 'A valid email and a password of at least 12 characters are required.',
+        },
+      });
+    }
+
+    const existing = await store.findAccountByEmail(normalizedEmail);
+    if (existing) {
+      return res.status(409).json({
+        error: {
+          code: 'ACCOUNT_EXISTS',
+          message: 'An account already exists for this email.',
+        },
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const account = await store.createAccount({
+      email: normalizedEmail,
+      passwordHash,
+      role: 'user',
+      status: 'pending_verification',
+    });
+    const verificationToken = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    await store.saveVerificationToken({
+      accountId: account.id,
+      tokenHash: hashToken(verificationToken),
+      expiresAt: new Date(Date.now() + VERIFICATION_TTL_MS),
+    });
+    await email.sendVerification({
+      accountId: account.id,
+      email: account.email,
+      token: verificationToken,
+    });
+
+    return res.status(201).json({ account: publicAccount(account) });
+  }));
+
+  router.post('/login', route(async (req, res) => {
+    const normalizedEmail = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || '');
+    const account = await store.findAccountByEmail(normalizedEmail);
+    const passwordMatches = account
+      ? await bcrypt.compare(password, account.passwordHash)
+      : false;
+
+    if (!account || !passwordMatches) {
+      return res.status(401).json({
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: 'Email or password is incorrect.',
+        },
+      });
+    }
+
+    if (account.status !== 'active') {
+      return res.status(403).json({
+        error: {
+          code: 'ACCOUNT_NOT_VERIFIED',
+          message: 'The account must be verified before login.',
+        },
+      });
+    }
+
+    const refreshToken = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const session = await store.createSession({
+      accountId: account.id,
+      refreshTokenHash: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000),
+    });
+    const accessToken = jwt.sign(
+      { roles: accountRoles(account), sid: session.id },
+      jwtSecret,
+      {
+        subject: account.id,
+        expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+        issuer: 'orientationpro-api',
+        audience: 'orientationpro-clients',
+        algorithm: 'HS256',
+      },
+    );
+
+    res.cookie(REFRESH_COOKIE, refreshToken, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000,
+      path: '/api/v1/auth',
+    });
+    return res.status(200).json({
+      accessToken,
+      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+      account: publicAccount(account),
+    });
+  }));
+
+  router.post('/verify-email', route(async (req, res) => {
+    const token = String(req.body?.token || '');
+    if (!token) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_VERIFICATION_TOKEN',
+          message: 'The verification token is invalid or expired.',
+        },
+      });
+    }
+
+    const account = await store.consumeVerificationToken({
+      tokenHash: hashToken(token),
+      now: new Date(),
+    });
+    if (!account) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_VERIFICATION_TOKEN',
+          message: 'The verification token is invalid or expired.',
+        },
+      });
+    }
+
+    return res.status(200).json({ account: publicAccount(account) });
+  }));
+
+  router.post('/refresh', route(async (req, res) => {
+    const refreshToken = readCookie(req, REFRESH_COOKIE);
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: { code: 'SESSION_REQUIRED', message: 'A refresh session is required.' },
+      });
+    }
+
+    const nextRefreshToken = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const result = await store.rotateSession({
+      refreshTokenHash: hashToken(refreshToken),
+      nextRefreshTokenHash: hashToken(nextRefreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000),
+      now: new Date(),
+    });
+
+    if (!result || result.status !== 'rotated') {
+      res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+      const replayed = result?.status === 'reused';
+      return res.status(401).json({
+        error: {
+          code: replayed ? 'SESSION_REVOKED' : 'INVALID_SESSION',
+          message: replayed ? 'The session was revoked after token replay.' : 'The session is invalid or expired.',
+        },
+      });
+    }
+
+    const accessToken = jwt.sign(
+      { roles: accountRoles(result.account), sid: result.session.id },
+      jwtSecret,
+      {
+        subject: result.account.id,
+        expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+        issuer: 'orientationpro-api',
+        audience: 'orientationpro-clients',
+        algorithm: 'HS256',
+      },
+    );
+    res.cookie(REFRESH_COOKIE, nextRefreshToken, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000,
+      path: '/api/v1/auth',
+    });
+    return res.status(200).json({
+      accessToken,
+      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+      account: publicAccount(result.account),
+    });
+  }));
+
+  router.get('/session', route(async (req, res) => {
+    const authorization = req.headers.authorization || '';
+    if (!authorization.startsWith('Bearer ')) {
+      return res.status(401).json({
+        error: { code: 'SESSION_REQUIRED', message: 'An access token is required.' },
+      });
+    }
+
+    try {
+      const claims = jwt.verify(authorization.slice(7), jwtSecret, {
+        issuer: 'orientationpro-api',
+        audience: 'orientationpro-clients',
+        algorithms: ['HS256'],
+      });
+      const active = await store.findActiveSession({
+        sessionId: claims.sid,
+        accountId: claims.sub,
+        now: new Date(),
+      });
+      if (!active) {
+        return res.status(401).json({
+          error: { code: 'INVALID_SESSION', message: 'The session is invalid or expired.' },
+        });
+      }
+      return res.status(200).json({ account: publicAccount(active.account) });
+    } catch (error) {
+      return res.status(401).json({
+        error: { code: 'INVALID_SESSION', message: 'The session is invalid or expired.' },
+      });
+    }
+  }));
+
+  router.post('/logout', route(async (req, res) => {
+    const refreshToken = readCookie(req, REFRESH_COOKIE);
+    if (refreshToken) {
+      await store.revokeSessionByRefreshHash({
+        refreshTokenHash: hashToken(refreshToken),
+        revokedAt: new Date(),
+      });
+    }
+    res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+    return res.status(204).end();
+  }));
+
+  router.post('/password-reset/request', route(async (req, res) => {
+    const normalizedEmail = normalizeEmail(req.body?.email);
+    const account = await store.findAccountByEmail(normalizedEmail);
+
+    if (account?.status === 'active') {
+      const resetToken = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+      await store.savePasswordResetToken({
+        accountId: account.id,
+        tokenHash: hashToken(resetToken),
+        expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+      });
+      await email.sendPasswordReset({
+        accountId: account.id,
+        email: account.email,
+        token: resetToken,
+      });
+    }
+
+    return res.status(202).json({
+      message: 'If an active account exists, password reset instructions will be sent.',
+    });
+  }));
+
+  router.post('/password-reset/confirm', route(async (req, res) => {
+    const token = String(req.body?.token || '');
+    const password = String(req.body?.password || '');
+    if (!token || password.length < 12) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_PASSWORD_RESET',
+          message: 'The reset token is invalid or the password is too short.',
+        },
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const account = await store.consumePasswordResetToken({
+      tokenHash: hashToken(token),
+      passwordHash,
+      now: new Date(),
+    });
+    if (!account) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_PASSWORD_RESET',
+          message: 'The reset token is invalid or expired.',
+        },
+      });
+    }
+
+    return res.status(204).end();
+  }));
+
+  return router;
+};
+
+module.exports = {
+  createAuthRouter,
+};

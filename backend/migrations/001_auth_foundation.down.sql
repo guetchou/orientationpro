@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS auth_refresh_tokens;
+DROP TABLE IF EXISTS auth_sessions;
+DROP TABLE IF EXISTS auth_password_reset_tokens;
+DROP TABLE IF EXISTS auth_email_verification_tokens;
+DROP TABLE IF EXISTS auth_account_roles;
+DROP TABLE IF EXISTS auth_role_permissions;
+DROP TABLE IF EXISTS auth_permissions;
+DROP TABLE IF EXISTS auth_roles;
+DROP TABLE IF EXISTS auth_accounts;

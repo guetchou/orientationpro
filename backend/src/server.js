@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth.routes');
@@ -16,48 +15,38 @@ const applicationRoutes = require('./routes/application.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const communicationRoutes = require('./routes/communication.routes');
 const jobScrapingRoutes = require('./routes/jobScraping.routes');
+const { createConfiguredAuthV1 } = require('./auth-v1/bootstrap');
 
 // Import du service de scraping (désactivé temporairement)
 // const jobScrapingService = require('./services/jobScrapingService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const allowedOrigins = new Set(
+  String(process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
+let closeAuthV1 = async () => undefined;
 
-// Configuration CORS très permissive pour le développement
 app.use(cors({
   origin: function(origin, callback) {
-    // Permettre toutes les origines en développement
-    callback(null, true);
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('Origin not allowed by CORS policy'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Middleware pour parser le JSON avec des limites généreuses
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Middleware de logging pour debug
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${req.method} ${req.path}`);
-  
-  // Log des headers importants
-  if (req.headers['content-type']) {
-    console.log(`  Content-Type: ${req.headers['content-type']}`);
-  }
-  
-  // Log du body pour les requêtes POST/PUT (sans les mots de passe)
-  if (req.method === 'POST' || req.method === 'PUT') {
-    const bodyLog = { ...req.body };
-    if (bodyLog.password) bodyLog.password = '***';
-    console.log(`  Body:`, bodyLog);
-  }
-  
   next();
 });
 
@@ -69,7 +58,14 @@ app.use((req, res, next) => {
 
 // Routes API
 app.use('/api/test', testRoutes);
-app.use('/api/auth', authRoutes);
+if (process.env.LEGACY_AUTH_ENABLED === 'true') {
+  app.use('/api/auth', authRoutes);
+}
+if (process.env.AUTH_V1_ENABLED === 'true') {
+  const authV1 = createConfiguredAuthV1(process.env);
+  closeAuthV1 = authV1.close;
+  app.use('/api/v1/auth', authV1.router);
+}
 app.use('/api/cv', cvRoutes);
 app.use('/api/candidates', candidatesRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -90,37 +86,25 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     port: PORT,
-    endpoints: {
-      health: 'GET /api/test/health',
-      login: 'POST /api/auth/login',
-      register: 'POST /api/auth/register',
-      verifyAdmin: 'GET /api/auth/verify-admin'
-    },
-    testAccounts: {
-      admin: {
-        email: 'admin@example.com',
-        password: 'admin123',
-        role: 'admin'
-      },
-      user: {
-        email: 'user@example.com',
-        password: 'password123',
-        role: 'user'
-      }
-    },
-    corsEnabled: true,
-    jsonLimit: '10mb'
+    endpoints: process.env.AUTH_V1_ENABLED === 'true'
+      ? {
+          health: 'GET /api/test/health',
+          login: 'POST /api/v1/auth/login',
+          register: 'POST /api/v1/auth/register',
+          session: 'GET /api/v1/auth/session',
+        }
+      : { health: 'GET /api/test/health' },
+    corsOriginsConfigured: allowedOrigins.size,
+    jsonLimit: '1mb'
   };
-  
-  console.log('Route racine appelée, réponse:', response);
   res.status(200).json(response);
 });
 
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
-  console.error('❌ Erreur globale:', {
+  console.error('Global request error:', {
     message: err.message,
-    stack: err.stack,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.url,
     method: req.method,
     timestamp: new Date().toISOString()
@@ -140,7 +124,7 @@ app.use((err, req, res, next) => {
 
 // Gestionnaire 404 pour toutes les routes non trouvées
 app.use('*', (req, res) => {
-  console.log(`❌ Route non trouvée: ${req.method} ${req.originalUrl}`);
+  console.log(`Route not found: ${req.method} ${req.originalUrl}`);
   
   const notFoundResponse = {
     success: false,
@@ -148,13 +132,7 @@ app.use('*', (req, res) => {
     path: req.originalUrl,
     method: req.method,
     timestamp: new Date().toISOString(),
-    availableEndpoints: [
-      'GET /',
-      'GET /api/test/health',
-      'POST /api/auth/login',
-      'POST /api/auth/register',
-      'GET /api/auth/verify-admin'
-    ]
+    availableEndpoints: ['GET /', 'GET /api/test/health']
   };
   
   res.status(404).json(notFoundResponse);
@@ -162,58 +140,31 @@ app.use('*', (req, res) => {
 
 // Démarrage du serveur avec gestion d'erreurs améliorée
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log('\n🎉 ================================');
-  console.log('🚀 SERVEUR BACKEND DÉMARRÉ !');
-  console.log('🎉 ================================');
-  console.log(`🌐 Port: ${PORT}`);
-  console.log(`🔗 URL: http://localhost:${PORT}`);
-  console.log(`📊 Santé: http://localhost:${PORT}/api/test/health`);
-  console.log(`🔐 Connexion: http://localhost:${PORT}/api/auth/login`);
-  console.log(`📅 Démarré: ${new Date().toLocaleString()}`);
-  console.log(`🛠️  Environnement: ${process.env.NODE_ENV || 'development'}`);
-  console.log('🎉 ================================\n');
-  
-  // Démarrer le scraping automatique des offres d'emploi (désactivé temporairement)
-  console.log('🔍 Service d\'offres d\'emploi disponible (mode simplifié)');
-  console.log('✅ API des offres d\'emploi opérationnelle');
-  
-  // Test de l'endpoint de santé au démarrage
-  setTimeout(() => {
-    console.log('🔍 Test automatique de l\'endpoint de santé...');
-  }, 1000);
+  console.log(`Backend listening on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
 });
 
 // Gestion des erreurs de serveur
 server.on('error', (err) => {
-  console.error('\n❌ ================================');
-  console.error('❌ ERREUR DE SERVEUR');
-  console.error('❌ ================================');
-  console.error('Erreur:', err.message);
-  
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Le port ${PORT} est déjà utilisé !`);
-    console.error('💡 Solutions possibles:');
-    console.error('   1. Arrêtez le processus qui utilise le port');
-    console.error('   2. Changez le port dans le fichier .env');
-    console.error('   3. Utilisez: kill -9 $(lsof -ti:3000)');
-  }
-  
-  console.error('❌ ================================\n');
+  console.error(`Backend server error: ${err.message}`);
 });
 
 // Gestion de l'arrêt propre
 process.on('SIGTERM', () => {
-  console.log('\n🛑 Arrêt du serveur...');
-  server.close(() => {
-    console.log('✅ Serveur arrêté proprement');
+  console.log('Stopping backend server.');
+  server.close(async () => {
+    await closeAuthV1();
+    console.log('Backend server stopped.');
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('\n🛑 Arrêt du serveur (Ctrl+C)...');
-  server.close(() => {
-    console.log('✅ Serveur arrêté proprement');
+  console.log('Stopping backend server after interrupt.');
+  server.close(async () => {
+    await closeAuthV1();
+    console.log('Backend server stopped.');
     process.exit(0);
   });
 });
