@@ -108,13 +108,19 @@ test('ordered migrations roll back completely and can be applied again', async (
   try {
     await migrateUp(pool, directory);
 
+    const [appliedRows] = await pool.query(
+      'SELECT version FROM schema_migrations ORDER BY applied_at DESC, version DESC',
+    );
+    const expectedRollbackOrder = appliedRows.map((row) => row.version);
     const rolledBack = [];
+
     while (true) {
       const version = await migrateDown(pool, directory);
       if (!version) break;
       rolledBack.push(version);
     }
 
+    assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
       '004_career_catalog_permissions',
       '003_occupation_catalog',
