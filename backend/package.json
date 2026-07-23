@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --test test/cv-security.test.js test/auth-v1.test.js test/riasec-scoring.test.js test/riasec-api.test.js",
+    "test": "node --test test/cv-security.test.js test/auth-v1.test.js test/authenticate.test.js test/riasec-scoring.test.js test/riasec-api.test.js",
     "test:mysql": "node --test --test-concurrency=1 test/auth-v1-mysql.test.js test/riasec-mysql.test.js",
     "migrate:up": "node scripts/migrate.js up",
     "migrate:down": "node scripts/migrate.js down",
