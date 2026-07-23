@@ -21,6 +21,7 @@ const mapInstrument = (row, items) => row ? {
   status: row.status,
   title: row.title,
   responseScale: parseJson(row.response_scale),
+  dimensions: parseJson(row.dimensions_json),
   methodology: row.methodology,
   source: {
     kind: row.source_kind,
