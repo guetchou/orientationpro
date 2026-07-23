@@ -20,6 +20,7 @@ const mapInstrument = (row, items) => row ? {
   locale: row.locale,
   status: row.status,
   title: row.title,
+  responseScale: parseJson(row.response_scale),
   methodology: row.methodology,
   source: {
     kind: row.source_kind,
