@@ -72,6 +72,7 @@ test('RIASEC instrument, permissions, attempt and immutable result persist in is
     assert.equal(instrument.items.length, 60);
     assert.equal(instrument.status, 'draft');
     assert.equal(instrument.contentHash.length, 64);
+    assert.deepEqual(instrument.dimensions, definition.dimensions);
 
     const itemOrder = instrument.items.map((item) => item.id).reverse();
     const attempt = await store.createAttempt({
