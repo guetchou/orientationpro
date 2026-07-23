@@ -14,10 +14,12 @@ Un Résultat d’orientation doit être reproductible, privé et associé à la 
 
 - MySQL est la source de vérité des instruments, items, passations, réponses et Résultats d’orientation.
 - Le score final est calculé côté serveur par un moteur pur et versionné.
+- L’API refuse explicitement un instrument dont la version de calcul n’est pas supportée ; elle ne substitue jamais silencieusement un autre algorithme.
 - Le navigateur reçoit le texte et l’ordre des items, mais pas leur dimension ni leur clé d’inversion.
 - Chaque dimension est normalisée indépendamment selon son propre nombre d’items.
 - Une égalité n’est jamais départagée par l’ordre accidentel d’un tableau. Le code principal à trois lettres reste nul lorsque les premiers rangs sont ambigus ; un code d’affichage explicite les groupes d’égalité.
 - La dispersion des six scores et le motif descriptif des réponses sont conservés. Ils ne sont pas appelés « confiance », « fidélité », « validité » ou « percentile ».
+- L’empreinte de l’instrument couvre notamment l’échelle de réponse, les descriptions des six dimensions, la méthodologie, la provenance, les avertissements, la version de calcul et tous les items.
 - Le résultat stocke l’identifiant et l’empreinte du contenu de l’instrument, la version de l’algorithme et un instantané destiné aux rapports futurs.
 - L’IA ne produit ni ne modifie les scores. Elle pourra seulement reformuler une explication déjà déterminée, dans un lot séparé et identifiable.
 - La banque initiale est une rédaction originale Orientation Pro Congo avec le statut `draft`. Elle ne peut être rendue `pilot` ou `active` sans revue humaine documentée.
