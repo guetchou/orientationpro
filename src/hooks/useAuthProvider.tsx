@@ -9,14 +9,12 @@ export interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // États
   const {
     user,
     setUser,
     profile,
     setProfile,
     loading,
-    setLoading,
     isSuperAdmin,
     setIsSuperAdmin,
     isMasterAdmin,
@@ -24,26 +22,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     profileData,
     setProfileData,
     refreshAuthState,
-    syncAuthState
   } = useAuthState();
 
-  // Méthodes d'authentification
   const {
     fetchProfile,
     signIn,
     signUp,
     signOut,
     logout,
-    updateProfile
+    updateProfile,
   } = useAuthMethods(
     setUser,
     setProfile,
     setProfileData,
     setIsSuperAdmin,
-    setIsMasterAdmin
+    setIsMasterAdmin,
   );
 
-  // Valeur du contexte
   const value: AuthContextProps = {
     user,
     profile,
@@ -56,13 +51,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (user) {
         await fetchProfile(user.id);
       } else {
-        refreshAuthState();
+        await refreshAuthState();
       }
     },
     logout,
     profileData: profileData || undefined,
     isSuperAdmin,
-    isMasterAdmin
+    isMasterAdmin,
   };
 
   return (
