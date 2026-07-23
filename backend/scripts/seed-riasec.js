@@ -14,6 +14,7 @@ const hashInstrument = (value) => crypto
     status: value.status,
     title: value.title,
     responseScale: value.responseScale,
+    dimensions: value.dimensions,
     methodology: value.methodology,
     source: value.source,
     disclaimer: value.disclaimer,
@@ -64,12 +65,13 @@ const seedRiasecInstrument = async (pool, value = instrument) => {
     await connection.query(
       `INSERT INTO orientation_riasec_instruments (
          id, slug, version, locale, status, title, response_scale,
-         methodology, source_kind, source_reference, license_text,
-         disclaimer, scoring_version, content_hash
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         dimensions_json, methodology, source_kind, source_reference,
+         license_text, disclaimer, scoring_version, content_hash
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          title = VALUES(title),
          response_scale = VALUES(response_scale),
+         dimensions_json = VALUES(dimensions_json),
          methodology = VALUES(methodology),
          source_kind = VALUES(source_kind),
          source_reference = VALUES(source_reference),
@@ -86,6 +88,7 @@ const seedRiasecInstrument = async (pool, value = instrument) => {
         value.status,
         value.title,
         JSON.stringify(value.responseScale),
+        JSON.stringify(value.dimensions),
         value.methodology,
         value.source.kind,
         value.source.reference,
