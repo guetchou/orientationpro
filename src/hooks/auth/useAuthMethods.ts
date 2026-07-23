@@ -47,7 +47,7 @@ export const useAuthMethods = (
     return user;
   };
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (_userId?: string) => {
     const stored = getStoredUserData();
     if (!stored) return null;
     const account: AuthAccount = {
