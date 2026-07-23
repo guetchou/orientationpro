@@ -26,6 +26,7 @@ const databaseInstrument = () => ({
   status: 'draft',
   title: definition.title,
   responseScale: definition.responseScale,
+  dimensions: definition.dimensions,
   methodology: definition.methodology,
   source: definition.source,
   disclaimer: definition.disclaimer,
@@ -152,6 +153,7 @@ test('submitting complete answers calculates the server result and persists one 
   assert.equal(completion.responses.length, 60);
   assert.equal(completion.result.algorithmVersion, 'riasec-opc-scoring-v1');
   assert.equal(completion.snapshot.instrument.id, instrument.id);
+  assert.deepEqual(completion.snapshot.dimensions, instrument.dimensions);
   assert.deepEqual(completion.snapshot.result.scores, completion.result.scores);
   assert.equal(body.result.snapshot.instrument.disclaimer, instrument.disclaimer);
 });
@@ -187,6 +189,29 @@ test('incomplete answers are rejected before any database completion write', asy
   assert.equal(response.status, 400);
   assert.equal(body.error.code, 'INCOMPLETE_RESPONSES');
   assert.equal(completed, false);
+});
+
+test('an unsupported instrument algorithm is rejected before creating an attempt', async () => {
+  let created = false;
+  const unsupported = {
+    ...databaseInstrument(),
+    scoringVersion: 'riasec-unknown-v99',
+  };
+  const store = {
+    getInstrument: async () => unsupported,
+    createAttempt: async () => {
+      created = true;
+    },
+  };
+  const response = await request(createApp(store), '/api/v1/orientation/riasec/attempts', {
+    method: 'POST',
+  });
+  const body = await response.json();
+
+  assert.equal(response.status, 409);
+  assert.equal(body.error.code, 'UNSUPPORTED_RIASEC_ALGORITHM');
+  assert.equal(body.error.details.requiredVersion, 'riasec-unknown-v99');
+  assert.equal(created, false);
 });
 
 test('result history always uses the authenticated account as owner filter', async () => {
