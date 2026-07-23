@@ -1,8 +1,8 @@
 const crypto = require('node:crypto');
 const express = require('express');
 
-const { instrument: instrumentDefinition, INSTRUMENT_ID } = require('./instrument');
-const { RiasecValidationError, scoreRiasec } = require('./scoring');
+const { INSTRUMENT_ID } = require('./instrument');
+const { ALGORITHM_VERSION, RiasecValidationError, scoreRiasec } = require('./scoring');
 const { RiasecStoreError } = require('./store');
 
 const route = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
@@ -14,6 +14,20 @@ const shuffle = (values) => {
     [result[index], result[selected]] = [result[selected], result[index]];
   }
   return result;
+};
+
+const ensureSupportedScoringVersion = (instrument) => {
+  if (instrument.scoringVersion !== ALGORITHM_VERSION) {
+    const error = new Error('The instrument requires a scoring algorithm that this API version does not support.');
+    error.code = 'UNSUPPORTED_RIASEC_ALGORITHM';
+    error.details = {
+      instrumentId: instrument.id,
+      requiredVersion: instrument.scoringVersion,
+      supportedVersion: ALGORITHM_VERSION,
+    };
+    throw error;
+  }
+  return instrument;
 };
 
 const publicInstrument = (instrument, itemOrder = instrument.items.map((item) => item.id)) => {
@@ -58,7 +72,7 @@ const resultSnapshot = ({ instrument, result }) => ({
     disclaimer: instrument.disclaimer,
     contentHash: instrument.contentHash,
   },
-  dimensions: instrumentDefinition.dimensions,
+  dimensions: instrument.dimensions,
   result,
   generatedAt: new Date().toISOString(),
 });
@@ -106,7 +120,7 @@ const createRiasecRouter = ({
     if (!instrument) return null;
     if (instrument.status === 'draft' && !allowDraft) return null;
     if (!['draft', 'pilot', 'active'].includes(instrument.status)) return null;
-    return instrument;
+    return ensureSupportedScoringVersion(instrument);
   };
 
   router.get('/riasec/instrument', route(async (req, res) => {
@@ -165,6 +179,7 @@ const createRiasecRouter = ({
         },
       });
     }
+    ensureSupportedScoringVersion(instrument);
     return res.status(200).json({
       attempt,
       instrument: publicInstrument(instrument, attempt.itemOrder),
@@ -191,9 +206,14 @@ const createRiasecRouter = ({
         },
       });
     }
+    ensureSupportedScoringVersion(instrument);
 
     const responses = req.body?.responses;
-    const result = scoreRiasec({ items: instrument.items, responses });
+    const result = scoreRiasec({
+      items: instrument.items,
+      responses,
+      algorithmVersion: instrument.scoringVersion,
+    });
     const completion = await store.completeAttempt({
       accountId: req.auth.account.id,
       attemptId: attempt.id,
@@ -237,6 +257,11 @@ const createRiasecRouter = ({
     if (error instanceof RiasecStoreError) {
       return res.status(statusForStoreError(error)).json({
         error: { code: error.code, message: error.message },
+      });
+    }
+    if (error.code === 'UNSUPPORTED_RIASEC_ALGORITHM') {
+      return res.status(409).json({
+        error: { code: error.code, message: error.message, details: error.details },
       });
     }
     return next(error);
