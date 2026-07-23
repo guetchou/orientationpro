@@ -23,6 +23,7 @@ const PageLoader = () => (
 const Index = lazy(() => import('@/pages/Index'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
+const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const Tests = lazy(() => import('@/pages/Tests'));
 const RiasecTest = lazy(() => import('@/pages/RiasecTest'));
 const RiasecResult = lazy(() => import('@/pages/RiasecResult'));
@@ -69,6 +70,7 @@ export const AppRouter = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/tests" element={<Tests />} />
           <Route path="/tests/riasec" element={<UserRoute><RiasecTest /></UserRoute>} />
           <Route path="/orientation/results" element={<UserRoute><RiasecResults /></UserRoute>} />
