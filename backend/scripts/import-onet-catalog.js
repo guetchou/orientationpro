@@ -1,37 +1,152 @@
 const crypto = require('node:crypto');
+const dns = require('node:dns');
+const fs = require('node:fs/promises');
+const path = require('node:path');
 const { createDatabasePool } = require('../src/db/pool');
 const { displayCode, DIMENSIONS } = require('../src/career/matching');
 
-const VERSION = process.env.ONET_VERSION || '30.3';
-const VERSION_PATH = VERSION.replaceAll('.', '_');
-const BASE_URL = process.env.ONET_BASE_URL || `https://www.onetcenter.org/dl_files/database/db_${VERSION_PATH}_json`;
-const SOURCE_ID = `onet:${VERSION}:en`;
 const LICENSE_NAME = 'Creative Commons Attribution 4.0 International';
-const LICENSE_URL = `https://www.onetcenter.org/license_db.html`;
-const MIN_OCCUPATIONS = Number(process.env.ONET_MIN_OCCUPATIONS || 1000);
-const MIN_DIRECT_PROFILES = Number(process.env.ONET_MIN_DIRECT_PROFILES || 900);
+const LICENSE_URL = 'https://www.onetcenter.org/license_db.html';
+const DEFAULT_DOWNLOAD_ATTEMPTS = 4;
+const DEFAULT_DOWNLOAD_TIMEOUT_MS = 180_000;
 
-const URLS = Object.freeze({
-  occupations: `${BASE_URL}/occupation_data.json`,
-  interests: `${BASE_URL}/career_interest_types.json`,
-  scales: `${BASE_URL}/scales_reference.json`,
+const FILE_NAMES = Object.freeze({
+  occupations: 'occupation_data.json',
+  interests: 'career_interest_types.json',
+  scales: 'scales_reference.json',
 });
 
-const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const positiveInteger = (value, fallback, label) => {
+  const parsed = Number(value ?? fallback);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new TypeError(`${label} must be a positive integer`);
+  }
+  return parsed;
+};
 
-const downloadJson = async (url) => {
-  const response = await fetch(url, {
-    headers: {
-      accept: 'application/json',
-      'user-agent': 'MAKOKI occupation catalog importer/1.0',
-    },
-    signal: AbortSignal.timeout(120_000),
-  });
-  if (!response.ok) throw new Error(`Download failed (${response.status}) for ${url}`);
-  const text = await response.text();
+const createConfig = (env = process.env) => {
+  const version = env.ONET_VERSION || '30.3';
+  const versionPath = version.replaceAll('.', '_');
+  const baseUrl = env.ONET_BASE_URL || `https://www.onetcenter.org/dl_files/database/db_${versionPath}_json`;
+  const sourceId = `onet:${version}:en`;
+
+  return {
+    version,
+    sourceId,
+    baseUrl,
+    urls: Object.freeze({
+      occupations: `${baseUrl}/${FILE_NAMES.occupations}`,
+      interests: `${baseUrl}/${FILE_NAMES.interests}`,
+      scales: `${baseUrl}/${FILE_NAMES.scales}`,
+    }),
+    minOccupations: positiveInteger(env.ONET_MIN_OCCUPATIONS, 1000, 'ONET_MIN_OCCUPATIONS'),
+    minDirectProfiles: positiveInteger(env.ONET_MIN_DIRECT_PROFILES, 900, 'ONET_MIN_DIRECT_PROFILES'),
+    downloadAttempts: positiveInteger(
+      env.ONET_DOWNLOAD_ATTEMPTS,
+      DEFAULT_DOWNLOAD_ATTEMPTS,
+      'ONET_DOWNLOAD_ATTEMPTS',
+    ),
+    downloadTimeoutMs: positiveInteger(
+      env.ONET_DOWNLOAD_TIMEOUT_MS,
+      DEFAULT_DOWNLOAD_TIMEOUT_MS,
+      'ONET_DOWNLOAD_TIMEOUT_MS',
+    ),
+    cacheDir: env.ONET_CACHE_DIR ? path.resolve(env.ONET_CACHE_DIR) : null,
+    forceIpv4: env.ONET_FORCE_IPV4 !== 'false',
+  };
+};
+
+const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const parseJsonPayload = (text, source) => {
   const payload = JSON.parse(text);
-  if (!Array.isArray(payload.row)) throw new Error(`Invalid O*NET JSON payload at ${url}`);
+  if (!Array.isArray(payload.row)) {
+    throw new Error(`Invalid O*NET JSON payload at ${source}`);
+  }
   return { text, rows: payload.row };
+};
+
+const downloadJson = async (url, options = {}) => {
+  const {
+    fetchImpl = fetch,
+    attempts = DEFAULT_DOWNLOAD_ATTEMPTS,
+    timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS,
+    sleepImpl = sleep,
+  } = options;
+
+  let latestError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(url, {
+        headers: {
+          accept: 'application/json',
+          'accept-encoding': 'identity',
+          'user-agent': 'MAKOKI occupation catalog importer/1.1',
+        },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!response.ok) {
+        throw new Error(`Download failed (${response.status}) for ${url}`);
+      }
+      return parseJsonPayload(await response.text(), url);
+    } catch (error) {
+      latestError = error;
+      if (attempt >= attempts) break;
+      const delayMs = Math.min(1000 * (2 ** (attempt - 1)), 8000);
+      console.warn(
+        `O*NET download attempt ${attempt}/${attempts} failed for ${url}: ${error.message}. ` +
+        `Retrying in ${delayMs}ms.`,
+      );
+      await sleepImpl(delayMs);
+    }
+  }
+
+  throw new Error(`O*NET download failed after ${attempts} attempts for ${url}`, {
+    cause: latestError,
+  });
+};
+
+const readCacheFile = async (filePath) => {
+  try {
+    const text = await fs.readFile(filePath, 'utf8');
+    const parsed = parseJsonPayload(text, filePath);
+    console.log(`O*NET cache hit: ${filePath}`);
+    return parsed;
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    console.warn(`Ignoring unusable O*NET cache file ${filePath}: ${error.message}`);
+    return null;
+  }
+};
+
+const writeCacheFile = async (filePath, text) => {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const temporaryPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  await fs.writeFile(temporaryPath, text, { encoding: 'utf8', mode: 0o600 });
+  await fs.rename(temporaryPath, filePath);
+};
+
+const loadJsonSource = async ({ url, fileName, config, fetchImpl, sleepImpl }) => {
+  const cachePath = config.cacheDir ? path.join(config.cacheDir, fileName) : null;
+  if (cachePath) {
+    const cached = await readCacheFile(cachePath);
+    if (cached) return cached;
+  }
+
+  const downloaded = await downloadJson(url, {
+    attempts: config.downloadAttempts,
+    timeoutMs: config.downloadTimeoutMs,
+    fetchImpl,
+    sleepImpl,
+  });
+
+  if (cachePath) {
+    await writeCacheFile(cachePath, downloaded.text);
+    console.log(`O*NET cache stored: ${cachePath}`);
+  }
+
+  return downloaded;
 };
 
 const dimensionByName = Object.freeze({
@@ -62,7 +177,7 @@ const buildProfiles = ({ interestRows, minimum, maximum }) => {
     current.raw[dimension] = Number(row.data_value);
     current.normalized[dimension] = normalize({ value: row.data_value, minimum, maximum });
     current.provenance[dimension] = {
-      date: row.date || null,
+      date: row.date_updated || row.date || null,
       domainSource: row.domain_source || null,
       elementId: row.element_id || null,
     };
@@ -82,15 +197,35 @@ const requireScale = (scaleRows, scaleId) => {
   return { minimum, maximum, name: row.scale_name || scaleId };
 };
 
-const importOnetCatalog = async (env = process.env) => {
-  const [occupationFile, interestFile, scaleFile] = await Promise.all([
-    downloadJson(URLS.occupations),
-    downloadJson(URLS.interests),
-    downloadJson(URLS.scales),
-  ]);
+const importOnetCatalog = async (env = process.env, dependencies = {}) => {
+  const config = createConfig(env);
+  if (config.forceIpv4) dns.setDefaultResultOrder('ipv4first');
 
-  if (occupationFile.rows.length < MIN_OCCUPATIONS) {
-    throw new Error(`O*NET occupation count ${occupationFile.rows.length} is below ${MIN_OCCUPATIONS}`);
+  const sourceOptions = {
+    config,
+    fetchImpl: dependencies.fetchImpl,
+    sleepImpl: dependencies.sleepImpl,
+  };
+
+  // O*NET occasionally closes large concurrent transfers. Download sequentially and cache validated files.
+  const occupationFile = await loadJsonSource({
+    ...sourceOptions,
+    url: config.urls.occupations,
+    fileName: FILE_NAMES.occupations,
+  });
+  const interestFile = await loadJsonSource({
+    ...sourceOptions,
+    url: config.urls.interests,
+    fileName: FILE_NAMES.interests,
+  });
+  const scaleFile = await loadJsonSource({
+    ...sourceOptions,
+    url: config.urls.scales,
+    fileName: FILE_NAMES.scales,
+  });
+
+  if (occupationFile.rows.length < config.minOccupations) {
+    throw new Error(`O*NET occupation count ${occupationFile.rows.length} is below ${config.minOccupations}`);
   }
 
   const oiScale = requireScale(scaleFile.rows, 'OI');
@@ -103,8 +238,10 @@ const importOnetCatalog = async (env = process.env) => {
     DIMENSIONS.every((dimension) => Number.isFinite(normalized[dimension]))
   )).length;
 
-  if (directProfileCount < MIN_DIRECT_PROFILES) {
-    throw new Error(`O*NET direct RIASEC profile count ${directProfileCount} is below ${MIN_DIRECT_PROFILES}`);
+  if (directProfileCount < config.minDirectProfiles) {
+    throw new Error(
+      `O*NET direct RIASEC profile count ${directProfileCount} is below ${config.minDirectProfiles}`,
+    );
   }
 
   const combinedHash = sha256(JSON.stringify({
@@ -118,11 +255,11 @@ const importOnetCatalog = async (env = process.env) => {
   try {
     const [[existing]] = await connection.query(
       'SELECT content_sha256 FROM career_catalog_sources WHERE id = ? LIMIT 1',
-      [SOURCE_ID],
+      [config.sourceId],
     );
     if (existing && existing.content_sha256 !== combinedHash && env.ALLOW_SOURCE_REPLACE !== 'true') {
       throw new Error(
-        `Pinned source ${SOURCE_ID} changed (${existing.content_sha256} -> ${combinedHash}); ` +
+        `Pinned source ${config.sourceId} changed (${existing.content_sha256} -> ${combinedHash}); ` +
         'set ALLOW_SOURCE_REPLACE=true only after an explicit source review',
       );
     }
@@ -141,20 +278,20 @@ const importOnetCatalog = async (env = process.env) => {
          record_count = VALUES(record_count), metadata_json = VALUES(metadata_json),
          imported_at = CURRENT_TIMESTAMP(3)`,
       [
-        SOURCE_ID,
-        VERSION,
-        `O*NET ${VERSION} Database`,
+        config.sourceId,
+        config.version,
+        `O*NET ${config.version} Database`,
         'https://www.onetcenter.org/database.html',
         LICENSE_NAME,
         LICENSE_URL,
-        `Includes information from the O*NET ${VERSION} Database by the U.S. Department of Labor, ` +
+        `Includes information from the O*NET ${config.version} Database by the U.S. Department of Labor, ` +
           'Employment and Training Administration (USDOL/ETA). Used under CC BY 4.0. ' +
           'O*NET® is a trademark of USDOL/ETA. MAKOKI normalizes RIASEC values to a 0-100 scale; ' +
           'USDOL/ETA has not approved, endorsed, or tested these modifications.',
         combinedHash,
         occupationFile.rows.length,
         JSON.stringify({
-          urls: URLS,
+          urls: config.urls,
           files: {
             occupationsSha256: sha256(occupationFile.text),
             interestsSha256: sha256(interestFile.text),
@@ -168,7 +305,7 @@ const importOnetCatalog = async (env = process.env) => {
 
     for (const row of occupationFile.rows) {
       const sourceCode = row.onetsoc_code;
-      const id = `${SOURCE_ID}:${sourceCode}`;
+      const id = `${config.sourceId}:${sourceCode}`;
       const profile = profiles.get(sourceCode);
       const hasDirectProfile = Boolean(profile && DIMENSIONS.every((dimension) => (
         Number.isFinite(profile.normalized[dimension])
@@ -176,8 +313,8 @@ const importOnetCatalog = async (env = process.env) => {
       const normalized = hasDirectProfile ? profile.normalized : {};
       const provenance = hasDirectProfile ? {
         source: 'O*NET Database',
-        sourceVersion: VERSION,
-        sourceUrl: URLS.interests,
+        sourceVersion: config.version,
+        sourceUrl: config.urls.interests,
         license: LICENSE_NAME,
         licenseUrl: LICENSE_URL,
         scale: { id: 'OI', ...oiScale },
@@ -186,7 +323,7 @@ const importOnetCatalog = async (env = process.env) => {
         elementProvenance: profile.provenance,
       } : {
         source: 'O*NET Database',
-        sourceVersion: VERSION,
+        sourceVersion: config.version,
         status: 'missing-direct-profile',
       };
 
@@ -208,7 +345,7 @@ const importOnetCatalog = async (env = process.env) => {
            metadata_json = VALUES(metadata_json)`,
         [
           id,
-          SOURCE_ID,
+          config.sourceId,
           sourceCode,
           row.title,
           row.description || '',
@@ -231,16 +368,19 @@ const importOnetCatalog = async (env = process.env) => {
               SUM(riasec_profile_status = 'direct') AS direct_profile_count
        FROM career_occupations
        WHERE catalog_source_id = ?`,
-      [SOURCE_ID],
+      [config.sourceId],
     );
-    if (Number(counts.occupation_count) < MIN_OCCUPATIONS || Number(counts.direct_profile_count) < MIN_DIRECT_PROFILES) {
+    if (
+      Number(counts.occupation_count) < config.minOccupations ||
+      Number(counts.direct_profile_count) < config.minDirectProfiles
+    ) {
       throw new Error(`Imported catalog verification failed: ${JSON.stringify(counts)}`);
     }
 
     await connection.commit();
     return {
-      sourceId: SOURCE_ID,
-      version: VERSION,
+      sourceId: config.sourceId,
+      version: config.version,
       contentSha256: combinedHash,
       occupationCount: Number(counts.occupation_count),
       directProfileCount: Number(counts.direct_profile_count),
@@ -263,4 +403,10 @@ if (require.main === module) {
     });
 }
 
-module.exports = { importOnetCatalog, normalize, requireScale };
+module.exports = {
+  createConfig,
+  downloadJson,
+  importOnetCatalog,
+  normalize,
+  requireScale,
+};
