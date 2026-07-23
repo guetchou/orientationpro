@@ -2,6 +2,7 @@ const { createDatabasePool } = require('../db/pool');
 const { createAuthRouter } = require('./index');
 const { createSessionAuthenticator } = require('./authenticate');
 const { createMySqlAuthStore } = require('./mysql-store');
+const { createPermissionChecker } = require('./permissions');
 const { createSmtpEmailAdapter } = require('./smtp-email');
 
 const createConfiguredAuthV1 = (env = process.env) => {
@@ -23,6 +24,7 @@ const createConfiguredAuthV1 = (env = process.env) => {
   return {
     router,
     authenticate,
+    hasPermission: createPermissionChecker(pool),
     pool,
     store,
     close: () => pool.end(),
