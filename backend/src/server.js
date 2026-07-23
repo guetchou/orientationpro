@@ -17,6 +17,8 @@ const jobScrapingRoutes = require('./routes/jobScraping.routes');
 const { createConfiguredAuthV1 } = require('./auth-v1/bootstrap');
 const { createRiasecRouter } = require('./orientation/riasec/router');
 const { createRiasecStore } = require('./orientation/riasec/store');
+const { createCareerRouter } = require('./career/router');
+const { createCareerStore } = require('./career/store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,6 +76,16 @@ if (process.env.RIASEC_API_ENABLED === 'true') {
     allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true',
   }));
 }
+if (process.env.CAREER_API_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('CAREER_API_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+  app.use('/api/v1/career', createCareerRouter({
+    store: createCareerStore(authV1.pool),
+    authenticate: authV1.authenticate,
+    hasPermission: authV1.hasPermission,
+  }));
+}
 app.use('/api/cv', cvRoutes);
 app.use('/api/candidates', candidatesRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -99,6 +111,13 @@ app.get('/', (req, res) => {
       riasecInstrument: 'GET /api/v1/orientation/riasec/instrument',
       riasecAttempts: 'POST /api/v1/orientation/riasec/attempts',
       orientationResults: 'GET /api/v1/orientation/results',
+    });
+  }
+  if (process.env.CAREER_API_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      careerCatalogSummary: 'GET /api/v1/career/catalog/summary',
+      occupations: 'GET /api/v1/career/occupations',
+      occupationMatches: 'GET /api/v1/career/matches/:resultId',
     });
   }
 
@@ -151,6 +170,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
   console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
+  console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
 });
 
 server.on('error', (err) => {
