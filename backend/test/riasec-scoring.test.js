@@ -15,7 +15,7 @@ const createItems = (counts = Object.fromEntries(dimensions.map((dimension) => [
       items.push({
         id: `${dimension}-${index}`,
         dimension,
-        reverseScored: index === counts[dimension],
+        reverseScored: counts[dimension] > 1 && index === counts[dimension],
       });
     }
   }
