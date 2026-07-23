@@ -18,13 +18,16 @@ const EXCLUDED_SUFFIXES = ['.backup', '.broken', '.bak'];
 const literalReplacements = [
   ['Orientation Pro Congo', 'MAKOKI'],
   ['OrientationPro Congo', 'MAKOKI'],
-  ['OrientationPro', 'MAKOKI'],
-  ['Orientation Pro', 'MAKOKI'],
   ['Tests RIASEC scientifiquement validés', 'Test RIASEC structuré et transparent'],
   [
     'Les résultats sont toujours pertinents et fiables. C\'est un outil précieux pour notre profession.',
     'Les résultats servent de support structuré à nos échanges d\'orientation. C\'est un outil utile pour préparer l\'accompagnement.',
   ],
+];
+
+const boundedBrandReplacements = [
+  [/OrientationPro(?![\p{L}\p{N}_])/gu, 'MAKOKI'],
+  [/Orientation Pro(?![\p{L}\p{N}_])/gu, 'MAKOKI'],
 ];
 
 const collectFiles = async (entry) => {
@@ -81,6 +84,14 @@ for (const file of targetFiles) {
     if (next !== before) {
       const count = before.split(from).length - 1;
       replacementCounts.set(from, (replacementCounts.get(from) || 0) + count);
+    }
+  }
+
+  for (const [pattern, replacement] of boundedBrandReplacements) {
+    const matches = next.match(pattern);
+    if (matches?.length) {
+      replacementCounts.set(pattern.source, (replacementCounts.get(pattern.source) || 0) + matches.length);
+      next = next.replace(pattern, replacement);
     }
   }
 
@@ -152,6 +163,7 @@ console.log(JSON.stringify({
   unchangedFileCount: unchangedFiles.length,
 }, null, 2));
 
-console.log('\nContrôle recommandé :');
-console.log("git grep -nE 'Orientation Pro Congo|OrientationPro Congo|OrientationPro|Orientation Pro' -- index.html public src backend/src/auth-v1/smtp-email.js vite.config.ts || true");
+console.log('\nContrôles recommandés :');
+console.log("git --no-pager grep -nE 'Orientation Pro Congo|OrientationPro Congo|OrientationPro([^a-zA-Z]|$)|Orientation Pro([^a-zA-Z]|$)' -- index.html public src backend/src/auth-v1/smtp-email.js vite.config.ts || true");
+console.log("git --no-pager grep -n 'MAKOKIfessionnelle' -- index.html public src backend/src/auth-v1/smtp-email.js vite.config.ts || true");
 console.log('npm run check');
