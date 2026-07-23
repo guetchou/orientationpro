@@ -70,6 +70,7 @@ if (process.env.RIASEC_API_ENABLED === 'true') {
   app.use('/api/v1/orientation', createRiasecRouter({
     store: createRiasecStore(authV1.pool),
     authenticate: authV1.authenticate,
+    hasPermission: authV1.hasPermission,
     allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true',
   }));
 }
