@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, refactor/platform-web-mobile-foundation]
   push:
-    branches: [main, refactor/platform-web-mobile-foundation]
+    branches: [main, refactor/platform-web-mobile-foundation, feat/riasec-holland-foundation]
 
 permissions:
   contents: read
