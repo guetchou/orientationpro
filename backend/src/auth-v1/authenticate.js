@@ -23,12 +23,20 @@ const createSessionAuthenticator = ({ store, jwtSecret }) => {
       });
     }
 
+    let claims;
     try {
-      const claims = jwt.verify(authorization.slice(7), jwtSecret, {
+      claims = jwt.verify(authorization.slice(7), jwtSecret, {
         issuer: 'orientationpro-api',
         audience: 'orientationpro-clients',
         algorithms: ['HS256'],
       });
+    } catch (error) {
+      return res.status(401).json({
+        error: { code: 'INVALID_SESSION', message: 'The session is invalid or expired.' },
+      });
+    }
+
+    try {
       const active = await store.findActiveSession({
         sessionId: claims.sid,
         accountId: claims.sub,
@@ -46,9 +54,7 @@ const createSessionAuthenticator = ({ store, jwtSecret }) => {
       };
       return next();
     } catch (error) {
-      return res.status(401).json({
-        error: { code: 'INVALID_SESSION', message: 'The session is invalid or expired.' },
-      });
+      return next(error);
     }
   };
 };
