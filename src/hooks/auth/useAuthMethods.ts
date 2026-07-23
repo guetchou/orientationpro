@@ -1,167 +1,129 @@
 import { toast } from 'sonner';
-// [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
-// import { supabase } from '@/integrations/supabase/client';
-import type { AuthUser } from '@supabase/supabase-js';
-import { User, ProfileData } from '../useAuthTypes';
+import {
+  apiFetch,
+  clearAuthSession,
+  getStoredUserData,
+  persistAuthSession,
+  type AuthAccount,
+  type AuthSessionPayload,
+} from '@/lib/apiClient';
+import type { ProfileData, User } from '../useAuthTypes';
 
-/**
- * Hook contenant les méthodes d'authentification
- */
+const userFromAccount = (account: AuthAccount): User => ({
+  id: account.id,
+  email: account.email,
+  role: account.roles?.includes('super_admin')
+    ? 'super_admin'
+    : account.roles?.includes('admin')
+      ? 'admin'
+      : account.roles?.[0] || 'user',
+  displayName: account.email.split('@')[0],
+});
+
+const profileFromAccount = (account: AuthAccount): ProfileData => ({
+  id: account.id,
+  email: account.email,
+  status: account.status,
+  first_name: account.email.split('@')[0],
+  is_super_admin: account.roles?.includes('super_admin') || false,
+  is_master_admin: account.roles?.includes('master_admin') || false,
+});
+
 export const useAuthMethods = (
   setUser: (user: User | null) => void,
   setProfile: (profile: ProfileData | null) => void,
   setProfileData: (profile: ProfileData | null) => void,
   setIsSuperAdmin: (value: boolean) => void,
-  setIsMasterAdmin: (value: boolean) => void
+  setIsMasterAdmin: (value: boolean) => void,
 ) => {
-  // Récupération du profil utilisateur
-  const fetchProfile = async (userId: string) => {
-    try {
-      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
-      // const { data, error } = await supabase
-      //   .from('profiles')
-      //   .select('*')
-      //   .eq('id', userId)
-      //   .single();
-      
-      // if (error) throw error;
-      
-      setProfile(null);
-      setProfileData(null);
-      
-      // Set admin status
-      setIsSuperAdmin(false);
-      setIsMasterAdmin(false);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
+  const applyAccount = (account: AuthAccount) => {
+    const user = userFromAccount(account);
+    const profile = profileFromAccount(account);
+    setUser(user);
+    setProfile(profile);
+    setProfileData(profile);
+    setIsSuperAdmin(Boolean(profile.is_super_admin));
+    setIsMasterAdmin(Boolean(profile.is_master_admin));
+    return user;
   };
 
-  // Connexion avec email/mot de passe - mode simplifié sans vérification
+  const fetchProfile = async () => {
+    const stored = getStoredUserData();
+    if (!stored) return null;
+    const account: AuthAccount = {
+      id: stored.id,
+      email: stored.email,
+      status: stored.status || 'active',
+      roles: Array.isArray(stored.roles) ? stored.roles : [stored.role || 'user'],
+    };
+    return applyAccount(account);
+  };
+
   const signIn = async (email: string, password?: string) => {
-    try {
-      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
-      // const { data, error } = await supabase.auth.signInWithOtp({ 
-      //   email,
-      //   options: {
-      //     shouldCreateUser: true,
-      //     emailRedirectTo: window.location.origin + '/dashboard'
-      //   }
-      // });
-      
-      // if (error) throw error;
-      
-      toast.success('Connexion en cours... Vérifiez vos emails pour le lien de connexion');
-      return { user: null, token: null };
-    } catch (error: any) {
-      toast.error(error.message || 'Échec de la connexion');
-      throw error;
-    }
+    const payload = await apiFetch<AuthSessionPayload>(
+      '/v1/auth/login',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password: password || '' }),
+      },
+      { auth: false },
+    );
+    persistAuthSession(payload);
+    const user = applyAccount(payload.account);
+    toast.success('Connexion réussie.');
+    return { user, token: payload.accessToken, account: payload.account };
   };
 
-  // Inscription avec email/mot de passe - simplifié
-  const signUp = async (email: string, password?: string, userData = {}) => {
-    try {
-      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
-      // const { data, error } = await supabase.auth.signInWithOtp({
-      //   email,
-      //   options: {
-      //     shouldCreateUser: true,
-      //     data: userData,
-      //     emailRedirectTo: window.location.origin + '/dashboard'
-      //   }
-      // });
-      
-      // if (error) throw error;
-      
-      toast.success('Un lien de connexion a été envoyé à votre email.');
-      return { user: null, token: null };
-    } catch (error: any) {
-      toast.error(error.message || 'Échec de l\'inscription');
-      throw error;
-    }
+  const signUp = async (email: string, password?: string) => {
+    const payload = await apiFetch<{ account: AuthAccount }>(
+      '/v1/auth/register',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password: password || '' }),
+      },
+      { auth: false },
+    );
+    toast.success('Compte créé. Consultez votre messagerie pour le vérifier.');
+    return payload;
   };
 
-  // Déconnexion unifiée
   const signOut = async () => {
     try {
-      console.log('🔐 Déconnexion en cours...');
-      
-      // Nettoyer TOUS les tokens et données possibles
-      const keysToRemove = [
-        'userToken', 'adminToken', 'userData', 'adminUser', 'userRole',
-        'rememberedEmail', 'rememberedMode', 'authToken', 'userData',
-        'supabase.auth.token', 'supabase.auth.refreshToken'
-      ];
-      
-      keysToRemove.forEach(key => {
-        localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
-      });
-      
-      // Nettoyer les cookies si nécessaire
-      document.cookie.split(";").forEach(function(c) { 
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-      });
-      
-      // Synchroniser l'état
+      await apiFetch<null>(
+        '/v1/auth/logout',
+        { method: 'POST' },
+        { auth: false },
+      );
+    } catch (error) {
+      console.warn('La session distante n’a pas pu être révoquée.', error);
+    } finally {
+      clearAuthSession();
       setUser(null);
       setProfile(null);
       setProfileData(null);
       setIsSuperAdmin(false);
       setIsMasterAdmin(false);
-      
-      console.log('✅ Déconnexion réussie - données nettoyées');
-      toast.success('Déconnexion réussie');
-      
-      // Recharger la page pour éviter les boucles
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-      
-    } catch (error: any) {
-      console.error('❌ Erreur lors de la déconnexion:', error);
-      toast.error('Erreur lors de la déconnexion');
-      
-      // Forcer le nettoyage même en cas d'erreur
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/';
+      toast.success('Déconnexion réussie.');
     }
   };
 
-  // Mise à jour du profil
   const updateProfile = async (profileData: Partial<ProfileData>) => {
-    try {
-      // [LOCAL MODE] Supabase désactivé. Utiliser uniquement l'API locale pour l'authentification.
-      // const { data: { user } } = await supabase.auth.getUser();
-      // if (!user) throw new Error('Utilisateur non connecté');
-      
-      // const { error } = await supabase
-      //   .from('profiles')
-      //   .update(profileData)
-      //   .eq('id', user.id);
-      
-      // if (error) throw error;
-      
-      // Récupérer le profil complet après mise à jour pour assurer la cohérence
-      // const { data: updatedProfile } = await supabase
-      //   .from('profiles')
-      //   .select('*')
-      //   .eq('id', user.id)
-      //   .single();
-      
-      // Utiliser directement les objets, pas des fonctions updater
-      // if (updatedProfile) {
-      //   setProfile(updatedProfile);
-      //   setProfileData(updatedProfile);
-      // }
-      
-      toast.success('Profil mis à jour avec succès');
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la mise à jour du profil');
-      throw error;
-    }
+    const stored = getStoredUserData();
+    if (!stored) throw new Error('Utilisateur non connecté.');
+    const next = { ...stored, ...profileData };
+    localStorage.setItem('userData', JSON.stringify(next));
+    const profile: ProfileData = {
+      id: next.id,
+      email: next.email,
+      first_name: next.first_name || next.full_name?.split(' ')[0],
+      last_name: next.last_name,
+      status: next.status || 'active',
+      is_super_admin: Boolean(next.is_super_admin),
+      is_master_admin: Boolean(next.is_master_admin),
+    };
+    setProfile(profile);
+    setProfileData(profile);
+    toast.success('Profil mis à jour localement.');
   };
 
   return {
@@ -169,7 +131,7 @@ export const useAuthMethods = (
     signIn,
     signUp,
     signOut,
-    logout: signOut, // Alias pour signOut pour compatibilité
+    logout: signOut,
     updateProfile,
   };
 };
