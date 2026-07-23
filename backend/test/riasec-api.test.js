@@ -41,12 +41,17 @@ const authenticated = (req, res, next) => {
   next();
 };
 
-const createApp = (store, authenticate = authenticated) => {
+const createApp = (
+  store,
+  authenticate = authenticated,
+  hasPermission = async () => true,
+) => {
   const app = express();
   app.use(express.json());
   app.use('/api/v1/orientation', createRiasecRouter({
     store,
     authenticate,
+    hasPermission,
     allowDraft: true,
   }));
   app.use((error, req, res, next) => {
@@ -218,5 +223,33 @@ test('all RIASEC routes reject a missing session before reading the store', asyn
 
   assert.equal(response.status, 401);
   assert.equal(body.error.code, 'SESSION_REQUIRED');
+  assert.equal(storeRead, false);
+});
+
+test('all RIASEC routes reject an account without the required server permission', async () => {
+  let storeRead = false;
+  let checkedPermission;
+  const store = {
+    getInstrument: async () => {
+      storeRead = true;
+      return databaseInstrument();
+    },
+  };
+  const hasPermission = async (input) => {
+    checkedPermission = input;
+    return false;
+  };
+  const response = await request(
+    createApp(store, authenticated, hasPermission),
+    '/api/v1/orientation/riasec/instrument',
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 403);
+  assert.equal(body.error.code, 'PERMISSION_DENIED');
+  assert.deepEqual(checkedPermission, {
+    accountId: 'account-1',
+    permissionId: 'orientation.result.read_own',
+  });
   assert.equal(storeRead, false);
 });
