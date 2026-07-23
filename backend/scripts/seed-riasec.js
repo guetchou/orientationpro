@@ -8,9 +8,16 @@ const hashInstrument = (value) => crypto
   .createHash('sha256')
   .update(JSON.stringify({
     id: value.id,
+    slug: value.slug,
     version: value.version,
     locale: value.locale,
+    status: value.status,
+    title: value.title,
+    responseScale: value.responseScale,
     methodology: value.methodology,
+    source: value.source,
+    disclaimer: value.disclaimer,
+    scoringVersion: ALGORITHM_VERSION,
     items: value.items,
   }))
   .digest('hex');
@@ -22,21 +29,22 @@ const seedRiasecInstrument = async (pool, value = instrument) => {
   try {
     await connection.beginTransaction();
     const [[existing]] = await connection.query(
-      `SELECT
-         instrument.id,
-         instrument.status,
-         instrument.content_hash,
-         COUNT(item.id) AS item_count
-       FROM orientation_riasec_instruments instrument
-       LEFT JOIN orientation_riasec_items item
-         ON item.instrument_id = instrument.id
-       WHERE instrument.id = ?
-       GROUP BY instrument.id, instrument.status, instrument.content_hash
+      `SELECT id, status, content_hash
+       FROM orientation_riasec_instruments
+       WHERE id = ?
        FOR UPDATE`,
       [value.id],
     );
+    const [[itemCountRow]] = existing
+      ? await connection.query(
+        `SELECT COUNT(*) AS item_count
+         FROM orientation_riasec_items
+         WHERE instrument_id = ?`,
+        [value.id],
+      )
+      : [[{ item_count: 0 }]];
 
-    const itemCountMatches = Number(existing?.item_count) === value.items.length;
+    const itemCountMatches = Number(itemCountRow.item_count) === value.items.length;
     if (existing && existing.content_hash === contentHash && itemCountMatches) {
       await connection.commit();
       return {
@@ -55,12 +63,13 @@ const seedRiasecInstrument = async (pool, value = instrument) => {
 
     await connection.query(
       `INSERT INTO orientation_riasec_instruments (
-         id, slug, version, locale, status, title, methodology,
-         source_kind, source_reference, license_text, disclaimer,
-         scoring_version, content_hash
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         id, slug, version, locale, status, title, response_scale,
+         methodology, source_kind, source_reference, license_text,
+         disclaimer, scoring_version, content_hash
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          title = VALUES(title),
+         response_scale = VALUES(response_scale),
          methodology = VALUES(methodology),
          source_kind = VALUES(source_kind),
          source_reference = VALUES(source_reference),
@@ -76,6 +85,7 @@ const seedRiasecInstrument = async (pool, value = instrument) => {
         value.locale,
         value.status,
         value.title,
+        JSON.stringify(value.responseScale),
         value.methodology,
         value.source.kind,
         value.source.reference,
