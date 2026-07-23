@@ -26,7 +26,7 @@ const publicInstrument = (instrument, itemOrder = instrument.items.map((item) =>
     status: instrument.status,
     title: instrument.title,
     disclaimer: instrument.disclaimer,
-    responseScale: instrumentDefinition.responseScale,
+    responseScale: instrument.responseScale,
     itemCount: itemOrder.length,
     items: itemOrder.map((itemId, index) => {
       const item = itemsById.get(itemId);
@@ -52,6 +52,7 @@ const resultSnapshot = ({ instrument, result }) => ({
     version: instrument.version,
     locale: instrument.locale,
     title: instrument.title,
+    responseScale: instrument.responseScale,
     methodology: instrument.methodology,
     source: instrument.source,
     disclaimer: instrument.disclaimer,
