@@ -1,5 +1,11 @@
 const DIMENSIONS = Object.freeze(['R', 'I', 'A', 'S', 'E', 'C']);
 const ALGORITHM_VERSION = 'career-riasec-cosine-rank-v1';
+const DIMENSION_TIE_ORDER = Object.freeze(
+  [...DIMENSIONS].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0)),
+);
+const DIMENSION_TIE_INDEX = new Map(
+  DIMENSION_TIE_ORDER.map((dimension, index) => [dimension, index]),
+);
 
 const round = (value, digits = 3) => {
   const factor = 10 ** digits;
@@ -24,19 +30,47 @@ const cosineSimilarity = (left, right) => {
 
 const rankDimensions = (scores) => DIMENSIONS
   .map((dimension) => ({ dimension, score: Number(scores[dimension]) }))
-  .sort((left, right) => right.score - left.score || left.dimension.localeCompare(right.dimension));
+  .sort((left, right) => (
+    right.score - left.score ||
+    DIMENSION_TIE_INDEX.get(left.dimension) - DIMENSION_TIE_INDEX.get(right.dimension)
+  ));
 
-const topThreeWeights = (scores) => {
+const rankGroups = (scores) => {
+  const groups = [];
+  for (const entry of rankDimensions(scores)) {
+    const latest = groups.at(-1);
+    if (latest && latest.score === entry.score) {
+      latest.dimensions.push(entry.dimension);
+    } else {
+      groups.push({ score: entry.score, dimensions: [entry.dimension] });
+    }
+  }
+  return groups;
+};
+
+const leadingGroups = (scores, targetDimensionCount = 3) => {
+  let covered = 0;
+  const selected = [];
+  for (const group of rankGroups(scores)) {
+    if (covered >= targetDimensionCount) break;
+    selected.push(group);
+    covered += group.dimensions.length;
+  }
+  return selected;
+};
+
+const dominantWeights = (scores) => {
   const weights = new Map();
-  rankDimensions(scores).slice(0, 3).forEach(({ dimension }, index) => {
-    weights.set(dimension, 3 - index);
+  leadingGroups(scores).forEach((group, groupIndex) => {
+    const weight = Math.max(3 - groupIndex, 1);
+    group.dimensions.forEach((dimension) => weights.set(dimension, weight));
   });
   return weights;
 };
 
 const weightedRankAgreement = (userScores, occupationScores) => {
-  const user = topThreeWeights(userScores);
-  const occupation = topThreeWeights(occupationScores);
+  const user = dominantWeights(userScores);
+  const occupation = dominantWeights(occupationScores);
   let intersection = 0;
   let union = 0;
   for (const dimension of DIMENSIONS) {
@@ -49,12 +83,16 @@ const weightedRankAgreement = (userScores, occupationScores) => {
 };
 
 const displayCode = (scores) => {
-  const ranked = rankDimensions(scores);
-  const cutoff = ranked[2]?.score;
-  if (cutoff === undefined) return '';
-  return ranked
-    .filter(({ score }) => score >= cutoff)
-    .map(({ dimension }) => dimension)
+  const groups = leadingGroups(scores);
+  const dimensions = groups.flatMap((group) => group.dimensions);
+  const hasTie = groups.some((group) => group.dimensions.length > 1);
+
+  if (!hasTie) return dimensions.join('');
+
+  return dimensions
+    .sort((left, right) => (
+      DIMENSION_TIE_INDEX.get(left) - DIMENSION_TIE_INDEX.get(right)
+    ))
     .join('');
 };
 
