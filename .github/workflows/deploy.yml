@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, refactor/platform-web-mobile-foundation]
   push:
     branches: [main, refactor/platform-web-mobile-foundation]
 
@@ -27,6 +27,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run lint:backend
       - run: npm test
       - run: npm run build
 
