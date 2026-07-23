@@ -22,20 +22,33 @@ const seedRiasecInstrument = async (pool, value = instrument) => {
   try {
     await connection.beginTransaction();
     const [[existing]] = await connection.query(
-      `SELECT id, status, content_hash
-       FROM orientation_riasec_instruments
-       WHERE id = ?
+      `SELECT
+         instrument.id,
+         instrument.status,
+         instrument.content_hash,
+         COUNT(item.id) AS item_count
+       FROM orientation_riasec_instruments instrument
+       LEFT JOIN orientation_riasec_items item
+         ON item.instrument_id = instrument.id
+       WHERE instrument.id = ?
+       GROUP BY instrument.id, instrument.status, instrument.content_hash
        FOR UPDATE`,
       [value.id],
     );
 
-    if (existing && existing.content_hash === contentHash) {
+    const itemCountMatches = Number(existing?.item_count) === value.items.length;
+    if (existing && existing.content_hash === contentHash && itemCountMatches) {
       await connection.commit();
-      return { status: 'unchanged', instrumentId: value.id, contentHash };
+      return {
+        status: 'unchanged',
+        instrumentId: value.id,
+        contentHash,
+        itemCount: value.items.length,
+      };
     }
 
     if (existing && existing.status !== 'draft') {
-      const error = new Error('A published or pilot instrument cannot be changed in place. Create a new version.');
+      const error = new Error('A published or pilot instrument cannot be changed or repaired in place. Create a new version.');
       error.code = 'IMMUTABLE_RIASEC_INSTRUMENT';
       throw error;
     }
