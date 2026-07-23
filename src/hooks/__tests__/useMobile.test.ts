@@ -109,6 +109,7 @@ describe('useMobile', () => {
   })
 
   test('should detect mobile user agent', () => {
+    mockWindowDimensions(375, 667)
     Object.defineProperty(navigator, 'userAgent', {
       writable: true,
       value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',

@@ -112,7 +112,7 @@ export default function AdminDashboard() {
     { label: 'Dashboard', path: '/admin/dashboard' }
   ]);
 
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Calculer le nombre de notifications non lues
@@ -422,7 +422,6 @@ export default function AdminDashboard() {
       console.log('🔐 Déconnexion depuis AdminDashboard...');
       
       // Utiliser le système de déconnexion unifié
-      const { signOut } = useAuth();
       await signOut();
       
       toast.success("Déconnexion réussie");

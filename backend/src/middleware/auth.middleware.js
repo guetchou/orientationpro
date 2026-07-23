@@ -8,9 +8,15 @@ const authenticate = (req, res, next) => {
   }
   
   const token = authHeader.split(' ')[1];
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    console.error('JWT_SECRET is not configured');
+    return res.status(500).json({ message: 'Authentication service unavailable' });
+  }
   
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
+    const payload = jwt.verify(token, jwtSecret);
     req.user = payload;
     next();
   } catch (error) {

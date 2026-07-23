@@ -100,7 +100,11 @@ export const AppRouter = () => {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/cv-optimizer" element={<CVOptimizer />} />
-          <Route path="/cv-history" element={<CVHistory />} />
+          <Route path="/cv-history" element={
+            <UserRoute>
+              <CVHistory />
+            </UserRoute>
+          } />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/guide-congo-2024" element={<GuideEtudesCongo2024 />} />
           <Route path="/book-appointment" element={<BookAppointment />} />

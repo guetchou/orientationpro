@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 
+interface CVHistoryItem {
+  id: number;
+  file_name: string;
+  upload_date: string;
+  ats_score: number;
+  feedback?: string;
+  processing_status: string;
+}
+
 export default function CVHistoryPage() {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<CVHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Récupérer le token utilisateur
@@ -13,11 +23,21 @@ export default function CVHistoryPage() {
         Authorization: userToken ? `Bearer ${userToken}` : ''
       }
     })
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          throw new Error(res.status === 401
+            ? 'Votre session a expiré. Veuillez vous reconnecter.'
+            : 'Impossible de charger votre historique de CV.');
+        }
+        return res.json();
+      })
       .then(data => {
         setHistory(data.history || []);
-        setLoading(false);
-      });
+      })
+      .catch(fetchError => {
+        setError(fetchError instanceof Error ? fetchError.message : 'Une erreur est survenue.');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -25,6 +45,8 @@ export default function CVHistoryPage() {
       <h1 className="text-3xl font-bold mb-6 text-center">Historique de mes analyses de CV</h1>
       {loading ? (
         <div className="text-center text-gray-500">Chargement...</div>
+      ) : error ? (
+        <div role="alert" className="text-center text-red-700">{error}</div>
       ) : history.length === 0 ? (
         <div className="text-center text-gray-500">Aucune analyse de CV trouvée.</div>
       ) : (
@@ -41,10 +63,9 @@ export default function CVHistoryPage() {
               <div className="mb-2">
                 <span className="font-semibold">Feedback :</span> <span className="text-gray-700">{item.feedback}</span>
               </div>
-              <details>
-                <summary className="cursor-pointer font-semibold text-blue-600">Voir le texte extrait</summary>
-                <pre className="mt-2 p-2 bg-gray-50 border rounded text-xs max-h-48 overflow-auto whitespace-pre-wrap">{item.extracted_text}</pre>
-              </details>
+              <div className="text-sm text-gray-500">
+                Statut : {item.processing_status}
+              </div>
               <button
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                 onClick={async () => {
@@ -71,4 +92,4 @@ export default function CVHistoryPage() {
       )}
     </div>
   );
-} 
+}

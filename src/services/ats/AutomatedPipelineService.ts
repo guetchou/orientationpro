@@ -139,7 +139,7 @@ export class AutomatedPipelineService {
     candidate: CandidateInPipeline,
     match: MatchResult
   ): CandidateInPipeline {
-    let updatedCandidate = { ...candidate };
+    const updatedCandidate = { ...candidate };
 
     // Appliquer les règles d'automatisation
     for (const rule of this.automationRules) {
@@ -388,4 +388,3 @@ export class AutomatedPipelineService {
 
 // Export instance singleton
 export const automatedPipelineService = new AutomatedPipelineService();
-

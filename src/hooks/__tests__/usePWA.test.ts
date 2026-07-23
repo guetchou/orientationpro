@@ -131,20 +131,22 @@ describe('usePWA', () => {
   })
 
   test('should send notification when permission granted', () => {
-    const { result } = renderHook(() => usePWA())
-    
     // Mock Notification constructor
-    global.Notification = vi.fn().mockImplementation((title, options) => ({
+    const notificationMock = vi.fn().mockImplementation((title, options) => ({
       title,
       ...options,
-    })) as any
+    }))
+    Object.defineProperty(notificationMock, 'permission', { value: 'granted' })
+    global.Notification = notificationMock as unknown as typeof Notification
+
+    const { result } = renderHook(() => usePWA())
     
     const notification = result.current.sendNotification('Test Title', {
       body: 'Test body'
     })
     
     expect(notification).toBeDefined()
-    expect(global.Notification).toHaveBeenCalledWith('Test Title', {
+    expect(notificationMock).toHaveBeenCalledWith('Test Title', {
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
       body: 'Test body'

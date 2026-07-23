@@ -24,6 +24,9 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Baseline legacy explicite : 305 occurrences au 2026-06-20.
+      // Le plafond CLI empêche une augmentation globale de la dette.
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   }
 );

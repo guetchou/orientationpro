@@ -1,36 +1,30 @@
 
 import { render } from '@testing-library/react';
 import { ConseillerDashboard } from '../ConseillerDashboard';
-import { supabase } from '@/lib/supabaseClient';
-import { ConseillerStats } from '@/types/dashboard';
 
-// Mock the supabase client
-jest.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({
-        data: {
-          total_students: 10,
-          tests_completed: 25,
-          appointments_scheduled: 15,
-          average_progress: 75
-        },
-        error: null
-      })
-    }))
-  }
+vi.mock('@supabase/auth-helpers-react', () => ({
+  useUser: () => ({ id: 'test-conseiller' }),
 }));
 
-describe('ConseillerDashboard', () => {
-  const mockStats: ConseillerStats = {
-    total_students: 10,
-    tests_completed: 25,
-    appointments_scheduled: 15,
-    average_progress: 75
-  };
+vi.mock('@/hooks/useConseillerStats', () => ({
+  useConseillerStats: () => ({
+    data: {
+      total_students: 10,
+      tests_completed: 25,
+      appointments_scheduled: 15,
+      average_progress: 75,
+    },
+    isLoading: false,
+    error: null,
+  }),
+}));
 
+vi.mock('../ConseillersAppointments', () => ({ ConseillersAppointments: () => null }));
+vi.mock('../ConseillerAvailability', () => ({ ConseillerAvailability: () => null }));
+vi.mock('../tabs/StudentsTab', () => ({ StudentsTab: () => null }));
+vi.mock('../tabs/ReportsTab', () => ({ ReportsTab: () => null }));
+
+describe('ConseillerDashboard', () => {
   it('renders the dashboard with stats', async () => {
     const { findByText } = render(<ConseillerDashboard />);
     

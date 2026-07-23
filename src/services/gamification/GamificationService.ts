@@ -540,7 +540,7 @@ export class GamificationService {
       case 'test_completion':
         return profile.progress_metrics.tests_completed >= condition.target;
       
-      case 'cv_score':
+      case 'cv_score': {
         // Vérifier le score CV le plus récent
         const { data: cvData } = await supabase
           .from('cv_analyses')
@@ -550,6 +550,7 @@ export class GamificationService {
           .limit(1);
         
         return cvData?.[0]?.ats_score >= condition.target;
+      }
       
       case 'appointments':
         return profile.progress_metrics.appointments_booked >= condition.target;
@@ -575,7 +576,7 @@ export class GamificationService {
   // Vérifier les conditions spéciales
   private async checkSpecialCondition(userId: string, achievementId: string, condition: UnlockCondition): Promise<boolean> {
     switch (achievementId) {
-      case 'first_steps':
+      case 'first_steps': {
         // Vérifier si le profil utilisateur est complété
         const { data: userData } = await supabase
           .from('profiles')
@@ -584,14 +585,16 @@ export class GamificationService {
           .single();
         
         return !!(userData?.first_name && userData?.last_name && userData?.bio);
+      }
       
-      case 'early_adopter':
+      case 'early_adopter': {
         // Vérifier si parmi les 100 premiers à utiliser l'ADN Carrière
         const { count } = await supabase
           .from('career_dna')
           .select('*', { count: 'exact', head: true });
         
         return (count || 0) <= 100;
+      }
       
       default:
         return false;

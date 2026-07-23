@@ -123,7 +123,7 @@ export default function UserCredentials() {
       setLoading(true);
       
       // Déterminer si le nouveau rôle inclut des privilèges d'admin
-      let updates: any = { department: newRole };
+      const updates: any = { department: newRole };
       
       if (newRole === 'admin') {
         updates.is_super_admin = true;

@@ -361,12 +361,14 @@ export class BenchmarkingService {
     // Simplification : on retourne un score basé sur les données disponibles
     // À adapter selon la structure réelle des données
     switch (category) {
-      case 'technical':
+      case 'technical': {
         const avgTechSkills = allCandidates.reduce((sum, c) => sum + c.technicalSkills.length, 0) / allCandidates.length;
         return Math.min(100, (candidate.technicalSkills.length / avgTechSkills) * 50);
-      case 'experience':
+      }
+      case 'experience': {
         const avgExp = allCandidates.reduce((sum, c) => sum + c.yearsExperience, 0) / allCandidates.length;
         return Math.min(100, (candidate.yearsExperience / Math.max(avgExp, 1)) * 50);
+      }
       default:
         return 50; // Score neutre par défaut
     }
@@ -375,4 +377,3 @@ export class BenchmarkingService {
 
 // Export instance singleton
 export const benchmarkingService = new BenchmarkingService();
-

@@ -5,7 +5,27 @@ const mammoth = require('mammoth');
 const mysql = require('mysql2/promise');
 const { pool } = require('../config/database');
 const PDFDocument = require('pdfkit');
-const jwt = require('jsonwebtoken');
+const {
+  CvAccessError,
+  getAuthenticatedUserId,
+  isPrivilegedCvRole,
+  parsePositiveInteger,
+  resolveCvAccessScope,
+} = require('../security/cv-access');
+
+const CV_HISTORY_COLUMNS = [
+  'id', 'user_id', 'candidate_id', 'file_name', 'file_size', 'mime_type',
+  'document_type', 'detected_language', 'detected_sections', 'ats_score',
+  'completeness_score', 'relevance_score', 'presentation_score', 'feedback',
+  'strengths', 'weaknesses', 'recommendations', 'processing_status',
+  'processing_time_ms', 'upload_date', 'analyzed_at', 'updated_at',
+].join(', ');
+
+const CV_ANALYSIS_COLUMNS = [
+  CV_HISTORY_COLUMNS, 'extracted_text', 'contact_info', 'personal_info',
+  'education', 'experience', 'skills', 'keywords', 'sentiment_score',
+  'readability_score', 'job_matches', 'match_percentage', 'ai_model_version',
+].join(', ');
 
 // =====================================================
 // SYSTÈME D'ANALYSE INTELLIGENT ATS v2.0
@@ -599,8 +619,10 @@ const uploadCV = async (req, res) => {
     const mimeType = req.file.mimetype;
     const fileName = req.file.originalname;
     const fileSize = req.file.size;
-    const userId = req.body.user_id ? parseInt(req.body.user_id, 10) : null;
-    const candidateId = req.body.candidate_id ? parseInt(req.body.candidate_id, 10) : null;
+    const userId = getAuthenticatedUserId(req.user);
+    const candidateId = isPrivilegedCvRole(req.user)
+      ? parsePositiveInteger(req.body.candidate_id, 'candidate_id', { optional: true })
+      : null;
 
     // Mise à jour du statut de traitement
     const [insertResult] = await pool.query(
@@ -756,10 +778,9 @@ const uploadCV = async (req, res) => {
 
   } catch (error) {
     console.error('Erreur upload CV intelligent:', error);
-    res.status(500).json({ 
+    res.status(error instanceof CvAccessError ? error.statusCode : 500).json({
       success: false, 
       message: 'Erreur lors de l\'analyse intelligente du CV.',
-      error: error.message 
     });
   }
 };
@@ -767,23 +788,25 @@ const uploadCV = async (req, res) => {
 // GET /api/cv/history?user_id=123
 const getCVHistory = async (req, res) => {
   try {
-    const userId = req.query.user_id || null;
-    const candidateId = req.query.candidate_id || null;
+    const scope = resolveCvAccessScope(req.user, req.query);
+    const requestedLimit = parsePositiveInteger(req.query.limit, 'limit', { optional: true });
+    const limit = Math.min(requestedLimit || 50, 100);
     
-    let query = 'SELECT * FROM cv_analysis WHERE 1=1';
+    let query = `SELECT ${CV_HISTORY_COLUMNS} FROM cv_analysis WHERE 1=1`;
     let params = [];
     
-    if (userId) {
+    if (scope.userId) {
       query += ' AND user_id = ?';
-      params.push(userId);
+      params.push(scope.userId);
     }
     
-    if (candidateId) {
+    if (scope.candidateId) {
       query += ' AND candidate_id = ?';
-      params.push(candidateId);
+      params.push(scope.candidateId);
     }
     
-    query += ' ORDER BY upload_date DESC';
+    query += ' ORDER BY upload_date DESC LIMIT ?';
+    params.push(limit);
     
     const [rows] = await pool.query(query, params);
     
@@ -833,15 +856,24 @@ const getCVHistory = async (req, res) => {
     res.json({ success: true, history: parsedRows });
   } catch (error) {
     console.error('Erreur historique CV:', error);
-    res.status(500).json({ success: false, message: 'Erreur lors de la récupération de l\'historique.' });
+    res.status(error instanceof CvAccessError ? error.statusCode : 500).json({
+      success: false,
+      message: error instanceof CvAccessError ? error.message : 'Erreur lors de la récupération de l\'historique.',
+    });
   }
 };
 
 // GET /api/cv/analysis/:id - Récupérer une analyse spécifique
 const getCVAnalysis = async (req, res) => {
   try {
-    const analysisId = req.params.id;
-    const [rows] = await pool.query('SELECT * FROM cv_analysis WHERE id = ?', [analysisId]);
+    const analysisId = parsePositiveInteger(req.params.id, 'analysis id');
+    const userId = getAuthenticatedUserId(req.user);
+    const privileged = isPrivilegedCvRole(req.user);
+    const query = privileged
+      ? `SELECT ${CV_ANALYSIS_COLUMNS} FROM cv_analysis WHERE id = ?`
+      : `SELECT ${CV_ANALYSIS_COLUMNS} FROM cv_analysis WHERE id = ? AND user_id = ?`;
+    const params = privileged ? [analysisId] : [analysisId, userId];
+    const [rows] = await pool.query(query, params);
     
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Analyse non trouvée.' });
@@ -893,29 +925,24 @@ const getCVAnalysis = async (req, res) => {
     res.json({ success: true, analysis: parsedAnalysis });
   } catch (error) {
     console.error('Erreur récupération analyse CV:', error);
-    res.status(500).json({ success: false, message: 'Erreur lors de la récupération de l\'analyse.' });
+    res.status(error instanceof CvAccessError ? error.statusCode : 500).json({
+      success: false,
+      message: error instanceof CvAccessError ? error.message : 'Erreur lors de la récupération de l\'analyse.',
+    });
   }
 };
 
 // GET /api/cv/report/:id/pdf - Version améliorée
 const getCVReportPDF = async (req, res) => {
   try {
-    // Authentification via JWT
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, message: 'Token manquant' });
-    }
-    const token = authHeader.split(' ')[1];
-    let userId = null;
-    try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
-      userId = payload.userId;
-    } catch (err) {
-      return res.status(401).json({ success: false, message: 'Token invalide' });
-    }
-
-    // Récupérer l'analyse
-    const [rows] = await pool.query('SELECT * FROM cv_analysis WHERE id = ? AND user_id = ?', [req.params.id, userId]);
+    const analysisId = parsePositiveInteger(req.params.id, 'analysis id');
+    const userId = getAuthenticatedUserId(req.user);
+    const privileged = isPrivilegedCvRole(req.user);
+    const query = privileged
+      ? `SELECT ${CV_ANALYSIS_COLUMNS} FROM cv_analysis WHERE id = ?`
+      : `SELECT ${CV_ANALYSIS_COLUMNS} FROM cv_analysis WHERE id = ? AND user_id = ?`;
+    const params = privileged ? [analysisId] : [analysisId, userId];
+    const [rows] = await pool.query(query, params);
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Rapport non trouvé.' });
     }
@@ -1016,7 +1043,10 @@ const getCVReportPDF = async (req, res) => {
     doc.end();
   } catch (error) {
     console.error('Erreur PDF CV:', error);
-    res.status(500).json({ success: false, message: 'Erreur lors de la génération du PDF.' });
+    res.status(error instanceof CvAccessError ? error.statusCode : 500).json({
+      success: false,
+      message: error instanceof CvAccessError ? error.message : 'Erreur lors de la génération du PDF.',
+    });
   }
 };
 

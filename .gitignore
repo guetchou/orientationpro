@@ -11,6 +11,22 @@ node_modules
 dist
 dist-ssr
 *.local
+coverage/
+playwright-report/
+test-results/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.demo.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Private user uploads must never be versioned
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Editor directories and files
 .vscode/*
