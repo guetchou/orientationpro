@@ -102,27 +102,36 @@ test('account lifecycle persists in isolated MySQL through the HTTP interface', 
   }
 });
 
-test('authentication migration rolls back and can be applied again', async () => {
+test('ordered migrations roll back completely and can be applied again', async () => {
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');
   try {
     await migrateUp(pool, directory);
-    const rolledBack = await migrateDown(pool, directory);
+    const riasecRollback = await migrateDown(pool, directory);
+    const authRollback = await migrateDown(pool, directory);
     const [[afterRollback]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
-       WHERE table_schema = DATABASE() AND table_name LIKE 'auth\\_%'`,
+       WHERE table_schema = DATABASE()
+         AND (table_name LIKE 'auth\\_%' OR table_name LIKE 'orientation\\_%')`,
     );
-    assert.equal(rolledBack, '001_auth_foundation');
+    assert.equal(riasecRollback, '002_riasec_foundation');
+    assert.equal(authRollback, '001_auth_foundation');
     assert.equal(Number(afterRollback.table_count), 0);
 
     await migrateUp(pool, directory);
-    const [[afterRestore]] = await pool.query(
+    const [[authTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
        WHERE table_schema = DATABASE() AND table_name LIKE 'auth\\_%'`,
     );
-    assert.equal(Number(afterRestore.table_count), 9);
+    const [[orientationTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'orientation\\_%'`,
+    );
+    assert.equal(Number(authTables.table_count), 9);
+    assert.equal(Number(orientationTables.table_count), 5);
   } finally {
     await pool.end();
   }
