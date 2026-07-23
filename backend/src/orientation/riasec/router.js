@@ -71,15 +71,34 @@ const statusForStoreError = (error) => {
 const createRiasecRouter = ({
   store,
   authenticate,
+  hasPermission,
   instrumentId = INSTRUMENT_ID,
   allowDraft = false,
 }) => {
-  if (!store || typeof authenticate !== 'function') {
-    throw new Error('RIASEC store and authentication middleware are required.');
+  if (!store || typeof authenticate !== 'function' || typeof hasPermission !== 'function') {
+    throw new Error('RIASEC store, authentication and permission checks are required.');
   }
 
   const router = express.Router();
   router.use(authenticate);
+  router.use(route(async (req, res, next) => {
+    const permissionId = req.method === 'GET'
+      ? 'orientation.result.read_own'
+      : 'orientation.result.create';
+    const allowed = await hasPermission({
+      accountId: req.auth.account.id,
+      permissionId,
+    });
+    if (!allowed) {
+      return res.status(403).json({
+        error: {
+          code: 'PERMISSION_DENIED',
+          message: 'The authenticated account is not allowed to perform this orientation action.',
+        },
+      });
+    }
+    return next();
+  }));
 
   const loadAvailableInstrument = async () => {
     const instrument = await store.getInstrument(instrumentId);
