@@ -6,7 +6,6 @@ const authRoutes = require('./routes/auth.routes');
 const testRoutes = require('./routes/test.routes');
 const cvRoutes = require('./routes/cv.routes');
 const candidatesRoutes = require('./routes/candidates.routes');
-const jobsRoutes = require('./routes/jobs.routes');
 const atsRoutes = require('./routes/ats.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
 const messagingRoutes = require('./routes/messaging.routes');
@@ -16,9 +15,10 @@ const matchingRoutes = require('./routes/matching.routes');
 const communicationRoutes = require('./routes/communication.routes');
 const jobScrapingRoutes = require('./routes/jobScraping.routes');
 const { createConfiguredAuthV1 } = require('./auth-v1/bootstrap');
-
-// Import du service de scraping (désactivé temporairement)
-// const jobScrapingService = require('./services/jobScrapingService');
+const { createRiasecRouter } = require('./orientation/riasec/router');
+const { createRiasecStore } = require('./orientation/riasec/store');
+const { createCareerRouter } = require('./career/router');
+const { createCareerStore } = require('./career/store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,7 +28,8 @@ const allowedOrigins = new Set(
     .map((origin) => origin.trim())
     .filter(Boolean),
 );
-let closeAuthV1 = async () => undefined;
+let closeApplicationResources = async () => undefined;
+let authV1 = null;
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -38,7 +39,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['Content-Type', 'Authorization']
+  exposedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json({ limit: '1mb' }));
@@ -50,21 +51,40 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware pour forcer les réponses JSON
 app.use((req, res, next) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   next();
 });
 
-// Routes API
 app.use('/api/test', testRoutes);
 if (process.env.LEGACY_AUTH_ENABLED === 'true') {
   app.use('/api/auth', authRoutes);
 }
 if (process.env.AUTH_V1_ENABLED === 'true') {
-  const authV1 = createConfiguredAuthV1(process.env);
-  closeAuthV1 = authV1.close;
+  authV1 = createConfiguredAuthV1(process.env);
+  closeApplicationResources = authV1.close;
   app.use('/api/v1/auth', authV1.router);
+}
+if (process.env.RIASEC_API_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('RIASEC_API_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+  app.use('/api/v1/orientation', createRiasecRouter({
+    store: createRiasecStore(authV1.pool),
+    authenticate: authV1.authenticate,
+    hasPermission: authV1.hasPermission,
+    allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true',
+  }));
+}
+if (process.env.CAREER_API_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('CAREER_API_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+  app.use('/api/v1/career', createCareerRouter({
+    store: createCareerStore(authV1.pool),
+    authenticate: authV1.authenticate,
+    hasPermission: authV1.hasPermission,
+  }));
 }
 app.use('/api/cv', cvRoutes);
 app.use('/api/candidates', candidatesRoutes);
@@ -77,96 +97,96 @@ app.use('/api/matching', matchingRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api', jobScrapingRoutes);
 
-// Route racine avec diagnostic complet
 app.get('/', (req, res) => {
-  const response = {
+  const endpoints = { health: 'GET /api/test/health' };
+  if (process.env.AUTH_V1_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      login: 'POST /api/v1/auth/login',
+      register: 'POST /api/v1/auth/register',
+      session: 'GET /api/v1/auth/session',
+    });
+  }
+  if (process.env.RIASEC_API_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      riasecInstrument: 'GET /api/v1/orientation/riasec/instrument',
+      riasecAttempts: 'POST /api/v1/orientation/riasec/attempts',
+      orientationResults: 'GET /api/v1/orientation/results',
+    });
+  }
+  if (process.env.CAREER_API_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      careerCatalogSummary: 'GET /api/v1/career/catalog/summary',
+      occupations: 'GET /api/v1/career/occupations',
+      occupationMatches: 'GET /api/v1/career/matches/:resultId',
+    });
+  }
+
+  res.status(200).json({
     success: true,
     message: 'Backend API is running successfully',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: process.env.APP_VERSION || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     port: PORT,
-    endpoints: process.env.AUTH_V1_ENABLED === 'true'
-      ? {
-          health: 'GET /api/test/health',
-          login: 'POST /api/v1/auth/login',
-          register: 'POST /api/v1/auth/register',
-          session: 'GET /api/v1/auth/session',
-        }
-      : { health: 'GET /api/test/health' },
+    endpoints,
     corsOriginsConfigured: allowedOrigins.size,
-    jsonLimit: '1mb'
-  };
-  res.status(200).json(response);
+    jsonLimit: '1mb',
+  });
 });
 
-// Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
   console.error('Global request error:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.url,
     method: req.method,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
-  const errorResponse = {
+
+  res.status(500).json({
     success: false,
     message: 'Erreur interne du serveur',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Une erreur s\'est produite',
     timestamp: new Date().toISOString(),
     path: req.path,
-    method: req.method
-  };
-  
-  res.status(500).json(errorResponse);
+    method: req.method,
+  });
 });
 
-// Gestionnaire 404 pour toutes les routes non trouvées
 app.use('*', (req, res) => {
   console.log(`Route not found: ${req.method} ${req.originalUrl}`);
-  
-  const notFoundResponse = {
+  res.status(404).json({
     success: false,
     message: 'Route non trouvée',
     path: req.originalUrl,
     method: req.method,
     timestamp: new Date().toISOString(),
-    availableEndpoints: ['GET /', 'GET /api/test/health']
-  };
-  
-  res.status(404).json(notFoundResponse);
+    availableEndpoints: ['GET /', 'GET /api/test/health'],
+  });
 });
 
-// Démarrage du serveur avec gestion d'erreurs améliorée
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Backend listening on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
+  console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
+  console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
 });
 
-// Gestion des erreurs de serveur
 server.on('error', (err) => {
   console.error(`Backend server error: ${err.message}`);
 });
 
-// Gestion de l'arrêt propre
-process.on('SIGTERM', () => {
-  console.log('Stopping backend server.');
+const stopServer = (reason) => {
+  console.log(`Stopping backend server${reason ? ` ${reason}` : ''}.`);
   server.close(async () => {
-    await closeAuthV1();
+    await closeApplicationResources();
     console.log('Backend server stopped.');
     process.exit(0);
   });
-});
+};
 
-process.on('SIGINT', () => {
-  console.log('Stopping backend server after interrupt.');
-  server.close(async () => {
-    await closeAuthV1();
-    console.log('Backend server stopped.');
-    process.exit(0);
-  });
-});
+process.on('SIGTERM', () => stopServer());
+process.on('SIGINT', () => stopServer('after interrupt'));
 
 module.exports = app;

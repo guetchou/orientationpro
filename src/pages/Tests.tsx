@@ -3,7 +3,7 @@ import { ChatBot } from "@/components/chat/ChatBot";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Brain, Heart, Lightbulb, BookOpen, RefreshCw, Award, Briefcase, LineChart, CheckCircle } from "lucide-react";
+import { ArrowRight, Brain, Heart, Lightbulb, BookOpen, RefreshCw, Award, Briefcase, LineChart } from "lucide-react";
 
 export default function Tests() {
   return (
@@ -14,7 +14,7 @@ export default function Tests() {
             Tests d'Orientation
           </h1>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Découvrez nos tests d'orientation professionnelle scientifiquement validés pour vous aider à mieux vous connaître et à faire les bons choix pour votre avenir.
+            Explorez plusieurs outils de connaissance de soi. Ils servent d'appui à la réflexion et ne remplacent pas un diagnostic psychologique ni un accompagnement professionnel.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -27,16 +27,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-indigo-800">Test RIASEC</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Version pilote
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-500">15-20 min • 60 questions</p>
+                  <p className="text-sm text-gray-500">10-15 min • 60 affirmations</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Découvrez vos intérêts professionnels dominants selon la théorie des types de personnalité RIASEC de John Holland.
+                Explorez vos intérêts professionnels selon le modèle RIASEC de John Holland, avec un calcul versionné réalisé côté serveur.
               </p>
               <Link 
                 to="/tests/riasec" 
@@ -55,16 +55,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-pink-800">Test d'Intelligence Émotionnelle</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">10-15 min • 45 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Évaluez votre capacité à comprendre et gérer vos émotions et celles des autres pour améliorer vos relations professionnelles.
+                Explorez votre manière de comprendre et gérer vos émotions et celles des autres dans les relations professionnelles.
               </p>
               <Link 
                 to="/tests/emotional" 
@@ -83,16 +83,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-green-800">Test de Styles d'Apprentissage</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">10 min • 30 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Découvrez votre façon préférée d'apprendre et de traiter l'information pour optimiser votre développement professionnel.
+                Explorez votre façon préférée d'apprendre et de traiter l'information pour préparer votre développement professionnel.
               </p>
               <Link 
                 to="/tests/learning" 
@@ -111,16 +111,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-purple-800">Test des Intelligences Multiples</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">15 min • 40 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Identifiez vos types d'intelligence dominants selon la théorie de Gardner pour mieux orienter votre parcours professionnel.
+                Explorez différentes formes de compétences inspirées de la théorie des intelligences multiples de Gardner.
               </p>
               <Link 
                 to="/tests/multiple" 
@@ -139,16 +139,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-blue-800">Test de Reconversion Professionnelle</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">12-15 min • 35 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Évaluez votre préparation à une reconversion et identifiez les domaines professionnels qui correspondent le mieux à vos compétences transférables.
+                Explorez votre préparation à une reconversion et les domaines susceptibles de correspondre à vos compétences transférables.
               </p>
               <Link 
                 to="/tests/career-transition" 
@@ -167,16 +167,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-teal-800">Test d'Orientation Sans Diplôme</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">10-12 min • 30 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Découvrez les opportunités professionnelles adaptées à vos compétences et à votre personnalité, même sans diplôme ou qualification formelle.
+                Explorez des pistes professionnelles à partir de vos compétences et préférences, indépendamment d'un diplôme formel.
               </p>
               <Link 
                 to="/tests/no-diploma" 
@@ -195,17 +195,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-amber-800">Test d'Emploi Senior</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">8-10 min • 20 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Évaluez vos atouts et talents pour une carrière épanouissante en tant que senior. Ce test analyse vos compétences 
-                et expériences pour vous orienter vers les meilleures opportunités adaptées à votre situation.
+                Explorez vos atouts, expériences et préférences pour préparer une nouvelle étape professionnelle en tant que senior.
               </p>
               <Link 
                 to="/tests/senior-employment" 
@@ -215,7 +214,7 @@ export default function Tests() {
               </Link>
             </Card>
             
-            {/* Entrepreneurial Test Card - NOUVEAU */}
+            {/* Entrepreneurial Test Card */}
             <Card className="bg-amber-50 border-amber-200 p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group">
               <div className="flex items-start mb-3">
                 <div className="p-2 bg-amber-100 rounded-full mr-3 group-hover:scale-110 transition-transform duration-300">
@@ -224,17 +223,16 @@ export default function Tests() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-bold text-amber-800">Test d'Aptitude Entrepreneuriale</h2>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Validé
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Exploration
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500">10-12 min • 15 questions</p>
                 </div>
               </div>
               <p className="text-gray-700 mb-4">
-                Découvrez votre profil professionnel : entrepreneur, salarié, commerçant, artisan, candidat à l'expatriation 
-                ou si vous préférez un mode de vie plus libre. Ce test vous aide à comprendre vos préférences fondamentales.
+                Explorez vos préférences entre entrepreneuriat, salariat, commerce, artisanat et autres modes d'activité professionnelle.
               </p>
               <Link 
                 to="/tests/entrepreneurial" 

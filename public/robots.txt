@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /superadmin/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /cv-history
+Disallow: /orientation/results
+
+Sitemap: https://makoki.org/sitemap.xml

@@ -29,14 +29,14 @@ const createSmtpEmailAdapter = (env = process.env) => {
     sendVerification: ({ email, token }) => transporter.sendMail({
       from,
       to: email,
-      subject: 'Vérifiez votre compte Orientation Pro Congo',
-      text: `Vérifiez votre compte : ${link('/verify-email', token)}`,
+      subject: 'Vérifiez votre compte MAKOKI',
+      text: `Bienvenue sur MAKOKI. Vérifiez votre compte : ${link('/verify-email', token)}`,
     }),
     sendPasswordReset: ({ email, token }) => transporter.sendMail({
       from,
       to: email,
-      subject: 'Réinitialisez votre mot de passe Orientation Pro Congo',
-      text: `Réinitialisez votre mot de passe : ${link('/reset-password', token)}`,
+      subject: 'Réinitialisez votre mot de passe MAKOKI',
+      text: `Réinitialisez votre mot de passe MAKOKI : ${link('/reset-password', token)}`,
     }),
   };
 };

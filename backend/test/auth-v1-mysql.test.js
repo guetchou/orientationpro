@@ -102,27 +102,71 @@ test('account lifecycle persists in isolated MySQL through the HTTP interface', 
   }
 });
 
-test('authentication migration rolls back and can be applied again', async () => {
+test('ordered migrations roll back completely and can be applied again', async () => {
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');
   try {
     await migrateUp(pool, directory);
-    const rolledBack = await migrateDown(pool, directory);
+
+    const [appliedRows] = await pool.query(
+      'SELECT version FROM schema_migrations ORDER BY applied_at DESC, version DESC',
+    );
+    const expectedRollbackOrder = appliedRows.map((row) => row.version);
+    const rolledBack = [];
+
+    while (true) {
+      const version = await migrateDown(pool, directory);
+      if (!version) break;
+      rolledBack.push(version);
+    }
+
+    assert.deepEqual(rolledBack, expectedRollbackOrder);
+    assert.deepEqual(rolledBack, [
+      '004_career_catalog_permissions',
+      '003_occupation_catalog',
+      '002_riasec_foundation',
+      '001_auth_foundation',
+    ]);
+
     const [[afterRollback]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
-       WHERE table_schema = DATABASE() AND table_name LIKE 'auth\\_%'`,
+       WHERE table_schema = DATABASE()
+         AND (
+           table_name LIKE 'auth\\_%'
+           OR table_name LIKE 'orientation\\_%'
+           OR table_name LIKE 'career\\_%'
+         )`,
     );
-    assert.equal(rolledBack, '001_auth_foundation');
     assert.equal(Number(afterRollback.table_count), 0);
 
     await migrateUp(pool, directory);
-    const [[afterRestore]] = await pool.query(
+
+    const [[authTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
        WHERE table_schema = DATABASE() AND table_name LIKE 'auth\\_%'`,
     );
-    assert.equal(Number(afterRestore.table_count), 9);
+    const [[orientationTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'orientation\\_%'`,
+    );
+    const [[careerTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'career\\_%'`,
+    );
+    const [[careerPermissions]] = await pool.query(
+      `SELECT COUNT(*) AS permission_count
+       FROM auth_permissions
+       WHERE id IN ('career.catalog.read', 'career.match.read_own')`,
+    );
+
+    assert.equal(Number(authTables.table_count), 9);
+    assert.equal(Number(orientationTables.table_count), 5);
+    assert.equal(Number(careerTables.table_count), 7);
+    assert.equal(Number(careerPermissions.permission_count), 2);
   } finally {
     await pool.end();
   }
