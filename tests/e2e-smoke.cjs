@@ -59,19 +59,45 @@ async function main() {
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
 
-    for (const route of ['/', '/login', '/tests']) {
+    const routes = ['/', '/login', '/tests', '/about', '/privacy', '/terms', '/cookies'];
+    for (const route of routes) {
       const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle0' });
       if (!response || response.status() !== 200) {
         throw new Error(`${route} returned ${response?.status() ?? 'no response'}`);
       }
       await page.waitForSelector('#root');
+      const bodyText = await page.$eval('body', (body) => body.innerText);
+      if (!bodyText.includes('MAKOKI')) {
+        throw new Error(`${route} does not expose the MAKOKI brand`);
+      }
+    }
+
+    const title = await page.title();
+    if (!title.includes('MAKOKI')) {
+      throw new Error(`Unexpected document title: ${title}`);
+    }
+
+    await page.goto(baseUrl, { waitUntil: 'networkidle0' });
+    const homeText = await page.$eval('body', (body) => body.innerText);
+    const forbiddenPublicClaims = [
+      'OrientationPro',
+      '15,000+',
+      '500+ offres',
+      '95% Satisfaction',
+      'Première Plateforme',
+      'Méthode reconnue et récompensée',
+    ];
+    for (const claim of forbiddenPublicClaims) {
+      if (homeText.includes(claim)) {
+        throw new Error(`Forbidden public claim still visible: ${claim}`);
+      }
     }
 
     if (pageErrors.length > 0) {
       throw new Error(`Browser page errors: ${pageErrors.join(' | ')}`);
     }
 
-    console.log(`E2E smoke passed on ephemeral port ${port}: /, /login, /tests`);
+    console.log(`E2E public smoke passed on ephemeral port ${port}: ${routes.join(', ')}`);
   } catch (error) {
     if (previewOutput) process.stderr.write(previewOutput);
     throw error;
