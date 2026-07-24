@@ -17,17 +17,17 @@ const defaultPreferences: EditablePreferences = {
   support: false,
 };
 
-const updateGoogleConsent = (granted: boolean) => {
+const updateGoogleConsent = (preferences: EditablePreferences) => {
   const globalWindow = window as any;
   globalWindow.dataLayer = globalWindow.dataLayer || [];
   globalWindow.gtag = globalWindow.gtag || function gtag(...args: any[]) {
     globalWindow.dataLayer.push(args);
   };
   globalWindow.gtag('consent', 'update', {
-    analytics_storage: granted ? 'granted' : 'denied',
-    ad_storage: granted ? 'granted' : 'denied',
-    ad_user_data: granted ? 'granted' : 'denied',
-    ad_personalization: granted ? 'granted' : 'denied',
+    analytics_storage: preferences.analytics ? 'granted' : 'denied',
+    ad_storage: preferences.marketing ? 'granted' : 'denied',
+    ad_user_data: preferences.marketing ? 'granted' : 'denied',
+    ad_personalization: preferences.marketing ? 'granted' : 'denied',
   });
 };
 
@@ -36,7 +36,7 @@ const configureTrackers = (preferences: EditablePreferences) => {
   const metaPixelId = String(import.meta.env.VITE_META_PIXEL_ID || '').trim();
   const globalWindow = window as any;
 
-  updateGoogleConsent(preferences.analytics);
+  updateGoogleConsent(preferences);
 
   if (preferences.analytics && googleId && !document.getElementById('makoki-google-analytics')) {
     const script = document.createElement('script');
@@ -45,7 +45,11 @@ const configureTrackers = (preferences: EditablePreferences) => {
     script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleId)}`;
     document.head.appendChild(script);
     globalWindow.gtag('js', new Date());
-    globalWindow.gtag('config', googleId, { anonymize_ip: true });
+    globalWindow.gtag('config', googleId, {
+      anonymize_ip: true,
+      allow_google_signals: preferences.marketing,
+      allow_ad_personalization_signals: preferences.marketing,
+    });
   }
 
   if (metaPixelId) {
