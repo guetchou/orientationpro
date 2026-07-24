@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   BarChart3,
   BookOpen,
+  BriefcaseBusiness,
   History,
   Loader2,
   RefreshCcw,
@@ -16,6 +17,7 @@ import type { RiasecDimensionCode, RiasecResult as RiasecResultModel } from '@/t
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CareerRecommendations } from '@/components/career/CareerRecommendations';
 
 const ORDER: RiasecDimensionCode[] = ['R', 'I', 'A', 'S', 'E', 'C'];
 
@@ -31,7 +33,7 @@ const fallbackNames: Record<RiasecDimensionCode, string> = {
 const errorMessage = (error: unknown) => {
   if (error instanceof ApiError) {
     if (error.code === 'ORIENTATION_RESULT_NOT_FOUND') {
-      return 'Ce Résultat d’orientation est introuvable ou n’appartient pas à ton compte.';
+      return 'Ce résultat d’orientation est introuvable ou n’appartient pas à ton compte.';
     }
     return error.message;
   }
@@ -90,7 +92,7 @@ export default function RiasecResult() {
       <main className="flex min-h-[70vh] items-center justify-center">
         <div className="text-center">
           <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-emerald-700" />
-          <p className="text-gray-600">Chargement du Résultat d’orientation…</p>
+          <p className="text-gray-600">Chargement du résultat d’orientation…</p>
         </div>
       </main>
     );
@@ -122,7 +124,10 @@ export default function RiasecResult() {
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button asChild variant="ghost"><Link to="/orientation/results"><ArrowLeft className="mr-2 h-4 w-4" />Historique</Link></Button>
-          <Button asChild variant="outline"><Link to="/tests/riasec"><RefreshCcw className="mr-2 h-4 w-4" />Nouvelle passation</Link></Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline"><Link to="/careers"><BriefcaseBusiness className="mr-2 h-4 w-4" />Catalogue métiers</Link></Button>
+            <Button asChild variant="outline"><Link to="/tests/riasec"><RefreshCcw className="mr-2 h-4 w-4" />Nouvelle passation</Link></Button>
+          </div>
         </div>
 
         <Card className="overflow-hidden border-0 shadow-2xl">
@@ -189,6 +194,8 @@ export default function RiasecResult() {
             })}
           </CardContent>
         </Card>
+
+        <CareerRecommendations resultId={result.id} />
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="border-0 shadow-lg">
