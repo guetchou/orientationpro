@@ -14,6 +14,7 @@ const titleForPath = (pathname: string) => {
   if (pathname === '/cv-optimizer') return 'Préparer son CV — MAKOKI';
   if (pathname === '/blog') return 'Ressources d’orientation — MAKOKI';
   if (pathname === '/about') return 'À propos — MAKOKI';
+  if (pathname === '/legal') return 'Mentions légales — MAKOKI';
   if (pathname === '/privacy') return 'Confidentialité — MAKOKI';
   if (pathname === '/terms') return 'Conditions d’utilisation — MAKOKI';
   if (pathname === '/cookies') return 'Cookies et stockage local — MAKOKI';
