@@ -15,6 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:backend": "npm --prefix backend test",
     "test:e2e": "npm run build && node tests/e2e-smoke.cjs",
+    "test:e2e:career": "node tests/e2e-career-functional.cjs",
     "check:sensitive": "node scripts/check-sensitive-files.cjs",
     "check": "npm run check:sensitive && npm run typecheck && npm run lint && npm run lint:backend && npm run test && npm run test:backend && npm run build",
     "preview": "vite preview"
@@ -78,7 +79,7 @@
     "express": "^4.18.2",
     "framer-motion": "^12.11.4",
     "html2canvas": "^1.4.1",
-    "input-otp": "^1.2.4",
+    "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.462.0",
