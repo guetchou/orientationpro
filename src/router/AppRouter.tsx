@@ -22,6 +22,7 @@ const PageLoader = () => (
 
 const Index = lazy(() => import('@/pages/Index'));
 const About = lazy(() => import('@/pages/About'));
+const LegalNotice = lazy(() => import('@/pages/LegalNotice'));
 const Privacy = lazy(() => import('@/pages/Privacy'));
 const Terms = lazy(() => import('@/pages/Terms'));
 const Cookies = lazy(() => import('@/pages/Cookies'));
@@ -76,6 +77,7 @@ export const AppRouter = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
+          <Route path="/legal" element={<LegalNotice />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/cookies" element={<Cookies />} />
