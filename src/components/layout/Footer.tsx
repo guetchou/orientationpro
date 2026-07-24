@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { openConsentManager } from '@/lib/privacyConsent';
 
 const sections = [
   {
@@ -72,6 +73,13 @@ export const Footer = () => {
                       <Link className="transition-colors hover:text-white" to={link.path}>{link.label}</Link>
                     </li>
                   ))}
+                  {section.title === 'Informations' ? (
+                    <li>
+                      <button type="button" className="text-left transition-colors hover:text-white" onClick={openConsentManager}>
+                        Gérer mes cookies
+                      </button>
+                    </li>
+                  ) : null}
                 </ul>
               </div>
             ))}
