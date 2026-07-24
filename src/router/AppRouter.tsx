@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import { Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
 import { RouteTracker } from '@/components/analytics/RouteTracker';
 import {
   AdminRoute,
@@ -131,6 +132,7 @@ export const AppRouter = () => (
         </Routes>
       </Suspense>
       <Footer />
+      <CookieConsentBanner />
     </div>
   </Router>
 );
