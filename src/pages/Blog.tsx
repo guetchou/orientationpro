@@ -1,190 +1,72 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Home, 
-  BookOpen, 
-  Users, 
-  Briefcase,
-  FileText,
-  Settings,
-  User,
-  Calendar,
-  MessageSquare,
-  Phone,
-  Mail,
-  MapPin,
-  Globe,
-  Star,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Award,
-  Lightbulb
-} from 'lucide-react';
+import { ArrowRight, BookOpenCheck, BriefcaseBusiness, Compass, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const Blog: React.FC = () => {
+const resources = [
+  {
+    title: 'Comprendre le modèle RIASEC',
+    description: 'Découvrez comment les six familles d’intérêts peuvent soutenir une réflexion d’orientation, ainsi que les limites à conserver lors de l’interprétation.',
+    icon: Compass,
+    path: '/tests',
+    action: 'Voir les outils',
+  },
+  {
+    title: 'Explorer les métiers avec méthode',
+    description: 'Comparez les pistes professionnelles sans confondre proximité d’intérêts, compétences acquises, débouchés réels et conditions d’exercice.',
+    icon: BriefcaseBusiness,
+    path: '/careers',
+    action: 'Explorer les métiers',
+  },
+  {
+    title: 'Préparer un CV lisible',
+    description: 'Organisez les informations utiles à un recruteur et vérifiez toujours les affirmations, dates, compétences et coordonnées présentes dans le document.',
+    icon: FileText,
+    path: '/cv-optimizer',
+    action: 'Préparer mon CV',
+  },
+];
+
+export default function Blog() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
-                <ArrowLeft size={20} />
-                <span>Retour à l'accueil</span>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Orientation Pro Congo
-              </Badge>
-            </div>
-          </div>
+    <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
+      <div className="mx-auto max-w-6xl">
+        <div className="max-w-3xl">
+          <p className="font-semibold text-emerald-700">Ressources MAKOKI</p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+            Des repères pour construire votre parcours
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-slate-700">
+            La bibliothèque éditoriale complète est en préparation. Cette page présente uniquement les ressources et parcours déjà disponibles dans MAKOKI, sans faux articles, chiffres d’audience ou coordonnées provisoires.
+          </p>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Page Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Blog
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Page en cours de développement pour /blog
-            </p>
-          </div>
-
-          {/* Content Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="hover:shadow-lg transition-shadow">
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {resources.map((resource) => (
+            <Card key={resource.title} className="flex h-full flex-col border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  <span>Fonctionnalités</span>
-                </CardTitle>
-                <CardDescription>
-                  Découvrez les fonctionnalités disponibles
-                </CardDescription>
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                  <resource.icon className="h-6 w-6" />
+                </span>
+                <CardTitle className="mt-3">{resource.title}</CardTitle>
+                <CardDescription className="text-base leading-7">{resource.description}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Interface moderne</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Navigation intuitive</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Design responsive</span>
-                  </div>
-                </div>
+              <CardContent className="mt-auto">
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to={resource.path}>{resource.action}<ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
               </CardContent>
             </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-green-600" />
-                  <span>Support</span>
-                </CardTitle>
-                <CardDescription>
-                  Besoin d'aide ? Contactez-nous
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">support@orientationpro.cg</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">+242 06 123 456</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-red-500" />
-                    <span className="text-sm">Brazzaville, Congo</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                  <span>Statistiques</span>
-                </CardTitle>
-                <CardDescription>
-                  Données et métriques
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Utilisateurs actifs</span>
-                    <Badge variant="secondary">1,234</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Tests complétés</span>
-                    <Badge variant="secondary">5,678</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Satisfaction</span>
-                    <Badge variant="secondary">98%</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="text-center space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                <Link to="/">
-                  <Home className="h-4 w-4 mr-2" />
-                  Retour à l'accueil
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/tests">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Découvrir les tests
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/conseiller">
-                  <Users className="h-4 w-4 mr-2" />
-                  Nos conseillers
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Footer Info */}
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center space-x-2 bg-white rounded-lg px-4 py-2 shadow-sm">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">
-                Page en cours de développement - Mise à jour prévue bientôt
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
+
+        <section className="mt-12 rounded-2xl border border-blue-200 bg-blue-50 p-6 text-blue-950">
+          <h2 className="flex items-center gap-2 text-xl font-semibold"><BookOpenCheck className="h-5 w-5" />Politique éditoriale</h2>
+          <p className="mt-3 leading-7">
+            Les futurs contenus devront distinguer les faits sourcés, les conseils généraux et les adaptations propres au contexte congolais. Une information non vérifiée ne doit pas être présentée comme une donnée officielle ou une garantie de résultat.
+          </p>
+        </section>
       </div>
-    </div>
+    </main>
   );
-};
-
-export default Blog;
+}
