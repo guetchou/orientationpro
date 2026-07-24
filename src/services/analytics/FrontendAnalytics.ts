@@ -43,16 +43,28 @@ class FrontendAnalytics {
     if (typeof window === 'undefined') return;
     this.startAutoFlush();
     window.addEventListener(CONSENT_CHANGED_EVENT, this.handleConsentChange as EventListener);
-    this.purgeExpiredEvents();
+
+    if (isConsentGranted('analytics')) {
+      this.purgeExpiredEvents();
+    } else {
+      this.clearAnalyticsStorage();
+    }
+  }
+
+  private clearAnalyticsStorage(): void {
+    this.queue = [];
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem('analytics_session_id');
+    this.sessionId = '';
   }
 
   private handleConsentChange = (event: CustomEvent<ConsentPreferences>) => {
     if (!event.detail.analytics) {
-      this.queue = [];
-      window.localStorage.removeItem(STORAGE_KEY);
-      window.sessionStorage.removeItem('analytics_session_id');
-      this.sessionId = '';
+      this.clearAnalyticsStorage();
+      return;
     }
+
+    this.purgeExpiredEvents();
   };
 
   private ensureSessionId(): string {
@@ -68,9 +80,17 @@ class FrontendAnalytics {
   }
 
   private purgeExpiredEvents(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !isConsentGranted('analytics')) {
+      return;
+    }
+
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === null) {
+      return;
+    }
+
     try {
-      const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]');
+      const stored = JSON.parse(raw);
       if (!Array.isArray(stored)) {
         window.localStorage.removeItem(STORAGE_KEY);
         return;
@@ -80,7 +100,12 @@ class FrontendAnalytics {
         const timestamp = new Date(event?.timestamp || 0).getTime();
         return Number.isFinite(timestamp) && timestamp >= cutoff;
       }).slice(-MAX_EVENTS);
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(retained));
+
+      if (retained.length === 0) {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(retained));
+      }
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
     }
