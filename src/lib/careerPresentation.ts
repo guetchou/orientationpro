@@ -2,6 +2,8 @@ import type { CompleteCareerRiasecVector } from '@/types/career';
 import type { RiasecDimensionCode } from '@/types/riasec';
 
 const DIMENSIONS: RiasecDimensionCode[] = ['R', 'I', 'A', 'S', 'E', 'C'];
+const TIE_ORDER = [...DIMENSIONS].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+const TIE_INDEX = new Map(TIE_ORDER.map((dimension, index) => [dimension, index]));
 
 export interface CareerFitBand {
   label: string;
@@ -40,7 +42,10 @@ export const dominantDimensions = (
   limit = 3,
 ): Array<{ dimension: RiasecDimensionCode; score: number }> => DIMENSIONS
   .map((dimension) => ({ dimension, score: scores[dimension] }))
-  .sort((left, right) => right.score - left.score || left.dimension.localeCompare(right.dimension))
+  .sort((left, right) => (
+    right.score - left.score ||
+    (TIE_INDEX.get(left.dimension) ?? 0) - (TIE_INDEX.get(right.dimension) ?? 0)
+  ))
   .slice(0, Math.max(1, Math.min(limit, DIMENSIONS.length)));
 
 export const localRelevanceLabel = (status: string) => {
