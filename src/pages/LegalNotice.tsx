@@ -29,7 +29,8 @@ export default function LegalNotice() {
               <p><strong>Forme déclarée :</strong> établissement individuel, sous réserve de confirmation par les documents d’immatriculation</p>
               <p><strong>Capital social :</strong> sans objet si la forme « établissement individuel » est confirmée</p>
               <p><strong>Ville et pays :</strong> Brazzaville, République du Congo</p>
-              <p><strong>Représentant légal et directeur de publication :</strong> NGUIE Gess</p>
+              <p><strong>Personne responsable déclarée :</strong> NGUIE Gess</p>
+              <p><strong>Qualité juridique et direction de publication :</strong> à confirmer</p>
               <p><strong>Support :</strong> 08h00 à 20h00 ; jours d’ouverture à préciser</p>
             </CardContent>
           </Card>
@@ -45,6 +46,7 @@ export default function LegalNotice() {
                 <li>numéro RCCM ;</li>
                 <li>numéro NIU ;</li>
                 <li>intitulé juridique exact de la fonction exercée par NGUIE Gess ;</li>
+                <li>identité du directeur ou responsable de publication ;</li>
                 <li>jours d’ouverture du support.</li>
               </ul>
             </CardContent>
