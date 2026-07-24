@@ -26,6 +26,8 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signUp } = useAuth();
 
@@ -33,6 +35,14 @@ export default function Register() {
     event.preventDefault();
     setError(null);
 
+    if (!confirmedAge) {
+      setError('L’inscription est actuellement réservée aux personnes âgées d’au moins 16 ans.');
+      return;
+    }
+    if (!acceptedTerms) {
+      setError('Tu dois accepter les conditions d’utilisation et la politique de confidentialité.');
+      return;
+    }
     if (password.length < 12) {
       setError('Le mot de passe doit contenir au moins 12 caractères.');
       return;
@@ -54,7 +64,7 @@ export default function Register() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 px-4 py-16">
+    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 px-4 py-24">
       <Card className="mx-auto w-full max-w-md border-0 shadow-2xl">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-blue-600 text-white shadow-lg">
@@ -63,7 +73,7 @@ export default function Register() {
           <div>
             <CardTitle className="text-3xl">Créer un compte MAKOKI</CardTitle>
             <CardDescription className="mt-2">
-              Un compte est nécessaire pour enregistrer les passations et les Résultats d’orientation.
+              Un compte est nécessaire pour enregistrer les passations et les résultats d’orientation.
             </CardDescription>
           </div>
         </CardHeader>
@@ -79,6 +89,9 @@ export default function Register() {
             </div>
           ) : (
             <>
+              <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+                L’inscription est actuellement réservée aux personnes âgées d’au moins 16 ans. L’ouverture aux 14–15 ans sera activée après mise en place d’un consentement parental conjoint et vérifiable.
+              </div>
               {error && (
                 <div className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -137,6 +150,16 @@ export default function Register() {
                     required
                   />
                 </div>
+                <label className="flex items-start gap-3 text-sm leading-6 text-slate-700">
+                  <input className="mt-1 h-4 w-4" type="checkbox" checked={confirmedAge} onChange={(event) => setConfirmedAge(event.target.checked)} />
+                  <span>Je confirme avoir au moins 16 ans.</span>
+                </label>
+                <label className="flex items-start gap-3 text-sm leading-6 text-slate-700">
+                  <input className="mt-1 h-4 w-4" type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
+                  <span>
+                    J’accepte les <Link className="font-medium text-emerald-700 underline" to="/terms">conditions d’utilisation</Link> et la <Link className="font-medium text-emerald-700 underline" to="/privacy">politique de confidentialité</Link>.
+                  </span>
+                </label>
                 <Button type="submit" className="w-full" disabled={submitting}>
                   {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Créer le compte
