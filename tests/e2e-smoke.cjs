@@ -62,7 +62,7 @@ async function main() {
     await waitForServer(baseUrl, preview);
     await assertStaticAsset(baseUrl, '/manifest.json', 'MAKOKI');
     await assertStaticAsset(baseUrl, '/robots.txt', 'https://makoki.org/sitemap.xml');
-    await assertStaticAsset(baseUrl, '/sitemap.xml', 'https://makoki.org/');
+    await assertStaticAsset(baseUrl, '/sitemap.xml', 'https://makoki.org/legal');
     await assertStaticAsset(baseUrl, '/favicon.svg', 'data:image/png;base64');
 
     browser = await puppeteer.launch({
@@ -83,6 +83,7 @@ async function main() {
       '/book-appointment',
       '/blog',
       '/about',
+      '/legal',
       '/privacy',
       '/terms',
       '/cookies',
@@ -131,6 +132,24 @@ async function main() {
       if (canonical !== expectedCanonical) {
         throw new Error(`${route} canonical mismatch: ${canonical} != ${expectedCanonical}`);
       }
+    }
+
+    await page.goto(`${baseUrl}/legal`, { waitUntil: 'networkidle0' });
+    const legalText = await page.$eval('body', (body) => body.innerText);
+    for (const expected of ['Nexora', 'NGUIE Gess', 'contact@makoki.org', '+242 05 534 42 53', 'OVH SAS', 'Spaceship, Inc.']) {
+      if (!legalText.includes(expected)) throw new Error(`/legal is missing ${expected}`);
+    }
+
+    await page.goto(`${baseUrl}/privacy`, { waitUntil: 'networkidle0' });
+    const privacyText = await page.$eval('body', (body) => body.innerText);
+    for (const expected of ['24 mois d’inactivité', '12 mois après la production du résultat', '10 ans', 'rgpd@makoki.org']) {
+      if (!privacyText.includes(expected)) throw new Error(`/privacy is missing ${expected}`);
+    }
+
+    await page.goto(`${baseUrl}/register`, { waitUntil: 'networkidle0' });
+    const registerText = await page.$eval('body', (body) => body.innerText);
+    if (!registerText.includes('au moins 16 ans') || !registerText.includes('14–15 ans')) {
+      throw new Error('/register does not expose the current minor-consent rule');
     }
 
     if (pageErrors.length > 0) {
