@@ -6,6 +6,7 @@
   <url><loc>https://makoki.org/jobs</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://makoki.org/blog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://makoki.org/book-appointment</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://makoki.org/legal</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://makoki.org/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://makoki.org/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://makoki.org/cookies</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
