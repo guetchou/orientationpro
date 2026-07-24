@@ -28,6 +28,9 @@ const Tests = lazy(() => import('@/pages/Tests'));
 const RiasecTest = lazy(() => import('@/pages/RiasecTest'));
 const RiasecResult = lazy(() => import('@/pages/RiasecResult'));
 const RiasecResults = lazy(() => import('@/pages/RiasecResults'));
+const CareerMatches = lazy(() => import('@/pages/CareerMatches'));
+const CareerCatalog = lazy(() => import('@/pages/CareerCatalog'));
+const OccupationDetail = lazy(() => import('@/pages/OccupationDetail'));
 const EmotionalTest = lazy(() => import('@/pages/EmotionalTest'));
 const LearningTest = lazy(() => import('@/pages/LearningTest'));
 const MultipleIntelligenceTest = lazy(() => import('@/pages/MultipleIntelligenceTest'));
@@ -75,6 +78,9 @@ export const AppRouter = () => (
           <Route path="/tests/riasec" element={<UserRoute><RiasecTest /></UserRoute>} />
           <Route path="/orientation/results" element={<UserRoute><RiasecResults /></UserRoute>} />
           <Route path="/orientation/results/:resultId" element={<UserRoute><RiasecResult /></UserRoute>} />
+          <Route path="/orientation/results/:resultId/careers" element={<UserRoute><CareerMatches /></UserRoute>} />
+          <Route path="/careers" element={<UserRoute><CareerCatalog /></UserRoute>} />
+          <Route path="/careers/:occupationId" element={<UserRoute><OccupationDetail /></UserRoute>} />
           <Route path="/tests/emotional" element={<EmotionalTest />} />
           <Route path="/tests/learning" element={<LearningTest />} />
           <Route path="/tests/multiple" element={<MultipleIntelligenceTest />} />
