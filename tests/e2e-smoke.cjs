@@ -43,6 +43,16 @@ async function assertStaticAsset(baseUrl, pathname, expectedFragment) {
   }
 }
 
+async function clickButtonByText(page, text) {
+  const clicked = await page.evaluate((label) => {
+    const button = [...document.querySelectorAll('button')].find((element) => element.textContent?.trim() === label);
+    if (!button) return false;
+    button.click();
+    return true;
+  }, text);
+  if (!clicked) throw new Error(`Button not found: ${text}`);
+}
+
 async function main() {
   const port = await reservePort();
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -72,6 +82,25 @@ async function main() {
     const page = await browser.newPage();
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
+
+    await page.goto(baseUrl, { waitUntil: 'networkidle0' });
+    await page.waitForSelector('[role="dialog"][aria-label="Gestion des cookies"]');
+    const storageBeforeChoice = await page.evaluate(() => ({
+      consent: localStorage.getItem('makoki_consent_v1'),
+      analytics: localStorage.getItem('analytics_queue'),
+      googleScript: Boolean(document.getElementById('makoki-google-analytics')),
+      metaScript: Boolean(document.getElementById('makoki-meta-pixel')),
+    }));
+    if (storageBeforeChoice.consent || storageBeforeChoice.analytics || storageBeforeChoice.googleScript || storageBeforeChoice.metaScript) {
+      throw new Error(`Non-essential tracking exists before consent: ${JSON.stringify(storageBeforeChoice)}`);
+    }
+
+    await clickButtonByText(page, 'Tout refuser');
+    await page.waitForFunction(() => !document.querySelector('[role="dialog"][aria-label="Gestion des cookies"]'));
+    const deniedConsent = await page.evaluate(() => JSON.parse(localStorage.getItem('makoki_consent_v1') || 'null'));
+    if (!deniedConsent || deniedConsent.analytics || deniedConsent.marketing || deniedConsent.support) {
+      throw new Error(`Invalid denied consent: ${JSON.stringify(deniedConsent)}`);
+    }
 
     const routes = [
       '/',
@@ -134,6 +163,11 @@ async function main() {
       }
     }
 
+    const analyticsAfterDeniedNavigation = await page.evaluate(() => localStorage.getItem('analytics_queue'));
+    if (analyticsAfterDeniedNavigation) {
+      throw new Error('Local analytics were stored after consent was denied');
+    }
+
     await page.goto(`${baseUrl}/legal`, { waitUntil: 'networkidle0' });
     const legalText = await page.$eval('body', (body) => body.innerText);
     for (const expected of ['Nexora', 'NGUIE Gess', 'contact@makoki.org', '+242 05 534 42 53', 'OVH SAS', 'Spaceship, Inc.']) {
@@ -152,11 +186,24 @@ async function main() {
       throw new Error('/register does not expose the current minor-consent rule');
     }
 
+    await page.goto(baseUrl, { waitUntil: 'networkidle0' });
+    await clickButtonByText(page, 'Gérer mes cookies');
+    await page.waitForSelector('[role="dialog"][aria-label="Gestion des cookies"]');
+    await clickButtonByText(page, 'Personnaliser');
+    const checkboxes = await page.$$('input[type="checkbox"]');
+    if (checkboxes.length < 3) throw new Error('Consent customization does not expose the expected categories');
+    await checkboxes[0].click();
+    await clickButtonByText(page, 'Enregistrer mes choix');
+    const customizedConsent = await page.evaluate(() => JSON.parse(localStorage.getItem('makoki_consent_v1') || 'null'));
+    if (!customizedConsent?.analytics || customizedConsent.marketing || customizedConsent.support) {
+      throw new Error(`Invalid customized consent: ${JSON.stringify(customizedConsent)}`);
+    }
+
     if (pageErrors.length > 0) {
       throw new Error(`Browser page errors: ${pageErrors.join(' | ')}`);
     }
 
-    console.log(`E2E public smoke passed on ephemeral port ${port}: ${routes.join(', ')}`);
+    console.log(`E2E public smoke passed on ephemeral port ${port}: ${routes.join(', ')}, consent lifecycle`);
   } catch (error) {
     if (previewOutput) process.stderr.write(previewOutput);
     throw error;
