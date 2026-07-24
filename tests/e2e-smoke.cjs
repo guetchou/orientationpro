@@ -53,6 +53,15 @@ async function clickButtonByText(page, text) {
   if (!clicked) throw new Error(`Button not found: ${text}`);
 }
 
+async function clickButtonByTextIfPresent(page, text) {
+  return page.evaluate((label) => {
+    const button = [...document.querySelectorAll('button')].find((element) => element.textContent?.trim() === label);
+    if (!button) return false;
+    button.click();
+    return true;
+  }, text);
+}
+
 async function main() {
   const port = await reservePort();
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -189,8 +198,17 @@ async function main() {
     await page.goto(baseUrl, { waitUntil: 'networkidle0' });
     await clickButtonByText(page, 'Gérer mes cookies');
     await page.waitForSelector('[role="dialog"][aria-label="Gestion des cookies"]');
-    await clickButtonByText(page, 'Personnaliser');
-    const checkboxes = await page.$$('input[type="checkbox"]');
+
+    let checkboxes = await page.$$('input[type="checkbox"]');
+    if (checkboxes.length < 3) {
+      const openedCustomization = await clickButtonByTextIfPresent(page, 'Personnaliser');
+      if (!openedCustomization) {
+        throw new Error('Consent dialog exposes neither categories nor a customization action');
+      }
+      await page.waitForFunction(() => document.querySelectorAll('input[type="checkbox"]').length >= 3);
+      checkboxes = await page.$$('input[type="checkbox"]');
+    }
+
     if (checkboxes.length < 3) throw new Error('Consent customization does not expose the expected categories');
     await checkboxes[0].click();
     await clickButtonByText(page, 'Enregistrer mes choix');
