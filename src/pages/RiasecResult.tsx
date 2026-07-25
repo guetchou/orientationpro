@@ -198,7 +198,7 @@ export default function RiasecResult() {
         <CareerRecommendations resultId={result.id} />
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-0 shadow-lg">
+          <Card className="min-w-0 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Scale className="h-5 w-5" />Indicateurs descriptifs</CardTitle>
             </CardHeader>
@@ -213,7 +213,7 @@ export default function RiasecResult() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg">
+          <Card className="min-w-0 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5" />Méthode et limites</CardTitle>
             </CardHeader>
@@ -222,7 +222,7 @@ export default function RiasecResult() {
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950">
                 {result.snapshot?.instrument?.disclaimer}
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 break-all">
                 Référence technique : {result.snapshot?.instrument?.contentHash || 'empreinte indisponible'}.
               </p>
             </CardContent>
