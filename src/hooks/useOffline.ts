@@ -8,7 +8,14 @@ interface OfflineOptions {
 }
 
 /**
- * Hook pour détecter et gérer l'état de connexion réseau
+ * Hook pour détecter et gérer l'état de connexion réseau.
+ *
+ * S'appuie sur `navigator.onLine` et les événements natifs `online`/`offline`
+ * du navigateur. On n'ajoute volontairement AUCUN sondage réseau périodique :
+ * l'ancienne version pingeait `/favicon.ico` toutes les 30 s par instance du
+ * hook (et le hook est monté plusieurs fois), ce qui générait des dizaines de
+ * requêtes inutiles — coûteuses sur les connexions mobiles instables. Les
+ * événements natifs suffisent et ne consomment ni bande passante ni batterie.
  */
 export function useOffline(options: OfflineOptions = {}) {
   const {
@@ -26,7 +33,7 @@ export function useOffline(options: OfflineOptions = {}) {
 
   const handleOnline = useCallback(() => {
     setIsOnline(true);
-    
+
     if (wasOffline && showNotification) {
       toast.success('Connexion rétablie', {
         description: 'Vous êtes de nouveau en ligne',
@@ -36,14 +43,14 @@ export function useOffline(options: OfflineOptions = {}) {
     if (onOnline) {
       onOnline();
     }
-    
+
     setWasOffline(false);
   }, [wasOffline, showNotification, onOnline]);
 
   const handleOffline = useCallback(() => {
     setIsOnline(false);
     setWasOffline(true);
-    
+
     if (showNotification) {
       toast.warning('Mode hors ligne', {
         description: 'Vérification de votre connexion...',
@@ -57,39 +64,14 @@ export function useOffline(options: OfflineOptions = {}) {
   }, [showNotification, onOffline]);
 
   useEffect(() => {
-    // Écouter les événements de changement d'état réseau
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
-    // Vérifier périodiquement la connexion
-    const checkConnection = async () => {
-      try {
-        const response = await fetch('/favicon.ico', {
-          method: 'HEAD',
-          cache: 'no-cache',
-        });
-        
-        if (!response.ok && !isOnline) {
-          handleOffline();
-        } else if (isOnline) {
-          handleOnline();
-        }
-      } catch (error) {
-        if (isOnline) {
-          handleOffline();
-        }
-      }
-    };
-
-    // Vérifier la connexion toutes les 30 secondes
-    const intervalId = setInterval(checkConnection, 30000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(intervalId);
     };
-  }, [handleOnline, handleOffline, isOnline]);
+  }, [handleOnline, handleOffline]);
 
   return {
     isOnline,
@@ -144,4 +126,3 @@ export function useOfflineData<T>(key: string) {
     isOnline,
   };
 }
-
