@@ -1,4 +1,3 @@
-import { TestsSection } from "@/components/home/TestsSection";
 import { ChatBot } from "@/components/chat/ChatBot";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -243,7 +242,6 @@ export default function Tests() {
             </Card>
           </div>
         </div>
-        <TestsSection />
       </main>
       <ChatBot />
     </div>
