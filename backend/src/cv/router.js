@@ -337,6 +337,68 @@ const createCvRouter = ({
     }),
   );
 
+  router.get(
+    '/analyses/:analysisId/report.pdf',
+    requirePermission(
+      hasPermission,
+      'cv.report.read_own',
+    ),
+    route(async (req, res) => {
+      const report =
+        await service.getReport({
+          accountId:
+            req.auth.account.id,
+          analysisId:
+            req.params.analysisId,
+        });
+
+      if (!report) {
+        return res.status(404).json({
+          error: {
+            code:
+              'CV_ANALYSIS_NOT_FOUND',
+            message:
+              "L'analyse CV demandee n'existe pas pour le compte authentifie.",
+          },
+        });
+      }
+
+      res.setHeader(
+        'Content-Type',
+        'application/pdf',
+      );
+
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${report.fileName}"`,
+      );
+
+      res.setHeader(
+        'Content-Length',
+        String(report.buffer.length),
+      );
+
+      res.setHeader(
+        'Cache-Control',
+        'private, no-store, max-age=0',
+      );
+
+      res.setHeader(
+        'Pragma',
+        'no-cache',
+      );
+
+      res.setHeader(
+        'X-Content-Type-Options',
+        'nosniff',
+      );
+
+      return res
+        .status(200)
+        .send(report.buffer);
+    }),
+  );
+
   router.delete(
     '/analyses/:analysisId',
     requirePermission(

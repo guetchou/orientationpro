@@ -432,3 +432,69 @@ test(
     );
   },
 );
+
+test(
+  'le rapport utilise toujours une analyse appartenant au compte authentifié',
+  async () => {
+    const calls = [];
+    const analysis = {
+      id: 'analysis-1',
+      snapshot: {
+        status: 'completed',
+      },
+    };
+
+    const store = {
+      createAnalysis: async () => null,
+      listAnalyses: async () => ({}),
+      getAnalysis: async (input) => {
+        calls.push(input);
+        return analysis;
+      },
+      deleteAnalysis: async () => false,
+    };
+
+    let generatedFrom;
+
+    const service = createCvService({
+      store,
+      reportGenerator: async (value) => {
+        generatedFrom = value;
+
+        return Buffer.from(
+          '%PDF-rapport',
+        );
+      },
+    });
+
+    const report =
+      await service.getReport({
+        accountId: 'account-1',
+        analysisId: 'analysis-1',
+      });
+
+    assert.deepEqual(calls, [
+      {
+        accountId: 'account-1',
+        analysisId: 'analysis-1',
+      },
+    ]);
+
+    assert.equal(
+      generatedFrom,
+      analysis,
+    );
+
+    assert.equal(
+      report.buffer
+        .subarray(0, 5)
+        .toString('ascii'),
+      '%PDF-',
+    );
+
+    assert.equal(
+      report.fileName,
+      'rapport-cv-makoki-analysis-1.pdf',
+    );
+  },
+);

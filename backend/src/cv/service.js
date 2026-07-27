@@ -10,6 +10,11 @@ const {
 const { CvInputError } = require('./errors');
 const { extractCvFile } = require('./extractor');
 
+const {
+  buildCvReportFileName,
+  generateCvReportPdf,
+} = require('./report');
+
 const MAX_JOB_TITLE_LENGTH = 255;
 const MAX_JOB_DESCRIPTION_LENGTH = 20000;
 const MAX_REQUIRED_SKILLS = 100;
@@ -228,6 +233,7 @@ const createCvService = ({
   extractor = extractCvFile,
   analyzer = analyzeCv,
   createId = randomUUID,
+  reportGenerator = generateCvReportPdf,
 } = {}) => {
   if (
     !store
@@ -319,6 +325,34 @@ const createCvService = ({
         accountId,
         analysisId,
       });
+    },
+
+    async getReport({
+      accountId,
+      analysisId,
+    }) {
+      const analysis =
+        await store.getAnalysis({
+          accountId,
+          analysisId,
+        });
+
+      if (!analysis) {
+        return null;
+      }
+
+      const buffer =
+        await reportGenerator(
+          analysis,
+        );
+
+      return {
+        buffer,
+        fileName:
+          buildCvReportFileName(
+            analysis.id,
+          ),
+      };
     },
 
     deleteAnalysis({

@@ -660,3 +660,142 @@ test(
     );
   },
 );
+
+test(
+  'le rapport PDF est protégé par ownership et permission dédiée',
+  async (t) => {
+    const calls = [];
+    const permissions = [];
+
+    const service = {
+      getReport: async (input) => {
+        calls.push(input);
+
+        return {
+          buffer: Buffer.from(
+            '%PDF-1.7\nrapport',
+          ),
+          fileName:
+            'rapport-cv-makoki-analysis-1.pdf',
+        };
+      },
+    };
+
+    const { app, uploadDirectory } =
+      createApp(
+        service,
+        async (input) => {
+          permissions.push(input);
+          return true;
+        },
+      );
+
+    t.after(() =>
+      fs.rm(uploadDirectory, {
+        recursive: true,
+        force: true,
+      })
+    );
+
+    const response = await request(
+      app,
+      '/api/v1/cv/analyses/analysis-1/report.pdf',
+    );
+
+    const buffer = Buffer.from(
+      await response.arrayBuffer(),
+    );
+
+    assert.equal(
+      response.status,
+      200,
+    );
+
+    assert.equal(
+      response.headers.get(
+        'content-type',
+      ),
+      'application/pdf',
+    );
+
+    assert.equal(
+      response.headers.get(
+        'cache-control',
+      ),
+      'private, no-store, max-age=0',
+    );
+
+    assert.equal(
+      response.headers.get(
+        'x-content-type-options',
+      ),
+      'nosniff',
+    );
+
+    assert.match(
+      response.headers.get(
+        'content-disposition',
+      ),
+      /rapport-cv-makoki-analysis-1\.pdf/u,
+    );
+
+    assert.equal(
+      buffer
+        .subarray(0, 5)
+        .toString('ascii'),
+      '%PDF-',
+    );
+
+    assert.deepEqual(calls, [
+      {
+        accountId: ACCOUNT_ID,
+        analysisId: 'analysis-1',
+      },
+    ]);
+
+    assert.deepEqual(permissions, [
+      {
+        accountId: ACCOUNT_ID,
+        permissionId:
+          'cv.report.read_own',
+      },
+    ]);
+  },
+);
+
+test(
+  'un rapport étranger ou inconnu retourne le même 404',
+  async (t) => {
+    const service = {
+      getReport: async () => null,
+    };
+
+    const { app, uploadDirectory } =
+      createApp(service);
+
+    t.after(() =>
+      fs.rm(uploadDirectory, {
+        recursive: true,
+        force: true,
+      })
+    );
+
+    const response = await request(
+      app,
+      '/api/v1/cv/analyses/inconnu/report.pdf',
+    );
+
+    const body =
+      await response.json();
+
+    assert.equal(
+      response.status,
+      404,
+    );
+
+    assert.equal(
+      body.error.code,
+      'CV_ANALYSIS_NOT_FOUND',
+    );
+  },
+);

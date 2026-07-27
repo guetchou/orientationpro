@@ -142,6 +142,7 @@ app.get('/', (req, res) => {
       cvAnalyses: 'POST /api/v1/cv/analyses',
       cvAnalysisHistory: 'GET /api/v1/cv/analyses',
       cvAnalysisDetail: 'GET /api/v1/cv/analyses/:analysisId',
+      cvAnalysisReport: 'GET /api/v1/cv/analyses/:analysisId/report.pdf',
       cvAnalysisDelete: 'DELETE /api/v1/cv/analyses/:analysisId',
     });
   }
