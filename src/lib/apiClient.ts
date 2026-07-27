@@ -3,6 +3,7 @@ const API_ROOT = String(import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, 
 const ACCESS_TOKEN_KEY = 'userToken';
 const ACCOUNT_KEY = 'userData';
 const AUTH_EVENT = 'orientationpro:auth-changed';
+const SESSION_HINT_KEY = 'makoki.session';
 
 export interface AuthAccount {
   id: string;
@@ -61,6 +62,7 @@ export const persistAuthSession = (payload: AuthSessionPayload) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, payload.accessToken);
   localStorage.setItem(ACCOUNT_KEY, JSON.stringify(storedUserFromAccount(payload.account)));
   localStorage.setItem('userRole', primaryRole(payload.account));
+  localStorage.setItem(SESSION_HINT_KEY, '1');
   notifyAuthChanged();
 };
 
@@ -72,6 +74,7 @@ export const clearAuthSession = () => {
     'adminToken',
     'adminUser',
     'authToken',
+    SESSION_HINT_KEY,
   ].forEach((key) => {
     localStorage.removeItem(key);
     sessionStorage.removeItem(key);
@@ -80,6 +83,7 @@ export const clearAuthSession = () => {
 };
 
 export const getStoredAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
+export const hasSessionHint = () => localStorage.getItem(SESSION_HINT_KEY) === '1';
 
 export const getStoredUserData = () => {
   const raw = localStorage.getItem(ACCOUNT_KEY);

@@ -7,6 +7,7 @@ import {
   Check,
   ClipboardCheck,
   History,
+  Keyboard,
   Loader2,
   RotateCcw,
   Save,
@@ -192,12 +193,46 @@ export default function RiasecTest() {
     setPhase('intro');
   };
 
+  // Navigation au clavier pendant la passation : les chiffres sélectionnent une
+  // réponse sur l'échelle, les flèches et Entrée déplacent la personne. Sur
+  // mobile ces raccourcis restent inertes ; ils accélèrent la saisie au clavier.
+  useEffect(() => {
+    if (phase !== 'questions' || !instrument || !currentItem) return;
+
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+
+      const numeric = Number(event.key);
+      const option = instrument.responseScale.find((entry) => entry.value === numeric);
+      if (option) {
+        event.preventDefault();
+        chooseAnswer(currentItem.id, option.value);
+        return;
+      }
+
+      if ((event.key === 'ArrowRight' || event.key === 'Enter') && selectedValue !== undefined) {
+        event.preventDefault();
+        if (isLast) void submit();
+        else goNext();
+      }
+      if (event.key === 'ArrowLeft' && currentIndex > 0) {
+        event.preventDefault();
+        goPrevious();
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, instrument, currentItem, selectedValue, isLast, currentIndex]);
+
   if (phase === 'loading') {
     return (
-      <main className="flex min-h-[70vh] items-center justify-center">
-        <div className="text-center">
+      <main className="flex min-h-[70vh] items-center justify-center bg-stone-50">
+        <div className="text-center" role="status" aria-live="polite">
           <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-emerald-700" />
-          <p className="text-gray-600">Chargement de l’instrument RIASEC…</p>
+          <p className="text-stone-600">Chargement de l’instrument RIASEC…</p>
         </div>
       </main>
     );
@@ -213,8 +248,8 @@ export default function RiasecTest() {
             </CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
-          <CardContent className="flex gap-3">
-            <Button onClick={() => void load()}>Réessayer</Button>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button onClick={() => void load()} className="bg-emerald-700 hover:bg-emerald-800">Réessayer</Button>
             <Button asChild variant="outline"><Link to="/tests">Retour aux tests</Link></Button>
           </CardContent>
         </Card>
@@ -224,42 +259,52 @@ export default function RiasecTest() {
 
   if (phase === 'intro') {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 px-4 py-12">
-        <div className="mx-auto max-w-4xl space-y-6">
+      <main className="min-h-screen bg-stone-50 px-4 py-10 sm:py-14">
+        <div className="mx-auto max-w-3xl space-y-6">
           <div className="flex items-center justify-between gap-4">
-            <Button asChild variant="ghost"><Link to="/tests"><ArrowLeft className="mr-2 h-4 w-4" />Tests</Link></Button>
-            <Button asChild variant="outline"><Link to="/orientation/results"><History className="mr-2 h-4 w-4" />Mes résultats</Link></Button>
+            <Button asChild variant="ghost" className="text-stone-600 hover:text-stone-900">
+              <Link to="/tests"><ArrowLeft className="mr-2 h-4 w-4" />Tests</Link>
+            </Button>
+            <Button asChild variant="ghost" className="text-stone-600 hover:text-stone-900">
+              <Link to="/orientation/results"><History className="mr-2 h-4 w-4" />Mes résultats</Link>
+            </Button>
           </div>
-          <Card className="overflow-hidden border-0 shadow-2xl">
-            <div className="h-2 bg-gradient-to-r from-emerald-600 via-blue-600 to-indigo-600" />
-            <CardHeader className="space-y-4 p-8">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge variant="secondary">Holland / RIASEC</Badge>
-                <Badge variant={instrument.status === 'active' ? 'default' : 'outline'}>
+
+          <Card className="overflow-hidden border border-stone-200 shadow-sm">
+            {/* Accent unique aux couleurs du Congo, sans dégradé arc-en-ciel. */}
+            <div className="h-1.5 bg-gradient-to-r from-emerald-700 via-amber-500 to-emerald-700" />
+            <CardHeader className="space-y-4 p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-emerald-700 hover:bg-emerald-700">Holland / RIASEC</Badge>
+                <Badge variant={instrument.status === 'active' ? 'secondary' : 'outline'}>
                   {instrument.status === 'active' ? 'Version active' : 'Version pilote'}
                 </Badge>
               </div>
-              <CardTitle className="text-4xl">{instrument.title}</CardTitle>
-              <CardDescription className="text-base leading-relaxed">
-                Réponds à {instrument.itemCount} affirmations pour explorer les environnements professionnels qui correspondent le mieux à tes intérêts actuels.
+              <CardTitle className="font-heading text-3xl leading-tight sm:text-4xl">
+                {instrument.title}
+              </CardTitle>
+              <CardDescription className="text-base leading-relaxed text-stone-600">
+                Réponds à {instrument.itemCount} affirmations pour explorer les environnements
+                professionnels qui correspondent le mieux à tes intérêts actuels.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 p-8 pt-0">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-xl bg-emerald-50 p-4">
+
+            <CardContent className="space-y-6 p-6 pt-0 sm:p-8 sm:pt-0">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
                   <ClipboardCheck className="mb-2 h-6 w-6 text-emerald-700" />
-                  <p className="font-semibold">{instrument.itemCount} affirmations</p>
-                  <p className="text-sm text-gray-600">Environ 10 à 15 minutes.</p>
+                  <p className="font-semibold text-stone-900">{instrument.itemCount} affirmations</p>
+                  <p className="text-sm text-stone-600">Environ 10 à 15 minutes.</p>
                 </div>
-                <div className="rounded-xl bg-blue-50 p-4">
-                  <ShieldCheck className="mb-2 h-6 w-6 text-blue-700" />
-                  <p className="font-semibold">Calcul côté serveur</p>
-                  <p className="text-sm text-gray-600">Les clés de calcul ne sont pas exposées au navigateur.</p>
+                <div className="rounded-xl border border-stone-200 bg-white p-4">
+                  <ShieldCheck className="mb-2 h-6 w-6 text-emerald-700" />
+                  <p className="font-semibold text-stone-900">Calcul côté serveur</p>
+                  <p className="text-sm text-stone-600">Les clés de calcul ne sont jamais exposées au navigateur.</p>
                 </div>
-                <div className="rounded-xl bg-amber-50 p-4">
-                  <Save className="mb-2 h-6 w-6 text-amber-700" />
-                  <p className="font-semibold">Brouillon local</p>
-                  <p className="text-sm text-gray-600">La reprise fonctionne sur ce navigateur et cet appareil.</p>
+                <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                  <Save className="mb-2 h-6 w-6 text-amber-600" />
+                  <p className="font-semibold text-stone-900">Reprise possible</p>
+                  <p className="text-sm text-stone-600">Le brouillon reste sur ce navigateur et cet appareil.</p>
                 </div>
               </div>
 
@@ -269,18 +314,25 @@ export default function RiasecTest() {
               </div>
 
               <div>
-                <p className="mb-3 font-semibold">Échelle de réponse</p>
-                <div className="grid gap-2 sm:grid-cols-5">
+                <p className="mb-3 font-semibold text-stone-900">Échelle de réponse</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {instrument.responseScale.map((option) => (
-                    <div key={option.value} className="rounded-lg border bg-white p-3 text-center text-sm">
+                    <div
+                      key={option.value}
+                      className="rounded-lg border border-stone-200 bg-white p-3 text-center text-sm"
+                    >
                       <div className="font-bold text-emerald-700">{option.value}</div>
-                      <div className="mt-1 text-gray-600">{option.label}</div>
+                      <div className="mt-1 text-stone-600">{option.label}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <Button size="lg" onClick={() => void startNewAttempt()}>
+              <Button
+                size="lg"
+                onClick={() => void startNewAttempt()}
+                className="w-full bg-emerald-700 hover:bg-emerald-800 sm:w-auto"
+              >
                 Commencer la passation <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </CardContent>
@@ -293,11 +345,11 @@ export default function RiasecTest() {
   if (!attempt || !currentItem) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 px-4 py-10">
-      <div className="mx-auto max-w-3xl space-y-5">
+    <main className="min-h-screen bg-stone-50 px-4 py-6 sm:py-10">
+      <div className="mx-auto max-w-2xl space-y-4">
         {resumed && (
-          <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-            <Save className="h-4 w-4" /> Brouillon local repris sur cet appareil.
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <Save className="h-4 w-4 shrink-0" /> Brouillon local repris sur cet appareil.
           </div>
         )}
         {error && (
@@ -306,58 +358,95 @@ export default function RiasecTest() {
           </div>
         )}
 
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
-              <span>Affirmation {currentIndex + 1} sur {instrument.itemCount}</span>
-              <span>{answeredCount} réponse(s) enregistrée(s) localement</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-gray-200" aria-label={`Progression ${progress}%`}>
-              <div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${progress}%` }} />
-            </div>
-            <CardTitle className="pt-4 text-2xl leading-relaxed">{currentItem.prompt}</CardTitle>
-            <CardDescription>Choisis la réponse qui te correspond le mieux aujourd’hui.</CardDescription>
+        {/* Barre de progression collante : le repère reste visible au défilement. */}
+        <div className="sticky top-0 z-10 -mx-4 border-b border-stone-200 bg-stone-50/90 px-4 py-3 backdrop-blur">
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium text-stone-700">
+              Affirmation {currentIndex + 1} / {instrument.itemCount}
+            </span>
+            <span className="text-stone-500">{answeredCount} répondue(s)</span>
+          </div>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-stone-200"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Progression : ${progress}%`}
+          >
+            <div className="h-full rounded-full bg-emerald-700 transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+
+        <Card className="border border-stone-200 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle className="font-heading text-xl leading-relaxed text-stone-900 sm:text-2xl">
+              {currentItem.prompt}
+            </CardTitle>
+            <CardDescription className="text-stone-500">
+              Choisis la réponse qui te correspond le mieux aujourd’hui.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-3">
+          <CardContent className="space-y-5">
+            <div className="grid gap-2.5" role="radiogroup" aria-label="Échelle de réponse">
               {instrument.responseScale.map((option) => {
                 const selected = selectedValue === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
+                    role="radio"
+                    aria-checked={selected}
                     onClick={() => chooseAnswer(currentItem.id, option.value)}
-                    className={`flex items-center justify-between rounded-xl border p-4 text-left transition ${
+                    className={`flex min-h-[3.25rem] items-center justify-between rounded-xl border p-3.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                       selected
-                        ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-200'
-                        : 'border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50'
+                        ? 'border-emerald-700 bg-emerald-50 ring-1 ring-emerald-200'
+                        : 'border-stone-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40'
                     }`}
-                    aria-pressed={selected}
                   >
-                    <span><strong className="mr-3 text-emerald-700">{option.value}</strong>{option.label}</span>
-                    {selected ? <Check className="h-5 w-5 text-emerald-700" /> : null}
+                    <span className="flex items-center gap-3">
+                      <span
+                        aria-hidden="true"
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
+                          selected ? 'bg-emerald-700 text-white' : 'bg-stone-100 text-stone-500'
+                        }`}
+                      >
+                        {option.value}
+                      </span>
+                      <span className="text-stone-800">{option.label}</span>
+                    </span>
+                    {selected ? <Check className="h-5 w-5 shrink-0 text-emerald-700" /> : null}
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={goPrevious} disabled={currentIndex === 0 || phase === 'submitting'}>
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
-                </Button>
-                <Button variant="ghost" onClick={abandonDraft} disabled={phase === 'submitting'}>
-                  <RotateCcw className="mr-2 h-4 w-4" /> Recommencer
-                </Button>
-              </div>
+            <div className="flex items-center justify-between gap-3 border-t border-stone-100 pt-4">
+              <Button
+                variant="outline"
+                onClick={goPrevious}
+                disabled={currentIndex === 0 || phase === 'submitting'}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
+              </Button>
 
               {isLast ? (
-                <Button onClick={() => void submit()} disabled={selectedValue === undefined || phase === 'submitting'}>
-                  {phase === 'submitting' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ClipboardCheck className="mr-2 h-4 w-4" />}
+                <Button
+                  onClick={() => void submit()}
+                  disabled={selectedValue === undefined || phase === 'submitting'}
+                  className="bg-emerald-700 hover:bg-emerald-800"
+                >
+                  {phase === 'submitting'
+                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    : <ClipboardCheck className="mr-2 h-4 w-4" />}
                   Calculer mon résultat
                 </Button>
               ) : (
-                <Button onClick={goNext} disabled={selectedValue === undefined || phase === 'submitting'}>
+                <Button
+                  onClick={goNext}
+                  disabled={selectedValue === undefined || phase === 'submitting'}
+                  className="bg-emerald-700 hover:bg-emerald-800"
+                >
                   Suivant <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
@@ -365,8 +454,25 @@ export default function RiasecTest() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-500">
-          Les réponses détaillées sont envoyées au serveur uniquement lors de la soumission finale. Le brouillon intermédiaire reste dans ce navigateur.
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={abandonDraft}
+            disabled={phase === 'submitting'}
+            className="text-stone-500 hover:text-stone-800"
+          >
+            <RotateCcw className="mr-2 h-4 w-4" /> Recommencer
+          </Button>
+          <span className="hidden items-center gap-1.5 text-xs text-stone-400 sm:flex">
+            <Keyboard className="h-3.5 w-3.5" />
+            Clavier : 1–{instrument.responseScale.length} pour répondre, ← → pour naviguer
+          </span>
+        </div>
+
+        <p className="px-1 text-center text-xs leading-relaxed text-stone-400">
+          Les réponses détaillées ne sont envoyées au serveur qu’à la soumission finale.
+          Le brouillon intermédiaire reste dans ce navigateur.
         </p>
       </div>
     </main>

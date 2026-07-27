@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { CounselorCard } from "@/components/counselors/CounselorCard"; 
+import { Link } from "react-router-dom";
+import { CounselorCard } from "@/components/counselors/CounselorCard";
 import { CounselorFilter } from "@/components/counselors/CounselorFilter";
 import { Button } from "@/components/ui/button";
-import { Calendar, Search, Filter, Users, Star, Clock, MapPin, Phone, Mail, Target, CheckCircle, Award } from "lucide-react";
+import {
+  Calendar,
+  Search,
+  Users,
+  MapPin,
+  Phone,
+  Mail,
+  Target,
+  ShieldCheck,
+  Award,
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +46,7 @@ export default function Conseillers() {
           .select('*')
           .eq('position', 'conseiller')
           .order('first_name', { ascending: true });
-        
+
         if (error) throw error;
         setCounselors(data || []);
       } catch (error) {
@@ -62,288 +73,257 @@ export default function Conseillers() {
   // Filter counselors based on selected filters and search term
   const filteredCounselors = counselors.filter((counselor: any) => {
     // Filter by search term
-    if (searchTerm && !`${counselor.first_name} ${counselor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) && 
+    if (searchTerm && !`${counselor.first_name} ${counselor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !counselor.department?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    
+
     // Filter by specialties
     if (selectedSpecialties.length > 0 && !selectedSpecialties.includes(counselor.department)) {
       return false;
     }
-    
+
     // Apply specialty filter if not "all"
     if (filters.specialty !== "all" && counselor.department !== filters.specialty) {
       return false;
     }
-    
+
     return true;
   });
 
+  const values = [
+    {
+      icon: Award,
+      title: "Professionnels vérifiés",
+      description: "Des conseillers et coachs autorisés, dont le profil est contrôlé.",
+    },
+    {
+      icon: Target,
+      title: "Accompagnement personnalisé",
+      description: "Un suivi adapté à votre situation : études, reconversion, insertion.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Méthode explicable",
+      description: "Des outils dont on assume les sources, les versions et les limites.",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-16"
-        >
-              <Badge className="mb-4 bg-blue-100 text-blue-800 border-blue-200">
-                <Users className="w-3 h-3 mr-1" />
-                Équipe d'Experts
-              </Badge>
-              <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-            Nos Conseillers d'Orientation
-          </h1>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Rencontrez notre équipe de conseillers certifiés pour un accompagnement personnalisé 
-                dans votre parcours d'orientation scolaire et professionnelle.
-              </p>
-            </motion.div>
-            
-            <div className="grid lg:grid-cols-3 gap-8 mb-12">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-center"
-              >
-                <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Experts Certifiés</h3>
-                <p className="text-gray-600">Conseillers diplômés et expérimentés</p>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-center"
-              >
-                <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="h-8 w-8 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Accompagnement Personnalisé</h3>
-                <p className="text-gray-600">Suivi adapté à vos besoins spécifiques</p>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-center"
-              >
-                <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="h-8 w-8 text-purple-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Méthodes Scientifiques</h3>
-                <p className="text-gray-600">Tests et outils validés scientifiquement</p>
-              </motion.div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-stone-50">
+
+      {/* ============================ HERO ============================ */}
+      <section className="relative isolate overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <img
+            src="/images/hero/accompagnement-conseiller.webp"
+            srcSet="/images/hero/accompagnement-conseiller-sm.webp 768w, /images/hero/accompagnement-conseiller.webp 1600w"
+            sizes="100vw"
+            alt="Un conseiller d’orientation échange avec un jeune couple autour d’un bureau à Brazzaville."
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/80 to-emerald-900/40" />
+        </div>
+
+        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="max-w-2xl text-white"
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-white/10 px-4 py-1.5 text-sm font-medium text-amber-100 backdrop-blur-sm">
+              <Users className="h-4 w-4" />
+              Être accompagné
+            </span>
+            <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+              Un conseiller à vos côtés,
+              <span className="block text-amber-200">pour décider en confiance</span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
+              Rencontrez des conseillers et coachs autorisés pour transformer un résultat
+              d’orientation en projet concret d’études ou d’emploi.
+            </p>
+            <Button size="lg" asChild className="mt-8 bg-amber-400 text-emerald-950 hover:bg-amber-300">
+              <Link to="/book-appointment">
+                <Calendar className="mr-2 h-5 w-5" /> Prendre rendez-vous
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
 
-      {/* Section de recherche et filtres */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
+      {/* ========================= VALEURS ========================= */}
+      <section className="mx-auto max-w-7xl px-6 py-14">
+        <div className="grid gap-6 sm:grid-cols-3">
+          {values.map((value, index) => (
             <motion.div
+              key={value.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="text-center mb-8"
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
             >
-              <h2 className="text-3xl font-bold mb-4">Trouvez votre Conseiller</h2>
-              <p className="text-gray-600">
-                Utilisez les filtres ci-dessous pour trouver le conseiller qui correspond le mieux à vos besoins
-          </p>
-        </motion.div>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-primary">
+                <value.icon className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 font-heading text-lg font-semibold text-stone-900">{value.title}</h3>
+              <p className="mt-2 text-stone-600">{value.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-          <CounselorFilter 
+      {/* ==================== RECHERCHE ET FILTRES ==================== */}
+      <section className="border-y border-stone-200 bg-white py-12">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-8 text-center">
+            <h2 className="font-heading text-3xl font-bold text-stone-900">Trouvez votre conseiller</h2>
+            <p className="mt-2 text-stone-600">
+              Filtrez par spécialité et par nom pour trouver l’accompagnement adapté à vos besoins.
+            </p>
+          </div>
+          <CounselorFilter
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             selectedSpecialties={selectedSpecialties}
             onSpecialtyToggle={handleSpecialtyToggle}
             availableSpecialties={availableSpecialties}
-            onFilterChange={(newFilters) => setFilters({...filters, ...newFilters})}
+            onFilterChange={(newFilters) => setFilters({ ...filters, ...newFilters })}
             currentFilters={filters}
           />
-            </motion.div>
-          </div>
         </div>
       </section>
 
-      {/* Section des conseillers */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-7xl mx-auto">
-        {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(6)].map((_, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="bg-white rounded-xl p-6 shadow-lg animate-pulse"
-                  >
-                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
-                <div className="h-6 bg-gray-200 rounded mb-2 w-3/4 mx-auto"></div>
-                <div className="h-4 bg-gray-200 rounded mb-4 w-1/2 mx-auto"></div>
-                <div className="h-20 bg-gray-200 rounded mb-4"></div>
-                <div className="h-10 bg-gray-200 rounded"></div>
-                  </motion.div>
-            ))}
-          </div>
-        ) : filteredCounselors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredCounselors.map((counselor, index) => (
-                  <motion.div
-                    key={counselor.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                  >
-                    <CounselorCard counselor={counselor} />
-                  </motion.div>
-            ))}
-          </div>
-        ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-center py-16"
-              >
-                <div className="bg-white rounded-2xl p-12 shadow-lg max-w-md mx-auto">
-                  <Search className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Aucun conseiller trouvé</h3>
-                  <p className="text-gray-600 mb-8">
-                    Essayez de modifier vos filtres ou contactez-nous pour plus d'informations
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild variant="outline">
-              <a href="/contact">Nous contacter</a>
-            </Button>
-                    <Button onClick={() => {
+      {/* ===================== LISTE DES CONSEILLERS ===================== */}
+      <section className="bg-stone-50 py-16">
+        <div className="mx-auto max-w-7xl px-6">
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="animate-pulse rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+                  <div className="mx-auto mb-4 h-24 w-24 rounded-full bg-stone-200"></div>
+                  <div className="mx-auto mb-2 h-6 w-3/4 rounded bg-stone-200"></div>
+                  <div className="mx-auto mb-4 h-4 w-1/2 rounded bg-stone-200"></div>
+                  <div className="mb-4 h-20 rounded bg-stone-200"></div>
+                  <div className="h-10 rounded bg-stone-200"></div>
+                </div>
+              ))}
+            </div>
+          ) : filteredCounselors.length > 0 ? (
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCounselors.map((counselor, index) => (
+                <motion.div
+                  key={counselor.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: (index % 3) * 0.1 }}
+                >
+                  <CounselorCard counselor={counselor} />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-16 text-center">
+              <div className="mx-auto max-w-md rounded-2xl border border-stone-200 bg-white p-12 shadow-sm">
+                <Search className="mx-auto mb-6 h-16 w-16 text-stone-300" />
+                <h3 className="mb-3 font-heading text-2xl font-semibold text-stone-900">Aucun conseiller trouvé</h3>
+                <p className="mb-8 text-stone-600">
+                  Modifiez vos filtres, ou prenez rendez-vous pour être orienté vers le bon interlocuteur.
+                </p>
+                <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                  <Button asChild variant="outline">
+                    <Link to="/book-appointment">Prendre rendez-vous</Link>
+                  </Button>
+                  <Button
+                    className="bg-primary hover:bg-primary-800"
+                    onClick={() => {
                       setSearchTerm("");
                       setSelectedSpecialties([]);
-                    }}>
-                      Réinitialiser les filtres
-                    </Button>
-                  </div>
+                    }}
+                  >
+                    Réinitialiser les filtres
+                  </Button>
                 </div>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Section CTA */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-green-600">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl font-bold text-white mb-6">
-                Besoin d'aide pour choisir un conseiller ?
-              </h2>
-              <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-                Notre équipe peut vous aider à trouver le conseiller idéal pour vos besoins spécifiques. 
-                Contactez-nous pour un accompagnement personnalisé.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
-                  <Calendar className="mr-2 h-5 w-5" />
-            Demander une orientation
-          </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Phone className="mr-2 h-5 w-5" />
-                  Nous appeler
-                </Button>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Section informations de contact */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl font-bold mb-6">Informations de Contact</h2>
-              <p className="text-lg text-gray-600">
-                Notre équipe est disponible pour répondre à toutes vos questions
-              </p>
-            </motion.div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
+      {/* =========================== CTA =========================== */}
+      <section className="relative isolate overflow-hidden bg-primary-900">
+        <div className="mx-auto max-w-4xl px-6 py-20 text-center text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="font-heading text-3xl font-bold sm:text-4xl">
+              Besoin d’aide pour choisir un conseiller ?
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-emerald-50/90">
+              Prenez rendez-vous : nous vous orientons vers le professionnel adapté à votre projet.
+            </p>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
+                <Link to="/book-appointment">
+                  <Calendar className="mr-2 h-5 w-5" /> Prendre rendez-vous
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-8 w-8 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Email</h3>
-                <p className="text-gray-600">contact@orientationprocongo.com</p>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Phone className="h-8 w-8 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Téléphone</h3>
-                <p className="text-gray-600">+242 00 000 000</p>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="h-8 w-8 text-purple-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Adresse</h3>
-                <p className="text-gray-600">Brazzaville, République du Congo</p>
-              </motion.div>
+                <a href="tel:+242055344253">
+                  <Phone className="mr-2 h-5 w-5" /> Nous appeler
+                </a>
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ===================== INFORMATIONS DE CONTACT ===================== */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-12 text-center">
+            <h2 className="font-heading text-3xl font-bold text-stone-900">Informations de contact</h2>
+            <p className="mt-2 text-lg text-stone-600">
+              Notre équipe est disponible pour répondre à toutes vos questions.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                <Mail className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-heading text-lg font-semibold text-stone-900">Email</h3>
+              <a href="mailto:contact@makoki.org" className="text-stone-600 hover:text-primary">
+                contact@makoki.org
+              </a>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+                <Phone className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="font-heading text-lg font-semibold text-stone-900">Téléphone</h3>
+              <a href="tel:+242055344253" className="text-stone-600 hover:text-primary">
+                +242 05 534 42 53
+              </a>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                <MapPin className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-heading text-lg font-semibold text-stone-900">Adresse</h3>
+              <p className="text-stone-600">Brazzaville, République du Congo</p>
             </div>
           </div>
         </div>
