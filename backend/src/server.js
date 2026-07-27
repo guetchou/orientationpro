@@ -19,6 +19,9 @@ const { createRiasecRouter } = require('./orientation/riasec/router');
 const { createRiasecStore } = require('./orientation/riasec/store');
 const { createCareerRouter } = require('./career/router');
 const { createCareerStore } = require('./career/store');
+const { createCvRouter } = require('./cv/router');
+const { createCvService } = require('./cv/service');
+const { createCvStore } = require('./cv/store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -86,6 +89,20 @@ if (process.env.CAREER_API_ENABLED === 'true') {
     hasPermission: authV1.hasPermission,
   }));
 }
+if (process.env.CV_API_V1_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('CV_API_V1_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+
+  app.use('/api/v1/cv', createCvRouter({
+    service: createCvService({
+      store: createCvStore(authV1.pool),
+    }),
+    authenticate: authV1.authenticate,
+    hasPermission: authV1.hasPermission,
+    uploadDirectory: process.env.CV_UPLOAD_DIR,
+  }));
+}
 app.use('/api/cv', cvRoutes);
 app.use('/api/candidates', candidatesRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -118,6 +135,14 @@ app.get('/', (req, res) => {
       careerCatalogSummary: 'GET /api/v1/career/catalog/summary',
       occupations: 'GET /api/v1/career/occupations',
       occupationMatches: 'GET /api/v1/career/matches/:resultId',
+    });
+  }
+  if (process.env.CV_API_V1_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      cvAnalyses: 'POST /api/v1/cv/analyses',
+      cvAnalysisHistory: 'GET /api/v1/cv/analyses',
+      cvAnalysisDetail: 'GET /api/v1/cv/analyses/:analysisId',
+      cvAnalysisDelete: 'DELETE /api/v1/cv/analyses/:analysisId',
     });
   }
 
@@ -171,6 +196,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
   console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
   console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
+  console.log(`CV API v1 enabled: ${process.env.CV_API_V1_ENABLED === 'true'}`);
 });
 
 server.on('error', (err) => {

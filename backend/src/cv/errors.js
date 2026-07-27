@@ -15,6 +15,8 @@ const MESSAGES = {
   CV_FILE_CORRUPTED: 'Le fichier est corrompu ou ne peut pas etre lu.',
   CV_PDF_SCANNED: 'Ce PDF semble etre scanne et ne contient pas de texte exploitable.',
   CV_TEXT_EXTRACTION_FAILED: "Le texte du document n'a pas pu etre extrait.",
+  CV_UPLOAD_INVALID: 'Le televersement du fichier CV est invalide.',
+  CV_TARGET_INVALID: 'Les parametres de ciblage de l analyse CV sont invalides.',
 };
 
 class CvInputError extends Error {
