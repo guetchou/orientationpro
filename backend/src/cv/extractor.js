@@ -7,6 +7,8 @@ const path = require('node:path');
 const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
 
+const { validateDocxContainer } = require('./docx-validator');
+
 const {
   CV_MAX_FILE_SIZE,
   isAllowedCvFile,
@@ -68,6 +70,7 @@ const extractCvFile = async (file, options = {}) => {
     unlink = fs.unlink,
     pdfParser = pdfParse,
     docxParser = defaultDocxParser,
+    docxValidator = validateDocxContainer,
   } = options;
 
   let buffer;
@@ -107,6 +110,7 @@ const extractCvFile = async (file, options = {}) => {
           pageCount = parsed.numpages;
         }
       } else if (file.mimetype === DOCX_MIME) {
+        await docxValidator(buffer);
         const parsed = await docxParser(buffer);
         extractedText = parsed?.value;
       } else {

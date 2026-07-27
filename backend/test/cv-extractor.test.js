@@ -6,6 +6,7 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const zlib = require('node:zlib');
 
 const {
   DOCX_MIME,
@@ -15,6 +16,11 @@ const {
 } = require('../src/cv/extractor');
 
 const { CV_MAX_FILE_SIZE } = require('../src/security/cv-access');
+
+const {
+  DocxValidationError,
+  validateDocxContainer,
+} = require('../src/cv/docx-validator');
 
 const SAMPLE_TEXT =
   'Profil professionnel avec experience, formation, competences et resultats mesurables.';
@@ -154,6 +160,7 @@ test('extrait un DOCX et supprime le temporaire', async (t) => {
 
   const result = await extractCvFile(fixture.file, {
     docxParser: async () => ({ value: SAMPLE_TEXT }),
+    docxValidator: async () => undefined,
   });
 
   assert.equal(result.text, SAMPLE_TEXT);
@@ -196,6 +203,7 @@ test('refuse un DOCX sans texte extrait', async (t) => {
   await assert.rejects(
     extractCvFile(fixture.file, {
       docxParser: async () => ({ value: '   ' }),
+      docxValidator: async () => undefined,
     }),
     (error) => error?.code === 'CV_TEXT_EXTRACTION_FAILED',
   );
@@ -273,17 +281,30 @@ const createStoredZip = (entries) => {
       ? entry.data
       : Buffer.from(entry.data, 'utf8');
 
+    const useDeflate = entry.deflate === true;
+    const storedData = useDeflate
+      ? zlib.deflateRawSync(data)
+      : data;
+
+    const compressionMethod = useDeflate ? 8 : 0;
+    const flags = Number(entry.flags || 0);
     const checksum = crc32(data);
 
     const localHeader = Buffer.alloc(30);
     localHeader.writeUInt32LE(0x04034b50, 0);
     localHeader.writeUInt16LE(20, 4);
-    localHeader.writeUInt16LE(0, 6);
-    localHeader.writeUInt16LE(0, 8);
+    localHeader.writeUInt16LE(flags, 6);
+    localHeader.writeUInt16LE(
+      compressionMethod,
+      8,
+    );
     localHeader.writeUInt16LE(0, 10);
     localHeader.writeUInt16LE(0, 12);
     localHeader.writeUInt32LE(checksum, 14);
-    localHeader.writeUInt32LE(data.length, 18);
+    localHeader.writeUInt32LE(
+      storedData.length,
+      18,
+    );
     localHeader.writeUInt32LE(data.length, 22);
     localHeader.writeUInt16LE(name.length, 26);
     localHeader.writeUInt16LE(0, 28);
@@ -291,7 +312,7 @@ const createStoredZip = (entries) => {
     const localRecord = Buffer.concat([
       localHeader,
       name,
-      data,
+      storedData,
     ]);
 
     localParts.push(localRecord);
@@ -300,20 +321,32 @@ const createStoredZip = (entries) => {
     centralHeader.writeUInt32LE(0x02014b50, 0);
     centralHeader.writeUInt16LE(20, 4);
     centralHeader.writeUInt16LE(20, 6);
-    centralHeader.writeUInt16LE(0, 8);
-    centralHeader.writeUInt16LE(0, 10);
+    centralHeader.writeUInt16LE(flags, 8);
+    centralHeader.writeUInt16LE(
+      compressionMethod,
+      10,
+    );
     centralHeader.writeUInt16LE(0, 12);
     centralHeader.writeUInt16LE(0, 14);
     centralHeader.writeUInt32LE(checksum, 16);
-    centralHeader.writeUInt32LE(data.length, 20);
-    centralHeader.writeUInt32LE(data.length, 24);
+    centralHeader.writeUInt32LE(
+      storedData.length,
+      20,
+    );
+    centralHeader.writeUInt32LE(
+      data.length,
+      24,
+    );
     centralHeader.writeUInt16LE(name.length, 28);
     centralHeader.writeUInt16LE(0, 30);
     centralHeader.writeUInt16LE(0, 32);
     centralHeader.writeUInt16LE(0, 34);
     centralHeader.writeUInt16LE(0, 36);
     centralHeader.writeUInt32LE(0, 38);
-    centralHeader.writeUInt32LE(localOffset, 42);
+    centralHeader.writeUInt32LE(
+      localOffset,
+      42,
+    );
 
     centralParts.push(Buffer.concat([
       centralHeader,
@@ -324,7 +357,8 @@ const createStoredZip = (entries) => {
   }
 
   const localData = Buffer.concat(localParts);
-  const centralDirectory = Buffer.concat(centralParts);
+  const centralDirectory =
+    Buffer.concat(centralParts);
 
   const endRecord = Buffer.alloc(22);
   endRecord.writeUInt32LE(0x06054b50, 0);
@@ -332,8 +366,14 @@ const createStoredZip = (entries) => {
   endRecord.writeUInt16LE(0, 6);
   endRecord.writeUInt16LE(entries.length, 8);
   endRecord.writeUInt16LE(entries.length, 10);
-  endRecord.writeUInt32LE(centralDirectory.length, 12);
-  endRecord.writeUInt32LE(localData.length, 16);
+  endRecord.writeUInt32LE(
+    centralDirectory.length,
+    12,
+  );
+  endRecord.writeUInt32LE(
+    localData.length,
+    16,
+  );
   endRecord.writeUInt16LE(0, 20);
 
   return Buffer.concat([
@@ -515,4 +555,151 @@ test('refuse reellement un conteneur DOCX corrompu', async (t) => {
   );
 
   await expectMissing(fixture.file.path);
+});
+
+
+const SECURITY_CONTENT_TYPES = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">',
+  '<Default Extension="xml" ContentType="application/xml"/>',
+  '<Override PartName="/word/document.xml" ',
+  'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>',
+  '</Types>',
+].join('');
+
+const SECURITY_DOCUMENT_XML = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<w:document ',
+  'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">',
+  '<w:body><w:p><w:r><w:t>CV fictif</w:t></w:r></w:p></w:body>',
+  '</w:document>',
+].join('');
+
+const createSecurityDocx = (extraEntries = []) =>
+  createStoredZip([
+    {
+      name: '[Content_Types].xml',
+      data: SECURITY_CONTENT_TYPES,
+    },
+    {
+      name: 'word/document.xml',
+      data: SECURITY_DOCUMENT_XML,
+    },
+    ...extraEntries,
+  ]);
+
+test('durcit le conteneur DOCX avant mammoth', async () => {
+  let parserCalled = false;
+
+  const fixture = await createFile({
+    name: 'faux.docx',
+    mimeType: DOCX_MIME,
+    buffer: Buffer.from([
+      0x50, 0x4b, 0x03, 0x04,
+      0x00, 0x00, 0x00, 0x00,
+    ]),
+  });
+
+  await assert.rejects(
+    extractCvFile(fixture.file, {
+      docxParser: async () => {
+        parserCalled = true;
+        return { value: SAMPLE_TEXT };
+      },
+    }),
+    (error) =>
+      error?.code === 'CV_FILE_CORRUPTED',
+  );
+
+  assert.equal(parserCalled, false);
+  await expectMissing(fixture.file.path);
+
+  await fs.rm(fixture.directory, {
+    recursive: true,
+    force: true,
+  });
+});
+
+test('refuse un DOCX sans word document', async () => {
+  const buffer = createStoredZip([
+    {
+      name: '[Content_Types].xml',
+      data: SECURITY_CONTENT_TYPES,
+    },
+  ]);
+
+  await assert.rejects(
+    validateDocxContainer(buffer),
+    (error) =>
+      error instanceof DocxValidationError
+      && error.reason === 'MISSING_DOCUMENT',
+  );
+});
+
+test('refuse les chemins ZIP dangereux', async () => {
+  const buffer = createSecurityDocx([
+    {
+      name: '../contenu-interdit.xml',
+      data: '<interdit/>',
+    },
+  ]);
+
+  await assert.rejects(
+    validateDocxContainer(buffer),
+    (error) =>
+      error instanceof DocxValidationError,
+  );
+});
+
+test('refuse les entrees DOCX dupliquees', async () => {
+  const buffer = createSecurityDocx([
+    {
+      name: 'word/document.xml',
+      data: SECURITY_DOCUMENT_XML,
+    },
+  ]);
+
+  await assert.rejects(
+    validateDocxContainer(buffer),
+    (error) =>
+      error instanceof DocxValidationError
+      && error.reason === 'DUPLICATE_ENTRY',
+  );
+});
+
+test('refuse une entree DOCX chiffree', async () => {
+  const buffer = createSecurityDocx([
+    {
+      name: 'word/chiffre.bin',
+      data: 'contenu fictif',
+      flags: 1,
+    },
+  ]);
+
+  await assert.rejects(
+    validateDocxContainer(buffer),
+    (error) =>
+      error instanceof DocxValidationError,
+  );
+});
+
+test('refuse un ratio de compression suspect', async () => {
+  const buffer = createSecurityDocx([
+    {
+      name: 'word/bombe.txt',
+      data: Buffer.alloc(
+        2 * 1024 * 1024,
+        0x41,
+      ),
+      deflate: true,
+    },
+  ]);
+
+  await assert.rejects(
+    validateDocxContainer(buffer),
+    (error) =>
+      error instanceof DocxValidationError
+      && error.reason
+        === 'SUSPICIOUS_COMPRESSION_RATIO',
+  );
 });
