@@ -1,3 +1,4 @@
+import { CommandPalette } from '@/components/search/CommandPalette';
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -95,6 +96,7 @@ export const AppRouter = () => (
       </a>
 
       <Header />
+      <CommandPalette />
 
       <main id="contenu-principal" className="flex-1">
         <Suspense fallback={<PageLoader />}>
