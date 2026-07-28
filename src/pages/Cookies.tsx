@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 const rows = [
   ['Session et sécurité', 'Strictement nécessaire', 'Maintien de la connexion, renouvellement de session, protection contre les accès non autorisés.', 'Durée de la session ou durée technique strictement nécessaire.'],
   ['Brouillon local RIASEC', 'Fonctionnel', 'Reprise du questionnaire sur le même navigateur et le même appareil.', 'Jusqu’à la soumission, la suppression manuelle ou 30 jours sans activité lorsque le mécanisme d’expiration est activé.'],
@@ -9,6 +10,7 @@ const rows = [
 ];
 
 export default function Cookies() {
+  usePageMeta({ title: "Gestion des cookies", description: "Informations et préférences sur l’utilisation des cookies sur MAKOKI.", path: "/cookies" });
   return (
     <main className="min-h-screen bg-white px-6 pb-20 pt-28">
       <article className="mx-auto max-w-5xl">

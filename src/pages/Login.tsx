@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -36,6 +37,7 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
+  usePageMeta({ title: "Connexion", description: "Connectez-vous à votre compte MAKOKI pour accéder à vos passations et résultats d’orientation.", path: "/login" });
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const { signIn, user } = useAuth();

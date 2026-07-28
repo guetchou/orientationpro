@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -63,6 +64,7 @@ const registerSchema = z
 type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function Register() {
+  usePageMeta({ title: "Créer un compte", description: "Créez votre compte MAKOKI pour enregistrer vos passations et vos résultats d’orientation.", path: "/register" });
   const [showPassword, setShowPassword] = useState(false);
   const [created, setCreated] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);

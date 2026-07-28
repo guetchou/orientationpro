@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { learningStyleQuestions } from "@/components/tests/learning/LearningStyl
 import { analyzeLearningStyleResults } from "@/components/tests/learning/LearningStyleAnalyzer";
 
 export default function LearningTest() {
+  usePageMeta({ title: "Test de style d’apprentissage", description: "Identifiez votre façon d’apprendre pour mieux choisir vos études et méthodes de travail.", path: "/tests/learning" });
   const {
     currentQuestion,
     totalQuestions,

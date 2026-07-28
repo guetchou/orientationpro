@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { ArrowRight, BriefcaseBusiness, Building2, FileSearch, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ const organizationFeatures = [
 ];
 
 export default function RecruitmentPage() {
+  usePageMeta({ title: "Recrutement", description: "Espace recrutement de MAKOKI : offres, candidatures et outils pour les recruteurs.", path: "/recruitment" });
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
       <div className="mx-auto max-w-6xl">
