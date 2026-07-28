@@ -58,6 +58,18 @@ const createCareerRouter = ({ store, authenticate, hasPermission }) => {
     return res.status(200).json(result);
   }));
 
+  router.get('/recommendations/:resultId', requirePermission(hasPermission, 'career.match.read_own'), route(async (req, res) => {
+    const result = await store.recommendProfileCareers({
+      accountId: req.auth.account.id,
+      resultId: req.params.resultId,
+      locale: requestedLocale(req),
+      includeLocallyExcluded: req.query.includeLocallyExcluded === 'true',
+      limit: req.query.limit,
+    });
+    if (!result) return res.status(404).json({ error: { code: 'ORIENTATION_RESULT_NOT_FOUND', message: 'The orientation result does not exist for the authenticated account.' } });
+    return res.status(200).json(result);
+  }));
+
   return router;
 };
 
