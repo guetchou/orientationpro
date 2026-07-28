@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { createConfig, loadEscoDataset, parseCrosswalk, parseCsv, parseOccupationSkillRelations, parseOccupations, parseSkills, persistEscoDataset } = require('../scripts/import-esco-catalog');
+const { createConfig, loadEscoDataset, parseCrosswalk, parseCrosswalkCsv, parseCsv, parseOccupationSkillRelations, parseOccupations, parseSkills, persistEscoDataset } = require('../scripts/import-esco-catalog');
 
 const dataset = () => ({
   occupations: [{ uri: 'http://data.europa.eu/esco/occupation/nurse', code: 'nurse', iscoCode: '2221', preferredLabel: 'infirmier/infirmière', description: 'Dispense des soins.', aliases: ['infirmier'], status: 'active', metadata: {} }],
@@ -13,7 +13,7 @@ const dataset = () => ({
   crosswalk: [{ onetCode: '29-1141.00', escoUri: 'http://data.europa.eu/esco/occupation/nurse', mappingKind: 'close', confidenceScore: null, confidenceLevel: 'unknown', mappedAt: null, sourceRow: {} }],
   files: {}, contentSha256: 'e'.repeat(64),
 });
-const config = (overrides = {}) => ({ sourceId: 'esco:1.2.1:fr', version: '1.2.1', locale: 'fr', accessDate: '2026-07-28', crosswalkUrl: 'https://example.test/crosswalk.csv', onetVersion: '30.3', allowSourceReplace: false, ...overrides });
+const config = (overrides = {}) => ({ sourceId: 'esco:1.2.1:fr', version: '1.2.1', locale: 'fr', accessDate: '2026-07-28', crosswalkUrl: 'https://example.test/crosswalk.csv', onetVersion: '30.3', minCrosswalks: 1, allowSourceReplace: false, ...overrides });
 const fakePool = ({ existing = null, failOn = null } = {}) => {
   const state = { began: 0, committed: 0, rolledBack: 0, statements: [] };
   const connection = {
@@ -42,6 +42,19 @@ test('official crosswalk keeps provenance without invented validation, score or 
   assert.equal(Object.hasOwn(mapping, 'reviewStatus'), false);
 });
 
+test('official crosswalk skips its metadata preamble and recognizes published headers', () => {
+  const [mapping] = parseCrosswalkCsv([
+    'Mapping project name,ESCO-O*NET Crosswalk,,,,,',
+    'Classification 1 Name,O*NET,,,,,',
+    ',,,,,,',
+    'O*NET Id,O*NET Title,O*NET Description,ESCO or ISCO URI,ESCO or ISCO Title,ESCO or ISCO Description,Type of Match',
+    '29-1141.00,Registered Nurses,,http://data.europa.eu/esco/occupation/nurse,infirmier,,exactMatch',
+  ].join('\n'));
+  assert.equal(mapping.onetCode, '29-1141.00');
+  assert.equal(mapping.escoUri, 'http://data.europa.eu/esco/occupation/nurse');
+  assert.equal(mapping.mappingKind, 'exact');
+});
+
 test('crosswalk preserves a confidence and date only when the source provides them', () => {
   const [mapping] = parseCrosswalk([{
     onetCode: '29-1141.00',
@@ -61,6 +74,7 @@ test('config pins version, locale, thresholds and replacement guard', () => {
   assert.equal(value.sourceId, 'esco:1.2.1:fr');
   assert.equal(value.minOccupations, 2900);
   assert.equal(value.minSkills, 13000);
+  assert.equal(value.minCrosswalks, 1000);
   assert.equal(value.allowSourceReplace, false);
 });
 
@@ -72,7 +86,7 @@ test('local package computes hashes and enforces minimum volumes', async () => {
     await fs.writeFile(path.join(directory, 'occupationSkillRelations.csv'), 'occupationUri,skillUri,relationType\nuri:o,uri:s,essential\n');
     const crosswalk = path.join(directory, 'crosswalk.csv');
     await fs.writeFile(crosswalk, 'onetCode,escoUri,mappingRelation\n29-1141.00,uri:o,exactMatch\n');
-    const cfg = createConfig({ ESCO_ARCHIVE_PATH: directory, ESCO_CROSSWALK_PATH: crosswalk, ESCO_MIN_OCCUPATIONS: '1', ESCO_MIN_SKILLS: '1' });
+    const cfg = createConfig({ ESCO_ARCHIVE_PATH: directory, ESCO_CROSSWALK_PATH: crosswalk, ESCO_MIN_OCCUPATIONS: '1', ESCO_MIN_SKILLS: '1', ESCO_MIN_CROSSWALKS: '1' });
     const loaded = await loadEscoDataset(cfg);
     assert.match(loaded.contentSha256, /^[a-f0-9]{64}$/u);
     await assert.rejects(loadEscoDataset({ ...cfg, minOccupations: 2 }), /below 2/u);
