@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ApiError } from '@/lib/apiClient';
+import { ApiError, oauthStartUrl } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,6 +88,12 @@ export default function Register() {
       }
       setServerError(messageForError(caught));
     }
+  };
+
+  const startSocialRegistration = async (provider: 'google' | 'meta') => {
+    const consentValid = await form.trigger(['confirmedAge', 'acceptedTerms'], { shouldFocus: true });
+    if (!consentValid) return;
+    window.location.assign(oauthStartUrl(provider));
   };
 
   const submitting = form.formState.isSubmitting;
@@ -272,6 +278,19 @@ export default function Register() {
                       {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Créer le compte
                     </Button>
+                    <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
+                      <span className="h-px flex-1 bg-gray-200" />
+                      ou inscription sociale
+                      <span className="h-px flex-1 bg-gray-200" />
+                    </div>
+                    <div className="grid gap-3">
+                      <Button type="button" variant="outline" className="w-full" disabled={submitting} onClick={() => void startSocialRegistration('google')}>
+                        Continuer avec Google
+                      </Button>
+                      <Button type="button" variant="outline" className="w-full" disabled={submitting} onClick={() => void startSocialRegistration('meta')}>
+                        Continuer avec Facebook
+                      </Button>
+                    </div>
                   </form>
                 </Form>
               </>
