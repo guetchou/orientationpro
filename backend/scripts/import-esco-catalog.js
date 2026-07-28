@@ -26,7 +26,7 @@ const createConfig = (env = process.env) => {
   const archivePath = env.ESCO_ARCHIVE_PATH ? path.resolve(env.ESCO_ARCHIVE_PATH) : null;
   const archiveUrl = env.ESCO_ARCHIVE_URL ? String(env.ESCO_ARCHIVE_URL) : null;
   if (!version) throw new Error('ESCO_VERSION is required.');
-  if (!/^[a-z]{2}(?:-[A-Z]{2})?$/u.test(locale)) throw new Error(`Unsupported ESCO_LOCALE: ${locale}`);
+  if (!/^[a-z]{2}(?:-[a-z]{2})?$/u.test(locale)) throw new Error(`Unsupported ESCO_LOCALE: ${locale}`);
   if (!archivePath && !archiveUrl) throw new Error('ESCO_ARCHIVE_PATH or ESCO_ARCHIVE_URL is required.');
   return {
     version,
@@ -209,12 +209,18 @@ const confidenceDetails = (row) => {
   const numeric = text === '' ? Number.NaN : Number(text.replace(',', '.'));
   if (Number.isFinite(numeric)) {
     const score = numeric <= 1 ? numeric * 100 : numeric;
-    return { score: Math.max(0, Math.min(100, Math.round(score * 1000) / 1000)), level: score >= 90 ? 'high' : score >= 70 ? 'medium' : 'low' };
+    const boundedScore = Math.max(0, Math.min(100, Math.round(score * 1000) / 1000));
+    return {
+      score: boundedScore,
+      level: boundedScore >= 90 ? 'high' : boundedScore >= 70 ? 'medium' : 'low',
+    };
   }
-  const relation = normalizedKey(valueFor(row, ['mappingRelation', 'mapping relation', 'relationType']));
-  if (relation.includes('exact')) return { score: null, level: 'high' };
-  if (relation.includes('close')) return { score: null, level: 'medium' };
   return { score: null, level: 'unknown' };
+};
+
+const sourceMappedAt = (row) => {
+  const value = valueFor(row, ['mappedAt', 'mappingDate', 'modifiedDate', 'date']);
+  return /^\d{4}-\d{2}-\d{2}$/u.test(value) ? value : null;
 };
 
 const parseCrosswalk = (rows) => rows.map((row) => {
@@ -224,7 +230,15 @@ const parseCrosswalk = (rows) => rows.map((row) => {
   const relation = normalizedKey(valueFor(row, ['mappingRelation', 'mapping relation', 'relationType']));
   const confidence = confidenceDetails(row);
   const mappingKind = relation.includes('exact') ? 'exact' : relation.includes('broad') ? 'broad' : relation.includes('narrow') ? 'narrow' : 'close';
-  return { onetCode, escoUri, mappingKind, confidenceScore: confidence.score, confidenceLevel: confidence.level, sourceRow: row };
+  return {
+    onetCode,
+    escoUri,
+    mappingKind,
+    confidenceScore: confidence.score,
+    confidenceLevel: confidence.level,
+    mappedAt: sourceMappedAt(row),
+    sourceRow: row,
+  };
 }).filter(Boolean);
 
 const loadEscoDataset = async (config, dependencies = {}) => {
@@ -320,7 +334,7 @@ const persistEscoDataset = async ({ config, dataset, pool }) => {
         `INSERT INTO career_occupation_crosswalks (source_occupation_id, target_occupation_id, mapping_kind, confidence_score, confidence_level, review_status, source_reference, source_version, mapped_at, provenance_json)
          VALUES (?, ?, ?, ?, ?, 'official', ?, 'official-esco-onet-crosswalk-2023-08', ?, ?)
          ON DUPLICATE KEY UPDATE confidence_score=IF(review_status IN ('proposed','official'),VALUES(confidence_score),confidence_score), confidence_level=IF(review_status IN ('proposed','official'),VALUES(confidence_level),confidence_level), source_reference=IF(review_status IN ('proposed','official'),VALUES(source_reference),source_reference), source_version=IF(review_status IN ('proposed','official'),VALUES(source_version),source_version), mapped_at=IF(review_status IN ('proposed','official'),VALUES(mapped_at),mapped_at), provenance_json=IF(review_status IN ('proposed','official'),VALUES(provenance_json),provenance_json), review_status=IF(review_status='proposed','official',review_status)`,
-        [sourceOccupationId, targetOccupationId, mapping.mappingKind, mapping.confidenceScore, mapping.confidenceLevel, config.crosswalkUrl, config.accessDate, JSON.stringify({ source: 'European Commission ESCO O*NET crosswalk', sourceUrl: config.crosswalkUrl, technicalReport: OFFICIAL_CROSSWALK_REPORT, row: mapping.sourceRow })],
+        [sourceOccupationId, targetOccupationId, mapping.mappingKind, mapping.confidenceScore, mapping.confidenceLevel, config.crosswalkUrl, mapping.mappedAt, JSON.stringify({ source: 'European Commission ESCO O*NET crosswalk', sourceUrl: config.crosswalkUrl, technicalReport: OFFICIAL_CROSSWALK_REPORT, accessDate: config.accessDate, row: mapping.sourceRow })],
       );
       importedCrosswalks += 1;
       confidenceDistribution[mapping.confidenceLevel] += 1;
@@ -348,4 +362,4 @@ if (require.main === module) {
   importEscoCatalog().then((result) => process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)).catch((error) => { process.stderr.write(`ESCO import failed: ${error.message}\n`); process.exitCode = 1; });
 }
 
-module.exports = { LICENSE_NAME, LICENSE_URL, OFFICIAL_CROSSWALK_REPORT, OFFICIAL_CROSSWALK_URL, OFFICIAL_DOWNLOAD_PAGE, confidenceDetails, createConfig, downloadBuffer, importEscoCatalog, listFor, loadEscoDataset, normalizeOnetCode, parseCrosswalk, parseCsv, parseOccupationSkillRelations, parseOccupations, parseSkills, persistEscoDataset, sha256 };
+module.exports = { LICENSE_NAME, LICENSE_URL, OFFICIAL_CROSSWALK_REPORT, OFFICIAL_CROSSWALK_URL, OFFICIAL_DOWNLOAD_PAGE, confidenceDetails, createConfig, downloadBuffer, importEscoCatalog, listFor, loadEscoDataset, normalizeOnetCode, parseCrosswalk, parseCsv, parseOccupationSkillRelations, parseOccupations, parseSkills, persistEscoDataset, sha256, sourceMappedAt };
