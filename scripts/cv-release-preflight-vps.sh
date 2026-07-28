@@ -10,7 +10,7 @@ PROJECT_NAME=${PROJECT_NAME:-orientationpro_riasec}
 VALIDATION_ROOT=${VALIDATION_ROOT:-/opt/validation}
 EXPECTED_MAIN_SHA=${EXPECTED_MAIN_SHA:?EXPECTED_MAIN_SHA is required}
 
-for command in docker git gzip sha256sum tar openssl; do
+for command in docker git gzip sha256sum tar openssl cmp; do
   command -v "${command}" >/dev/null 2>&1 || {
     printf 'Missing required command: %s\n' "${command}" >&2
     exit 1
@@ -220,6 +220,7 @@ printf '=== API image smoke with CV V1 disabled ===\n'
 docker run -d \
   --name "${API_NAME}" \
   --network "${NETWORK_NAME}" \
+  --network-alias api-preflight \
   -e PORT=3000 \
   -e NODE_ENV=test \
   -e LEGACY_AUTH_ENABLED=false \
@@ -278,12 +279,6 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 NODE
-
-docker network connect \
-  --alias api-preflight \
-  "${NETWORK_NAME}" \
-  "${API_NAME}" \
-  >/dev/null 2>&1 || true
 
 docker run --rm \
   --network "${NETWORK_NAME}" \
