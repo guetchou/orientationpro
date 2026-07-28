@@ -1,190 +1,146 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Home, 
-  BookOpen, 
-  Users, 
-  Briefcase,
-  FileText,
-  Settings,
-  User,
-  Calendar,
-  MessageSquare,
-  Phone,
-  Mail,
-  MapPin,
-  Globe,
-  Star,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Award,
-  Lightbulb
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, Loader2, Save, User } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
-const Profile: React.FC = () => {
+interface ProfileForm {
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  education_level: string;
+  current_job: string;
+  bio: string;
+}
+
+const emptyProfile: ProfileForm = {
+  email: '',
+  first_name: '',
+  last_name: '',
+  phone: '',
+  education_level: '',
+  current_job: '',
+  bio: '',
+};
+
+export default function Profile() {
+  const [profile, setProfile] = useState<ProfileForm>(emptyProfile);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const user = authData.user;
+        if (!user?.email) return;
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('email, first_name, last_name, phone, education_level, current_job, bio')
+          .eq('email', user.email)
+          .maybeSingle();
+        if (error) throw error;
+
+        setProfile({
+          email: user.email,
+          first_name: data?.first_name ?? '',
+          last_name: data?.last_name ?? '',
+          phone: data?.phone ?? '',
+          education_level: data?.education_level ?? '',
+          current_job: data?.current_job ?? '',
+          bio: data?.bio ?? '',
+        });
+      } catch (error) {
+        console.error('Unable to load profile', error);
+        toast.error('Impossible de charger votre profil.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadProfile();
+  }, []);
+
+  const updateField = (field: keyof ProfileForm, value: string) => {
+    setProfile((current) => ({ ...current, [field]: value }));
+  };
+
+  const saveProfile = async () => {
+    setSaving(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData.user;
+      if (!user?.id || !user.email) throw new Error('Utilisateur non connecté');
+
+      const { error } = await supabase.from('profiles').upsert(
+        {
+          id: user.id,
+          email: user.email,
+          first_name: profile.first_name || null,
+          last_name: profile.last_name || null,
+          full_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || null,
+          phone: profile.phone || null,
+          education_level: profile.education_level || null,
+          current_job: profile.current_job || null,
+          bio: profile.bio || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'email' },
+      );
+      if (error) throw error;
+      toast.success('Profil enregistré.');
+    } catch (error) {
+      console.error('Unable to save profile', error);
+      toast.error("Impossible d'enregistrer votre profil.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
-                <ArrowLeft size={20} />
-                <span>Retour à l'accueil</span>
-              </Link>
+      <div className="container mx-auto max-w-3xl px-4 py-8">
+        <Link to="/dashboard" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-700">
+          <ArrowLeft className="h-4 w-4" /> Retour au tableau de bord
+        </Link>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Mon profil</CardTitle>
+            <CardDescription>Ces informations personnalisent vos résultats et recommandations.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div><Label htmlFor="first_name">Prénom</Label><Input id="first_name" value={profile.first_name} onChange={(e) => updateField('first_name', e.target.value)} /></div>
+              <div><Label htmlFor="last_name">Nom</Label><Input id="last_name" value={profile.last_name} onChange={(e) => updateField('last_name', e.target.value)} /></div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Orientation Pro Congo
-              </Badge>
+            <div><Label htmlFor="email">E-mail</Label><Input id="email" value={profile.email} disabled /></div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div><Label htmlFor="phone">Téléphone</Label><Input id="phone" value={profile.phone} onChange={(e) => updateField('phone', e.target.value)} /></div>
+              <div><Label htmlFor="education">Niveau d'études</Label><Input id="education" value={profile.education_level} onChange={(e) => updateField('education_level', e.target.value)} /></div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Page Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Profile
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Page en cours de développement pour /profile
-            </p>
-          </div>
-
-          {/* Content Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  <span>Fonctionnalités</span>
-                </CardTitle>
-                <CardDescription>
-                  Découvrez les fonctionnalités disponibles
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Interface moderne</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Navigation intuitive</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Design responsive</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-green-600" />
-                  <span>Support</span>
-                </CardTitle>
-                <CardDescription>
-                  Besoin d'aide ? Contactez-nous
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">support@orientationpro.cg</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">+242 06 123 456</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-red-500" />
-                    <span className="text-sm">Brazzaville, Congo</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                  <span>Statistiques</span>
-                </CardTitle>
-                <CardDescription>
-                  Données et métriques
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Utilisateurs actifs</span>
-                    <Badge variant="secondary">1,234</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Tests complétés</span>
-                    <Badge variant="secondary">5,678</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Satisfaction</span>
-                    <Badge variant="secondary">98%</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="text-center space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                <Link to="/">
-                  <Home className="h-4 w-4 mr-2" />
-                  Retour à l'accueil
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/tests">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Découvrir les tests
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/conseiller">
-                  <Users className="h-4 w-4 mr-2" />
-                  Nos conseillers
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Footer Info */}
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center space-x-2 bg-white rounded-lg px-4 py-2 shadow-sm">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">
-                Page en cours de développement - Mise à jour prévue bientôt
-              </span>
-            </div>
-          </div>
-        </div>
+            <div><Label htmlFor="job">Activité actuelle</Label><Input id="job" value={profile.current_job} onChange={(e) => updateField('current_job', e.target.value)} /></div>
+            <div><Label htmlFor="bio">Présentation</Label><Textarea id="bio" rows={5} value={profile.bio} onChange={(e) => updateField('bio', e.target.value)} /></div>
+            <Button onClick={saveProfile} disabled={saving}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Enregistrer
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-};
-
-export default Profile;
+}
