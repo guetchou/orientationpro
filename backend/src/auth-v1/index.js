@@ -9,6 +9,8 @@ const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
 const REFRESH_COOKIE = 'orientationpro_refresh';
+const OAUTH_STATE_COOKIE = 'orientationpro_oauth_state';
+const OAUTH_TRANSACTION_TTL_MS = 10 * 60 * 1000;
 
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -28,7 +30,15 @@ const readCookie = (req, name) => {
 };
 const route = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 
-const createAuthRouter = ({ store, email, jwtSecret, cookieSecure = true }) => {
+const createAuthRouter = ({
+  store,
+  email,
+  jwtSecret,
+  cookieSecure = true,
+  oauthProviders = {},
+  frontendUrl = 'http://localhost:5173',
+  oauthCallbackBaseUrl = frontendUrl,
+}) => {
   if (!store || !email) {
     throw new Error('Auth store and email adapter are required');
   }
@@ -38,6 +48,119 @@ const createAuthRouter = ({ store, email, jwtSecret, cookieSecure = true }) => {
 
   const router = express.Router();
 
+  const oauthRedirect = (res, code) => {
+    const target = new URL('/login', frontendUrl);
+    target.searchParams.set('oauth', 'error');
+    target.searchParams.set('code', code);
+    return res.redirect(302, target.toString());
+  };
+
+  router.get('/oauth/:provider/start', route(async (req, res) => {
+    const providerName = String(req.params.provider || '');
+    const provider = oauthProviders[providerName];
+    if (!provider) {
+      return res.status(404).json({
+        error: { code: 'OAUTH_PROVIDER_UNAVAILABLE', message: 'This login provider is unavailable.' },
+      });
+    }
+
+    const state = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const nonce = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const codeVerifier = crypto.randomBytes(48).toString('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    const redirectUri = new URL(
+      `/api/v1/auth/oauth/${providerName}/callback`,
+      oauthCallbackBaseUrl,
+    ).toString();
+    await store.saveOAuthTransaction({
+      stateHash: hashToken(state),
+      provider: providerName,
+      nonce,
+      codeVerifier,
+      expiresAt: new Date(Date.now() + OAUTH_TRANSACTION_TTL_MS),
+    });
+    res.cookie(OAUTH_STATE_COOKIE, state, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      maxAge: OAUTH_TRANSACTION_TTL_MS,
+      path: `/api/v1/auth/oauth/${providerName}/callback`,
+    });
+    return res.redirect(302, provider.authorizationUrl({
+      state,
+      nonce,
+      codeChallenge,
+      redirectUri,
+    }));
+  }));
+
+  router.get('/oauth/:provider/callback', route(async (req, res) => {
+    const providerName = String(req.params.provider || '');
+    const provider = oauthProviders[providerName];
+    const state = String(req.query.state || '');
+    const cookieState = readCookie(req, OAUTH_STATE_COOKIE) || '';
+    res.clearCookie(OAUTH_STATE_COOKIE, {
+      path: `/api/v1/auth/oauth/${providerName}/callback`,
+    });
+    if (!provider || req.query.error || !state || !cookieState) {
+      return oauthRedirect(res, 'OAUTH_CANCELLED');
+    }
+    const stateMatches = state.length === cookieState.length
+      && crypto.timingSafeEqual(Buffer.from(state), Buffer.from(cookieState));
+    if (!stateMatches) return oauthRedirect(res, 'OAUTH_STATE_INVALID');
+
+    const transaction = await store.consumeOAuthTransaction({
+      stateHash: hashToken(state),
+      provider: providerName,
+      now: new Date(),
+    });
+    if (!transaction || !req.query.code) return oauthRedirect(res, 'OAUTH_STATE_INVALID');
+
+    let identity;
+    try {
+      const redirectUri = new URL(
+        `/api/v1/auth/oauth/${providerName}/callback`,
+        oauthCallbackBaseUrl,
+      ).toString();
+      identity = await provider.exchange({
+        code: String(req.query.code),
+        nonce: transaction.nonce,
+        codeVerifier: transaction.codeVerifier,
+        redirectUri,
+      });
+    } catch (error) {
+      return oauthRedirect(res, 'OAUTH_PROVIDER_REJECTED');
+    }
+
+    const passwordHash = await bcrypt.hash(
+      crypto.randomBytes(48).toString('base64url'),
+      12,
+    );
+    const resolved = await store.resolveOAuthIdentity({
+      ...identity,
+      email: normalizeEmail(identity.email),
+      passwordHash,
+    });
+    if (resolved.status === 'link_required') return oauthRedirect(res, 'ACCOUNT_LINK_REQUIRED');
+    if (resolved.status !== 'authenticated') return oauthRedirect(res, 'OAUTH_ACCOUNT_UNAVAILABLE');
+
+    const refreshToken = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    await store.createSession({
+      accountId: resolved.account.id,
+      refreshTokenHash: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000),
+    });
+    res.cookie(REFRESH_COOKIE, refreshToken, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000,
+      path: '/api/v1/auth',
+    });
+    const target = new URL('/login', frontendUrl);
+    target.searchParams.set('oauth', 'success');
+    return res.redirect(302, target.toString());
+  }));
   router.post('/register', route(async (req, res) => {
     const normalizedEmail = normalizeEmail(req.body?.email);
     const password = String(req.body?.password || '');
