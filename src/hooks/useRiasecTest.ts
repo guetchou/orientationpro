@@ -28,13 +28,11 @@ export const useRiasecTest = () => {
     setLoading(true);
     const newAnswers = [...answers, score];
     setAnswers(newAnswers);
-
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setLoading(false);
       return;
     }
-
     await completeTest(newAnswers, questions);
   };
 
@@ -94,8 +92,8 @@ export const useRiasecTest = () => {
       const aiInsights = await getAIEnhancedAnalysis("riasec", testResults);
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
-
       const authUser = authData.user;
+
       if (authUser?.id && authUser.email) {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -110,17 +108,10 @@ export const useRiasecTest = () => {
           )
           .select("id")
           .single();
-
         if (profileError) throw profileError;
 
         const averageScore = Math.round(
-          (testResults.realistic +
-            testResults.investigative +
-            testResults.artistic +
-            testResults.social +
-            testResults.enterprising +
-            testResults.conventional) /
-            6,
+          (testResults.realistic + testResults.investigative + testResults.artistic + testResults.social + testResults.enterprising + testResults.conventional) / 6,
         );
 
         const { error: saveError } = await supabase.from("test_results").insert({
@@ -129,17 +120,15 @@ export const useRiasecTest = () => {
           test_data: { answers: finalAnswers },
           results: { ...testResults, aiInsights },
           score: averageScore,
-          interpretation: aiInsights?.summary ?? null,
-          recommendations: aiInsights?.recommendations ?? [],
+          interpretation: aiInsights.analysis,
+          recommendations: aiInsights.recommendations,
           completed_at: new Date().toISOString(),
         });
-
         if (saveError) throw saveError;
         toast.success("Test complété et enregistré dans votre tableau de bord.");
       } else {
         toast.info("Test complété. Connectez-vous pour conserver le résultat.");
       }
-
       setCompleted(true);
     } catch (error) {
       console.error("Error finalizing test:", error);
@@ -151,22 +140,8 @@ export const useRiasecTest = () => {
   };
 
   const viewResults = () => {
-    if (results) {
-      navigate("/test-results", { state: { results, testType: "riasec" } });
-    }
+    if (results) navigate("/test-results", { state: { results, testType: "riasec" } });
   };
 
-  return {
-    started,
-    completed,
-    currentQuestion,
-    answers,
-    loading,
-    results,
-    resetTest,
-    startTest,
-    handleAnswer,
-    handlePrevious,
-    viewResults,
-  };
+  return { started, completed, currentQuestion, answers, loading, results, resetTest, startTest, handleAnswer, handlePrevious, viewResults };
 };
