@@ -4,13 +4,12 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -95,200 +94,169 @@ export default function Register() {
   const submitting = form.formState.isSubmitting;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 px-4 py-24">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-      >
-        <Card className="mx-auto w-full max-w-md border-0 shadow-2xl">
-          <CardHeader className="space-y-4 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-blue-600 text-white shadow-lg">
-              {created ? <CheckCircle2 className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
+    <AuthLayout
+      headline="Rejoins MAKOKI"
+      tagline="Crée ton compte pour passer les tests, enregistrer tes résultats et découvrir les métiers qui te correspondent."
+      imageName="orientation-etudiants"
+    >
+      <div className="mb-8">
+        <h1 className="font-heading text-3xl font-bold text-slate-900">Créer un compte</h1>
+        <p className="mt-2 text-slate-600">Quelques secondes suffisent pour commencer.</p>
+      </div>
+
+      {created ? (
+        <div className="space-y-5 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+            <CheckCircle2 className="h-7 w-7" />
+          </div>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            Le compte a été créé. Consulte ta messagerie et ouvre le lien de vérification avant de te connecter.
+          </div>
+          <Button asChild size="lg" className="w-full">
+            <Link to="/login">Aller à la connexion</Link>
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+            L’inscription est actuellement réservée aux personnes âgées d’au moins 16 ans. L’ouverture aux 14–15 ans sera
+            activée après mise en place d’un consentement parental conjoint et vérifiable.
+          </div>
+          {serverError && (
+            <div className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{serverError}</span>
             </div>
-            <div>
-              <CardTitle className="text-3xl">Créer un compte MAKOKI</CardTitle>
-              <CardDescription className="mt-2">
-                Un compte est nécessaire pour enregistrer les passations et les résultats d’orientation.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {created ? (
-              <div className="space-y-5 text-center">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                  Le compte a été créé. Consulte ta messagerie et ouvre le lien de vérification avant de te connecter.
-                </div>
-                <Button asChild className="w-full">
-                  <Link to="/login">Aller à la connexion</Link>
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-                  L’inscription est actuellement réservée aux personnes âgées d’au moins 16 ans. L’ouverture aux 14–15 ans
-                  sera activée après mise en place d’un consentement parental conjoint et vérifiable.
-                </div>
-                {serverError && (
-                  <div
-                    className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-                    role="alert"
-                  >
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{serverError}</span>
-                  </div>
-                )}
-                <Form {...form}>
-                  <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Adresse e-mail</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                              <Input
-                                type="email"
-                                autoComplete="email"
-                                placeholder="prenom@exemple.cg"
-                                className="pl-10"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Mot de passe</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                              <Input
-                                type={showPassword ? 'text' : 'password'}
-                                autoComplete="new-password"
-                                className="px-10"
-                                {...field}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword((value) => !value)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                              >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </button>
-                            </div>
-                          </FormControl>
-                          {password ? (
-                            <div className="mt-2" aria-live="polite">
-                              <div className="flex gap-1">
-                                {[0, 1, 2, 3].map((i) => (
-                                  <span
-                                    key={i}
-                                    className={cn(
-                                      'h-1.5 flex-1 rounded-full transition-colors',
-                                      i < strength.score ? strength.color : 'bg-gray-200',
-                                    )}
-                                  />
-                                ))}
-                              </div>
-                              <p className="mt-1 text-xs text-gray-500">
-                                Force : <span className="font-medium">{strength.label}</span> — 12 caractères minimum.
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="mt-1 text-xs text-gray-500">12 caractères minimum.</p>
-                          )}
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="confirmation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirmer le mot de passe</FormLabel>
-                          <FormControl>
-                            <Input
-                              type={showPassword ? 'text' : 'password'}
-                              autoComplete="new-password"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="confirmedAge"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-start gap-3">
-                            <FormControl>
-                              <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-1" />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal leading-6 text-slate-700">
-                              Je confirme avoir au moins 16 ans.
-                            </FormLabel>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="acceptedTerms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-start gap-3">
-                            <FormControl>
-                              <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-1" />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal leading-6 text-slate-700">
-                              J’accepte les{' '}
-                              <Link className="font-medium text-emerald-700 underline" to="/terms">
-                                conditions d’utilisation
-                              </Link>{' '}
-                              et la{' '}
-                              <Link className="font-medium text-emerald-700 underline" to="/privacy">
-                                politique de confidentialité
-                              </Link>
-                              .
-                            </FormLabel>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full" disabled={submitting || !form.formState.isValid}>
-                      {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Créer le compte
-                    </Button>
-                  </form>
-                </Form>
-              </>
-            )}
-          </CardContent>
-          {!created && (
-            <CardFooter className="justify-center text-sm text-gray-600">
-              Déjà inscrit ?&nbsp;
-              <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
-                Se connecter
-              </Link>
-            </CardFooter>
           )}
-        </Card>
-      </motion.div>
-    </main>
+          <Form {...form}>
+            <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Adresse e-mail</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mot de passe</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="px-10" {...field} />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((value) => !value)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                          aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    {password ? (
+                      <div className="mt-2" aria-live="polite">
+                        <div className="flex gap-1">
+                          {[0, 1, 2, 3].map((i) => (
+                            <span
+                              key={i}
+                              className={cn('h-1.5 flex-1 rounded-full transition-colors', i < strength.score ? strength.color : 'bg-gray-200')}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Force : <span className="font-medium">{strength.label}</span> — 12 caractères minimum.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-xs text-gray-500">12 caractères minimum.</p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmer le mot de passe</FormLabel>
+                    <FormControl>
+                      <Input type={showPassword ? 'text' : 'password'} autoComplete="new-password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmedAge"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-1" />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-6 text-slate-700">
+                        Je confirme avoir au moins 16 ans.
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="acceptedTerms"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-1" />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-6 text-slate-700">
+                        J’accepte les{' '}
+                        <Link className="font-medium text-emerald-700 underline" to="/terms">
+                          conditions d’utilisation
+                        </Link>{' '}
+                        et la{' '}
+                        <Link className="font-medium text-emerald-700 underline" to="/privacy">
+                          politique de confidentialité
+                        </Link>
+                        .
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" size="lg" className="w-full" disabled={submitting || !form.formState.isValid}>
+                {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Créer le compte
+              </Button>
+            </form>
+          </Form>
+
+          <p className="mt-8 text-center text-sm text-gray-600">
+            Déjà inscrit ?{' '}
+            <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
+              Se connecter
+            </Link>
+          </p>
+        </>
+      )}
+    </AuthLayout>
   );
 }
