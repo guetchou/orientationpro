@@ -23,11 +23,12 @@ test('adaptive profile persists education, sourced skills and account-scoped hyp
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const sourceVersion = `test-${crypto.createHash('sha256').update(suffix).digest('hex').slice(0, 12)}`;
   const accountA = crypto.randomUUID();
   const accountB = crypto.randomUUID();
   const hypothesisId = crypto.randomUUID();
   const cvSkillId = crypto.randomUUID();
-  const sourceId = `internal:profile-test:${suffix}`;
+  const sourceId = `esco:${sourceVersion}:fr`;
   const catalogSkillId = `${sourceId}:skill`;
   const escoUri = `http://data.europa.eu/esco/skill/profile-test-${suffix}`;
 
@@ -44,10 +45,10 @@ test('adaptive profile persists education, sourced skills and account-scoped hyp
          id, source_kind, source_version, locale, title, source_url,
          license_name, license_url, attribution_text, content_sha256,
          record_count, metadata_json
-       ) VALUES (?, 'internal', 'profile-test', 'fr', 'Catalogue profil test',
+       ) VALUES (?, 'esco', ?, 'fr', 'Catalogue ESCO profil test',
                  'https://example.test/profile-source', 'Test license',
                  'https://example.test/license', 'Attribution test', ?, 1, JSON_OBJECT())`,
-      [sourceId, 'b'.repeat(64)],
+      [sourceId, sourceVersion, 'b'.repeat(64)],
     );
     await pool.execute(
       `INSERT INTO career_skills (
