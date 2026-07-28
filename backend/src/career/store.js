@@ -148,6 +148,14 @@ const presentationSelect = `
                    WHEN 'official' THEN 2
                    ELSE 9
                  END,
+                 CASE crosswalk.mapping_kind
+                   WHEN 'exact' THEN 1
+                   WHEN 'close' THEN 2
+                   WHEN 'narrow' THEN 3
+                   WHEN 'broad' THEN 4
+                   WHEN 'manual' THEN 5
+                   ELSE 9
+                 END,
                  CASE crosswalk.confidence_level
                    WHEN 'high' THEN 1
                    WHEN 'medium' THEN 2
