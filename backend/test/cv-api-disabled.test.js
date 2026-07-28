@@ -87,11 +87,17 @@ const waitForServer = async (
 const stopChild = async (child) => {
   if (child.exitCode !== null) return;
 
+  const exited = once(child, 'exit');
   child.kill('SIGTERM');
 
-  const exited = once(child, 'exit');
+  let timeoutId;
   const timeout = new Promise((resolve) => {
-    setTimeout(resolve, 3000, 'timeout');
+    timeoutId = setTimeout(
+      resolve,
+      3000,
+      'timeout',
+    );
+    timeoutId.unref();
   });
 
   const result = await Promise.race([
@@ -99,9 +105,12 @@ const stopChild = async (child) => {
     timeout,
   ]);
 
+  clearTimeout(timeoutId);
+
   if (result === 'timeout' && child.exitCode === null) {
+    const forcedExit = once(child, 'exit');
     child.kill('SIGKILL');
-    await once(child, 'exit');
+    await forcedExit;
   }
 };
 
