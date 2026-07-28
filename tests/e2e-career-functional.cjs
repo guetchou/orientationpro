@@ -316,6 +316,17 @@ const main = async () => {
     assert.equal(ranking.matching.matches.length, 50);
     assert.ok(ranking.matching.matches[0].fitScore >= ranking.matching.matches[49].fitScore);
 
+    const { payload: profileRanking } = await apiRequest(
+      apiBaseUrl,
+      `/api/v1/career/recommendations/${encodeURIComponent(result.id)}?locale=en&limit=50`,
+      { token: primary.accessToken },
+    );
+    assert.equal(profileRanking.matching.eligibleOccupationCount, 923);
+    assert.equal(profileRanking.matching.matches.length, 50);
+    assert.deepEqual(profileRanking.recommendationContext.usedSignals, ['riasec']);
+    assert.ok(profileRanking.recommendationContext.missingSignals.includes('profile'));
+    assert.equal(profileRanking.matching.matches[0].recommendationScore, profileRanking.matching.matches[0].fitScore);
+
     const firstOccupationId = ranking.matching.matches[0].occupationId;
     const { payload: occupationPayload } = await apiRequest(
       apiBaseUrl,
@@ -344,6 +355,12 @@ const main = async () => {
       { token: secondary.accessToken, expectedStatus: 404 },
     );
     assert.equal(isolation.payload.error.code, 'ORIENTATION_RESULT_NOT_FOUND');
+    const profileIsolation = await apiRequest(
+      apiBaseUrl,
+      `/api/v1/career/recommendations/${encodeURIComponent(result.id)}?locale=en&limit=6`,
+      { token: secondary.accessToken, expectedStatus: 404 },
+    );
+    assert.equal(profileIsolation.payload.error.code, 'ORIENTATION_RESULT_NOT_FOUND');
 
     browser = await puppeteer.launch({
       headless: true,
@@ -357,8 +374,9 @@ const main = async () => {
     await page.goto(`${webBaseUrl}/orientation/results/${encodeURIComponent(result.id)}`, {
       waitUntil: 'networkidle0',
     });
-    await waitForText(page, 'Métiers correspondant à ton profil');
-    await waitForText(page, '923 métiers disposent d’un profil RIASEC traçable');
+    await waitForText(page, 'Métiers à explorer selon ton profil');
+    await waitForText(page, 'Signaux utilisés');
+    await waitForText(page, '923 métiers');
     const recommendationCount = await page.$$eval(
       'section[aria-labelledby="career-recommendations-title"] a[href^="/careers/"]',
       (links) => links.length,
@@ -368,7 +386,7 @@ const main = async () => {
     await page.goto(`${webBaseUrl}/orientation/results/${encodeURIComponent(result.id)}/careers`, {
       waitUntil: 'networkidle0',
     });
-    await waitForText(page, 'Classement des métiers');
+    await waitForText(page, 'Classement expliqué des métiers');
     await waitForText(page, '923 métiers classables');
     const rankingLinks = await page.$$eval('a[href^="/careers/"]', (links) => links.map((link) => link.getAttribute('href')));
     assert.equal(rankingLinks.length, 50);
@@ -397,7 +415,7 @@ const main = async () => {
     await page.goto(`${webBaseUrl}/orientation/results/${encodeURIComponent(result.id)}`, {
       waitUntil: 'networkidle0',
     });
-    await waitForText(page, 'Métiers correspondant à ton profil');
+    await waitForText(page, 'Métiers à explorer selon ton profil');
     const mobileMetrics = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
@@ -422,6 +440,7 @@ const main = async () => {
       occupationCount: summary.sources[0].occupationCount,
       matchableCount: summary.sources[0].matchableCount,
       rankedCount: ranking.matching.matches.length,
+      profileRankedCount: profileRanking.matching.matches.length,
       recommendationCount,
       catalogSearchCount: searchPayload.occupations.length,
       isolatedAccountAccess: '404 ORIENTATION_RESULT_NOT_FOUND',
