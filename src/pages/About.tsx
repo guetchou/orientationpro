@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { BookOpenCheck, Compass, Database, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -25,6 +26,7 @@ const pillars = [
 ];
 
 export default function About() {
+  usePageMeta({ title: 'À propos', description: 'La mission de MAKOKI, sa méthode d’orientation basée sur des données sourcées (O*NET, modèle RIASEC) et ses limites.', path: '/about' });
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
       <div className="mx-auto max-w-6xl">
