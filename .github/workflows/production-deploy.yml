@@ -1,0 +1,76 @@
+name: Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type DEPLOY_PRODUCTION to deploy the selected main commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orientationpro-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'DEPLOY_PRODUCTION'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: Production
+      url: https://makoki.org
+    steps:
+      - name: Check out the selected main commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Validate deployment scripts
+        run: |
+          set -Eeuo pipefail
+          bash -n scripts/deploy-production-vps.sh
+          test "${GITHUB_REF}" = refs/heads/main
+          test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
+
+      - name: Configure restricted production SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          test -n "${SSH_PRIVATE_KEY}"
+          test -n "${SSH_KNOWN_HOSTS}"
+          install -d -m 700 "${HOME}/.ssh"
+          printf '%s\n' "${SSH_PRIVATE_KEY}" >"${HOME}/.ssh/orientationpro-production"
+          chmod 600 "${HOME}/.ssh/orientationpro-production"
+          printf '%s\n' "${SSH_KNOWN_HOSTS}" >"${HOME}/.ssh/known_hosts"
+          chmod 600 "${HOME}/.ssh/known_hosts"
+
+      - name: Deploy through the restricted VPS gateway
+        env:
+          PRODUCTION_SSH_HOST: ${{ vars.PRODUCTION_SSH_HOST }}
+          PRODUCTION_SSH_USER: ${{ vars.PRODUCTION_SSH_USER }}
+        run: |
+          set -Eeuo pipefail
+          test -n "${PRODUCTION_SSH_HOST}"
+          test -n "${PRODUCTION_SSH_USER}"
+          ssh \
+            -i "${HOME}/.ssh/orientationpro-production" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${PRODUCTION_SSH_USER}@${PRODUCTION_SSH_HOST}" \
+            "deploy ${GITHUB_SHA}"
+
+      - name: Verify public production endpoints
+        run: |
+          set -Eeuo pipefail
+          curl --fail --retry 12 --retry-all-errors --retry-delay 5 https://makoki.org/ >/dev/null
+          status=$(curl --silent --show-error --output /tmp/health.json --write-out '%{http_code}' \
+            https://makoki.org/api/test/health)
+          test "${status}" = 200
+          grep -q '"status"' /tmp/health.json
