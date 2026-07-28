@@ -112,16 +112,19 @@ test('profile recommendations combine owned RIASEC result, ESCO skills and educa
     await pool.execute(
       `INSERT INTO career_occupations (
          id, catalog_source_id, source_code, locale, preferred_label, description,
-         job_zone, riasec_r, riasec_i, riasec_a, riasec_s, riasec_e, riasec_c,
+         isco_code, job_zone, riasec_r, riasec_i, riasec_a, riasec_s, riasec_e, riasec_c,
          riasec_display_code, riasec_profile_status, riasec_provenance_json,
          local_relevance_status, metadata_json
        ) VALUES
-         (?, ?, 'GENERAL', 'en', 'General close occupation', 'General occupation.', 4,
-          20, 72, 28, 93, 34, 44, 'SIC', 'direct', JSON_OBJECT('source', 'O*NET'), 'relevant', JSON_OBJECT()),
-         (?, ?, 'SKILLED', 'en', 'Skill-backed occupation', 'Skill-backed occupation.', 4,
-          22, 68, 32, 88, 36, 46, 'SIC', 'direct', JSON_OBJECT('source', 'O*NET'), 'relevant', JSON_OBJECT()),
-         (?, ?, ?, 'fr', 'métier soutenu par les compétences', 'Métier de test avec compétence ESCO.', '2421',
-          NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'missing', JSON_OBJECT('source', 'ESCO'), 'unreviewed', JSON_OBJECT())`,
+         (?, ?, 'GENERAL', 'en', 'General close occupation', 'General occupation.',
+          NULL, 4, 20, 72, 28, 93, 34, 44, 'SIC', 'direct',
+          JSON_OBJECT('source', 'O*NET'), 'relevant', JSON_OBJECT()),
+         (?, ?, 'SKILLED', 'en', 'Skill-backed occupation', 'Skill-backed occupation.',
+          NULL, 4, 22, 68, 32, 88, 36, 46, 'SIC', 'direct',
+          JSON_OBJECT('source', 'O*NET'), 'relevant', JSON_OBJECT()),
+         (?, ?, ?, 'fr', 'métier soutenu par les compétences', 'Métier de test avec compétence ESCO.',
+          '2421', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'missing',
+          JSON_OBJECT('source', 'ESCO'), 'unreviewed', JSON_OBJECT())`,
       [onetGeneral, onetSource, onetSkilled, onetSource, escoSkilled, escoSource, `http://data.europa.eu/esco/occupation/profile-rec-${short}`],
     );
     await pool.execute(
