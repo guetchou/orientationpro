@@ -1,0 +1,195 @@
+name: Release Preflight
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orientationpro-release-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  container-images:
+    name: Container image preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build web image
+        run: |
+          docker build \
+            --pull \
+            --tag makoki-web:preflight \
+            --build-arg VITE_BACKEND_URL=https://example.invalid \
+            --build-arg VITE_API_URL=https://example.invalid/api \
+            .
+
+      - name: Build API image
+        run: |
+          docker build \
+            --pull \
+            --tag makoki-api:preflight \
+            backend
+
+      - name: Smoke test images with CV API disabled
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          cleanup() {
+            docker rm -f makoki-web-preflight >/dev/null 2>&1 || true
+            docker rm -f makoki-api-preflight >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker run -d \
+            --name makoki-api-preflight \
+            -p 127.0.0.1:3100:3000 \
+            -e PORT=3000 \
+            -e NODE_ENV=test \
+            -e LEGACY_AUTH_ENABLED=false \
+            -e AUTH_V1_ENABLED=false \
+            -e RIASEC_API_ENABLED=false \
+            -e CAREER_API_ENABLED=false \
+            -e CV_API_V1_ENABLED=false \
+            -e DB_HOST=127.0.0.1 \
+            -e DB_PORT=1 \
+            -e DB_USER=unused \
+            -e DB_PASSWORD=unused \
+            -e DB_NAME=unused \
+            makoki-api:preflight
+
+          curl \
+            --retry 30 \
+            --retry-all-errors \
+            --retry-delay 1 \
+            --fail \
+            --silent \
+            --show-error \
+            http://127.0.0.1:3100/api/test/health \
+            >/tmp/api-health.json
+
+          analysis_id=11111111-1111-4111-8111-111111111111
+          routes=(
+            "POST /api/v1/cv/analyses"
+            "GET /api/v1/cv/analyses"
+            "GET /api/v1/cv/analyses/${analysis_id}"
+            "GET /api/v1/cv/analyses/${analysis_id}/report.pdf"
+            "DELETE /api/v1/cv/analyses/${analysis_id}"
+          )
+
+          for route in "${routes[@]}"; do
+            method=${route%% *}
+            path=${route#* }
+            status=$(curl \
+              --silent \
+              --show-error \
+              --output /tmp/cv-disabled-response.json \
+              --write-out '%{http_code}' \
+              --request "${method}" \
+              "http://127.0.0.1:3100${path}")
+
+            test "${status}" = 404
+            grep -q '"message":"Route non trouvée"' \
+              /tmp/cv-disabled-response.json
+          done
+
+          docker run -d \
+            --name makoki-web-preflight \
+            -p 127.0.0.1:8088:80 \
+            makoki-web:preflight
+
+          curl \
+            --retry 30 \
+            --retry-all-errors \
+            --retry-delay 1 \
+            --fail \
+            --silent \
+            --show-error \
+            http://127.0.0.1:8088/ \
+            >/tmp/web-index.html
+
+          grep -qi '<!doctype html' /tmp/web-index.html
+
+      - name: Record image metadata
+        shell: bash
+        run: |
+          {
+            echo '## Container images'
+            echo
+            echo '| Image | ID | Size |'
+            echo '|---|---|---:|'
+            for image in makoki-api:preflight makoki-web:preflight; do
+              image_id=$(docker image inspect \
+                --format '{{.Id}}' "${image}")
+              image_size=$(docker image inspect \
+                --format '{{.Size}}' "${image}")
+              echo "| ${image} | ${image_id} | ${image_size} |"
+            done
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+  migration-cycle:
+    name: Migration 005 clone cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: preflight_root_password
+          MYSQL_DATABASE: orientationpro_release_preflight
+          MYSQL_USER: orientationpro_preflight
+          MYSQL_PASSWORD: preflight_user_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ppreflight_root_password --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: orientationpro_preflight
+      DB_PASSWORD: preflight_user_password
+      DB_NAME: orientationpro_release_preflight
+      RELEASE_PREFLIGHT_CONFIRM_CLONE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.4
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Validate migration preflight syntax
+        run: node --check scripts/verify-cv-migration-cycle.js
+
+      - name: Prove migration 005 up down up on isolated MySQL
+        run: |
+          node scripts/verify-cv-migration-cycle.js \
+            | tee /tmp/cv-migration-preflight.json
+
+      - name: Publish protected-data checksums
+        shell: bash
+        run: |
+          {
+            echo '## Migration 005 cycle'
+            echo
+            echo '```json'
+            cat /tmp/cv-migration-preflight.json
+            echo '```'
+          } >>"${GITHUB_STEP_SUMMARY}"
