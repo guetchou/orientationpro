@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
 const mysql = require('mysql2/promise');
-const { migrateUp } = require('../src/db/migrate');
+const { migrateDown, migrateUp } = require('../src/db/migrate');
 const { createCareerStore } = require('../src/career/store');
 
 const createPool = () => mysql.createPool({
@@ -19,7 +19,8 @@ const createPool = () => mysql.createPool({
 
 test('French ESCO presentation remains linked to O*NET RIASEC and explicit English fallback', async () => {
   const pool = createPool();
-  await migrateUp(pool, path.join(__dirname, '..', 'migrations'));
+  const migrationsDirectory = path.join(__dirname, '..', 'migrations');
+  await migrateUp(pool, migrationsDirectory);
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const onetSource = `onet:test:${suffix}:en`;
   const escoSource = `esco:test:${suffix}:fr`;
@@ -71,7 +72,7 @@ test('French ESCO presentation remains linked to O*NET RIASEC and explicit Engli
          source_occupation_id, target_occupation_id, mapping_kind, confidence_score,
          confidence_level, review_status, source_reference, source_version, mapped_at,
          provenance_json
-       ) VALUES (?, ?, 'close', NULL, 'medium', 'official', 'https://example.test/crosswalk.csv', 'official-2023-08', '2026-07-28', JSON_OBJECT('source', 'European Commission'))`,
+       ) VALUES (?, ?, 'close', NULL, 'unknown', 'official', 'https://example.test/crosswalk.csv', 'official-2023-08', NULL, JSON_OBJECT('source', 'European Commission'))`,
       [onetNurse, escoNurse],
     );
 
@@ -84,6 +85,9 @@ test('French ESCO presentation remains linked to O*NET RIASEC and explicit Engli
     assert.equal(french[0].riasecSource.kind, 'onet');
     assert.equal(french[0].presentationSource.kind, 'esco');
     assert.equal(french[0].crosswalk.reviewStatus, 'official');
+    assert.equal(french[0].crosswalk.confidenceScore, null);
+    assert.equal(french[0].crosswalk.confidenceLevel, 'unknown');
+    assert.equal(french[0].crosswalk.mappedAt, null);
 
     const detail = await store.getOccupation({ occupationId: onetNurse, locale: 'fr' });
     assert.equal(detail.aliases[0].label, 'infirmier');
@@ -94,6 +98,24 @@ test('French ESCO presentation remains linked to O*NET RIASEC and explicit Engli
     assert.equal(fallback.locale, 'en');
     assert.equal(fallback.fallbackLocale, 'en');
     assert.equal(fallback.translationStatus, 'unavailable');
+
+    await assert.rejects(
+      migrateDown(pool, migrationsDirectory),
+    );
+    const [[migrationStillApplied]] = await pool.query(
+      `SELECT COUNT(*) AS count
+       FROM schema_migrations
+       WHERE version = '006_esco_fr_catalog'`,
+    );
+    const [[confidenceColumnStillPresent]] = await pool.query(
+      `SELECT COUNT(*) AS count
+       FROM information_schema.columns
+       WHERE table_schema = DATABASE()
+         AND table_name = 'career_occupation_crosswalks'
+         AND column_name = 'confidence_level'`,
+    );
+    assert.equal(Number(migrationStillApplied.count), 1);
+    assert.equal(Number(confidenceColumnStillPresent.count), 1);
   } finally {
     await pool.query('DELETE FROM career_occupation_skill_links WHERE occupation_id = ?', [escoNurse]);
     await pool.query('DELETE FROM career_occupation_crosswalks WHERE source_occupation_id IN (?, ?)', [onetNurse, onetAccountant]);
