@@ -61,6 +61,7 @@ const Blog = lazy(() => import('@/pages/Blog'));
 const BlogPost = lazy(() => import('@/pages/BlogPost'));
 const CVOptimizer = lazy(() => import('@/pages/CVOptimizer'));
 const CVHistory = lazy(() => import('@/pages/CVHistory'));
+const PostBac = lazy(() => import('@/pages/PostBac'));
 const Unauthorized = lazy(() => import('@/pages/Unauthorized'));
 const GuideEtudesCongo2024 = lazy(() => import('@/pages/GuideEtudesCongo2024'));
 const BookAppointment = lazy(() => import('@/pages/BookAppointment'));
@@ -108,6 +109,7 @@ export const AppRouter = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/tests" element={<Tests />} />
+            <Route path="/post-bac" element={<PostBac />} />
             <Route path="/tests/riasec" element={<UserRoute><RiasecTest /></UserRoute>} />
             <Route path="/orientation/results" element={<UserRoute><RiasecResults /></UserRoute>} />
             <Route path="/orientation/results/:resultId" element={<UserRoute><RiasecResult /></UserRoute>} />

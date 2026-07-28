@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CareerRecommendations } from '@/components/career/CareerRecommendations';
+import { isPostBacEnabled } from '@/features/postbac/config';
+import { AutomaticOrientationSummary } from '@/features/postbac/AutomaticOrientationSummary';
 
 const ORDER: RiasecDimensionCode[] = ['R', 'I', 'A', 'S', 'E', 'C'];
 
@@ -175,6 +177,10 @@ export default function RiasecResult() {
             </div>
           </CardContent>
         </Card>
+
+        {isPostBacEnabled() ? (
+          <AutomaticOrientationSummary result={result} />
+        ) : null}
 
         {/* Scores par dimension */}
         <Card className="border border-stone-200 shadow-sm">
