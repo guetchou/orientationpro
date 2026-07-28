@@ -59,7 +59,7 @@ export const Header = () => {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-6">
-        <Link to="/" className="flex items-center gap-3" aria-label="Accueil MAKOKI">
+        <Link to="/" className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-xl font-bold text-white shadow-sm">
             M
           </span>

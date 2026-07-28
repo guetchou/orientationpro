@@ -45,7 +45,7 @@ export const Footer = () => {
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_3fr]">
           <div className="max-w-sm">
-            <Link to="/" className="inline-flex items-center gap-3" aria-label="Accueil MAKOKI">
+            <Link to="/" className="inline-flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-xl font-bold">M</span>
               <span>
                 <span className="block text-2xl font-bold">MAKOKI</span>
