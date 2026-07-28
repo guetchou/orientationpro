@@ -27,11 +27,17 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          blob='5cbf7b03176f329095ae0cb4a48c00993492f4a3'
-          git cat-file -e "${blob}^{blob}"
+          base_commit='c3fb03a79970a3dac95a51a261d5ed28548d6cb4'
+          base_path='scripts/cv-release-preflight-vps.sh'
+          base_script=/tmp/cv-release-preflight-base.sh
 
-          start_marker=$(git cat-file blob "${blob}" | sed -n '122p')
-          end_marker=$(git cat-file blob "${blob}" | sed -n '146p')
+          git show "${base_commit}:${base_path}" >"${base_script}"
+
+          start_marker=$(sed -n '122p' "${base_script}")
+          end_marker=$(sed -n '146p' "${base_script}")
+
+          printf 'start_marker=%q\n' "${start_marker}"
+          printf 'end_marker=%q\n' "${end_marker}"
 
           test "${start_marker}" = "printf '=== Transactional production dump ===\\n'"
           test "${end_marker}" = "printf '=== Detached source archive ===\\n'"
