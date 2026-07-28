@@ -118,8 +118,7 @@ export default function Tests() {
               Mieux se connaître pour mieux choisir
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
-              Plusieurs outils de connaissance de soi. Ils servent d’appui à la réflexion et ne
-              remplacent ni un diagnostic psychologique, ni un accompagnement professionnel.
+              Des outils de connaissance de soi, appuyés sur le modèle RIASEC reconnu à l’international, pour découvrir les métiers qui te correspondent.
             </p>
           </motion.div>
         </div>

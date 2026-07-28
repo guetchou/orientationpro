@@ -123,7 +123,7 @@ export default function CareerCatalog() {
 
             {source ? (
               <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-950">
-                Source : <strong>{source.title}</strong>, version {source.version}. Licence : {source.licenseName}. L’adaptation Congo n’a pas encore été validée métier par métier.
+                Fiches métiers basées sur <strong>{source.title}</strong> {source.version}, la base de référence du U.S. Department of Labor (licence {source.licenseName}). Adaptation au marché congolais en cours d’enrichissement.
               </div>
             ) : null}
           </CardContent>
