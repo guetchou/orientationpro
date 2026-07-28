@@ -36,8 +36,8 @@ git show \
   "${BASE_SCRIPT_COMMIT}:${BASE_SCRIPT_PATH}" \
   >"${SOURCE_SCRIPT}"
 
-START_MARKER=$(sed -n '122p' "${SOURCE_SCRIPT}")
-END_MARKER=$(sed -n '146p' "${SOURCE_SCRIPT}")
+START_MARKER=$(sed -n '120p' "${SOURCE_SCRIPT}")
+END_MARKER=$(sed -n '144p' "${SOURCE_SCRIPT}")
 
 if [[ "${START_MARKER}" != "printf '=== Transactional production dump ===\\n'" ]]; then
   printf 'Unexpected dump start marker in base script.\n' >&2
@@ -50,7 +50,7 @@ if [[ "${END_MARKER}" != "printf '=== Detached source archive ===\\n'" ]]; then
 fi
 
 {
-  head -n 121 "${SOURCE_SCRIPT}"
+  head -n 119 "${SOURCE_SCRIPT}"
   cat <<'PATCH'
 printf '=== Transactional production dump ===\n'
 DUMP_PLAIN="${ARTIFACT_DIR}/production-clone-source.sql"
@@ -99,7 +99,7 @@ sha256sum "${DUMP_FILE}" | tee "${DUMP_SHA_FILE}"
 chmod 600 "${DUMP_FILE}" "${DUMP_SHA_FILE}"
 
 PATCH
-  tail -n +146 "${SOURCE_SCRIPT}"
+  tail -n +144 "${SOURCE_SCRIPT}"
 } >"${PATCHED_SCRIPT}"
 
 chmod 700 "${PATCHED_SCRIPT}"
