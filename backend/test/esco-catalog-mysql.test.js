@@ -99,6 +99,17 @@ test('French ESCO presentation remains linked to O*NET RIASEC and explicit Engli
     assert.equal(fallback.fallbackLocale, 'en');
     assert.equal(fallback.translationStatus, 'unavailable');
 
+    // Des migrations plus recentes (ex. 007 profil) peuvent etre appliquees
+    // au-dessus de la 006 ESCO : on les retire d'abord pour que le rollback
+    // suivant cible bien la migration ESCO dont le retrait doit etre refuse.
+    while (true) {
+      const [[latest]] = await pool.query(
+        'SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1',
+      );
+      if (!latest || latest.version <= '006_esco_fr_catalog') break;
+      await migrateDown(pool, migrationsDirectory);
+    }
+
     await assert.rejects(
       migrateDown(pool, migrationsDirectory),
     );
