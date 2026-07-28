@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { entrepreneurialQuestions } from "@/components/tests/entrepreneurial/Ent
 import { analyzeEntrepreneurialResults } from "@/components/tests/entrepreneurial/EntrepreneurialAnalyzer";
 
 export default function EntrepreneurialTest() {
+  usePageMeta({ title: "Test de profil entrepreneurial", description: "Évaluez votre appétence entrepreneuriale et vos atouts pour créer votre activité.", path: "/tests/entrepreneurial" });
   const {
     currentQuestion,
     totalQuestions,

@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,9 +7,11 @@ import {
   Award,
   Brain,
   BriefcaseBusiness,
+  Clock,
   Heart,
   Lightbulb,
   LineChart,
+  ListChecks,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -30,64 +33,78 @@ const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }
 
 const explorationTests = [
   {
-    title: "Test d’Intelligence Émotionnelle",
+    title: "Intelligence émotionnelle",
     to: "/tests/emotional",
     icon: Heart,
-    meta: "10-15 min • 45 questions",
+    duration: "10-15 min",
+    questions: "45 questions",
     description:
-      "Explorez votre manière de comprendre et gérer vos émotions et celles des autres dans les relations professionnelles.",
+      "Comprends ta manière de gérer tes émotions et celles des autres dans les relations professionnelles.",
   },
   {
-    title: "Test de Styles d’Apprentissage",
+    title: "Styles d’apprentissage",
     to: "/tests/learning",
     icon: Lightbulb,
-    meta: "10 min • 30 questions",
+    duration: "10 min",
+    questions: "30 questions",
     description:
-      "Explorez votre façon préférée d’apprendre et de traiter l’information pour préparer votre développement.",
+      "Découvre ta façon préférée d’apprendre et de traiter l’information pour mieux étudier.",
   },
   {
-    title: "Test des Intelligences Multiples",
+    title: "Intelligences multiples",
     to: "/tests/multiple",
     icon: Brain,
-    meta: "15 min • 40 questions",
+    duration: "15 min",
+    questions: "40 questions",
     description:
-      "Explorez différentes formes de compétences inspirées de la théorie des intelligences multiples de Gardner.",
+      "Explore tes formes de compétences, inspirées de la théorie des intelligences multiples de Gardner.",
   },
   {
-    title: "Test de Reconversion Professionnelle",
+    title: "Reconversion professionnelle",
     to: "/tests/career-transition",
     icon: RefreshCw,
-    meta: "12-15 min • 35 questions",
+    duration: "12-15 min",
+    questions: "35 questions",
     description:
-      "Explorez votre préparation à une reconversion et les domaines susceptibles de correspondre à vos compétences.",
+      "Fais le point sur ta préparation à une reconversion et les domaines qui te correspondent.",
   },
   {
-    title: "Test d’Orientation Sans Diplôme",
+    title: "Orientation sans diplôme",
     to: "/tests/no-diploma",
     icon: Award,
-    meta: "10-12 min • 30 questions",
+    duration: "10-12 min",
+    questions: "30 questions",
     description:
-      "Explorez des pistes professionnelles à partir de vos compétences et préférences, indépendamment d’un diplôme.",
+      "Trouve des pistes de métiers à partir de tes compétences et préférences, sans condition de diplôme.",
   },
   {
-    title: "Test d’Emploi Senior",
+    title: "Emploi senior",
     to: "/tests/senior-employment",
     icon: BriefcaseBusiness,
-    meta: "8-10 min • 20 questions",
+    duration: "8-10 min",
+    questions: "20 questions",
     description:
-      "Explorez vos atouts, expériences et préférences pour préparer une nouvelle étape professionnelle en tant que senior.",
+      "Valorise ton expérience et tes préférences pour préparer une nouvelle étape professionnelle.",
   },
   {
-    title: "Test d’Aptitude Entrepreneuriale",
+    title: "Aptitude entrepreneuriale",
     to: "/tests/entrepreneurial",
     icon: LineChart,
-    meta: "10-12 min • 15 questions",
+    duration: "10-12 min",
+    questions: "15 questions",
     description:
-      "Explorez vos préférences entre entrepreneuriat, salariat, commerce, artisanat et autres modes d’activité.",
+      "Situe-toi entre entrepreneuriat, salariat, commerce et artisanat selon tes préférences.",
   },
 ];
 
+const heroStats = [
+  { value: "8", label: "tests disponibles" },
+  { value: "~10 min", label: "en moyenne" },
+  { value: "RIASEC", label: "modèle de référence" },
+];
+
 export default function Tests() {
+  usePageMeta({ title: 'Tests d’orientation', description: 'Passez le questionnaire d’intérêts RIASEC et d’autres outils de connaissance de soi pour découvrir les métiers qui vous correspondent.', path: '/tests' });
   return (
     <div className="min-h-screen bg-stone-50">
       {/* ============================ HERO ============================ */}
@@ -100,7 +117,7 @@ export default function Tests() {
             alt="Étudiants congolais consultant ensemble un test d’orientation sur un ordinateur portable."
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/80 to-emerald-900/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/85 to-emerald-950/60" />
         </div>
 
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28">
@@ -110,16 +127,41 @@ export default function Tests() {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="max-w-2xl text-white"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-white/10 px-4 py-1.5 text-sm font-medium text-amber-100 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-900 px-4 py-1.5 text-sm font-medium text-amber-100">
               <Sparkles className="h-4 w-4" />
               Tests d’orientation
             </span>
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
               Mieux se connaître pour mieux choisir
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
-              Des outils de connaissance de soi, appuyés sur le modèle RIASEC reconnu à l’international, pour découvrir les métiers qui te correspondent.
+            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50">
+              Des outils de connaissance de soi, appuyés sur le modèle RIASEC reconnu à
+              l’international, pour découvrir les métiers qui te correspondent.
             </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
+                <Link to="/tests/riasec">
+                  Commencer le test RIASEC <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              >
+                <a href="#tous-les-tests">Voir tous les tests</a>
+              </Button>
+            </div>
+
+            <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
+              {heroStats.map((stat) => (
+                <div key={stat.label}>
+                  <dt className="font-heading text-2xl font-bold text-amber-200">{stat.value}</dt>
+                  <dd className="text-sm text-emerald-50/90">{stat.label}</dd>
+                </div>
+              ))}
+            </dl>
           </motion.div>
         </div>
       </section>
@@ -133,15 +175,22 @@ export default function Tests() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="bg-primary hover:bg-primary">Recommandé</Badge>
                   <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">
-                    Version pilote
+                    Le plus complet
                   </Badge>
                 </div>
                 <h2 className="mt-4 font-heading text-3xl font-bold text-stone-900">Test RIASEC</h2>
-                <p className="mt-1 text-sm text-stone-500">10-15 min • 60 affirmations</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
+                    <Clock className="h-3.5 w-3.5" /> 10-15 min
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
+                    <ListChecks className="h-3.5 w-3.5" /> 60 affirmations
+                  </span>
+                </div>
                 <p className="mt-4 text-lg leading-8 text-stone-600">
-                  Explorez vos intérêts professionnels selon le modèle de John Holland. Le calcul
-                  est <strong>versionné et réalisé côté serveur</strong> : les clés de notation ne
-                  sont jamais exposées, et chaque résultat conserve sa méthode.
+                  Explore tes intérêts professionnels selon le modèle de John Holland. Le calcul est{" "}
+                  <strong>versionné et réalisé côté serveur</strong> : les clés de notation ne sont
+                  jamais exposées, et chaque résultat conserve sa méthode.
                 </p>
                 <Button asChild size="lg" className="mt-6 bg-primary hover:bg-primary-800">
                   <Link to="/tests/riasec">
@@ -171,38 +220,45 @@ export default function Tests() {
       </section>
 
       {/* ===================== AUTRES TESTS (EXPLORATION) ===================== */}
-      <section className="mx-auto max-w-7xl px-6 pb-20">
+      <section id="tous-les-tests" className="mx-auto max-w-7xl px-6 pb-20">
         <Reveal>
           <div className="mb-8">
             <h2 className="font-heading text-2xl font-bold text-stone-900">Explorer d’autres dimensions</h2>
             <p className="mt-2 text-stone-600">
-              Des outils complémentaires en mode exploration, pour élargir votre réflexion.
+              Des outils complémentaires en mode exploration, pour élargir ta réflexion.
             </p>
           </div>
         </Reveal>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {explorationTests.map((test, index) => (
-            <Reveal key={test.to} delay={(index % 3) * 0.08}>
-              <div className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-primary">
-                    <test.icon className="h-6 w-6" />
-                  </span>
-                  <Badge variant="outline" className="text-stone-500">Exploration</Badge>
-                </div>
-                <h3 className="mt-4 font-heading text-lg font-semibold text-stone-900">{test.title}</h3>
-                <p className="mt-1 text-sm text-stone-500">{test.meta}</p>
-                <p className="mt-3 flex-1 text-sm leading-6 text-stone-600">{test.description}</p>
+          {explorationTests.map((test, index) => {
+            const Icon = test.icon;
+            return (
+              <Reveal key={test.to} delay={(index % 3) * 0.08}>
                 <Link
                   to={test.to}
-                  className="mt-5 inline-flex items-center font-medium text-primary transition-transform hover:translate-x-1"
+                  className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                 >
-                  Commencer le test <ArrowRight className="ml-2 h-4 w-4" />
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-primary transition-colors group-hover:bg-emerald-100">
+                      <Icon className="h-6 w-6" />
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-500">
+                      <Clock className="h-3.5 w-3.5" /> {test.duration}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 font-heading text-lg font-semibold text-stone-900">{test.title}</h3>
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-stone-500">
+                    <ListChecks className="h-3.5 w-3.5" /> {test.questions}
+                  </p>
+                  <p className="mt-3 flex-1 text-sm leading-6 text-stone-600">{test.description}</p>
+                  <span className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                    Commencer le test <ArrowRight className="h-4 w-4" />
+                  </span>
                 </Link>
-              </div>
-            </Reveal>
-          ))}
+              </Reveal>
+            );
+          })}
         </div>
       </section>
 

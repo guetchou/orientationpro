@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { CalendarClock, ClipboardCheck, ShieldCheck, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const requirements = [
 ];
 
 export default function BookAppointment() {
+  usePageMeta({ title: "Prendre rendez-vous", description: "Planifiez un rendez-vous d’accompagnement avec un conseiller MAKOKI.", path: "/book-appointment" });
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
       <div className="mx-auto max-w-5xl">

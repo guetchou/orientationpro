@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, Loader2, MailCheck } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 type Status = 'loading' | 'success' | 'error';
 
 export default function VerifyEmail() {
+  usePageMeta({ title: "Vérification de l’e-mail", description: "Confirmez votre adresse e-mail pour activer votre compte MAKOKI.", path: "/verify-email" });
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<Status>('loading');
   const [message, setMessage] = useState('Vérification de ton adresse e-mail…');

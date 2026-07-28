@@ -1,3 +1,4 @@
+import { CommandPalette } from '@/components/search/CommandPalette';
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -39,6 +40,7 @@ const Terms = lazy(() => import('@/pages/Terms'));
 const Cookies = lazy(() => import('@/pages/Cookies'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const Tests = lazy(() => import('@/pages/Tests'));
 const RiasecTest = lazy(() => import('@/pages/RiasecTest'));
@@ -95,6 +97,7 @@ export const AppRouter = () => (
       </a>
 
       <Header />
+      <CommandPalette />
 
       <main id="contenu-principal" className="flex-1">
         <Suspense fallback={<PageLoader />}>
@@ -107,6 +110,7 @@ export const AppRouter = () => (
             <Route path="/cookies" element={<Cookies />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/tests" element={<Tests />} />
             <Route path="/post-bac" element={<PostBac />} />

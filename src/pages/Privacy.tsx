@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 const retentionRows = [
   ['Compte utilisateur', 'Pendant l’utilisation du service, puis suppression ou anonymisation après 24 mois d’inactivité. Un avertissement doit être envoyé avant suppression lorsque les coordonnées restent valides.'],
   ['Résultats des tests d’orientation', '24 mois après la dernière activité liée au résultat, sauf suppression anticipée demandée par l’utilisateur ou nécessité de conservation plus courte.'],
@@ -23,6 +24,7 @@ const providers = [
 ];
 
 export default function Privacy() {
+  usePageMeta({ title: "Politique de confidentialité", description: "Comment MAKOKI protège et traite vos données personnelles.", path: "/privacy" });
   return (
     <main className="min-h-screen bg-white px-6 pb-20 pt-28">
       <article className="mx-auto max-w-5xl">

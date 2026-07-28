@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 const sections = [
   {
     title: 'Éditeur et objet du service',
@@ -81,6 +82,7 @@ const sections = [
 ];
 
 export default function Terms() {
+  usePageMeta({ title: "Conditions d’utilisation", description: "Les conditions d’utilisation de la plateforme d’orientation MAKOKI.", path: "/terms" });
   return (
     <main className="min-h-screen bg-white px-6 pb-20 pt-28">
       <article className="mx-auto max-w-5xl">

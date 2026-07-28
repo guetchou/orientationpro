@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 import { useTestState } from "@/hooks/useTestState";
 import TestLayout from "@/components/tests/TestLayout";
@@ -5,6 +6,7 @@ import { TestQuestion } from "@/components/tests/TestQuestion";
 import { SeniorEmploymentResults } from "@/types/test";
 
 export default function SeniorEmploymentTest() {
+  usePageMeta({ title: "Test d’emploi des seniors", description: "Un outil pour valoriser l’expérience et explorer des pistes professionnelles pour les seniors.", path: "/tests/senior-employment" });
   // Define questions
   const seniorEmploymentQuestions = [
     {

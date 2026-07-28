@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { intelligenceQuestions } from "@/components/tests/intelligence/Intellige
 import { analyzeMultipleIntelligence } from "@/components/tests/intelligence/IntelligenceAnalyzer";
 
 export default function MultipleIntelligenceTest() {
+  usePageMeta({ title: "Test des intelligences multiples", description: "Explorez vos formes d’intelligence dominantes pour éclairer votre orientation.", path: "/tests/multiple" });
   const {
     currentQuestion,
     totalQuestions,
