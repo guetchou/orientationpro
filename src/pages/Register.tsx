@@ -98,6 +98,7 @@ export default function Register() {
       headline="Rejoins MAKOKI"
       tagline="Crée ton compte pour passer les tests, enregistrer tes résultats et découvrir les métiers qui te correspondent."
       imageName="orientation-etudiants"
+      imageSide="right"
     >
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-slate-900">Créer un compte</h1>

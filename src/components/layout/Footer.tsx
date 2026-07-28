@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { isAuthRoute } from '@/lib/authRoutes';
 import { openConsentManager } from '@/lib/privacyConsent';
 
 const sections = [
@@ -38,6 +39,9 @@ const sections = [
 ];
 
 export const Footer = () => {
+  const { pathname } = useLocation();
+  if (isAuthRoute(pathname)) return null;
+
   const currentYear = new Date().getFullYear();
 
   return (

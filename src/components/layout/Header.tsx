@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, LogOut, Menu, Search, User, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { isAuthRoute } from '@/lib/authRoutes';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -53,6 +54,8 @@ export const Header = () => {
   const isActivePath = (path: string) => (
     location.pathname === path || location.pathname.startsWith(`${path}/`)
   );
+
+  if (isAuthRoute(location.pathname)) return null;
 
   return (
     <header
