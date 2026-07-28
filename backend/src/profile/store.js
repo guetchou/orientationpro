@@ -25,6 +25,23 @@ const COMPLETION_FIELDS = [
   'mobility_scope',
 ];
 
+const CURRENT_SITUATIONS = new Set([
+  'student',
+  'employee',
+  'job_seeker',
+  'entrepreneur',
+  'career_change',
+  'other',
+]);
+const PRIMARY_GOALS = new Set([
+  'choose_studies',
+  'find_job',
+  'career_change',
+  'improve_skills',
+  'start_business',
+  'other',
+]);
+const MOBILITY_SCOPES = new Set(['local', 'national', 'international', 'remote', 'unknown']);
 const EDUCATION_LEVELS = new Set([
   'primary',
   'middle_school',
@@ -61,6 +78,19 @@ const requiredChoice = (value, field, choices) => {
   return normalized;
 };
 
+const optionalChoice = (value, field, choices) => {
+  const normalized = cleanText(value, field, 64);
+  if (!normalized) return null;
+  if (!choices.has(normalized)) throw new TypeError(`${field} is invalid.`);
+  return normalized;
+};
+
+const optionalCountryCode = (value, field = 'country_code') => {
+  const normalized = cleanText(value, field, 2)?.toUpperCase() || null;
+  if (normalized && !/^[A-Z]{2}$/u.test(normalized)) throw new TypeError(`${field} is invalid.`);
+  return normalized;
+};
+
 const optionalYear = (value, field) => {
   if (value === undefined || value === null || value === '') return null;
   const year = Number(value);
@@ -71,6 +101,18 @@ const optionalYear = (value, field) => {
   return year;
 };
 
+const normalizeProfileInput = (input = {}) => ({
+  first_name: cleanText(input.first_name, 'first_name', 100),
+  last_name: cleanText(input.last_name, 'last_name', 100),
+  phone: cleanText(input.phone, 'phone', 30),
+  city: cleanText(input.city, 'city', 120),
+  country_code: optionalCountryCode(input.country_code),
+  current_situation: optionalChoice(input.current_situation, 'current_situation', CURRENT_SITUATIONS),
+  primary_goal: optionalChoice(input.primary_goal, 'primary_goal', PRIMARY_GOALS),
+  mobility_scope: optionalChoice(input.mobility_scope, 'mobility_scope', MOBILITY_SCOPES),
+  profile_summary: cleanText(input.profile_summary, 'profile_summary', 5000),
+});
+
 const normalizeEducationEntry = (entry = {}) => {
   const normalized = {
     id: crypto.randomUUID(),
@@ -79,7 +121,7 @@ const normalizeEducationEntry = (entry = {}) => {
     diploma_name: cleanText(entry.diploma_name, 'diploma_name', 255),
     field_of_study: cleanText(entry.field_of_study, 'field_of_study', 255),
     institution: cleanText(entry.institution, 'institution', 255),
-    country_code: cleanText(entry.country_code, 'country_code', 2)?.toUpperCase() || null,
+    country_code: optionalCountryCode(entry.country_code, 'education.country_code'),
     start_year: optionalYear(entry.start_year, 'start_year'),
     end_year: optionalYear(entry.end_year, 'end_year'),
   };
@@ -142,9 +184,7 @@ const createProfileStore = (pool) => {
     getProfile,
 
     async upsertProfile(accountId, input = {}) {
-      const profile = Object.fromEntries(
-        PROFILE_FIELDS.map((key) => [key, input[key] ?? null]),
-      );
+      const profile = normalizeProfileInput(input);
       const completion = calculateCompletion(profile);
 
       await pool.execute(
@@ -223,12 +263,25 @@ const createProfileStore = (pool) => {
           [accountId],
         );
         for (const skill of skills) {
+          let persistedLabel = skill.label;
+          if (skill.esco_uri) {
+            const [[catalogSkill]] = await connection.execute(
+              `SELECT skill.preferred_label
+               FROM career_skills skill
+               JOIN career_catalog_sources source ON source.id = skill.catalog_source_id
+               WHERE source.source_kind = 'esco' AND skill.source_code = ?
+               LIMIT 1`,
+              [skill.esco_uri],
+            );
+            if (!catalogSkill) throw new TypeError('esco_uri is not a known ESCO skill.');
+            persistedLabel = catalogSkill.preferred_label;
+          }
           await connection.execute(
             `INSERT INTO account_profile_skills (
                id, account_id, label, esco_uri, proficiency, source,
                confirmation_status, evidence
              ) VALUES (?, ?, ?, ?, ?, 'declared', 'confirmed', ?)`,
-            [skill.id, accountId, skill.label, skill.esco_uri, skill.proficiency, skill.evidence],
+            [skill.id, accountId, persistedLabel, skill.esco_uri, skill.proficiency, skill.evidence],
           );
         }
         await connection.commit();
