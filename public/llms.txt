@@ -1,0 +1,25 @@
+# MAKOKI
+
+> Plateforme d'orientation scolaire et professionnelle pour les jeunes du Congo (Brazzaville). MAKOKI aide à comprendre ses intérêts (modèle RIASEC / O*NET), à explorer des métiers réels et à construire un projet d'études ou d'emploi, à partir de données explicables et sourcées.
+
+MAKOKI distingue clairement les faits sourcés (catalogue métiers O*NET), les conseils généraux et les adaptations au contexte congolais. Un résultat n'est ni un diagnostic psychologique ni une garantie d'admission, d'emploi ou de revenu : l'utilisateur garde la décision.
+
+## Pages principales
+
+- [Accueil](https://makoki.org/) : présentation et parcours d'orientation.
+- [Tests d'orientation](https://makoki.org/tests) : questionnaire d'intérêts RIASEC et autres outils de connaissance de soi.
+- [Explorer les métiers](https://makoki.org/careers) : catalogue de métiers basé sur O*NET, adapté au marché congolais.
+- [Offres d'emploi](https://makoki.org/jobs) : opportunités professionnelles au Congo.
+- [À propos](https://makoki.org/about) : mission, méthode et limites.
+- [Blog et ressources](https://makoki.org/blog) : articles et guides d'orientation.
+
+## Références et méthode
+
+- [Guide des études au Congo 2024](https://makoki.org/guide-congo-2024) : repères pour l'orientation post-bac.
+- Données métiers : O*NET 30.3 (U.S. Department of Labor), licence Creative Commons Attribution 4.0 International ; adaptation au Congo en cours d'enrichissement.
+- Modèle d'intérêts : RIASEC (John Holland), référence internationale en orientation.
+
+## Conditions
+
+- [Conditions d'utilisation](https://makoki.org/terms)
+- [Politique de confidentialité](https://makoki.org/privacy)
