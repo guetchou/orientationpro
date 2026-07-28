@@ -6,8 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ApiError } from '@/lib/apiClient';
+import { ApiError, oauthStartUrl, refreshAuthSession } from '@/lib/apiClient';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -39,6 +40,7 @@ export default function Login() {
   usePageMeta({ title: "Connexion", description: "Connectez-vous à votre compte MAKOKI pour accéder à vos passations et résultats d’orientation.", path: "/login" });
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [oauthCompleting, setOauthCompleting] = useState(false);
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,6 +55,40 @@ export default function Login() {
   useEffect(() => {
     if (user) navigate(requestedPath || destinationForRole(user.role), { replace: true });
   }, [navigate, requestedPath, user]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const oauth = params.get('oauth');
+    const code = params.get('code');
+    if (oauth === 'error') {
+      const messages: Record<string, string> = {
+        ACCOUNT_LINK_REQUIRED: 'Un compte existe déjà avec cette adresse. Connecte-toi avec ton mot de passe avant de lier ce fournisseur.',
+        OAUTH_CANCELLED: 'La connexion sociale a été annulée.',
+        OAUTH_STATE_INVALID: 'La tentative de connexion a expiré. Recommence depuis cette page.',
+        OAUTH_PROVIDER_REJECTED: 'Le fournisseur n’a pas pu confirmer ton identité.',
+        OAUTH_ACCOUNT_UNAVAILABLE: 'Ce compte ne peut pas être utilisé actuellement.',
+      };
+      setServerError(messages[code || ''] || 'La connexion sociale a échoué.');
+      return;
+    }
+    if (oauth !== 'success') return;
+
+    let active = true;
+    setOauthCompleting(true);
+    void refreshAuthSession()
+      .then((payload) => {
+        if (!active) return;
+        if (!payload) throw new Error('Session sociale indisponible');
+        navigate(requestedPath || destinationForRole(payload.account.roles[0]), { replace: true });
+      })
+      .catch(() => {
+        if (active) setServerError('La session sociale n’a pas pu être finalisée. Recommence la connexion.');
+      })
+      .finally(() => {
+        if (active) setOauthCompleting(false);
+      });
+    return () => { active = false; };
+  }, [location.search, navigate, requestedPath]);
 
   const onSubmit = async (values: LoginValues) => {
     setServerError(null);
@@ -83,6 +119,26 @@ export default function Login() {
           <span>{serverError}</span>
         </div>
       )}
+
+      <div className="mb-5 grid gap-3">
+        <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
+          <a href={oauthStartUrl('google')}>
+            <SocialProviderIcon provider="google" />
+            Continuer avec Google
+          </a>
+        </Button>
+        <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
+          <a href={oauthStartUrl('meta')}>
+            <SocialProviderIcon provider="meta" />
+            Continuer avec Facebook
+          </a>
+        </Button>
+        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
+          <span className="h-px flex-1 bg-gray-200" />
+          ou avec ton mot de passe
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+      </div>
 
       <Form {...form}>
         <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>

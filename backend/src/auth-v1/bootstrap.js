@@ -3,6 +3,7 @@ const { createAuthRouter } = require('./index');
 const { createSessionAuthenticator } = require('./authenticate');
 const { createMySqlAuthStore } = require('./mysql-store');
 const { createPermissionChecker } = require('./permissions');
+const { createConfiguredOAuthProviders } = require('./oauth-providers');
 const { createSmtpEmailAdapter } = require('./smtp-email');
 
 const createConfiguredAuthV1 = (env = process.env) => {
@@ -16,6 +17,9 @@ const createConfiguredAuthV1 = (env = process.env) => {
     email: createSmtpEmailAdapter(env),
     jwtSecret: env.JWT_SECRET,
     cookieSecure: env.NODE_ENV === 'production',
+    oauthProviders: createConfiguredOAuthProviders(env),
+    frontendUrl: env.APP_WEB_URL || 'http://localhost:5173',
+    oauthCallbackBaseUrl: env.OAUTH_CALLBACK_BASE_URL || env.APP_WEB_URL || 'http://localhost:5173',
   });
   const authenticate = createSessionAuthenticator({
     store,

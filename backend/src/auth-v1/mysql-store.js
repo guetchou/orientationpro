@@ -68,6 +68,78 @@ const createMySqlAuthStore = (pool) => ({
     });
   },
 
+  async saveOAuthTransaction({ stateHash, provider, nonce, codeVerifier, expiresAt }) {
+    await pool.query(
+      `INSERT INTO auth_oauth_transactions
+       (state_hash, provider, nonce, code_verifier, expires_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      [stateHash, provider, nonce, codeVerifier, expiresAt],
+    );
+  },
+
+  async consumeOAuthTransaction({ stateHash, provider, now }) {
+    return transaction(pool, async (connection) => {
+      const [[row]] = await connection.query(
+        `SELECT nonce, code_verifier
+         FROM auth_oauth_transactions
+         WHERE state_hash = ?
+           AND provider = ?
+           AND consumed_at IS NULL
+           AND expires_at > ?
+         FOR UPDATE`,
+        [stateHash, provider, now],
+      );
+      if (!row) return null;
+      await connection.query(
+        'UPDATE auth_oauth_transactions SET consumed_at = ? WHERE state_hash = ?',
+        [now, stateHash],
+      );
+      return { nonce: row.nonce, codeVerifier: row.code_verifier };
+    });
+  },
+
+  async resolveOAuthIdentity({ provider, subject, email, emailVerified, passwordHash }) {
+    return transaction(pool, async (connection) => {
+      const [[identity]] = await connection.query(
+        `SELECT account_id
+         FROM auth_external_identities
+         WHERE provider = ? AND provider_subject = ?
+         FOR UPDATE`,
+        [provider, subject],
+      );
+      if (identity) {
+        const account = await findAccountById(connection, identity.account_id);
+        return account?.status === 'active'
+          ? { status: 'authenticated', account }
+          : { status: 'account_unavailable' };
+      }
+      if (!emailVerified) return { status: 'email_unverified' };
+      const normalizedEmail = String(email || '').trim().toLowerCase();
+      const [[existing]] = await connection.query(
+        'SELECT id FROM auth_accounts WHERE email = ? FOR UPDATE',
+        [normalizedEmail],
+      );
+      if (existing) return { status: 'link_required' };
+
+      const accountId = crypto.randomUUID();
+      await connection.query(
+        `INSERT INTO auth_accounts (id, email, password_hash, status)
+         VALUES (?, ?, ?, 'active')`,
+        [accountId, normalizedEmail, passwordHash],
+      );
+      await connection.query(
+        'INSERT INTO auth_account_roles (account_id, role_id) VALUES (?, ?)',
+        [accountId, 'user'],
+      );
+      await connection.query(
+        `INSERT INTO auth_external_identities
+         (provider, provider_subject, account_id, email_at_link)
+         VALUES (?, ?, ?, ?)`,
+        [provider, subject, accountId, normalizedEmail],
+      );
+      return { status: 'authenticated', account: await findAccountById(connection, accountId) };
+    });
+  },
   async saveVerificationToken({ accountId, tokenHash, expiresAt }) {
     await pool.query(
       'INSERT INTO auth_email_verification_tokens (token_hash, account_id, expires_at) VALUES (?, ?, ?)',

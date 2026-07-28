@@ -6,9 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ApiError } from '@/lib/apiClient';
+import { ApiError, oauthStartUrl } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -89,6 +90,12 @@ export default function Register() {
       }
       setServerError(messageForError(caught));
     }
+  };
+
+  const startSocialRegistration = async (provider: 'google' | 'meta') => {
+    const consentValid = await form.trigger(['confirmedAge', 'acceptedTerms'], { shouldFocus: true });
+    if (!consentValid) return;
+    window.location.assign(oauthStartUrl(provider));
   };
 
   const submitting = form.formState.isSubmitting;
@@ -249,6 +256,22 @@ export default function Register() {
               </Button>
             </form>
           </Form>
+
+          <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
+            <span className="h-px flex-1 bg-gray-200" />
+            ou inscription sociale
+            <span className="h-px flex-1 bg-gray-200" />
+          </div>
+          <div className="grid gap-3">
+            <Button type="button" variant="outline" className="w-full" disabled={submitting} onClick={() => void startSocialRegistration('google')}>
+              <SocialProviderIcon provider="google" />
+              Continuer avec Google
+            </Button>
+            <Button type="button" variant="outline" className="w-full" disabled={submitting} onClick={() => void startSocialRegistration('meta')}>
+              <SocialProviderIcon provider="meta" />
+              Continuer avec Facebook
+            </Button>
+          </div>
 
           <p className="mt-8 text-center text-sm text-gray-600">
             Déjà inscrit ?{' '}
