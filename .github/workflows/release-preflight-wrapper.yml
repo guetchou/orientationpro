@@ -1,0 +1,37 @@
+name: Release Preflight Wrapper
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  wrapper:
+    name: VPS preflight wrapper
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate wrapper syntax
+        run: bash -n scripts/cv-release-preflight-vps-v2.sh
+
+      - name: Validate immutable base script markers
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          blob='5cbf7b03176f329095ae0cb4a48c00993492f4a3'
+          git cat-file -e "${blob}^{blob}"
+
+          start_marker=$(git cat-file blob "${blob}" | sed -n '122p')
+          end_marker=$(git cat-file blob "${blob}" | sed -n '146p')
+
+          test "${start_marker}" = "printf '=== Transactional production dump ===\\n'"
+          test "${end_marker}" = "printf '=== Detached source archive ===\\n'"
