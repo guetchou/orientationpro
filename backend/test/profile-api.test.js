@@ -34,6 +34,13 @@ const request = (port, method, path, body, accountId) => new Promise((resolve, r
   req.end();
 });
 
+const profilePayload = (accountId) => ({
+  profile: { account_id: accountId },
+  education: [],
+  skills: [],
+  hypotheses: [],
+});
+
 test('completion is proportional to confirmed structured fields', () => {
   assert.equal(calculateCompletion({
     first_name: 'A',
@@ -50,16 +57,32 @@ test('completion is proportional to confirmed structured fields', () => {
   }), 100);
 });
 
-test('profile ownership always comes from the authenticated account', async (t) => {
+test('adaptive profile ownership always comes from the authenticated account', async (t) => {
   const calls = [];
   const store = {
     async getProfile(accountId) {
       calls.push(['get', accountId]);
-      return { profile: { account_id: accountId }, education: [], skills: [], hypotheses: [] };
+      return profilePayload(accountId);
     },
     async upsertProfile(accountId, body) {
       calls.push(['put', accountId, body]);
-      return { profile: { ...body, account_id: accountId }, education: [], skills: [], hypotheses: [] };
+      return { ...profilePayload(accountId), profile: { ...body, account_id: accountId } };
+    },
+    async replaceEducation(accountId, education) {
+      calls.push(['education', accountId, education]);
+      return { ...profilePayload(accountId), education };
+    },
+    async replaceDeclaredSkills(accountId, skills) {
+      calls.push(['skills', accountId, skills]);
+      return { ...profilePayload(accountId), skills };
+    },
+    async updateHypothesisStatus(accountId, hypothesisId, status) {
+      calls.push(['hypothesis', accountId, hypothesisId, status]);
+      return { ...profilePayload(accountId), hypotheses: [{ id: hypothesisId, status }] };
+    },
+    async searchSkills(options) {
+      calls.push(['search', options]);
+      return [{ esco_uri: 'http://data.europa.eu/esco/skill/example', label: 'Analyser des données' }];
     },
   };
   const authenticate = (req, res, next) => {
@@ -87,8 +110,84 @@ test('profile ownership always comes from the authenticated account', async (t) 
   );
   assert.equal(write.status, 200);
   assert.equal(write.body.profile.account_id, 'account-a');
-  assert.deepEqual(
-    calls.map((call) => call.slice(0, 2)),
-    [['get', 'account-a'], ['put', 'account-a']],
+
+  const education = await request(
+    port,
+    'PUT',
+    '/api/v1/profile/education',
+    { education: [{ education_level: 'licence', status: 'completed', account_id: 'account-b' }] },
+    'account-a',
   );
+  assert.equal(education.status, 200);
+  assert.equal(education.body.profile.account_id, 'account-a');
+
+  const skills = await request(
+    port,
+    'PUT',
+    '/api/v1/profile/skills',
+    { skills: [{ label: 'Analyser des données', proficiency: 'advanced', account_id: 'account-b' }] },
+    'account-a',
+  );
+  assert.equal(skills.status, 200);
+  assert.equal(skills.body.profile.account_id, 'account-a');
+
+  const hypothesis = await request(
+    port,
+    'PATCH',
+    '/api/v1/profile/hypotheses/hypothesis-b',
+    { status: 'confirmed', account_id: 'account-b' },
+    'account-a',
+  );
+  assert.equal(hypothesis.status, 200);
+  assert.equal(hypothesis.body.profile.account_id, 'account-a');
+
+  const search = await request(
+    port,
+    'GET',
+    '/api/v1/profile/skills/search?q=donn%C3%A9es&locale=fr&limit=8',
+    null,
+    'account-a',
+  );
+  assert.equal(search.status, 200);
+  assert.equal(search.body.skills[0].label, 'Analyser des données');
+
+  assert.deepEqual(
+    calls.slice(0, 5).map((call) => call.slice(0, 2)),
+    [
+      ['get', 'account-a'],
+      ['put', 'account-a'],
+      ['education', 'account-a'],
+      ['skills', 'account-a'],
+      ['hypothesis', 'account-a'],
+    ],
+  );
+  assert.deepEqual(calls[5], ['search', { query: 'données', locale: 'fr', limit: '8' }]);
+});
+
+test('adaptive collections reject malformed payloads', async (t) => {
+  const store = {
+    async replaceEducation() {
+      throw new Error('should not be called');
+    },
+  };
+  const authenticate = (req, res, next) => {
+    req.auth = { account: { id: 'account-a' } };
+    next();
+  };
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/profile', createProfileRouter({ store, authenticate }));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+
+  const response = await request(
+    server.address().port,
+    'PUT',
+    '/api/v1/profile/education',
+    { education: 'not-an-array' },
+    'account-a',
+  );
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error.code, 'PROFILE_INPUT_INVALID');
 });
