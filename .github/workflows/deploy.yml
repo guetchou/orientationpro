@@ -68,7 +68,20 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npm test
-      - run: npm run test:mysql
+      - name: Run MySQL tests
+        id: mysql-tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:mysql 2>&1 | tee /tmp/mysql-test.log
+      - name: Upload MySQL failure log
+        if: failure() && steps.mysql-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysql-test-failure
+          path: /tmp/mysql-test.log
+          if-no-files-found: error
+          retention-days: 1
       - name: Validate JavaScript syntax
         run: find src test -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
