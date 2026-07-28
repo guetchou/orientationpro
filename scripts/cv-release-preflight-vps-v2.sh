@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-BASE_SCRIPT_BLOB='5cbf7b03176f329095ae0cb4a48c00993492f4a3'
+BASE_SCRIPT_COMMIT='c3fb03a79970a3dac95a51a261d5ed28548d6cb4'
+BASE_SCRIPT_PATH='scripts/cv-release-preflight-vps.sh'
 EXPECTED_MAIN_SHA=${EXPECTED_MAIN_SHA:?EXPECTED_MAIN_SHA is required}
 
 for command in bash git head tail sed mktemp; do
@@ -31,7 +32,9 @@ cleanup_wrapper() {
 }
 trap cleanup_wrapper EXIT
 
-git cat-file blob "${BASE_SCRIPT_BLOB}" >"${SOURCE_SCRIPT}"
+git show \
+  "${BASE_SCRIPT_COMMIT}:${BASE_SCRIPT_PATH}" \
+  >"${SOURCE_SCRIPT}"
 
 START_MARKER=$(sed -n '122p' "${SOURCE_SCRIPT}")
 END_MARKER=$(sed -n '146p' "${SOURCE_SCRIPT}")
