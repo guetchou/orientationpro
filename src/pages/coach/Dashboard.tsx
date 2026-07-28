@@ -1,13 +1,44 @@
 import React from 'react';
+import { CalendarClock, UserCircle, CalendarPlus, Compass } from 'lucide-react';
+import {
+  RoleDashboardScaffold,
+  DashboardGrid,
+  DashboardActionCard,
+  DashboardEmptyState,
+} from '@/components/dashboards/RoleDashboardScaffold';
 
 export default function CoachDashboard() {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Tableau de bord Coach</h1>
-      <div className="p-6 bg-white shadow rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">Bienvenue dans le dashboard Coach</h2>
-        <p className="text-gray-600">Ici, vous pourrez suivre vos coachés, planifier des sessions et accéder à vos outils d'accompagnement.</p>
-      </div>
-    </div>
+    <RoleDashboardScaffold
+      roleLabel="Coach"
+      title="Tableau de bord Coach"
+      subtitle="Suivez vos coachés, planifiez des sessions et accédez à vos outils d'accompagnement."
+    >
+      <DashboardEmptyState
+        icon={CalendarClock}
+        title="Votre espace Coach arrive bientôt"
+        description="Les outils dédiés au suivi des coachés et à la planification des sessions sont en cours de préparation. En attendant, ces raccourcis restent accessibles."
+      />
+      <DashboardGrid>
+        <DashboardActionCard
+          to="/profile"
+          icon={UserCircle}
+          title="Mon profil"
+          description="Complétez vos informations et vos préférences."
+        />
+        <DashboardActionCard
+          to="/book-appointment"
+          icon={CalendarPlus}
+          title="Prendre rendez-vous"
+          description="Planifiez un rendez-vous d'accompagnement."
+        />
+        <DashboardActionCard
+          to="/tests"
+          icon={Compass}
+          title="Tests d'orientation"
+          description="Explorez les outils de connaissance de soi proposés."
+        />
+      </DashboardGrid>
+    </RoleDashboardScaffold>
   );
-} 
+}
