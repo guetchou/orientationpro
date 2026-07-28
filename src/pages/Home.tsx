@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -15,16 +15,20 @@ import {
 import { Button } from '@/components/ui/button';
 
 /** Apparition douce à l'entrée dans le viewport, jouée une seule fois. */
-const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 24 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: '-80px' }}
-    transition={{ duration: 0.6, ease: 'easeOut', delay }}
-  >
-    {children}
-  </motion.div>
-);
+const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => {
+  const shouldReduceMotion = useReducedMotion();
+  if (shouldReduceMotion) return <div>{children}</div>;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.6, ease: 'easeOut', delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 /** <img> responsive WebP : version mobile légère (768w) + desktop (1600w). */
 const Photo = ({
@@ -123,7 +127,7 @@ export default function Home() {
             sizes="100vw"
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/80 to-emerald-900/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/85 to-emerald-950/60" />
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/70 via-transparent to-transparent" />
         </div>
 
@@ -134,7 +138,7 @@ export default function Home() {
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="max-w-2xl text-white"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-white/10 px-4 py-1.5 text-sm font-medium text-amber-100 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-950/60 px-4 py-1.5 text-sm font-medium text-amber-100 backdrop-blur-sm">
               <Sparkles className="h-4 w-4" />
               Orientation • Compétences • Emploi
             </span>
@@ -142,7 +146,7 @@ export default function Home() {
               Révélez votre potentiel.
               <span className="block text-amber-200">Construisez votre avenir.</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
+            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50">
               MAKOKI aide chaque jeune du Congo à comprendre ses intérêts, explorer des métiers
               réels et bâtir un projet d’études ou d’emploi à partir de données explicables.
             </p>
@@ -167,12 +171,12 @@ export default function Home() {
         </div>
 
         {/* Bande de chiffres-clés en pied de hero, en verre dépoli. */}
-        <div className="relative border-t border-white/10 bg-emerald-950/40 backdrop-blur-sm">
+        <div className="relative border-t border-white/10 bg-emerald-950/70 backdrop-blur-sm">
           <dl className="mx-auto grid max-w-7xl grid-cols-2 gap-px px-6 py-8 sm:grid-cols-4">
             {stats.map((stat) => (
               <div key={stat.label} className="px-2 text-center sm:text-left">
                 <dt className="font-heading text-3xl font-bold text-amber-200">{stat.value}</dt>
-                <dd className="mt-1 text-sm text-emerald-50/80">{stat.label}</dd>
+                <dd className="mt-1 text-sm text-emerald-100">{stat.label}</dd>
               </div>
             ))}
           </dl>
