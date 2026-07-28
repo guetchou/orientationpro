@@ -39,6 +39,7 @@ const createConfig = (env = process.env) => {
     cacheDir: path.resolve(env.ESCO_CACHE_DIR || path.join(os.tmpdir(), 'makoki-esco-cache', version, locale)),
     minOccupations: positiveInteger(env.ESCO_MIN_OCCUPATIONS, 2900, 'ESCO_MIN_OCCUPATIONS'),
     minSkills: positiveInteger(env.ESCO_MIN_SKILLS, 13000, 'ESCO_MIN_SKILLS'),
+    minCrosswalks: positiveInteger(env.ESCO_MIN_CROSSWALKS, 1000, 'ESCO_MIN_CROSSWALKS'),
     downloadAttempts: positiveInteger(env.ESCO_DOWNLOAD_ATTEMPTS, 4, 'ESCO_DOWNLOAD_ATTEMPTS'),
     downloadTimeoutMs: positiveInteger(env.ESCO_DOWNLOAD_TIMEOUT_MS, 180000, 'ESCO_DOWNLOAD_TIMEOUT_MS'),
     accessDate: env.ESCO_ACCESS_DATE || new Date().toISOString().slice(0, 10),
@@ -224,10 +225,10 @@ const sourceMappedAt = (row) => {
 };
 
 const parseCrosswalk = (rows) => rows.map((row) => {
-  const onetCode = normalizeOnetCode(valueFor(row, ['onetCode', 'O*NET-SOC Code', 'O*NET concept URI', 'source URI'])) || Object.values(row).map(normalizeOnetCode).find(Boolean) || '';
-  const escoUri = valueFor(row, ['escoUri', 'ESCO URI', 'ESCO occupation URI', 'ESCO concept URI', 'target URI']) || Object.values(row).find((value) => /data\.europa\.eu\/esco\/occupation\//iu.test(String(value))) || '';
+  const onetCode = normalizeOnetCode(valueFor(row, ['onetCode', 'O*NET Id', 'O*NET-SOC Code', 'O*NET concept URI', 'source URI'])) || Object.values(row).map(normalizeOnetCode).find(Boolean) || '';
+  const escoUri = valueFor(row, ['escoUri', 'ESCO or ISCO URI', 'ESCO URI', 'ESCO occupation URI', 'ESCO concept URI', 'target URI']) || Object.values(row).find((value) => /data\.europa\.eu\/esco\/occupation\//iu.test(String(value))) || '';
   if (!onetCode || !escoUri) return null;
-  const relation = normalizedKey(valueFor(row, ['mappingRelation', 'mapping relation', 'relationType']));
+  const relation = normalizedKey(valueFor(row, ['mappingRelation', 'mapping relation', 'relationType', 'Type of Match']));
   const confidence = confidenceDetails(row);
   const mappingKind = relation.includes('exact') ? 'exact' : relation.includes('broad') ? 'broad' : relation.includes('narrow') ? 'narrow' : 'close';
   return {
@@ -240,6 +241,19 @@ const parseCrosswalk = (rows) => rows.map((row) => {
     sourceRow: row,
   };
 }).filter(Boolean);
+
+const parseCrosswalkCsv = (buffer) => {
+  const text = Buffer.isBuffer(buffer) ? buffer.toString('utf8') : String(buffer);
+  const lines = text.replace(/^\uFEFF/u, '').split(/\r?\n/u);
+  const headerIndex = lines.findIndex((line) => {
+    const header = normalizedKey(line);
+    const officialHeader = header.includes('onetid') && header.includes('escooriscouri') && header.includes('typeofmatch');
+    const normalizedHeader = header.includes('onetcode') && header.includes('escouri') && header.includes('mappingrelation');
+    return officialHeader || normalizedHeader;
+  });
+  if (headerIndex === -1) throw new Error('Official ESCO O*NET crosswalk header was not found.');
+  return parseCrosswalk(parseCsv(lines.slice(headerIndex).join('\n')));
+};
 
 const loadEscoDataset = async (config, dependencies = {}) => {
   const wanted = [
@@ -258,9 +272,10 @@ const loadEscoDataset = async (config, dependencies = {}) => {
   const occupations = parseOccupations(parseCsv(files.occupations.buffer));
   const skills = parseSkills(parseCsv(files.skills.buffer));
   const occupationSkillRelations = parseOccupationSkillRelations(parseCsv(files.occupationSkillRelations.buffer));
-  const crosswalk = parseCrosswalk(parseCsv(crosswalkBuffer));
+  const crosswalk = parseCrosswalkCsv(crosswalkBuffer);
   if (occupations.length < config.minOccupations) throw new Error(`ESCO occupation count ${occupations.length} is below ${config.minOccupations}`);
   if (skills.length < config.minSkills) throw new Error(`ESCO skill count ${skills.length} is below ${config.minSkills}`);
+  if (crosswalk.length < config.minCrosswalks) throw new Error(`ESCO crosswalk count ${crosswalk.length} is below ${config.minCrosswalks}`);
   const fileMetadata = {
     occupations: { name: files.occupations.fileName, sha256: sha256(files.occupations.buffer) },
     skills: { name: files.skills.fileName, sha256: sha256(files.skills.buffer) },
@@ -340,6 +355,8 @@ const persistEscoDataset = async ({ config, dataset, pool }) => {
       confidenceDistribution[mapping.confidenceLevel] += 1;
     }
 
+    if (importedCrosswalks < config.minCrosswalks) throw new Error(`Imported ESCO crosswalk count ${importedCrosswalks} is below ${config.minCrosswalks}`);
+
     await connection.commit();
     return { sourceId: config.sourceId, contentSha256: dataset.contentSha256, occupations: dataset.occupations.length, skills: dataset.skills.length, occupationSkillRelations: importedSkillRelations, crosswalks: importedCrosswalks, confidenceDistribution };
   } catch (error) {
@@ -362,4 +379,4 @@ if (require.main === module) {
   importEscoCatalog().then((result) => process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)).catch((error) => { process.stderr.write(`ESCO import failed: ${error.message}\n`); process.exitCode = 1; });
 }
 
-module.exports = { LICENSE_NAME, LICENSE_URL, OFFICIAL_CROSSWALK_REPORT, OFFICIAL_CROSSWALK_URL, OFFICIAL_DOWNLOAD_PAGE, confidenceDetails, createConfig, downloadBuffer, importEscoCatalog, listFor, loadEscoDataset, normalizeOnetCode, parseCrosswalk, parseCsv, parseOccupationSkillRelations, parseOccupations, parseSkills, persistEscoDataset, sha256, sourceMappedAt };
+module.exports = { LICENSE_NAME, LICENSE_URL, OFFICIAL_CROSSWALK_REPORT, OFFICIAL_CROSSWALK_URL, OFFICIAL_DOWNLOAD_PAGE, confidenceDetails, createConfig, downloadBuffer, importEscoCatalog, listFor, loadEscoDataset, normalizeOnetCode, parseCrosswalk, parseCrosswalkCsv, parseCsv, parseOccupationSkillRelations, parseOccupations, parseSkills, persistEscoDataset, sha256, sourceMappedAt };
