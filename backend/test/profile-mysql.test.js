@@ -104,7 +104,7 @@ test('adaptive profile persists education, sourced skills and account-scoped hyp
     assert.equal(withEducation.education[0].account_id, accountA);
 
     const withSkills = await store.replaceDeclaredSkills(accountA, [{
-      label: 'Analyser des données de test',
+      label: 'Libellé client ignoré',
       esco_uri: escoUri,
       proficiency: 'advanced',
       account_id: accountB,
@@ -113,6 +113,22 @@ test('adaptive profile persists education, sourced skills and account-scoped hyp
     assert.equal(withSkills.skills.filter((skill) => skill.source === 'declared').length, 1);
     assert.equal(withSkills.skills.filter((skill) => skill.source === 'cv').length, 1);
     assert.ok(withSkills.skills.every((skill) => skill.account_id === accountA));
+    assert.equal(
+      withSkills.skills.find((skill) => skill.source === 'declared').label,
+      'Analyser des données de test',
+    );
+
+    await assert.rejects(
+      store.replaceDeclaredSkills(accountA, [{
+        label: 'Fausse compétence ESCO',
+        esco_uri: 'http://data.europa.eu/esco/skill/not-in-catalog',
+        proficiency: 'unknown',
+      }]),
+      /not a known ESCO skill/u,
+    );
+    const afterRejectedSkill = await store.getProfile(accountA);
+    assert.equal(afterRejectedSkill.skills.filter((skill) => skill.source === 'declared').length, 1);
+    assert.equal(afterRejectedSkill.skills.filter((skill) => skill.source === 'cv').length, 1);
 
     const forbiddenDecision = await store.updateHypothesisStatus(accountB, hypothesisId, 'confirmed');
     assert.equal(forbiddenDecision, null);
