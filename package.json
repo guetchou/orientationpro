@@ -18,7 +18,8 @@
     "test:e2e:career": "node tests/e2e-career-functional.cjs",
     "check:sensitive": "node scripts/check-sensitive-files.cjs",
     "check": "npm run check:sensitive && npm run typecheck && npm run lint && npm run lint:backend && npm run test && npm run test:backend && npm run build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e:postbac": "node tests/e2e-postbac-functional.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
