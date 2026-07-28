@@ -22,6 +22,8 @@ const { createCareerStore } = require('./career/store');
 const { createCvRouter } = require('./cv/router');
 const { createCvService } = require('./cv/service');
 const { createCvStore } = require('./cv/store');
+const { createProfileRouter } = require('./profile/router');
+const { createProfileStore } = require('./profile/store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -67,6 +69,10 @@ if (process.env.AUTH_V1_ENABLED === 'true') {
   authV1 = createConfiguredAuthV1(process.env);
   closeApplicationResources = authV1.close;
   app.use('/api/v1/auth', authV1.router);
+  app.use('/api/v1/profile', createProfileRouter({
+    store: createProfileStore(authV1.pool),
+    authenticate: authV1.authenticate,
+  }));
 }
 if (process.env.RIASEC_API_ENABLED === 'true') {
   if (!authV1) {
@@ -121,6 +127,7 @@ app.get('/', (req, res) => {
       login: 'POST /api/v1/auth/login',
       register: 'POST /api/v1/auth/register',
       session: 'GET /api/v1/auth/session',
+      profile: 'GET|PUT /api/v1/profile',
     });
   }
   if (process.env.RIASEC_API_ENABLED === 'true') {
@@ -195,6 +202,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Backend listening on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
+  console.log(`Profile API enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
   console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
   console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
   console.log(`CV API v1 enabled: ${process.env.CV_API_V1_ENABLED === 'true'}`);
