@@ -1,12 +1,6 @@
-import React from 'react';
-import { CVUploadZone } from '@/components/admin/ats/CVUploadZone';
+import CvOptimizerPage from '@/features/cv-optimizer/CvOptimizerPage';
 
-export default function CVOptimizerPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto py-12">
-        <CVUploadZone onCandidateCreated={() => {}} />
-      </div>
-    </div>
-  );
-} 
+// Parcours public d'optimisation de CV (moteur makoki-cv-rules-v1, API v1).
+export default function CVOptimizer() {
+  return <CvOptimizerPage />;
+}
