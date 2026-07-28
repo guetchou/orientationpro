@@ -1,0 +1,43 @@
+name: Release Preflight Wrapper
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  wrapper:
+    name: VPS preflight wrapper
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate wrapper syntax
+        run: bash -n scripts/cv-release-preflight-vps-v2.sh
+
+      - name: Validate immutable base script markers
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          base_commit='c3fb03a79970a3dac95a51a261d5ed28548d6cb4'
+          base_path='scripts/cv-release-preflight-vps.sh'
+          base_script=/tmp/cv-release-preflight-base.sh
+
+          git show "${base_commit}:${base_path}" >"${base_script}"
+
+          start_marker=$(sed -n '120p' "${base_script}")
+          end_marker=$(sed -n '144p' "${base_script}")
+
+          printf 'start_marker=%q\n' "${start_marker}"
+          printf 'end_marker=%q\n' "${end_marker}"
+
+          test "${start_marker}" = "printf '=== Transactional production dump ===\\n'"
+          test "${end_marker}" = "printf '=== Detached source archive ===\\n'"
