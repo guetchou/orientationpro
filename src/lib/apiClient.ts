@@ -180,4 +180,81 @@ export const apiFetch = async <T>(
   }
 };
 
+/**
+ * Envoi multipart authentifie (upload de fichier). Contrairement a apiFetch,
+ * on ne fixe jamais Content-Type : le navigateur pose lui-meme la frontiere
+ * multipart. Meme logique de rafraichissement de session sur 401.
+ */
+export const apiUpload = async <T>(
+  path: string,
+  formData: FormData,
+  options: { retryAfterRefresh?: boolean } = {},
+): Promise<T> => {
+  const retryAfterRefresh = options.retryAfterRefresh !== false;
+  const headers = new Headers();
+  const token = getStoredAccessToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  try {
+    return await request<T>(`${API_ROOT}${path}`, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
+  } catch (error) {
+    if (retryAfterRefresh && error instanceof ApiError && error.status === 401) {
+      const refreshed = await refreshAuthSession();
+      if (refreshed) {
+        return apiUpload<T>(path, formData, { retryAfterRefresh: false });
+      }
+    }
+    throw error;
+  }
+};
+
+/**
+ * Telechargement binaire authentifie (rapport PDF). Renvoie un Blob et gere le
+ * rafraichissement de session sur 401. Ne simule jamais de contenu.
+ */
+export const apiDownload = async (
+  path: string,
+  options: { retryAfterRefresh?: boolean } = {},
+): Promise<Blob> => {
+  const retryAfterRefresh = options.retryAfterRefresh !== false;
+  const headers = new Headers();
+  const token = getStoredAccessToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const response = await fetch(`${API_ROOT}${path}`, {
+    headers,
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    if (
+      retryAfterRefresh
+      && response.status === 401
+    ) {
+      const refreshed = await refreshAuthSession();
+      if (refreshed) {
+        return apiDownload(path, { retryAfterRefresh: false });
+      }
+    }
+    let code: string | undefined;
+    try {
+      const payload = await response.json();
+      code = payload?.error?.code;
+    } catch {
+      code = undefined;
+    }
+    throw new ApiError(
+      `Telechargement refuse (${response.status}).`,
+      response.status,
+      code,
+    );
+  }
+
+  return response.blob();
+};
+
 export const AUTH_CHANGED_EVENT = AUTH_EVENT;
