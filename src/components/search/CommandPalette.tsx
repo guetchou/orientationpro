@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -13,63 +13,65 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
+  Search,
   Sparkles,
   UserCircle,
   Users,
 } from 'lucide-react';
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from '@/components/ui/command';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
-interface PaletteItem {
+interface Item {
+  group: string;
   label: string;
   to: string;
   icon: LucideIcon;
   keywords?: string;
 }
 
-const EXPLORER: PaletteItem[] = [
-  { label: 'Passer le test RIASEC', to: '/tests/riasec', icon: Sparkles, keywords: 'orientation interets holland questionnaire' },
-  { label: 'Découvrir mon profil', to: '/tests', icon: Compass, keywords: 'tests connaissance de soi' },
-  { label: 'Explorer les métiers', to: '/careers', icon: GraduationCap, keywords: 'catalogue onet professions carriere' },
-  { label: "Voir les offres d'emploi", to: '/jobs', icon: Briefcase, keywords: 'travail recrutement emploi' },
-  { label: 'Lire le blog et les ressources', to: '/blog', icon: BookOpen, keywords: 'articles guides actualites' },
+const EXPLORER: Item[] = [
+  { group: 'Explorer', label: 'Passer le test RIASEC', to: '/tests/riasec', icon: Sparkles, keywords: 'orientation interets holland questionnaire' },
+  { group: 'Explorer', label: 'Découvrir mon profil', to: '/tests', icon: Compass, keywords: 'tests connaissance de soi' },
+  { group: 'Explorer', label: 'Explorer les métiers', to: '/careers', icon: GraduationCap, keywords: 'catalogue onet professions carriere' },
+  { group: 'Explorer', label: "Voir les offres d'emploi", to: '/jobs', icon: Briefcase, keywords: 'travail recrutement emploi' },
+  { group: 'Explorer', label: 'Lire le blog et les ressources', to: '/blog', icon: BookOpen, keywords: 'articles guides actualites' },
 ];
 
-const TESTS: PaletteItem[] = [
-  { label: 'Test RIASEC (intérêts)', to: '/tests/riasec', icon: Sparkles, keywords: 'holland interets' },
-  { label: 'Intelligence émotionnelle', to: '/tests/emotional', icon: Compass, keywords: 'emotions' },
-  { label: "Style d'apprentissage", to: '/tests/learning', icon: Compass, keywords: 'apprendre etudes' },
-  { label: 'Intelligences multiples', to: '/tests/multiple', icon: Compass, keywords: 'gardner' },
-  { label: 'Reconversion professionnelle', to: '/tests/career-transition', icon: Compass, keywords: 'changer de metier' },
-  { label: 'Orientation sans diplôme', to: '/tests/no-diploma', icon: Compass, keywords: 'sans bac formation' },
-  { label: 'Emploi des seniors', to: '/tests/senior-employment', icon: Compass, keywords: 'age experience' },
-  { label: 'Profil entrepreneurial', to: '/tests/entrepreneurial', icon: Compass, keywords: 'entreprise creer' },
+const TESTS: Item[] = [
+  { group: "Tests d'orientation", label: 'Test RIASEC (intérêts)', to: '/tests/riasec', icon: Sparkles, keywords: 'holland' },
+  { group: "Tests d'orientation", label: 'Intelligence émotionnelle', to: '/tests/emotional', icon: Compass, keywords: 'emotions' },
+  { group: "Tests d'orientation", label: "Style d'apprentissage", to: '/tests/learning', icon: Compass, keywords: 'apprendre etudes' },
+  { group: "Tests d'orientation", label: 'Intelligences multiples', to: '/tests/multiple', icon: Compass, keywords: 'gardner' },
+  { group: "Tests d'orientation", label: 'Reconversion professionnelle', to: '/tests/career-transition', icon: Compass, keywords: 'changer de metier' },
+  { group: "Tests d'orientation", label: 'Orientation sans diplôme', to: '/tests/no-diploma', icon: Compass, keywords: 'sans bac formation' },
+  { group: "Tests d'orientation", label: 'Emploi des seniors', to: '/tests/senior-employment', icon: Compass, keywords: 'age experience' },
+  { group: "Tests d'orientation", label: 'Profil entrepreneurial', to: '/tests/entrepreneurial', icon: Compass, keywords: 'entreprise creer' },
 ];
 
-const PAGES: PaletteItem[] = [
-  { label: 'Accueil', to: '/', icon: Home },
-  { label: 'À propos', to: '/about', icon: Info, keywords: 'mission methode' },
-  { label: 'Conseillers', to: '/conseiller', icon: Users, keywords: 'coach accompagnement' },
-  { label: 'Prendre rendez-vous', to: '/book-appointment', icon: CalendarCheck, keywords: 'rdv' },
-  { label: 'Optimiser mon CV', to: '/cv-optimizer', icon: FileText, keywords: 'ats curriculum' },
-  { label: 'Guide des études au Congo 2024', to: '/guide-congo-2024', icon: BookOpen, keywords: 'post-bac filieres' },
+const PAGES: Item[] = [
+  { group: 'Aller à', label: 'Accueil', to: '/', icon: Home },
+  { group: 'Aller à', label: 'À propos', to: '/about', icon: Info, keywords: 'mission methode' },
+  { group: 'Aller à', label: 'Conseillers', to: '/conseiller', icon: Users, keywords: 'coach accompagnement' },
+  { group: 'Aller à', label: 'Prendre rendez-vous', to: '/book-appointment', icon: CalendarCheck, keywords: 'rdv' },
+  { group: 'Aller à', label: 'Optimiser mon CV', to: '/cv-optimizer', icon: FileText, keywords: 'ats curriculum' },
+  { group: 'Aller à', label: 'Guide des études au Congo 2024', to: '/guide-congo-2024', icon: BookOpen, keywords: 'post-bac filieres' },
 ];
+
+const LOGOUT = '__logout';
+
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /**
  * Palette de commandes globale (⌘K / Ctrl+K). Recherche instantanée des
- * pages, tests et espaces publics du site. Ouverte au clavier ou via
- * l'événement « makoki:open-search » (boutons du header).
+ * pages, tests et espaces publics. Construite sur le Dialog Radix (sans
+ * dépendance cmdk) : ouverture au clavier ou via l'événement
+ * « makoki:open-search » (boutons du header), navigation ↑↓ + Entrée.
  */
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
@@ -89,71 +91,116 @@ export function CommandPalette() {
     };
   }, []);
 
-  const go = (to: string) => {
+  useEffect(() => {
+    if (!open) {
+      setQuery('');
+      setActive(0);
+    }
+  }, [open]);
+
+  const account: Item[] = user
+    ? [
+        { group: 'Compte', label: 'Mon profil', to: '/profile', icon: UserCircle, keywords: 'compte' },
+        { group: 'Compte', label: 'Mon tableau de bord', to: '/dashboard', icon: LayoutDashboard, keywords: 'espace' },
+        { group: 'Compte', label: 'Se déconnecter', to: LOGOUT, icon: LogOut, keywords: 'quitter logout' },
+      ]
+    : [
+        { group: 'Compte', label: 'Se connecter', to: '/login', icon: LogIn, keywords: 'connexion' },
+        { group: 'Compte', label: 'Créer un compte', to: '/register', icon: UserCircle, keywords: 'inscription register' },
+      ];
+
+  const filtered = useMemo(() => {
+    const all = [...EXPLORER, ...TESTS, ...PAGES, ...account];
+    const q = norm(query.trim());
+    if (!q) return all;
+    return all.filter((item) => norm(`${item.label} ${item.keywords ?? ''}`).includes(q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, user]);
+
+  useEffect(() => {
+    setActive(0);
+  }, [query]);
+
+  const select = (item: Item) => {
     setOpen(false);
-    navigate(to);
+    if (item.to === LOGOUT) {
+      void signOut().then(() => navigate('/'));
+    } else {
+      navigate(item.to);
+    }
   };
 
-  const renderItems = (items: PaletteItem[]) =>
-    items.map((item) => {
-      const Icon = item.icon;
-      return (
-        <CommandItem key={item.label} value={`${item.label} ${item.keywords ?? ''}`} onSelect={() => go(item.to)}>
-          <Icon className="mr-2 h-4 w-4 text-emerald-600" />
-          {item.label}
-        </CommandItem>
-      );
-    });
+  const onInputKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActive((index) => Math.min(index + 1, filtered.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActive((index) => Math.max(index - 1, 0));
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      const item = filtered[active];
+      if (item) select(item);
+    }
+  };
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Rechercher une page, un test, un métier…" />
-      <CommandList>
-        <CommandEmpty>Aucun résultat. Essaie « test », « métiers » ou « rendez-vous ».</CommandEmpty>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-lg gap-0 overflow-hidden p-0">
+        <DialogTitle className="sr-only">Recherche</DialogTitle>
 
-        <CommandGroup heading="Explorer">{renderItems(EXPLORER)}</CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Tests d'orientation">{renderItems(TESTS)}</CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Aller à">{renderItems(PAGES)}</CommandGroup>
-        <CommandSeparator />
+        <div className="flex items-center gap-2 border-b border-slate-200 px-4">
+          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+          <input
+            autoFocus
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={onInputKey}
+            placeholder="Rechercher une page, un test, un métier…"
+            aria-label="Rechercher"
+            className="h-12 w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+          />
+        </div>
 
-        <CommandGroup heading="Compte">
-          {user ? (
-            <>
-              <CommandItem value="mon profil compte" onSelect={() => go('/profile')}>
-                <UserCircle className="mr-2 h-4 w-4 text-emerald-600" />
-                Mon profil
-              </CommandItem>
-              <CommandItem value="tableau de bord dashboard espace" onSelect={() => go('/dashboard')}>
-                <LayoutDashboard className="mr-2 h-4 w-4 text-emerald-600" />
-                Mon tableau de bord
-              </CommandItem>
-              <CommandItem
-                value="se deconnecter logout quitter"
-                onSelect={() => {
-                  setOpen(false);
-                  void signOut().then(() => navigate('/'));
-                }}
-              >
-                <LogOut className="mr-2 h-4 w-4 text-red-600" />
-                Se déconnecter
-              </CommandItem>
-            </>
+        <div className="max-h-80 overflow-y-auto p-2">
+          {filtered.length === 0 ? (
+            <p className="px-3 py-8 text-center text-sm text-slate-500">
+              Aucun résultat. Essaie « test », « métiers » ou « rendez-vous ».
+            </p>
           ) : (
-            <>
-              <CommandItem value="se connecter login connexion" onSelect={() => go('/login')}>
-                <LogIn className="mr-2 h-4 w-4 text-emerald-600" />
-                Se connecter
-              </CommandItem>
-              <CommandItem value="creer un compte inscription register" onSelect={() => go('/register')}>
-                <UserCircle className="mr-2 h-4 w-4 text-emerald-600" />
-                Créer un compte
-              </CommandItem>
-            </>
+            filtered.map((item, index) => {
+              const Icon = item.icon;
+              const showHeader = index === 0 || filtered[index - 1].group !== item.group;
+              return (
+                <div key={`${item.group}-${item.label}`}>
+                  {showHeader && (
+                    <p className="px-3 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+                      {item.group}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => select(item)}
+                    onMouseMove={() => setActive(index)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors',
+                      index === active ? 'bg-emerald-50 text-emerald-900' : 'text-slate-700 hover:bg-slate-50',
+                    )}
+                  >
+                    <Icon className={cn('h-4 w-4 shrink-0', item.to === LOGOUT ? 'text-red-600' : 'text-emerald-600')} />
+                    {item.label}
+                  </button>
+                </div>
+              );
+            })
           )}
-        </CommandGroup>
-      </CommandList>
-    </CommandDialog>
+        </div>
+
+        <div className="hidden items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-400 sm:flex">
+          <span>↑↓ pour naviguer · Entrée pour ouvrir</span>
+          <span>Échap pour fermer</span>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
