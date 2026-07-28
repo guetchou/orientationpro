@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -25,22 +24,25 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // Vert MAKOKI : la couleur de marque (theme-color #047857) devient la
+        // couleur primaire. Les boutons `default` (bg-primary) s'alignent enfin
+        // sur l'identité verte au lieu du bleu générique hérité du gabarit.
         primary: {
-          DEFAULT: "#2563EB", // Bleu plus vif
+          DEFAULT: "#047857",
           foreground: "#FFFFFF",
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
+          50: "#ecfdf5",
+          100: "#d1fae5",
+          200: "#a7f3d0",
+          300: "#6ee7b7",
+          400: "#34d399",
+          500: "#10b981",
+          600: "#059669",
+          700: "#047857",
+          800: "#065f46",
+          900: "#064e3b",
         },
         secondary: {
-          DEFAULT: "#F97316", // Orange plus vif
+          DEFAULT: "#F97316", // Orange / latérite
           foreground: "#FFFFFF",
           50: "#fff7ed",
           100: "#ffedd5",
@@ -73,31 +75,64 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Couleurs vives supplémentaires
+        // Échelles réparées : elles étaient réduites à {DEFAULT,light,dark}, ce
+        // qui rendait inertes toutes les classes numérotées (from-purple-600…).
         purple: {
-          DEFAULT: "#8B5CF6",
-          light: "#A78BFA",
-          dark: "#7C3AED",
+          DEFAULT: "#8b5cf6",
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
         },
         teal: {
-          DEFAULT: "#14B8A6",
-          light: "#5EEAD4",
-          dark: "#0D9488",
+          DEFAULT: "#14b8a6",
+          50: "#f0fdfa",
+          100: "#ccfbf1",
+          200: "#99f6e4",
+          300: "#5eead4",
+          400: "#2dd4bf",
+          500: "#14b8a6",
+          600: "#0d9488",
+          700: "#0f766e",
+          800: "#115e59",
+          900: "#134e4a",
         },
         pink: {
-          DEFAULT: "#EC4899",
-          light: "#F9A8D4",
-          dark: "#DB2777",
+          DEFAULT: "#ec4899",
+          50: "#fdf2f8",
+          100: "#fce7f3",
+          200: "#fbcfe8",
+          300: "#f9a8d4",
+          400: "#f472b6",
+          500: "#ec4899",
+          600: "#db2777",
+          700: "#be185d",
+          800: "#9d174d",
+          900: "#831843",
         },
         green: {
-          DEFAULT: "#22C55E",
-          light: "#86EFAC",
-          dark: "#16A34A",
+          DEFAULT: "#22c55e",
+          50: "#f0fdf4",
+          100: "#dcfce7",
+          200: "#bbf7d0",
+          300: "#86efac",
+          400: "#4ade80",
+          500: "#22c55e",
+          600: "#16a34a",
+          700: "#15803d",
+          800: "#166534",
+          900: "#14532d",
         },
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        heading: ["Montserrat", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        heading: ["Montserrat", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -110,9 +145,9 @@ export default {
         soft: "0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)",
         glossy: "0 0 20px rgba(0, 0, 0, 0.1), 0 0 6px rgba(0, 0, 0, 0.1)",
         highlight: "inset 0 1px 0 0 rgba(255, 255, 255, 0.1)",
-        glow: "0 0 20px rgba(37, 99, 235, 0.5)",
+        glow: "0 0 20px rgba(4, 120, 87, 0.4)",
         "inner-glow": "inset 0 0 20px 5px rgba(255, 255, 255, 0.2)",
-        "glass": "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
+        "glass": "0 8px 32px 0 rgba(6, 78, 59, 0.15)",
         "3d": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)",
       },
       animation: {
@@ -142,8 +177,8 @@ export default {
           to: { transform: "translateY(0)", opacity: "1" }
         },
         pulseGlow: {
-          "0%, 100%": { boxShadow: "0 0 10px 0px rgba(59, 130, 246, 0.5)" },
-          "50%": { boxShadow: "0 0 20px 5px rgba(59, 130, 246, 0.8)" }
+          "0%, 100%": { boxShadow: "0 0 10px 0px rgba(4, 120, 87, 0.5)" },
+          "50%": { boxShadow: "0 0 20px 5px rgba(4, 120, 87, 0.8)" }
         },
         "gradient-xy": {
           "0%, 100%": {

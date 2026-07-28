@@ -6,6 +6,7 @@ import {
   getStoredAccessToken,
   getStoredUserData,
   refreshAuthSession,
+  hasSessionHint,
   storedUserFromAccount,
   type AuthAccount,
 } from '@/lib/apiClient';
@@ -85,6 +86,10 @@ export const useAuthState = () => {
         return;
       }
 
+      if (!hasSessionHint()) {
+        clearState();
+        return;
+      }
       const refreshed = await refreshAuthSession();
       if (refreshed) {
         applyAccount(refreshed.account);

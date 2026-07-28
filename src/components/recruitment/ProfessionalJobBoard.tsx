@@ -107,11 +107,11 @@ export const ProfessionalJobBoard = ({ className }: ProfessionalJobBoardProps) =
   }, [jobs, searchTerm]);
 
   return (
-    <main className={`min-h-screen bg-slate-50 px-4 pb-20 pt-28 ${className || ''}`}>
+    <div className={`min-h-screen bg-stone-50 px-4 pb-20 pt-14 ${className || ''}`}>
       <div className="mx-auto max-w-6xl">
         <div className="max-w-3xl">
           <p className="font-semibold text-emerald-700">Opportunités</p>
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Offres d’emploi disponibles</h1>
+          <h2 className="mt-2 font-heading text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">Offres d’emploi disponibles</h2>
           <p className="mt-5 text-lg leading-8 text-slate-700">
             Cette page affiche uniquement les offres retournées par le service MAKOKI. Vérifiez toujours l’identité de l’employeur, les conditions du poste et le canal de candidature avant de transmettre des informations personnelles.
           </p>
@@ -175,6 +175,6 @@ export const ProfessionalJobBoard = ({ className }: ProfessionalJobBoardProps) =
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 };
