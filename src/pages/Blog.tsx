@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { ArrowRight, BookOpenCheck, BriefcaseBusiness, Compass, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ const resources = [
 ];
 
 export default function Blog() {
+  usePageMeta({ title: 'Blog et ressources', description: 'Articles, guides et ressources d’orientation scolaire et professionnelle pour les jeunes du Congo.', path: '/blog' });
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
       <div className="mx-auto max-w-6xl">

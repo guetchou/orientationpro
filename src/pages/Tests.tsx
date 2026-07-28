@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -88,6 +89,7 @@ const explorationTests = [
 ];
 
 export default function Tests() {
+  usePageMeta({ title: 'Tests d’orientation', description: 'Passez le questionnaire d’intérêts RIASEC et d’autres outils de connaissance de soi pour découvrir les métiers qui vous correspondent.', path: '/tests' });
   return (
     <div className="min-h-screen bg-stone-50">
       {/* ============================ HERO ============================ */}
