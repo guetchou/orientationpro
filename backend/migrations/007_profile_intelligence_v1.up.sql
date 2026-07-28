@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS account_profiles (
-  account_id CHAR(36) PRIMARY KEY,
+  account_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
   first_name VARCHAR(100) NULL,
   last_name VARCHAR(100) NULL,
   phone VARCHAR(30) NULL,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS account_profiles (
 
 CREATE TABLE IF NOT EXISTS account_education_history (
   id CHAR(36) PRIMARY KEY,
-  account_id CHAR(36) NOT NULL,
+  account_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   education_level ENUM('primary','middle_school','high_school','baccalaureate','vocational','bac_plus_1','bac_plus_2','licence','master','doctorate','other') NOT NULL,
   status ENUM('in_progress','completed','interrupted') NOT NULL,
   diploma_name VARCHAR(255) NULL,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS account_education_history (
 
 CREATE TABLE IF NOT EXISTS account_profile_skills (
   id CHAR(36) PRIMARY KEY,
-  account_id CHAR(36) NOT NULL,
+  account_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   label VARCHAR(255) NOT NULL,
   esco_uri VARCHAR(512) NULL,
   proficiency ENUM('beginner','intermediate','advanced','expert','unknown') NOT NULL DEFAULT 'unknown',
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS account_profile_skills (
 
 CREATE TABLE IF NOT EXISTS account_profile_hypotheses (
   id CHAR(36) PRIMARY KEY,
-  account_id CHAR(36) NOT NULL,
+  account_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   hypothesis_type VARCHAR(80) NOT NULL,
   value_json JSON NOT NULL,
   rationale TEXT NOT NULL,
