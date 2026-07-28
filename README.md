@@ -32,10 +32,9 @@ Orientation Pro Congo est une plateforme complète d'orientation professionnelle
 
 ### 🎯 Objectifs
 
-- ✅ **95% des CV optimisés** passent les filtres ATS
-- ✅ **2,500+ étudiants** orientés avec succès
-- ✅ **4.8/5** satisfaction client
-- ✅ **150+ partenaires** entreprises et institutions
+- Aider chaque personne à comprendre ses intérêts et à explorer des métiers réels
+- Fournir une analyse de CV explicable, sans promesse de résultat garanti
+- Faciliter la mise en relation avec des conseillers et des recruteurs au Congo
 
 ## 🚀 Fonctionnalités
 

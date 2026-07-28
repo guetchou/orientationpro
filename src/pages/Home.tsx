@@ -149,7 +149,7 @@ export default function Home() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
                 <Link to="/tests">
-                  Passer un test d’orientation <ArrowRight className="ml-2 h-5 w-5" />
+                  Découvrir les métiers qui pourraient me correspondre <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
