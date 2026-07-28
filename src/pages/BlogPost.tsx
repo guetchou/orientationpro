@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,12 @@ export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<WordPressPost | null>(null);
   const [loading, setLoading] = useState(true);
+
+  usePageMeta({
+    title: post?.title?.rendered ? post.title.rendered.replace(/<[^>]+>/g, '') : 'Article de blog',
+    description: 'Article d’orientation scolaire et professionnelle sur le blog MAKOKI.',
+    path: slug ? `/blog/${slug}` : '/blog',
+  });
 
   useEffect(() => {
     if (slug) {

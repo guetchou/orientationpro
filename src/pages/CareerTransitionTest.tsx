@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { careerTransitionQuestions } from "@/components/tests/career/CareerTrans
 import { analyzeCareerTransitionResults } from "@/components/tests/career/CareerTransitionAnalyzer";
 
 export default function CareerTransitionTest() {
+  usePageMeta({ title: "Test de reconversion professionnelle", description: "Faites le point sur vos intérêts et compétences pour préparer une reconversion.", path: "/tests/career-transition" });
   const {
     currentQuestion,
     totalQuestions,

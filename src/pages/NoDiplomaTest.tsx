@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { careerTestQuestions } from "@/components/tests/nodiploma/TestQuestions"
 import { analyzeNoDiplomaCareerResults } from "@/components/tests/nodiploma/ResultsAnalyzer";
 
 export default function NoDiplomaTest() {
+  usePageMeta({ title: "Test d’orientation sans diplôme", description: "Des pistes de métiers et de formations accessibles sans diplôme, adaptées au Congo.", path: "/tests/no-diploma" });
   const {
     currentQuestion,
     totalQuestions,

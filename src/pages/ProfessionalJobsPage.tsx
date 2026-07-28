@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,6 +12,7 @@ import { ProfessionalJobBoard } from '@/components/recruitment/ProfessionalJobBo
  * logique (chargement des offres, recherche, garde-fous de candidature).
  */
 export default function ProfessionalJobsPage() {
+  usePageMeta({ title: "Offres d’emploi", description: "Découvrez des offres d’emploi et des opportunités professionnelles au Congo.", path: "/jobs" });
   return (
     <div className="min-h-screen bg-stone-50">
       {/* ============================ HERO ============================ */}
