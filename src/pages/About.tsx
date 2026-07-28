@@ -51,9 +51,9 @@ export default function About() {
         </div>
 
         <section className="mt-12 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950">
-          <h2 className="text-xl font-semibold">Limite importante</h2>
+          <h2 className="text-xl font-semibold">Bon à savoir</h2>
           <p className="mt-3 leading-7">
-            Un résultat MAKOKI ne constitue ni un diagnostic médical ou psychologique, ni une garantie d’admission, d’emploi ou de revenu. Les métiers réglementés peuvent exiger des diplômes, autorisations, aptitudes ou conditions particulières qui doivent être vérifiés séparément.
+            Un résultat MAKOKI éclaire ta réflexion et ouvre des pistes. Certains métiers réglementés exigent diplômes ou autorisations à vérifier séparément.
           </p>
         </section>
       </div>

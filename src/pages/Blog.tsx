@@ -61,9 +61,9 @@ export default function Blog() {
         </div>
 
         <section className="mt-12 rounded-2xl border border-blue-200 bg-blue-50 p-6 text-blue-950">
-          <h2 className="flex items-center gap-2 text-xl font-semibold"><BookOpenCheck className="h-5 w-5" />Politique éditoriale</h2>
+          <h2 className="flex items-center gap-2 text-xl font-semibold"><BookOpenCheck className="h-5 w-5" />Notre engagement</h2>
           <p className="mt-3 leading-7">
-            Les futurs contenus devront distinguer les faits sourcés, les conseils généraux et les adaptations propres au contexte congolais. Une information non vérifiée ne doit pas être présentée comme une donnée officielle ou une garantie de résultat.
+            Nos contenus s’appuient sur des sources vérifiées et distinguent clairement les faits des conseils généraux. Nous ne présentons jamais une information non vérifiée comme officielle.
           </p>
         </section>
       </div>
