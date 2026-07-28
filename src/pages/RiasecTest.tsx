@@ -308,11 +308,6 @@ export default function RiasecTest() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-                <p className="font-semibold text-amber-900">À lire avant de commencer</p>
-                <p className="mt-2 text-sm leading-relaxed text-amber-900">{instrument.disclaimer}</p>
-              </div>
-
               <div>
                 <p className="mb-3 font-semibold text-stone-900">Échelle de réponse</p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
