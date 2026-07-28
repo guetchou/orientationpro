@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { RiasecResults } from "@/types/test";
 import { getAIEnhancedAnalysis } from "@/utils/aiEnhancedAnalysis";
@@ -15,7 +14,6 @@ export const useRiasecTest = () => {
   const [results, setResults] = useState<RiasecResults | null>(null);
   const navigate = useNavigate();
 
-  // Reset the test if the user goes back to the start
   const resetTest = () => {
     setStarted(false);
     setCompleted(false);
@@ -24,156 +22,137 @@ export const useRiasecTest = () => {
     setResults(null);
   };
 
-  // Start the test
-  const startTest = () => {
-    setStarted(true);
-  };
+  const startTest = () => setStarted(true);
 
-  // Handle the user's answer
   const handleAnswer = async (score: number, questions: any[]) => {
     setLoading(true);
-    // Add the answer to the array
     const newAnswers = [...answers, score];
     setAnswers(newAnswers);
-    
-    // Move to the next question or complete the test
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setLoading(false);
-    } else {
-      // Test completed, calculate the results
-      await completeTest(newAnswers, questions);
+      return;
     }
+
+    await completeTest(newAnswers, questions);
   };
 
-  // Navigate to the previous question
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      // Remove the last answer
       setAnswers(answers.slice(0, -1));
     }
   };
 
-  // Calculate the RIASEC results
   const completeTest = async (finalAnswers: number[], questions: any[]) => {
-    // Calculate the scores for each category
-    let realistic = 0;
-    let investigative = 0;
-    let artistic = 0;
-    let social = 0;
-    let enterprising = 0;
-    let conventional = 0;
-
-    // Map each answer to its category
-    finalAnswers.forEach((answer, index) => {
-      const category = questions[index].category;
-      switch (category) {
-        case "realistic":
-          realistic += answer;
-          break;
-        case "investigative":
-          investigative += answer;
-          break;
-        case "artistic":
-          artistic += answer;
-          break;
-        case "social":
-          social += answer;
-          break;
-        case "enterprising":
-          enterprising += answer;
-          break;
-        case "conventional":
-          conventional += answer;
-          break;
-      }
-    });
-
-    // Normalize the scores to be out of 100
-    const maxPossibleScore = 5 * (questions.filter(q => q.category === "realistic").length);
-    realistic = Math.round((realistic / maxPossibleScore) * 100);
-    investigative = Math.round((investigative / maxPossibleScore) * 100);
-    artistic = Math.round((artistic / maxPossibleScore) * 100);
-    social = Math.round((social / maxPossibleScore) * 100);
-    enterprising = Math.round((enterprising / maxPossibleScore) * 100);
-    conventional = Math.round((conventional / maxPossibleScore) * 100);
-
-    // Calculate the personality code (top 3 scores)
-    const scores = [
-      { code: "R", score: realistic },
-      { code: "I", score: investigative },
-      { code: "A", score: artistic },
-      { code: "S", score: social },
-      { code: "E", score: enterprising },
-      { code: "C", score: conventional }
-    ];
-    scores.sort((a, b) => b.score - a.score);
-    const personalityCode = `${scores[0].code}${scores[1].code}${scores[2].code}`;
-    const dominantTypes = scores.slice(0, 3).map(item => item.code);
-
-    // Create the results object
-    const testResults: RiasecResults = {
-      realistic,
-      investigative,
-      artistic,
-      social,
-      enterprising,
-      conventional,
-      personalityCode,
-      confidenceScore: 90,
-      dominantTypes
+    const rawScores: Record<string, number> = {
+      realistic: 0,
+      investigative: 0,
+      artistic: 0,
+      social: 0,
+      enterprising: 0,
+      conventional: 0,
     };
 
-    // Set the results
+    finalAnswers.forEach((answer, index) => {
+      const category = questions[index]?.category;
+      if (category in rawScores) rawScores[category] += answer;
+    });
+
+    const normalize = (category: string) => {
+      const count = questions.filter((question) => question.category === category).length;
+      return count > 0 ? Math.round((rawScores[category] / (5 * count)) * 100) : 0;
+    };
+
+    const testResults: RiasecResults = {
+      realistic: normalize("realistic"),
+      investigative: normalize("investigative"),
+      artistic: normalize("artistic"),
+      social: normalize("social"),
+      enterprising: normalize("enterprising"),
+      conventional: normalize("conventional"),
+      personalityCode: "",
+      confidenceScore: 90,
+      dominantTypes: [],
+    };
+
+    const rankedScores = [
+      { code: "R", score: testResults.realistic },
+      { code: "I", score: testResults.investigative },
+      { code: "A", score: testResults.artistic },
+      { code: "S", score: testResults.social },
+      { code: "E", score: testResults.enterprising },
+      { code: "C", score: testResults.conventional },
+    ].sort((a, b) => b.score - a.score);
+
+    testResults.personalityCode = rankedScores.slice(0, 3).map(({ code }) => code).join("");
+    testResults.dominantTypes = rankedScores.slice(0, 3).map(({ code }) => code);
     setResults(testResults);
-    
+
     try {
-      // Get AI enhanced analysis
-      const aiInsights = await getAIEnhancedAnalysis('riasec', testResults);
-      
-      // Check if user is logged in before saving
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user?.id) {
-        // Save results to database if user is logged in
-        const { error } = await supabase.from('test_results').insert({
-          user_id: user.id,
-          test_type: 'riasec',
-          result_data: {
-            ...testResults,
-            aiInsights
-          }
+      const aiInsights = await getAIEnhancedAnalysis("riasec", testResults);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+
+      const authUser = authData.user;
+      if (authUser?.id && authUser.email) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              id: authUser.id,
+              email: authUser.email,
+              full_name: authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "email" },
+          )
+          .select("id")
+          .single();
+
+        if (profileError) throw profileError;
+
+        const averageScore = Math.round(
+          (testResults.realistic +
+            testResults.investigative +
+            testResults.artistic +
+            testResults.social +
+            testResults.enterprising +
+            testResults.conventional) /
+            6,
+        );
+
+        const { error: saveError } = await supabase.from("test_results").insert({
+          profile_id: profile.id,
+          test_type: "riasec",
+          test_data: { answers: finalAnswers },
+          results: { ...testResults, aiInsights },
+          score: averageScore,
+          interpretation: aiInsights?.summary ?? null,
+          recommendations: aiInsights?.recommendations ?? [],
+          completed_at: new Date().toISOString(),
         });
-        
-        if (error) {
-          console.error('Error saving results:', error);
-          toast.error("Impossible d'enregistrer vos résultats.");
-        } else {
-          toast.success("Test complété avec succès !");
-        }
+
+        if (saveError) throw saveError;
+        toast.success("Test complété et enregistré dans votre tableau de bord.");
+      } else {
+        toast.info("Test complété. Connectez-vous pour conserver le résultat.");
       }
-      
-      // Mark test as completed and stop loading
+
       setCompleted(true);
-      setLoading(false);
-      
     } catch (error) {
-      console.error('Error finalizing test:', error);
-      toast.error("Une erreur s'est produite lors de l'analyse de vos résultats.");
+      console.error("Error finalizing test:", error);
+      toast.error("Le résultat a été calculé, mais son enregistrement a échoué.");
+      setCompleted(true);
+    } finally {
       setLoading(false);
     }
   };
 
-  // View the test results
   const viewResults = () => {
     if (results) {
-      navigate('/test-results', { 
-        state: { 
-          results,
-          testType: 'riasec'
-        }
-      });
+      navigate("/test-results", { state: { results, testType: "riasec" } });
     }
   };
 
@@ -188,6 +167,6 @@ export const useRiasecTest = () => {
     startTest,
     handleAnswer,
     handlePrevious,
-    viewResults
+    viewResults,
   };
 };
