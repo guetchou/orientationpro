@@ -138,7 +138,7 @@ export default function Home() {
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="max-w-2xl text-white"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-950/60 px-4 py-1.5 text-sm font-medium text-amber-100 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-900 px-4 py-1.5 text-sm font-medium text-amber-100">
               <Sparkles className="h-4 w-4" />
               Orientation • Compétences • Emploi
             </span>
