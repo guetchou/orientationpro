@@ -10,7 +10,7 @@ const dataset = () => ({
   occupations: [{ uri: 'http://data.europa.eu/esco/occupation/nurse', code: 'nurse', iscoCode: '2221', preferredLabel: 'infirmier/infirmière', description: 'Dispense des soins.', aliases: ['infirmier'], status: 'active', metadata: {} }],
   skills: [{ uri: 'http://data.europa.eu/esco/skill/care', code: 'care', preferredLabel: 'prodiguer des soins', description: 'Fournir des soins.', kind: 'skill', metadata: {} }],
   occupationSkillRelations: [{ occupationUri: 'http://data.europa.eu/esco/occupation/nurse', skillUri: 'http://data.europa.eu/esco/skill/care', relationKind: 'essential', sourceRelation: 'essential' }],
-  crosswalk: [{ onetCode: '29-1141.00', escoUri: 'http://data.europa.eu/esco/occupation/nurse', mappingKind: 'close', confidenceScore: null, confidenceLevel: 'medium', sourceRow: {} }],
+  crosswalk: [{ onetCode: '29-1141.00', escoUri: 'http://data.europa.eu/esco/occupation/nurse', mappingKind: 'close', confidenceScore: null, confidenceLevel: 'unknown', mappedAt: null, sourceRow: {} }],
   files: {}, contentSha256: 'e'.repeat(64),
 });
 const config = (overrides = {}) => ({ sourceId: 'esco:1.2.1:fr', version: '1.2.1', locale: 'fr', accessDate: '2026-07-28', crosswalkUrl: 'https://example.test/crosswalk.csv', onetVersion: '30.3', allowSourceReplace: false, ...overrides });
@@ -32,12 +32,28 @@ test('parses French ESCO CSV, aliases, skills and relations', () => {
   assert.equal(parseOccupationSkillRelations(parseCsv('occupationUri,skillUri,relationType\nuri:o,uri:s,essential\n'))[0].relationKind, 'essential');
 });
 
-test('official crosswalk keeps provenance without invented validation or score', () => {
+test('official crosswalk keeps provenance without invented validation, score or date', () => {
   const [mapping] = parseCrosswalk([{ 'O*NET concept URI': 'https://onet/29-1141.00', 'ESCO concept URI': 'http://data.europa.eu/esco/occupation/nurse', mappingRelation: 'closeMatch' }]);
   assert.equal(mapping.onetCode, '29-1141.00');
+  assert.equal(mapping.mappingKind, 'close');
   assert.equal(mapping.confidenceScore, null);
-  assert.equal(mapping.confidenceLevel, 'medium');
+  assert.equal(mapping.confidenceLevel, 'unknown');
+  assert.equal(mapping.mappedAt, null);
   assert.equal(Object.hasOwn(mapping, 'reviewStatus'), false);
+});
+
+test('crosswalk preserves a confidence and date only when the source provides them', () => {
+  const [mapping] = parseCrosswalk([{
+    onetCode: '29-1141.00',
+    escoUri: 'http://data.europa.eu/esco/occupation/nurse',
+    mappingRelation: 'exactMatch',
+    confidenceScore: '0.92',
+    mappingDate: '2023-08-10',
+  }]);
+  assert.equal(mapping.mappingKind, 'exact');
+  assert.equal(mapping.confidenceScore, 92);
+  assert.equal(mapping.confidenceLevel, 'high');
+  assert.equal(mapping.mappedAt, '2023-08-10');
 });
 
 test('config pins version, locale, thresholds and replacement guard', () => {
@@ -67,6 +83,7 @@ test('import is transactional, idempotent and preserves local/reviewed data', as
   const first = fakePool();
   const result = await persistEscoDataset({ config: config(), dataset: dataset(), pool: first.pool });
   assert.equal(result.crosswalks, 1);
+  assert.deepEqual(result.confidenceDistribution, { high: 0, medium: 0, low: 0, unknown: 1 });
   assert.equal(first.state.committed, 1);
   assert.ok(first.state.statements.some((sql) => /alias_kind\s*=\s*'alternate'/u.test(sql)));
   assert.ok(first.state.statements.some((sql) => /review_status IN \('proposed',\s*'official'\)/u.test(sql)));
