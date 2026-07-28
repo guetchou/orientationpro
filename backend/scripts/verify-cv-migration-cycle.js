@@ -49,6 +49,16 @@ const PROTECTED_TABLES = [
   {
     key: 'occupationCrosswalks',
     name: 'career_occupation_crosswalks',
+    columns: [
+      'source_occupation_id',
+      'target_occupation_id',
+      'mapping_kind',
+      'confidence_score',
+      'provenance_json',
+      'reviewed_by_account_id',
+      'reviewed_at',
+      'created_at',
+    ],
     orderBy:
       '`source_occupation_id`, `target_occupation_id`, `mapping_kind`',
   },
@@ -95,6 +105,16 @@ const migrationExists = async (pool, version) => {
   return Number(row.count) === 1;
 };
 
+const listAppliedMigrations = async (pool) => {
+  const [rows] = await pool.query(
+    `SELECT version
+     FROM schema_migrations
+     ORDER BY applied_at DESC, version DESC`,
+  );
+
+  return rows.map((row) => row.version);
+};
+
 const scalarCount = async (pool, sql) => {
   const [[row]] = await pool.query(sql);
   return Number(row.count);
@@ -126,9 +146,13 @@ const hashTable = async (
   pool,
   tableName,
   orderBy,
+  columns,
 ) => {
+  const selectList = columns?.length
+    ? columns.map((column) => `\`${column}\``).join(', ')
+    : '*';
   const [rows] = await pool.query(
-    `SELECT * FROM \`${tableName}\` ORDER BY ${orderBy}`,
+    `SELECT ${selectList} FROM \`${tableName}\` ORDER BY ${orderBy}`,
   );
   const hash = createHash('sha256');
 
@@ -154,6 +178,7 @@ const snapshotProtectedData = async (pool) => {
       pool,
       table.name,
       table.orderBy,
+      table.columns,
     );
   }
 
@@ -202,7 +227,30 @@ const main = async () => {
     await migrateUp(pool, migrationsDirectory);
     await assertCvMigrationApplied(pool);
 
+    const appliedMigrations = await listAppliedMigrations(pool);
+    const cvMigrationIndex = appliedMigrations.indexOf(CV_MIGRATION);
+    assert.notEqual(
+      cvMigrationIndex,
+      -1,
+      `${CV_MIGRATION} must be applied before the cycle`,
+    );
+    const laterMigrations = appliedMigrations.slice(0, cvMigrationIndex);
     const protectedBefore = await snapshotProtectedData(pool);
+
+    for (const expectedMigration of laterMigrations) {
+      const rolledBack = await migrateDown(
+        pool,
+        migrationsDirectory,
+      );
+      assert.equal(rolledBack, expectedMigration);
+      assert.deepEqual(
+        await snapshotProtectedData(pool),
+        protectedBefore,
+      );
+    }
+
+    await assertCvMigrationApplied(pool);
+
     const rolledBack = await migrateDown(
       pool,
       migrationsDirectory,
@@ -224,6 +272,10 @@ const main = async () => {
     await migrateUp(pool, migrationsDirectory);
     await assertCvMigrationApplied(pool);
 
+    for (const migration of laterMigrations) {
+      assert.equal(await migrationExists(pool, migration), true);
+    }
+
     const protectedAfterReapply =
       await snapshotProtectedData(pool);
     assert.deepEqual(protectedAfterReapply, protectedBefore);
@@ -231,6 +283,7 @@ const main = async () => {
     process.stdout.write(`${JSON.stringify({
       databaseName,
       migration: CV_MIGRATION,
+      temporarilyRolledBack: laterMigrations,
       cycle: ['up', 'down', 'up'],
       protectedData: protectedAfterReapply,
       cvPermissions: 4,
