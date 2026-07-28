@@ -99,9 +99,11 @@ test('French ESCO presentation remains linked to O*NET RIASEC and explicit Engli
     assert.equal(fallback.fallbackLocale, 'en');
     assert.equal(fallback.translationStatus, 'unavailable');
 
-    await assert.rejects(
-      migrateDown(pool, migrationsDirectory),
+    assert.equal(
+      await migrateDown(pool, migrationsDirectory),
+      '007_social_auth',
     );
+    await assert.rejects(migrateDown(pool, migrationsDirectory));
     const [[migrationStillApplied]] = await pool.query(
       `SELECT COUNT(*) AS count
        FROM schema_migrations

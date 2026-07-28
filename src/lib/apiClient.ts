@@ -1,5 +1,8 @@
 const API_ROOT = String(import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
 
+export const oauthStartUrl = (provider: 'google' | 'meta') =>
+  `${API_ROOT}/v1/auth/oauth/${provider}/start`;
+
 const ACCESS_TOKEN_KEY = 'userToken';
 const ACCOUNT_KEY = 'userData';
 const AUTH_EVENT = 'orientationpro:auth-changed';
