@@ -11,6 +11,18 @@ for command in bash git head tail sed mktemp; do
   }
 done
 
+git fetch --quiet origin \
+  '+refs/heads/main:refs/remotes/origin/main'
+
+ACTUAL_MAIN_SHA=$(git rev-parse refs/remotes/origin/main)
+
+if [[ "${ACTUAL_MAIN_SHA}" != "${EXPECTED_MAIN_SHA}" ]]; then
+  printf 'Refusing preflight: origin/main is %s, expected %s\n' \
+    "${ACTUAL_MAIN_SHA}" \
+    "${EXPECTED_MAIN_SHA}" >&2
+  exit 1
+fi
+
 SOURCE_SCRIPT=$(mktemp)
 PATCHED_SCRIPT=$(mktemp)
 
