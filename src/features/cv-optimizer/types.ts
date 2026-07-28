@@ -1,10 +1,11 @@
-// Types du parcours public d'analyse de CV, alignes sur l'API /api/v1/cv/*
-// et le moteur deterministe makoki-cv-rules-v1 (aucune notion de probabilite
-// d'entretien, aucun score arbitraire).
+// Types du parcours public d'analyse ATS MAKOKI, alignes sur l'API /api/v1/cv/*
+// et le moteur versionne makoki-cv-rules-v1. Le score exprime une compatibilite
+// avec les regles ATS analysees, jamais une probabilite d'entretien, un taux de
+// recrutement ni une garantie de passage des ATS.
 
 export type CvSeverity = 'critique' | 'important' | 'suggestion';
 
-export interface CvScores {
+export interface AtsScores {
   generalReadiness: number;
   structure: number;
   contentClarity: number;
@@ -13,12 +14,12 @@ export interface CvScores {
   targetRelevance: number | null;
 }
 
-export interface CvSummaryScores {
+export interface AtsSummaryScores {
   generalReadiness: number;
   targetRelevance: number | null;
 }
 
-export interface CvDocument {
+export interface AtsDocument {
   fileName: string | null;
   mimeType: string | null;
   fileSize: number | null;
@@ -28,17 +29,19 @@ export interface CvDocument {
   wordCount?: number;
 }
 
-export interface CvSection {
+export interface AtsSection {
   key: string;
   present: boolean;
 }
 
-export interface CvSkill {
+export interface AtsSkill {
   canonical: string;
   domain: string;
 }
 
-export interface CvIssue {
+// Un point d'analyse ATS : regle detectee, gravite, preuve observable et
+// correction recommandee, avec l'impact sur le score de compatibilite.
+export interface AtsIssue {
   code: string;
   severity: CvSeverity;
   title: string;
@@ -47,12 +50,13 @@ export interface CvIssue {
   scoreImpact: number;
 }
 
-export interface CvStrength {
+// Une regle ATS reussie.
+export interface AtsStrength {
   code: string;
   title: string;
 }
 
-export interface CvTargetMatch {
+export interface AtsTargetMatch {
   targetRelevance: number;
   jobTitle: string | null;
   presentSkills: string[];
@@ -61,42 +65,42 @@ export interface CvTargetMatch {
   keywordOverlapPercent: number;
 }
 
-export interface CvMethodology {
+export interface AtsMethodology {
   version: string;
   type: string;
   limitations: string[];
 }
 
-// Contenu immuable calcule par le serveur (present dans le detail).
-export interface CvAnalysisSnapshot {
+// Contenu immuable calcule par le moteur ATS (present dans le detail).
+export interface AtsAnalysisSnapshot {
   status: string;
-  document: CvDocument;
-  scores: CvScores;
+  document: AtsDocument;
+  scores: AtsScores;
   contactPresence: { hasEmail: boolean; hasPhone: boolean };
-  sections: CvSection[];
-  skills: CvSkill[];
-  strengths: CvStrength[];
-  issues: CvIssue[];
-  targetMatch: CvTargetMatch | null;
-  methodology: CvMethodology;
+  sections: AtsSection[];
+  skills: AtsSkill[];
+  strengths: AtsStrength[];
+  issues: AtsIssue[];
+  targetMatch: AtsTargetMatch | null;
+  methodology: AtsMethodology;
 }
 
-// Resume renvoye par la liste.
-export interface CvAnalysisSummary {
+// Resume renvoye par la liste des analyses ATS.
+export interface AtsAnalysisSummary {
   id: string;
   algorithmVersion: string;
-  document: CvDocument;
-  scores: CvSummaryScores;
+  document: AtsDocument;
+  scores: AtsSummaryScores;
   targetTitle: string | null;
   createdAt: string;
 }
 
-// Analyse complete (creation / detail) : resume + snapshot immuable.
-export interface CvAnalysis extends CvAnalysisSummary {
-  snapshot: CvAnalysisSnapshot;
+// Analyse ATS complete (creation / detail) : resume + snapshot immuable.
+export interface AtsAnalysis extends AtsAnalysisSummary {
+  snapshot: AtsAnalysisSnapshot;
 }
 
-export interface CvAnalysisPage {
-  analyses: CvAnalysisSummary[];
+export interface AtsAnalysisPage {
+  analyses: AtsAnalysisSummary[];
   pagination: { limit: number; offset: number; total: number };
 }

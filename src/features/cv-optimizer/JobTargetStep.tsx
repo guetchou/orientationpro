@@ -26,10 +26,10 @@ export const JobTargetStep = ({
     <div className="mx-auto max-w-xl space-y-5">
       <div className="rounded-2xl border border-stone-200 bg-white p-6">
         <p className="flex items-center gap-2 font-semibold text-stone-900">
-          <Target className="h-5 w-5 text-emerald-700" /> Cibler une offre (facultatif)
+          <Target className="h-5 w-5 text-emerald-700" /> Cibler une offre — mots-clés ATS (facultatif)
         </p>
         <p className="mt-1 text-sm text-stone-600">
-          Renseignez une offre pour comparer votre CV à ses attentes. Sans description, l’analyse
+          Renseignez une offre pour comparer la compatibilité ATS de votre CV avec ses attentes. Sans description, l’analyse
           reste générale.
         </p>
 

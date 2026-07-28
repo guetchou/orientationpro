@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AnalysisResult } from '../AnalysisResult';
-import type { CvAnalysis } from '../types';
+import { AtsAnalysisResult } from '../AtsAnalysisResult';
+import type { AtsAnalysis } from '../types';
 
-const analysis: CvAnalysis = {
+const analysis: AtsAnalysis = {
   id: 'a-1',
   algorithmVersion: 'makoki-cv-rules-v1',
   document: {
@@ -52,6 +52,14 @@ const analysis: CvAnalysis = {
         recommendation: 'Ajoutez uniquement des résultats réels et vérifiables.',
         scoreImpact: -6,
       },
+      {
+        code: 'WEAK_ACTION_VERBS',
+        severity: 'suggestion',
+        title: 'Verbes d’action peu présents',
+        observation: 'Peu de verbes d’action repérés.',
+        recommendation: 'Commencez vos réalisations par des verbes d’action.',
+        scoreImpact: -3,
+      },
     ],
     targetMatch: {
       targetRelevance: 64,
@@ -72,19 +80,29 @@ const analysis: CvAnalysis = {
 const renderResult = () =>
   render(
     <MemoryRouter>
-      <AnalysisResult analysis={analysis} />
+      <AtsAnalysisResult analysis={analysis} />
     </MemoryRouter>,
   );
 
-describe('AnalysisResult', () => {
-  it('affiche la version du moteur makoki-cv-rules-v1', () => {
+describe('AtsAnalysisResult', () => {
+  it('emploie explicitement le registre ATS', () => {
     renderResult();
-    expect(screen.getAllByText(/makoki-cv-rules-v1/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Compatibilité ATS selon les règles MAKOKI/i)).toBeInTheDocument();
+    expect(screen.getByText(/Règles ATS réussies/i)).toBeInTheDocument();
+    expect(screen.getByText(/Problèmes détectés/i)).toBeInTheDocument();
+    expect(screen.getByText(/Éléments à vérifier/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/optimisation ATS/i).length).toBeGreaterThan(0);
   });
 
-  it('affiche les composantes avec leurs maximums reels, jamais /100', () => {
+  it('associe le score au moteur versionné makoki-cv-rules-v1', () => {
     renderResult();
-    expect(screen.getByText('76 / 100')).toBeInTheDocument(); // general
+    expect(screen.getAllByText(/makoki-cv-rules-v1/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Version du moteur d’analyse/i)).toBeInTheDocument();
+  });
+
+  it('affiche les composantes avec leurs maximums réels, jamais /100', () => {
+    renderResult();
+    expect(screen.getByText('76 / 100')).toBeInTheDocument();
     expect(screen.getByText('20 / 30')).toBeInTheDocument();
     expect(screen.getByText('19 / 25')).toBeInTheDocument();
     expect(screen.getByText('18 / 25')).toBeInTheDocument();
@@ -92,15 +110,24 @@ describe('AnalysisResult', () => {
     expect(screen.queryByText('20 / 100')).not.toBeInTheDocument();
   });
 
-  it("n'affiche aucune probabilite d'entretien ni score arbitraire", () => {
+  it("n'affiche aucune affirmation interdite", () => {
     const { container } = renderResult();
-    const text = container.textContent || '';
-    expect(text).not.toMatch(/probabilité d.entretien\s*:\s*\d/i);
+    const text = (container.textContent || '').toLowerCase();
+    expect(text).not.toMatch(/probabilité d.entretien\s*:\s*\d/);
     expect(text).not.toMatch(/85\s*[-–]\s*95\s*%/);
-    expect(text).not.toMatch(/score de base/i);
+    expect(text).not.toMatch(/taux de recrutement/);
+    expect(text).not.toMatch(/score de base/);
+    // Aucune formulation POSITIVE de garantie de passage des ATS.
+    expect(text).not.toMatch(/garantit\s+(le\s+)?passage/);
+    expect(text).not.toMatch(/passe(z|ra)?\s+les\s+ats/);
+    // La reproduction de tous les ATS ne doit apparaitre que niee.
+    expect(text).not.toMatch(/reproduit\s+tous\s+les\s+ats/);
+    // Le disclaimer nie explicitement la garantie et la reproduction.
+    expect(text).toMatch(/ni d.une garantie de\s*passage des ats/);
+    expect(text).toMatch(/ni d.une reproduction de tous les ats/);
   });
 
-  it('affiche les recommandations explicables', () => {
+  it('restitue les preuves et les recommandations', () => {
     renderResult();
     expect(screen.getByText(/Résultats peu quantifiés/)).toBeInTheDocument();
     expect(screen.getByText(/résultats réels et vérifiables/)).toBeInTheDocument();

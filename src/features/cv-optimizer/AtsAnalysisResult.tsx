@@ -6,6 +6,7 @@ import {
   Download,
   FileText,
   Info,
+  ListChecks,
   Loader2,
   RefreshCw,
   Target,
@@ -14,9 +15,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CvAnalysis, CvSeverity } from './types';
+import type { AtsAnalysis, CvSeverity } from './types';
 import { SCORE_DEFINITIONS, type ScoreKey } from './scoreDefs';
-import { downloadCvReport, describeCvError } from './cvApi';
+import { downloadAtsReport, describeCvError } from './cvApi';
 
 const SEVERITY_STYLE: Record<CvSeverity, string> = {
   critique: 'border-red-200 bg-red-50 text-red-800',
@@ -64,12 +65,15 @@ const ScoreBar = ({ scoreKey, value }: { scoreKey: ScoreKey; value: number | nul
   );
 };
 
-export const AnalysisResult = ({
+// Restitution de l'analyse ATS : compatibilite selon les regles MAKOKI, regles
+// reussies, problemes detectes, elements a verifier et recommandations
+// d'optimisation. Le score provient exclusivement de l'API (makoki-cv-rules-v1).
+export const AtsAnalysisResult = ({
   analysis,
   onRestart,
   onDelete,
 }: {
-  analysis: CvAnalysis;
+  analysis: AtsAnalysis;
   onRestart?: () => void;
   onDelete?: (id: string) => void;
 }) => {
@@ -80,15 +84,19 @@ export const AnalysisResult = ({
   const scores = snap.scores;
   const target = snap.targetMatch;
 
+  // Separation par gravite : problemes (critique/important) vs elements a verifier.
+  const problems = snap.issues.filter((issue) => issue.severity !== 'suggestion');
+  const toVerify = snap.issues.filter((issue) => issue.severity === 'suggestion');
+
   const handleDownload = async () => {
     setActionError(null);
     setDownloading(true);
     try {
-      const blob = await downloadCvReport(analysis.id);
+      const blob = await downloadAtsReport(analysis.id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `rapport-cv-makoki-${analysis.id}.pdf`;
+      link.download = `rapport-analyse-ats-makoki-${analysis.id}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -100,25 +108,48 @@ export const AnalysisResult = ({
     }
   };
 
+  const renderIssues = (items: typeof snap.issues) =>
+    items.map((issue) => (
+      <div key={issue.code} className={`rounded-xl border p-4 ${SEVERITY_STYLE[issue.severity]}`}>
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="font-semibold">{issue.title}</h4>
+          <Badge variant="outline" className="shrink-0 capitalize">{issue.severity}</Badge>
+        </div>
+        {/* Preuve observable */}
+        <p className="mt-1 text-sm opacity-90">{issue.observation}</p>
+        {/* Recommandation d'optimisation ATS */}
+        <p className="mt-2 flex items-start gap-2 text-sm font-medium">
+          <ArrowRight className="mt-0.5 h-4 w-4 shrink-0" />
+          {issue.recommendation}
+        </p>
+      </div>
+    ));
+
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      {/* En-tete */}
+      {/* En-tete : compatibilite ATS selon les regles MAKOKI */}
       <Card className="overflow-hidden border border-stone-200 shadow-sm">
         <div className="h-1.5 bg-gradient-to-r from-emerald-700 via-amber-500 to-emerald-700" />
         <CardHeader className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-emerald-700 hover:bg-emerald-700">Analyse de CV</Badge>
-            <Badge variant="outline">{analysis.algorithmVersion}</Badge>
+            <Badge className="bg-emerald-700 hover:bg-emerald-700">Analyse ATS</Badge>
+            <Badge variant="outline">Moteur : {analysis.algorithmVersion}</Badge>
           </div>
           <CardTitle className="font-heading text-2xl">
-            Indice général : <span className="text-emerald-700">{scores.generalReadiness} / 100</span>
+            Compatibilité ATS selon les règles MAKOKI :{' '}
+            <span className="text-emerald-700">{scores.generalReadiness} / 100</span>
           </CardTitle>
-          <CardDescription className="flex flex-wrap items-center gap-2 text-stone-500">
+          <CardDescription className="text-stone-500">
+            Indicateur de compatibilité avec les règles analysées par le moteur
+            {' '}<strong>{analysis.algorithmVersion}</strong>. Il ne s’agit ni d’une garantie de
+            passage des ATS, ni d’une reproduction de tous les ATS du marché.
+          </CardDescription>
+          <p className="flex flex-wrap items-center gap-2 text-sm text-stone-500">
             <FileText className="h-4 w-4" />
             <span className="break-all">{snap.document.fileName || 'Document'}</span>
             <span>·</span>
             <span>Langue : {snap.document.detectedLanguage}</span>
-          </CardDescription>
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <ScoreBar scoreKey="structure" value={scores.structure} />
@@ -131,10 +162,10 @@ export const AnalysisResult = ({
         </CardContent>
       </Card>
 
-      {/* Sections + compétences détectées */}
+      {/* Elements du CV lus par le moteur */}
       <Card className="border border-stone-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="font-heading text-lg">Éléments détectés</CardTitle>
+          <CardTitle className="font-heading text-lg">Éléments lus par le moteur ATS</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -164,12 +195,12 @@ export const AnalysisResult = ({
         </CardContent>
       </Card>
 
-      {/* Forces */}
+      {/* Regles ATS reussies */}
       {snap.strengths.length > 0 ? (
         <Card className="border border-stone-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-heading text-lg">
-              <BadgeCheck className="h-5 w-5 text-emerald-700" /> Points forts
+              <BadgeCheck className="h-5 w-5 text-emerald-700" /> Règles ATS réussies
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -185,48 +216,46 @@ export const AnalysisResult = ({
         </Card>
       ) : null}
 
-      {/* Constats et recommandations explicables */}
-      {snap.issues.length > 0 ? (
+      {/* Problemes detectes (critique / important) */}
+      {problems.length > 0 ? (
         <Card className="border border-stone-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-heading text-lg">
-              <AlertTriangle className="h-5 w-5 text-amber-600" /> Axes d’amélioration
+              <AlertTriangle className="h-5 w-5 text-amber-600" /> Problèmes détectés
             </CardTitle>
-            <CardDescription>Chaque point est expliqué et rattaché à une recommandation concrète.</CardDescription>
+            <CardDescription>
+              Chaque problème est justifié par une preuve observable et une recommandation
+              d’optimisation ATS.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {snap.issues.map((issue) => (
-              <div
-                key={issue.code}
-                className={`rounded-xl border p-4 ${SEVERITY_STYLE[issue.severity]}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-semibold">{issue.title}</h4>
-                  <Badge variant="outline" className="shrink-0 capitalize">{issue.severity}</Badge>
-                </div>
-                <p className="mt-1 text-sm opacity-90">{issue.observation}</p>
-                <p className="mt-2 flex items-start gap-2 text-sm font-medium">
-                  <ArrowRight className="mt-0.5 h-4 w-4 shrink-0" />
-                  {issue.recommendation}
-                </p>
-              </div>
-            ))}
-          </CardContent>
+          <CardContent className="space-y-3">{renderIssues(problems)}</CardContent>
         </Card>
       ) : null}
 
-      {/* Analyse ciblée si une offre a été fournie */}
+      {/* Elements a verifier (suggestions) */}
+      {toVerify.length > 0 ? (
+        <Card className="border border-stone-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-heading text-lg">
+              <ListChecks className="h-5 w-5 text-stone-600" /> Éléments à vérifier
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">{renderIssues(toVerify)}</CardContent>
+        </Card>
+      ) : null}
+
+      {/* Analyse par rapport a une offre (mots-cles ATS) */}
       {target ? (
         <Card className="border border-stone-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-heading text-lg">
-              <Target className="h-5 w-5 text-emerald-700" /> Analyse par rapport au poste ciblé
+              <Target className="h-5 w-5 text-emerald-700" /> Compatibilité ATS avec le poste ciblé
             </CardTitle>
             {target.jobTitle ? <CardDescription>Poste : {target.jobTitle}</CardDescription> : null}
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             <p className="text-stone-600">
-              Recouvrement des mots-clés : <strong>{target.keywordOverlapPercent} / 100</strong>
+              Recouvrement des mots-clés du poste : <strong>{target.keywordOverlapPercent} / 100</strong>
             </p>
             {target.presentSkills.length > 0 ? (
               <div>
@@ -255,10 +284,13 @@ export const AnalysisResult = ({
         </Card>
       ) : null}
 
-      {/* Méthode et limites */}
+      {/* Version du moteur + methode et limites */}
       <div className="rounded-xl border border-stone-200 bg-stone-50 p-5 text-sm text-stone-600">
         <p className="flex items-center gap-2 font-semibold text-stone-800">
           <Info className="h-4 w-4" /> Méthode et limites
+        </p>
+        <p className="mt-2">
+          Version du moteur d’analyse : <strong>{snap.methodology.version}</strong>.
         </p>
         <ul className="mt-2 list-inside list-disc space-y-1">
           {snap.methodology.limitations.map((limit) => (
@@ -277,7 +309,7 @@ export const AnalysisResult = ({
       <div className="flex flex-wrap justify-center gap-3">
         <Button onClick={handleDownload} disabled={downloading} className="bg-emerald-700 hover:bg-emerald-800">
           {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-          Télécharger le rapport PDF
+          Télécharger le rapport d’analyse ATS (PDF)
         </Button>
         {onRestart ? (
           <Button variant="outline" onClick={onRestart}>

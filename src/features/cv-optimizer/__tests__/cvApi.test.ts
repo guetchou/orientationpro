@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { ApiError } from '@/lib/apiClient';
-import { describeCvError, createCvAnalysis, listCvAnalyses } from '../cvApi';
+import { describeCvError, createAtsAnalysis, listAtsAnalyses } from '../cvApi';
 
 describe('describeCvError', () => {
-  it('404 sans code metier => service non active (flag desactive)', () => {
+  it('404 sans code metier => service ATS non active (flag desactive)', () => {
     const view = describeCvError(new ApiError('Not Found', 404));
     expect(view.kind).toBe('service_unavailable');
-    expect(view.message).toMatch(/pas encore activé/i);
+    expect(view.message).toMatch(/analyse ATS.*pas encore activé/i);
   });
 
   it('404 CV_ANALYSIS_NOT_FOUND => introuvable', () => {
@@ -38,7 +38,7 @@ describe('describeCvError', () => {
   });
 });
 
-describe('appels API', () => {
+describe('appels API ATS', () => {
   beforeEach(() => {
     localStorage.setItem('userToken', 'jwt-test');
     vi.stubGlobal('fetch', vi.fn());
@@ -48,7 +48,7 @@ describe('appels API', () => {
     localStorage.clear();
   });
 
-  it('createCvAnalysis envoie un multipart FormData (pas de JSON)', async () => {
+  it('createAtsAnalysis envoie un multipart FormData (pas de JSON)', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValue({
       ok: true,
@@ -57,13 +57,12 @@ describe('appels API', () => {
     });
 
     const file = new File(['%PDF-1.4 contenu'], 'cv.pdf', { type: 'application/pdf' });
-    await createCvAnalysis({ file, jobTitle: 'Comptable' });
+    await createAtsAnalysis({ file, jobTitle: 'Comptable' });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0];
     expect(init.method).toBe('POST');
     expect(init.body).toBeInstanceOf(FormData);
-    // Aucun Content-Type JSON force : le navigateur pose la frontiere multipart.
     const headers = new Headers(init.headers);
     expect(headers.get('Content-Type')).toBeNull();
     expect(headers.get('Authorization')).toBe('Bearer jwt-test');
@@ -72,14 +71,14 @@ describe('appels API', () => {
     expect(body.get('jobTitle')).toBe('Comptable');
   });
 
-  it('listCvAnalyses passe limit et offset', async () => {
+  it('listAtsAnalyses passe limit et offset', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
       text: async () => JSON.stringify({ analyses: [], pagination: { limit: 10, offset: 0, total: 0 } }),
     });
-    await listCvAnalyses(10, 20);
+    await listAtsAnalyses(10, 20);
     const [url] = fetchMock.mock.calls[0];
     expect(String(url)).toContain('limit=10');
     expect(String(url)).toContain('offset=20');

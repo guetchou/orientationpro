@@ -1,12 +1,15 @@
 import { ApiError, apiDownload, apiFetch, apiUpload } from '@/lib/apiClient';
-import type { CvAnalysis, CvAnalysisPage } from './types';
+import type { AtsAnalysis, AtsAnalysisPage } from './types';
 
+// Le parcours public d'analyse ATS consomme exclusivement l'API /api/v1/cv/*.
+// Aucun score n'est calcule cote frontend ; en cas d'echec, on affiche un etat
+// honnete, jamais un resultat simule.
 const BASE = '/v1/cv/analyses';
 
 export interface CvErrorView {
   kind:
     | 'service_unavailable' // flag desactive / route absente
-    | 'not_found' // analyse inexistante pour ce compte
+    | 'not_found' // analyse ATS inexistante pour ce compte
     | 'unauthenticated' // session expiree
     | 'forbidden' // permission insuffisante
     | 'invalid_file' // fichier refuse (type, taille, signature, corrompu)
@@ -18,22 +21,19 @@ export interface CvErrorView {
   code?: string;
 }
 
-// Traduit une erreur en message honnete, sans jamais simuler de resultat.
 export const describeCvError = (error: unknown): CvErrorView => {
   if (error instanceof ApiError) {
     const code = error.code;
 
     if (error.status === 404) {
-      // Une analyse manquante porte un code metier explicite ; sinon, c'est la
-      // route qui est absente parce que le service n'est pas encore active.
       if (code === 'CV_ANALYSIS_NOT_FOUND') {
-        return { kind: 'not_found', code, message: "Cette analyse n'existe pas ou plus." };
+        return { kind: 'not_found', code, message: "Cette analyse ATS n'existe pas ou plus." };
       }
       return {
         kind: 'service_unavailable',
         code,
         message:
-          "Le service d'analyse de CV n'est pas encore activé. Réessayez plus tard.",
+          "Le service d'analyse ATS n'est pas encore activé. Réessayez plus tard.",
       };
     }
 
@@ -41,7 +41,7 @@ export const describeCvError = (error: unknown): CvErrorView => {
       return {
         kind: 'unauthenticated',
         code,
-        message: 'Votre session a expiré. Reconnectez-vous pour continuer.',
+        message: 'Votre session a expiré. Reconnectez-vous pour lancer une analyse ATS.',
       };
     }
 
@@ -49,7 +49,7 @@ export const describeCvError = (error: unknown): CvErrorView => {
       return {
         kind: 'forbidden',
         code,
-        message: "Votre compte n'est pas autorisé à utiliser cette fonctionnalité.",
+        message: "Votre compte n'est pas autorisé à utiliser l'analyse ATS.",
       };
     }
 
@@ -58,7 +58,7 @@ export const describeCvError = (error: unknown): CvErrorView => {
         kind: 'scanned_pdf',
         code,
         message:
-          "Ce PDF semble scanné (sans texte). Utilisez un PDF contenant du texte ou un fichier DOCX.",
+          "Ce PDF semble scanné (sans texte). L'analyse ATS a besoin d'un PDF contenant du texte ou d'un fichier DOCX.",
       };
     }
 
@@ -67,7 +67,7 @@ export const describeCvError = (error: unknown): CvErrorView => {
         kind: 'unreadable',
         code,
         message:
-          "Le texte extrait est trop court ou illisible pour être analysé. Vérifiez votre fichier.",
+          "Le texte extrait est trop court ou illisible pour l'analyse ATS. Vérifiez votre fichier.",
       };
     }
 
@@ -88,52 +88,51 @@ export const describeCvError = (error: unknown): CvErrorView => {
       };
     }
 
-    return { kind: 'unknown', code, message: error.message || "L'analyse a échoué." };
+    return { kind: 'unknown', code, message: error.message || "L'analyse ATS a échoué." };
   }
 
-  // Erreur reseau / fetch impossible : on l'annonce sans inventer de resultat.
   return {
     kind: 'network',
-    message: "Le service est momentanément injoignable. Vérifiez votre connexion et réessayez.",
+    message: "Le service d'analyse ATS est momentanément injoignable. Vérifiez votre connexion.",
   };
 };
 
-export interface CreateAnalysisInput {
+export interface CreateAtsAnalysisInput {
   file: File;
   jobTitle?: string;
   jobDescription?: string;
 }
 
-export const createCvAnalysis = async (
-  input: CreateAnalysisInput,
-): Promise<CvAnalysis> => {
+export const createAtsAnalysis = async (
+  input: CreateAtsAnalysisInput,
+): Promise<AtsAnalysis> => {
   const form = new FormData();
   form.append('cv', input.file);
   if (input.jobTitle) form.append('jobTitle', input.jobTitle);
   if (input.jobDescription) form.append('jobDescription', input.jobDescription);
 
-  const payload = await apiUpload<{ analysis: CvAnalysis }>(BASE, form);
+  const payload = await apiUpload<{ analysis: AtsAnalysis }>(BASE, form);
   return payload.analysis;
 };
 
-export const listCvAnalyses = async (
+export const listAtsAnalyses = async (
   limit = 10,
   offset = 0,
-): Promise<CvAnalysisPage> =>
-  apiFetch<CvAnalysisPage>(
+): Promise<AtsAnalysisPage> =>
+  apiFetch<AtsAnalysisPage>(
     `${BASE}?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`,
   );
 
-export const getCvAnalysis = async (id: string): Promise<CvAnalysis> => {
-  const payload = await apiFetch<{ analysis: CvAnalysis }>(
+export const getAtsAnalysis = async (id: string): Promise<AtsAnalysis> => {
+  const payload = await apiFetch<{ analysis: AtsAnalysis }>(
     `${BASE}/${encodeURIComponent(id)}`,
   );
   return payload.analysis;
 };
 
-export const deleteCvAnalysis = async (id: string): Promise<void> => {
+export const deleteAtsAnalysis = async (id: string): Promise<void> => {
   await apiFetch<null>(`${BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' });
 };
 
-export const downloadCvReport = async (id: string): Promise<Blob> =>
+export const downloadAtsReport = async (id: string): Promise<Blob> =>
   apiDownload(`${BASE}/${encodeURIComponent(id)}/report.pdf`);

@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, ClipboardList, FileText, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AnalysisResult } from './AnalysisResult';
+import { AtsAnalysisResult } from './AtsAnalysisResult';
 import { CvEmpty, CvErrorState, CvLoading } from './states';
 import {
-  deleteCvAnalysis,
+  deleteAtsAnalysis,
   describeCvError,
-  getCvAnalysis,
-  listCvAnalyses,
+  getAtsAnalysis,
+  listAtsAnalyses,
   type CvErrorView,
 } from './cvApi';
-import type { CvAnalysis, CvAnalysisPage } from './types';
+import type { AtsAnalysis, AtsAnalysisPage } from './types';
 
 const PAGE_SIZE = 10;
 
@@ -22,21 +22,21 @@ const formatDate = (value: string) =>
     new Date(value),
   );
 
-// Historique paginé cote serveur des analyses du compte connecte, avec ouverture
-// du detail, telechargement et suppression. Tous les etats sont explicites.
+// Historique pagine des analyses ATS du compte connecte, avec ouverture du
+// detail, telechargement du rapport et suppression. Tous les etats sont explicites.
 export const CvAnalysisHistory = () => {
-  const [page, setPage] = useState<CvAnalysisPage | null>(null);
+  const [page, setPage] = useState<AtsAnalysisPage | null>(null);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<CvErrorView | null>(null);
-  const [detail, setDetail] = useState<CvAnalysis | null>(null);
+  const [detail, setDetail] = useState<AtsAnalysis | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(async (nextOffset: number) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await listCvAnalyses(PAGE_SIZE, nextOffset);
+      const result = await listAtsAnalyses(PAGE_SIZE, nextOffset);
       setPage(result);
       setOffset(nextOffset);
     } catch (caught) {
@@ -54,7 +54,7 @@ export const CvAnalysisHistory = () => {
     setDetailLoading(true);
     setError(null);
     try {
-      setDetail(await getCvAnalysis(id));
+      setDetail(await getAtsAnalysis(id));
     } catch (caught) {
       setError(describeCvError(caught));
     } finally {
@@ -64,7 +64,7 @@ export const CvAnalysisHistory = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteCvAnalysis(id);
+      await deleteAtsAnalysis(id);
       setDetail(null);
       await load(offset);
     } catch (caught) {
@@ -75,7 +75,7 @@ export const CvAnalysisHistory = () => {
   if (detailLoading) {
     return (
       <main className="min-h-screen bg-stone-50 px-4 py-10">
-        <CvLoading label="Chargement de l’analyse…" />
+        <CvLoading label="Chargement de l’analyse ATS…" />
       </main>
     );
   }
@@ -87,7 +87,7 @@ export const CvAnalysisHistory = () => {
           <Button variant="ghost" className="mb-6" onClick={() => setDetail(null)}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l’historique
           </Button>
-          <AnalysisResult analysis={detail} onDelete={handleDelete} />
+          <AtsAnalysisResult analysis={detail} onDelete={handleDelete} />
         </div>
       </main>
     );
@@ -98,24 +98,26 @@ export const CvAnalysisHistory = () => {
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold text-stone-900">Mes analyses de CV</h1>
-            <p className="mt-2 text-stone-600">Historique des analyses enregistrées sur votre compte.</p>
+            <h1 className="font-heading text-3xl font-bold text-stone-900">Mes analyses ATS</h1>
+            <p className="mt-2 text-stone-600">
+              Historique des analyses de compatibilité ATS enregistrées sur votre compte.
+            </p>
           </div>
           <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
             <Link to="/cv-optimizer">
-              <Plus className="mr-2 h-4 w-4" /> Nouvelle analyse
+              <Plus className="mr-2 h-4 w-4" /> Nouvelle analyse ATS
             </Link>
           </Button>
         </div>
 
         {loading ? (
-          <CvLoading label="Chargement de votre historique…" />
+          <CvLoading label="Chargement de votre historique ATS…" />
         ) : error ? (
           <CvErrorState error={error} onRetry={() => void load(offset)} />
         ) : !page || page.analyses.length === 0 ? (
           <CvEmpty
-            title="Aucune analyse pour le moment"
-            description="Lancez une première analyse pour obtenir un indice de préparation et des recommandations."
+            title="Aucune analyse ATS pour le moment"
+            description="Lancez une première analyse pour obtenir un indice de compatibilité ATS et des recommandations d’optimisation."
             action={
               <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
                 <Link to="/cv-optimizer">Analyser mon CV</Link>
@@ -129,7 +131,9 @@ export const CvAnalysisHistory = () => {
                 <Card key={item.id} className="flex flex-col border border-stone-200 shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between gap-2 font-heading text-lg">
-                      <span className="text-emerald-700">{item.scores.generalReadiness} / 100</span>
+                      <span className="text-emerald-700">
+                        Compatibilité ATS : {item.scores.generalReadiness} / 100
+                      </span>
                       <Badge variant="outline">{item.document.detectedLanguage}</Badge>
                     </CardTitle>
                     <p className="flex items-center gap-2 text-sm text-stone-500">
@@ -171,12 +175,6 @@ export const CvAnalysisHistory = () => {
             </div>
           </>
         )}
-
-        {page && page.analyses.length === 0 ? (
-          <div className="mt-6 flex justify-center text-stone-400">
-            <ClipboardList className="h-6 w-6" />
-          </div>
-        ) : null}
       </div>
     </main>
   );

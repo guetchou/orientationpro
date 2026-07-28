@@ -101,7 +101,7 @@ export const CvUploadStep = ({
 
       <p className="flex items-start gap-2 text-xs text-stone-500">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-        Votre fichier est analysé côté serveur puis supprimé. Seul le résultat structuré est conservé
+        Votre fichier est analysé par le moteur ATS MAKOKI côté serveur, puis supprimé. Seul le résultat structuré est conservé
         dans votre historique. Le texte brut du CV n’est pas stocké.
       </p>
 
