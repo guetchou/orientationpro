@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 
 const destinationForRole = (role?: string) => {
   if (role === 'super_admin') return '/admin/super-admin';
@@ -130,10 +131,16 @@ export default function Login() {
             )}
             <div className="mb-5 grid gap-3">
               <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
-                <a href={oauthStartUrl('google')}>Continuer avec Google</a>
+                <a href={oauthStartUrl('google')}>
+                  <SocialProviderIcon provider="google" />
+                  Continuer avec Google
+                </a>
               </Button>
               <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
-                <a href={oauthStartUrl('meta')}>Continuer avec Facebook</a>
+                <a href={oauthStartUrl('meta')}>
+                  <SocialProviderIcon provider="meta" />
+                  Continuer avec Facebook
+                </a>
               </Button>
               <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
                 <span className="h-px flex-1 bg-gray-200" />

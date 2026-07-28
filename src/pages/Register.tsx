@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 
 const messageForError = (error: unknown) => {
   if (error instanceof ApiError) {
@@ -285,9 +286,11 @@ export default function Register() {
                     </div>
                     <div className="grid gap-3">
                       <Button type="button" variant="outline" className="w-full" disabled={submitting} onClick={() => void startSocialRegistration('google')}>
+                        <SocialProviderIcon provider="google" />
                         Continuer avec Google
                       </Button>
                       <Button type="button" variant="outline" className="w-full" disabled={submitting} onClick={() => void startSocialRegistration('meta')}>
+                        <SocialProviderIcon provider="meta" />
                         Continuer avec Facebook
                       </Button>
                     </div>
