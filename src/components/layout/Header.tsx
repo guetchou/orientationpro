@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut, Menu, User, X } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Search, User, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { isAuthRoute } from '@/lib/authRoutes';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -48,9 +49,13 @@ export const Header = () => {
     navigate('/');
   };
 
+  const openSearch = () => window.dispatchEvent(new CustomEvent('makoki:open-search'));
+
   const isActivePath = (path: string) => (
     location.pathname === path || location.pathname.startsWith(`${path}/`)
   );
+
+  if (isAuthRoute(location.pathname)) return null;
 
   return (
     <header
@@ -86,6 +91,16 @@ export const Header = () => {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <button
+            type="button"
+            onClick={openSearch}
+            aria-label="Rechercher (Ctrl+K)"
+            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 transition-colors hover:border-emerald-300 hover:text-slate-700"
+          >
+            <Search className="h-4 w-4" />
+            <span>Rechercher</span>
+            <kbd className="ml-1 rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-400">⌘K</kbd>
+          </button>
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -136,6 +151,14 @@ export const Header = () => {
             className="overflow-hidden border-t border-slate-200 bg-white lg:hidden"
           >
             <div className="space-y-1 px-4 py-4">
+              <button
+                type="button"
+                onClick={() => { setIsMenuOpen(false); openSearch(); }}
+                className="mb-2 flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-slate-600"
+              >
+                <Search className="h-5 w-5" />
+                Rechercher
+              </button>
               {navigation.map((item) => (
                 <Link
                   key={item.path}

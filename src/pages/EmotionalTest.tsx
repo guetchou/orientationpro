@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { emotionalQuestions } from "@/components/tests/emotional/EmotionalQuesti
 import { analyzeEmotionalResults } from "@/components/tests/emotional/EmotionalTestAnalyzer";
 
 export default function EmotionalTest() {
+  usePageMeta({ title: "Test d’intelligence émotionnelle", description: "Un outil de connaissance de soi pour mieux comprendre vos émotions et votre orientation.", path: "/tests/emotional" });
   // Remplacer le hook par un hook spécifique si besoin, sinon adapter le testType
   const {
     currentQuestion,

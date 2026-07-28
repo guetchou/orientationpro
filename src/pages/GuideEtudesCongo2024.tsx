@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Briefcase, Globe, Users, Info, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -120,6 +121,7 @@ const institutions = [
 ];
 
 export default function GuideEtudesCongo2024() {
+  usePageMeta({ title: 'Guide des études au Congo 2024', description: 'Repères et pistes pour l’orientation post-bac au Congo : filières, établissements et métiers.', path: '/guide-congo-2024' });
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <main className="flex-1">

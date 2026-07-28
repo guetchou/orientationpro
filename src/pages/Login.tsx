@@ -1,17 +1,17 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError, oauthStartUrl, refreshAuthSession } from '@/lib/apiClient';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 
 const destinationForRole = (role?: string) => {
   if (role === 'super_admin') return '/admin/super-admin';
@@ -37,6 +37,7 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
+  usePageMeta({ title: "Connexion", description: "Connectez-vous à votre compte MAKOKI pour accéder à vos passations et résultats d’orientation.", path: "/login" });
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [oauthCompleting, setOauthCompleting] = useState(false);
@@ -88,6 +89,7 @@ export default function Login() {
       });
     return () => { active = false; };
   }, [location.search, navigate, requestedPath]);
+
   const onSubmit = async (values: LoginValues) => {
     setServerError(null);
     try {
@@ -101,121 +103,108 @@ export default function Login() {
   const submitting = form.formState.isSubmitting;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 px-4 py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-      >
-        <Card className="mx-auto w-full max-w-md border-0 shadow-2xl">
-          <CardHeader className="space-y-4 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-blue-600 text-white shadow-lg">
-              <Lock className="h-8 w-8" />
-            </div>
-            <div>
-              <CardTitle className="text-3xl">Connexion à MAKOKI</CardTitle>
-              <CardDescription className="mt-2">
-                Accède à tes passations et à tes résultats d’orientation.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {serverError && (
-              <div
-                className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-                role="alert"
-              >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{serverError}</span>
-              </div>
+    <AuthLayout
+      headline="Content de te revoir"
+      tagline="Connecte-toi pour retrouver tes passations, tes résultats d’orientation et ton accompagnement."
+      imageName="accompagnement-conseiller"
+    >
+      <div className="mb-8">
+        <h1 className="font-heading text-3xl font-bold text-slate-900">Connexion</h1>
+        <p className="mt-2 text-slate-600">Accède à tes passations et à tes résultats d’orientation.</p>
+      </div>
+
+      {serverError && (
+        <div className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{serverError}</span>
+        </div>
+      )}
+
+      <div className="mb-5 grid gap-3">
+        <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
+          <a href={oauthStartUrl('google')}>
+            <SocialProviderIcon provider="google" />
+            Continuer avec Google
+          </a>
+        </Button>
+        <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
+          <a href={oauthStartUrl('meta')}>
+            <SocialProviderIcon provider="meta" />
+            Continuer avec Facebook
+          </a>
+        </Button>
+        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
+          <span className="h-px flex-1 bg-gray-200" />
+          ou avec ton mot de passe
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+      </div>
+
+      <Form {...form}>
+        <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Adresse e-mail</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Input type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            <div className="mb-5 grid gap-3">
-              <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
-                <a href={oauthStartUrl('google')}>
-                  <SocialProviderIcon provider="google" />
-                  Continuer avec Google
-                </a>
-              </Button>
-              <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
-                <a href={oauthStartUrl('meta')}>
-                  <SocialProviderIcon provider="meta" />
-                  Continuer avec Facebook
-                </a>
-              </Button>
-              <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
-                <span className="h-px flex-1 bg-gray-200" />
-                ou avec ton mot de passe
-                <span className="h-px flex-1 bg-gray-200" />
-              </div>
-            </div>
-            <Form {...form}>
-              <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Adresse e-mail</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                          <Input
-                            type="email"
-                            autoComplete="email"
-                            placeholder="prenom@exemple.cg"
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                          <Input
-                            type={showPassword ? 'text' : 'password'}
-                            autoComplete="current-password"
-                            className="px-10"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((value) => !value)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Se connecter
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="justify-center text-sm text-gray-600">
-            Pas encore de compte ?&nbsp;
-            <Link to="/register" className="font-semibold text-emerald-700 hover:underline">
-              Créer un compte
-            </Link>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </main>
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Mot de passe</FormLabel>
+                  <Link to="/forgot-password" className="text-sm font-medium text-emerald-700 hover:underline">
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
+                <FormControl>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      className="px-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+            {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Se connecter
+          </Button>
+        </form>
+      </Form>
+
+      <p className="mt-8 text-center text-sm text-gray-600">
+        Pas encore de compte ?{' '}
+        <Link to="/register" className="font-semibold text-emerald-700 hover:underline">
+          Créer un compte
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -115,6 +116,7 @@ const principles = [
 ];
 
 export default function Home() {
+  usePageMeta({ description: 'MAKOKI aide chaque jeune du Congo à comprendre ses intérêts, explorer des métiers réels et bâtir un projet d’études ou d’emploi à partir de données explicables.', path: '/' });
   return (
     <main className="bg-white">
       {/* ============================ HERO ============================ */}

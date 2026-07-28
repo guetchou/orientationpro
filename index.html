@@ -52,9 +52,36 @@
         "description": "Plateforme d'orientation, de compétences et d'emploi conçue pour aider à comprendre son profil et explorer les métiers."
       }
     </script>
+    <style>
+      /* App-shell : paint de marque instantane avant le montage de React,
+         pour supprimer l'ecran blanc pendant le chargement du bundle SPA.
+         React (createRoot) remplace ce contenu au montage. */
+      .ms-shell { min-height: 100vh; background: #fafaf9; display: flex; flex-direction: column; }
+      .ms-shell-bar { display: flex; align-items: center; gap: 12px; height: 80px; padding: 0 24px; border-bottom: 1px solid #e2e8f0; background: #fff; }
+      .ms-shell-logo { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: #047857; color: #fff; font-weight: 700; font-size: 20px; font-family: system-ui, sans-serif; }
+      .ms-shell-brand { display: flex; flex-direction: column; line-height: 1.15; font-family: system-ui, sans-serif; }
+      .ms-shell-brand b { font-size: 20px; color: #020617; font-weight: 700; }
+      .ms-shell-brand span { font-size: 12px; color: #64748b; }
+      .ms-shell-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+      .ms-shell-spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #d1fae5; border-top-color: #047857; animation: ms-spin 0.8s linear infinite; }
+      .ms-shell-text { color: #64748b; font-size: 14px; font-family: system-ui, sans-serif; }
+      @keyframes ms-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .ms-shell-spinner { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="ms-shell" role="status" aria-label="Chargement de MAKOKI">
+        <header class="ms-shell-bar">
+          <span class="ms-shell-logo">M</span>
+          <span class="ms-shell-brand"><b>MAKOKI</b><span>Orientation • Compétences • Emploi</span></span>
+        </header>
+        <div class="ms-shell-body">
+          <div class="ms-shell-spinner"></div>
+          <p class="ms-shell-text">Chargement…</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

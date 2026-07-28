@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { AlertTriangle, Building2, Globe2, Mail, Phone, Server } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -9,6 +10,7 @@ const contacts = [
 ];
 
 export default function LegalNotice() {
+  usePageMeta({ title: "Mentions légales", description: "Mentions légales de la plateforme d’orientation MAKOKI.", path: "/legal" });
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
       <article className="mx-auto max-w-5xl">

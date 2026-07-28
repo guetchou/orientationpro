@@ -1,3 +1,4 @@
+import { usePageMeta } from '@/hooks/usePageMeta';
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { CounselorCard } from "@/components/counselors/CounselorCard";
@@ -19,6 +20,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 export default function Conseillers() {
+  usePageMeta({ title: "Conseillers en orientation", description: "Prenez rendez-vous avec des conseillers et coachs pour être accompagné dans votre orientation.", path: "/conseiller" });
   const [counselors, setCounselors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
