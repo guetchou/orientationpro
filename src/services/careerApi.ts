@@ -3,6 +3,7 @@ import type {
   CareerCatalogSourceSummary,
   CareerMatchResponse,
   CareerOccupation,
+  CareerProfileRecommendationResponse,
 } from '@/types/career';
 
 export interface CareerSearchOptions {
@@ -55,18 +56,28 @@ export const getCareerOccupation = async (
   return payload.occupation;
 };
 
-export const getCareerMatches = async (
-  resultId: string,
+const matchingParameters = (
   options: Pick<CareerSearchOptions, 'locale' | 'includeLocallyExcluded' | 'limit'> = {},
 ) => {
   const parameters = new URLSearchParams();
   parameters.set('locale', options.locale || DEFAULT_PRESENTATION_LOCALE);
   parameters.set('includeLocallyExcluded', String(options.includeLocallyExcluded === true));
   parameters.set('limit', String(boundedInteger(options.limit, 20, 1, 100)));
-
-  return apiFetch<CareerMatchResponse>(
-    `/v1/career/matches/${encodeURIComponent(resultId)}?${parameters.toString()}`,
-  );
+  return parameters;
 };
+
+export const getCareerMatches = async (
+  resultId: string,
+  options: Pick<CareerSearchOptions, 'locale' | 'includeLocallyExcluded' | 'limit'> = {},
+) => apiFetch<CareerMatchResponse>(
+  `/v1/career/matches/${encodeURIComponent(resultId)}?${matchingParameters(options).toString()}`,
+);
+
+export const getProfileCareerRecommendations = async (
+  resultId: string,
+  options: Pick<CareerSearchOptions, 'locale' | 'includeLocallyExcluded' | 'limit'> = {},
+) => apiFetch<CareerProfileRecommendationResponse>(
+  `/v1/career/recommendations/${encodeURIComponent(resultId)}?${matchingParameters(options).toString()}`,
+);
 
 export { DEFAULT_PRESENTATION_LOCALE };
