@@ -10,7 +10,7 @@ Le catalogue initial stocke O*NET 30.3 en anglais et l’interface française de
 
 ## Décision
 
-MAKOKI conserve les occupations O*NET comme identité fonctionnelle du classement et comme seule source des six scores RIASEC. ESCO 1.2.1 fournit une couche de présentation française séparée : libellés, descriptions, synonymes, compétences et relations métier-compétence.
+MAKOKI conserve les occupations O*NET comme identité fonctionnelle du classement et comme seule source des six scores RIASEC. ESCO 1.2.1, version courante publiée en décembre 2025, fournit une couche de présentation française séparée : libellés, descriptions, synonymes, compétences et relations métier-compétence.
 
 La stratégie de restitution est :
 
@@ -27,11 +27,17 @@ Une liaison `proposed` n’est jamais utilisée pour présenter du contenu comme
 
 Les tables de la migration 003 sont réutilisées. La migration 006 enrichit seulement `career_occupation_crosswalks` avec : niveau de confiance, statut de revue, référence/version de source et date de mapping. Le score numérique devient nullable afin de ne pas fabriquer un chiffre lorsque la source officielle ne le fournit pas.
 
+La nature de la relation (`exact`, `close`, `narrow`, `broad`) ne constitue pas à elle seule un niveau de confiance. Sans score numérique fourni par la source, `confidenceScore` reste `null` et `confidenceLevel` reste `unknown`. Une date de mapping n’est stockée que lorsqu’une date complète est présente dans la ligne source ; la date d’accès documentaire reste dans la provenance.
+
+Lorsqu’un métier O*NET possède plusieurs liaisons admissibles, la présentation choisit d’abord une décision `reviewed`, puis `official`, puis privilégie la nature de relation (`exact`, `close`, `narrow`, `broad`) avant une éventuelle confiance réellement sourcée et un dernier ordre déterministe.
+
 L’identifiant public et `sourceCode` restent O*NET pour préserver les consommateurs actuels. L’API ajoute `presentationSource`, `riasecSource`, `translationStatus`, `fallbackLocale` et `crosswalk`.
 
 ## Import
 
 L’import ESCO est explicite (`npm --prefix backend run import:esco`), transactionnel, idempotent, versionné et protégé par empreinte SHA-256. Il accepte un paquet officiel local ou une URL explicite, utilise un cache local, vérifie les volumes minimums et ne remplace pas silencieusement une version déjà importée. Les annotations locales, alias locaux et décisions humaines ne sont pas écrasés.
+
+Le rollback de la migration 006 ne convertit jamais une confiance absente en `0`. Il échoue avant toute suppression de colonne si des lignes `NULL` ne peuvent pas être représentées par l’ancien schéma `NOT NULL`.
 
 ## Conséquences et limites
 
