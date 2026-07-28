@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AuthLayoutProps {
   /** Accroche du panneau de marque (grand titre). */
@@ -10,6 +11,8 @@ interface AuthLayoutProps {
   tagline: string;
   /** Nom de base d'une image de /images/hero (sans extension). */
   imageName: string;
+  /** Côté du panneau de marque sur grand écran (par défaut à gauche). */
+  imageSide?: 'left' | 'right';
   children: ReactNode;
 }
 
@@ -20,15 +23,18 @@ const POINTS = [
 ];
 
 /**
- * Mise en page « split-screen » des écrans d'authentification : un panneau
- * de marque (image + accroche) à gauche sur grand écran, le formulaire à
- * droite. Sur mobile, seul le formulaire s'affiche, précédé du logo.
+ * Mise en page « split-screen » plein écran des écrans d'authentification :
+ * un panneau de marque (image + accroche) d'un côté sur grand écran, le
+ * formulaire de l'autre. Le côté de l'image alterne selon la page pour les
+ * distinguer. Sur mobile, seul le formulaire s'affiche, précédé du logo.
+ * Ces pages sont volontairement autonomes (sans header/footer du site).
  */
-export function AuthLayout({ headline, tagline, imageName, children }: AuthLayoutProps) {
+export function AuthLayout({ headline, tagline, imageName, imageSide = 'left', children }: AuthLayoutProps) {
+  const rightSide = imageSide === 'right';
   return (
     <main className="min-h-screen bg-white lg:grid lg:grid-cols-2">
       {/* Panneau de marque (grand écran) */}
-      <aside className="relative hidden overflow-hidden lg:block">
+      <aside className={cn('relative hidden overflow-hidden lg:block', rightSide && 'lg:order-2')}>
         <img
           src={`/images/hero/${imageName}.webp`}
           srcSet={`/images/hero/${imageName}-sm.webp 768w, /images/hero/${imageName}.webp 1600w`}
@@ -37,7 +43,12 @@ export function AuthLayout({ headline, tagline, imageName, children }: AuthLayou
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/95 via-emerald-950/85 to-emerald-900/70" />
+        <div
+          className={cn(
+            'absolute inset-0 bg-gradient-to-br from-emerald-950/95 via-emerald-950/85 to-emerald-900/70',
+            rightSide && 'bg-gradient-to-bl',
+          )}
+        />
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <Link to="/" className="flex w-fit items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-xl font-bold backdrop-blur-sm">
@@ -64,7 +75,7 @@ export function AuthLayout({ headline, tagline, imageName, children }: AuthLayou
       </aside>
 
       {/* Zone formulaire */}
-      <div className="flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12">
+      <div className={cn('flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12', rightSide && 'lg:order-1')}>
         <Link to="/" className="mb-8 flex w-fit items-center gap-3 lg:hidden">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-lg font-bold text-white">
             M
