@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
 const path = require('node:path');
 
 const { createDatabasePool } = require('../src/db/pool');
@@ -8,6 +9,50 @@ const { migrateDown, migrateUp } = require('../src/db/migrate');
 
 const CV_MIGRATION = '005_cv_analysis_v1';
 const CLONE_NAME_PATTERN = /(clone|preflight|test)/iu;
+
+const PROTECTED_TABLES = [
+  {
+    key: 'riasecInstruments',
+    name: 'orientation_riasec_instruments',
+    orderBy: '`id`',
+  },
+  {
+    key: 'riasecItems',
+    name: 'orientation_riasec_items',
+    orderBy: '`id`',
+  },
+  {
+    key: 'catalogSources',
+    name: 'career_catalog_sources',
+    orderBy: '`id`',
+  },
+  {
+    key: 'occupations',
+    name: 'career_occupations',
+    orderBy: '`id`',
+  },
+  {
+    key: 'occupationAliases',
+    name: 'career_occupation_aliases',
+    orderBy: '`occupation_id`, `locale`, `alias`',
+  },
+  {
+    key: 'skills',
+    name: 'career_skills',
+    orderBy: '`id`',
+  },
+  {
+    key: 'occupationSkillLinks',
+    name: 'career_occupation_skill_links',
+    orderBy: '`occupation_id`, `skill_id`, `relation_kind`',
+  },
+  {
+    key: 'occupationCrosswalks',
+    name: 'career_occupation_crosswalks',
+    orderBy:
+      '`source_occupation_id`, `target_occupation_id`, `mapping_kind`',
+  },
+];
 
 const requireCloneGuard = () => {
   const databaseName = String(process.env.DB_NAME || '');
@@ -55,130 +100,64 @@ const scalarCount = async (pool, sql) => {
   return Number(row.count);
 };
 
-const checksumQuery = async (pool, sql) => {
-  const [[row]] = await pool.query(sql);
+const normalizeValue = (value) => {
+  if (value instanceof Date) return value.toISOString();
+  if (Buffer.isBuffer(value)) return value.toString('hex');
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [
+          key,
+          normalizeValue(value[key]),
+        ]),
+    );
+  }
+
+  return value;
+};
+
+const hashTable = async (
+  pool,
+  tableName,
+  orderBy,
+) => {
+  const [rows] = await pool.query(
+    `SELECT * FROM \`${tableName}\` ORDER BY ${orderBy}`,
+  );
+  const hash = createHash('sha256');
+
+  for (const row of rows) {
+    hash.update(
+      JSON.stringify(normalizeValue(row)),
+      'utf8',
+    );
+    hash.update('\n', 'utf8');
+  }
 
   return {
-    count: Number(row.count),
-    sha256: row.sha256,
+    count: rows.length,
+    sha256: hash.digest('hex'),
   };
 };
 
 const snapshotProtectedData = async (pool) => {
-  await pool.query(
-    'SET SESSION group_concat_max_len = 16777216',
-  );
+  const snapshot = {};
 
-  return {
-    riasecInstruments: await checksumQuery(
+  for (const table of PROTECTED_TABLES) {
+    snapshot[table.key] = await hashTable(
       pool,
-      `SELECT
-         COUNT(*) AS count,
-         SHA2(
-           COALESCE(
-             GROUP_CONCAT(
-               CONCAT_WS(
-                 '||',
-                 id,
-                 slug,
-                 version,
-                 locale,
-                 status,
-                 content_hash
-               )
-               ORDER BY id
-               SEPARATOR '\n'
-             ),
-             ''
-           ),
-           256
-         ) AS sha256
-       FROM orientation_riasec_instruments`,
-    ),
-    riasecItems: await checksumQuery(
-      pool,
-      `SELECT
-         COUNT(*) AS count,
-         SHA2(
-           COALESCE(
-             GROUP_CONCAT(
-               CONCAT_WS(
-                 '||',
-                 id,
-                 instrument_id,
-                 position,
-                 dimension,
-                 prompt,
-                 reverse_scored
-               )
-               ORDER BY id
-               SEPARATOR '\n'
-             ),
-             ''
-           ),
-           256
-         ) AS sha256
-       FROM orientation_riasec_items`,
-    ),
-    catalogSources: await checksumQuery(
-      pool,
-      `SELECT
-         COUNT(*) AS count,
-         SHA2(
-           COALESCE(
-             GROUP_CONCAT(
-               CONCAT_WS(
-                 '||',
-                 id,
-                 source_kind,
-                 source_version,
-                 locale,
-                 content_sha256,
-                 record_count
-               )
-               ORDER BY id
-               SEPARATOR '\n'
-             ),
-             ''
-           ),
-           256
-         ) AS sha256
-       FROM career_catalog_sources`,
-    ),
-    occupations: await checksumQuery(
-      pool,
-      `SELECT
-         COUNT(*) AS count,
-         SHA2(
-           COALESCE(
-             GROUP_CONCAT(
-               CONCAT_WS(
-                 '||',
-                 id,
-                 catalog_source_id,
-                 source_code,
-                 locale,
-                 preferred_label,
-                 status,
-                 COALESCE(riasec_r, ''),
-                 COALESCE(riasec_i, ''),
-                 COALESCE(riasec_a, ''),
-                 COALESCE(riasec_s, ''),
-                 COALESCE(riasec_e, ''),
-                 COALESCE(riasec_c, ''),
-                 COALESCE(riasec_display_code, ''),
-                 riasec_profile_status
-               )
-               ORDER BY id
-               SEPARATOR '\n'
-             ),
-             ''
-           ),
-           256
-         ) AS sha256
-       FROM career_occupations`,
-    ),
-  };
+      table.name,
+      table.orderBy,
+    );
+  }
+
+  return snapshot;
 };
 
 const assertCvMigrationApplied = async (pool) => {
