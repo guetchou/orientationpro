@@ -18,12 +18,16 @@ const createStorage = (): StorageLike => {
   };
 };
 
-const envelope = (version: number): LifeProjectEnvelope => ({
+const envelope = (
+  version: number,
+  projectId = 'project-1',
+  accountId = 'account-1',
+): LifeProjectEnvelope => ({
   schemaVersion: 'makoki-life-project-api-v1',
   persistenceVersion: version,
   project: {
-    id: 'project-1',
-    ownerAccountId: 'account-1',
+    id: projectId,
+    ownerAccountId: accountId,
     title: 'Projet',
     purpose: null,
     state: 'exploration',
@@ -133,5 +137,45 @@ describe('file locale de reprise LifeProject', () => {
     expect(result.applied).toBe(1);
     expect(result.conflict?.code).toBe('COMMAND_REJECTED');
     expect(readSyncQueue(storage).commands.map((entry) => entry.commandId)).toEqual(['command-2']);
+  });
+
+  it('isole la reprise lors d’un changement de projet', async () => {
+    const storage = createStorage();
+    enqueueSyncCommand(command(), storage);
+    enqueueSyncCommand(command({ commandId: 'command-2', projectId: 'project-2' }), storage);
+    const executor = vi.fn().mockResolvedValue(envelope(3, 'project-2'));
+    const result = await flushSyncQueue({
+      remote: envelope(2, 'project-2'), confirmed: true, executor, storage,
+    });
+    expect(result.applied).toBe(1);
+    expect(executor.mock.calls[0][0].projectId).toBe('project-2');
+    expect(readSyncQueue(storage).commands.map((entry) => entry.projectId)).toEqual(['project-1']);
+  });
+
+  it('reprend sans perte après une interruption sur une liaison lente', async () => {
+    const storage = createStorage();
+    enqueueSyncCommand(command(), storage);
+    enqueueSyncCommand(command({ commandId: 'command-2' }), storage);
+    const interrupted = vi.fn()
+      .mockResolvedValueOnce(envelope(3))
+      .mockRejectedValueOnce(new Error('network interrupted'));
+    const firstAttempt = await flushSyncQueue({
+      remote: envelope(2), confirmed: true, executor: interrupted, storage,
+    });
+    expect(firstAttempt.applied).toBe(1);
+    expect(readSyncQueue(storage).commands.map((entry) => entry.commandId)).toEqual(['command-2']);
+
+    const resumed = await flushSyncQueue({
+      remote: envelope(3),
+      confirmed: true,
+      executor: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return envelope(4);
+      },
+      storage,
+    });
+    expect(resumed.applied).toBe(1);
+    expect(resumed.envelope.persistenceVersion).toBe(4);
+    expect(readSyncQueue(storage).commands).toHaveLength(0);
   });
 });

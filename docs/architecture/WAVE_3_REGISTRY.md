@@ -1,6 +1,6 @@
 # Registre de livraison — Vague 3
 
-Statut : actif
+Statut : clôture technique en cours sur `integration/wave-3`
 
 Ce registre coordonne le parcours adaptatif, les actions, la reprise et l’intégration finale. Il ne prouve ni validation scientifique, ni validation terrain, ni activation publique.
 
@@ -10,9 +10,9 @@ Ce registre coordonne le parcours adaptatif, les actions, la reprise et l’int�
 |---|---|---|---|---|---|---|
 | V3-A | Orchestrateur adaptatif versionné | merged | #95 | orchestration, tests, ADR | aucune | #101 |
 | V3-B | Actions et progression | merged | V3-A | action tracking, service, API, MySQL et tests | `012_life_project_action_tracking` fusionnée | #104 |
-| V3-C | Reprise et synchronisation | active | V3-B | `src/features/life-project/sync*`, hook, API et page | aucune | issue #97, branche `agent/wave-3-resume-sync-v1` |
-| V3-D | Expérience adaptative intégrée | blocked | V3-A à V3-C | frontend LifeProject et raccord court | aucune prévue | à ouvrir |
-| V3-E | Intégration et clôture | blocked | V3-A à V3-D | tests E2E, documentation, registre | aucune prévue | à ouvrir |
+| V3-C | Reprise et synchronisation | merged | V3-B | `src/features/life-project/sync*`, hook, API et page | aucune | #105 |
+| V3-D | Expérience adaptative intégrée | merged | V3-A à V3-C, V4-E | frontend LifeProject et raccord court | aucune | #122 |
+| V3-E | Intégration et clôture | active | V3-A à V3-D | tests E2E, résilience, documentation | aucune | `integration/wave-3` |
 
 ## Réservations V3-C
 
@@ -40,10 +40,14 @@ Ce registre coordonne le parcours adaptatif, les actions, la reprise et l’int�
 - les feature flags restent désactivés par défaut ;
 - aucun contenu local non vérifié n’est introduit.
 
-## Ordre immédiat
+## Gate de clôture
 
 ```text
-V3-C reprise et synchronisation
-→ V3-D expérience adaptative
-→ V3-E clôture
+création → clarification → scénario → plan → action
+→ blocage → reprise → réorientation
 ```
+
+Le gate exige aussi l’isolation multi-compte et multi-projet, le rejet des
+versions obsolètes, la conservation de la file hors ligne, puis sa reprise sans
+perte après interruption. Les flags restent désactivés par défaut ; cette
+clôture n’autorise aucune activation publique.

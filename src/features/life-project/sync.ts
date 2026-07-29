@@ -244,6 +244,10 @@ export const flushSyncQueue = async ({
       const remaining = state.commands.filter((entry) => (
         entry.projectId !== remote.project.id
         || commands.slice(applied).some((candidate) => candidate.commandId === entry.commandId)
+      )).map((entry) => (
+        entry.projectId === remote.project.id
+          ? { ...entry, baseVersion: envelope.persistenceVersion }
+          : entry
       ));
       writeSyncQueue({ schemaVersion: SYNC_QUEUE_VERSION, commands: remaining, conflict }, storage);
       return { envelope, applied, conflict };
