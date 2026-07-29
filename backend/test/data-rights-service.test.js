@@ -48,6 +48,7 @@ const createFixture = async () => {
       getAnalysis: async () => ({ id: 'cv-1', snapshot: { version: 1 } }),
     },
     now: () => new Date('2026-07-29T00:00:00.000Z'),
+    deletionReference: () => 'delete-reference-1234',
   });
   return { service, queries };
 };
@@ -93,7 +94,8 @@ test('confirmed deletion revokes sessions, removes account-owned data and commit
   });
   assert.equal(result.status, 'deleted');
   assert.equal(result.deletedAt, '2026-07-29T00:00:00.000Z');
-  assert.match(result.accountIdHash, /^[0-9a-f]{64}$/);
+  assert.equal(result.deletionReference, 'delete-reference-1234');
+  assert.equal(result.accountIdHash, undefined);
   assert.equal(queries.includes('COMMIT'), true);
   assert.equal(
     queries.some((entry) => typeof entry === 'object' && /DELETE FROM auth_accounts/.test(entry.sql)),
