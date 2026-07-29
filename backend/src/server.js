@@ -36,6 +36,9 @@ const {
   createMemoryRateLimiter,
   createOpaqueKeyFactory,
 } = require('./security/rate-limit');
+const { createJsonLogger } = require('./observability/logger');
+const { createMetricsRegistry } = require('./observability/metrics');
+const { createHttpObservability } = require('./observability/http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +55,9 @@ const allowedOrigins = new Set(
 let closeApplicationResources = async () => undefined;
 let authV1 = null;
 
+const logger = createJsonLogger();
+const metrics = createMetricsRegistry();
+const httpObservability = createHttpObservability({ logger, metrics });
 const generalLimiter = createMemoryRateLimiter({
   windowMs: rateLimitWindowMs,
   max: process.env.RATE_LIMIT_GENERAL_MAX || 300,
@@ -78,10 +84,11 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'If-Match'],
-  exposedHeaders: ['Content-Type', 'Authorization', 'ETag', 'RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'If-Match', 'X-Request-Id'],
+  exposedHeaders: ['Content-Type', 'Authorization', 'ETag', 'X-Request-Id', 'RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
 }));
 
+app.use(httpObservability.requestMiddleware);
 app.use('/api', generalLimiter);
 app.use(express.json({ limit: jsonBodyLimit, strict: true }));
 app.use(express.urlencoded({
@@ -91,12 +98,6 @@ app.use(express.urlencoded({
     ? urlencodedParameterLimit
     : 200,
 }));
-
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.path}`);
-  next();
-});
 
 app.use((req, res, next) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -248,61 +249,51 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, next) => {
   const statusCode = err?.type === 'entity.too.large' ? 413 : 500;
-  console.error('Global request error:', {
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    url: req.url,
-    method: req.method,
-    timestamp: new Date().toISOString(),
-  });
+  httpObservability.logError({ request: req, error: err, statusCode });
 
   res.status(statusCode).json({
     success: false,
     code: statusCode === 413 ? 'REQUEST_ENTITY_TOO_LARGE' : 'INTERNAL_SERVER_ERROR',
     message: statusCode === 413 ? 'La requête dépasse la taille autorisée' : 'Erreur interne du serveur',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Une erreur s\'est produite',
     timestamp: new Date().toISOString(),
     path: req.path,
     method: req.method,
+    requestId: req.requestId,
   });
 });
 
 app.use('*', (req, res) => {
-  console.log(`Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
     message: 'Route non trouvée',
-    path: req.originalUrl,
+    path: req.path,
     method: req.method,
     timestamp: new Date().toISOString(),
+    requestId: req.requestId,
     availableEndpoints: ['GET /', 'GET /api/test/health', 'GET /api/v1/capabilities'],
   });
 });
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend listening on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
-  console.log(`Profile API enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
-  console.log(`LifeProject API enabled: ${process.env.LIFE_PROJECT_API_ENABLED === 'true'}`);
-  console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
-  console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
-  console.log(`CV API v1 enabled: ${process.env.CV_API_V1_ENABLED === 'true'}`);
-  console.log(`Legacy API enabled: ${process.env.LEGACY_API_ENABLED === 'true'}`);
+  logger.write({
+    event: 'server.started',
+    version: process.env.APP_VERSION || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 server.on('error', (err) => {
-  console.error(`Backend server error: ${err.message}`);
+  logger.write({ event: 'server.failed', errorCode: err.code || err.name || 'Error' });
 });
 
 const stopServer = (reason) => {
-  console.log(`Stopping backend server${reason ? ` ${reason}` : ''}.`);
+  logger.write({ event: 'server.stopping', result: reason || 'signal' });
   server.close(async () => {
     await closeApplicationResources();
-    console.log('Backend server stopped.');
+    logger.write({ event: 'server.stopped', result: 'completed' });
     process.exit(0);
   });
 };
 
-process.on('SIGTERM', () => stopServer('after SIGTERM'));
-process.on('SIGINT', () => stopServer('after SIGINT'));
+process.on('SIGTERM', () => stopServer('SIGTERM'));
+process.on('SIGINT', () => stopServer('SIGINT'));
