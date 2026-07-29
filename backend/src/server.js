@@ -30,6 +30,7 @@ const { createProfileSynthesisStore } = require('./profile/synthesis-store');
 const { createLifeProjectRouter } = require('./life-project/router');
 const { createLifeProjectService } = require('./life-project/service');
 const { createLifeProjectStore } = require('./life-project/store');
+const { createActionTrackingStore } = require('./life-project/action-tracking-store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -92,6 +93,7 @@ if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
   app.use('/api/v1/life-projects', createLifeProjectRouter({
     service: createLifeProjectService({
       store: createLifeProjectStore(authV1.pool),
+      actionTrackingStore: createActionTrackingStore(authV1.pool),
     }),
     authenticate: authV1.authenticate,
   }));
@@ -158,9 +160,11 @@ app.get('/', (req, res) => {
     Object.assign(endpoints, {
       lifeProjects: 'GET|POST /api/v1/life-projects',
       lifeProject: 'GET /api/v1/life-projects/:projectId',
+      lifeProjectProgress: 'GET /api/v1/life-projects/:projectId/progress',
       lifeProjectScenarios: 'POST /api/v1/life-projects/:projectId/scenarios',
       lifeProjectTransitions: 'POST /api/v1/life-projects/:projectId/transitions',
       lifeProjectActionPlans: 'POST|PUT /api/v1/life-projects/:projectId/action-plans',
+      lifeProjectAction: 'PATCH /api/v1/life-projects/:projectId/action-plans/:planId/actions/:actionId',
     });
   }
   if (process.env.RIASEC_API_ENABLED === 'true') {
