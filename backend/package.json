@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --test test/capabilities.test.js test/life-project-contracts.test.js test/life-project-orchestration.test.js test/life-project-action-tracking.test.js test/life-project-store.test.js test/life-project-api.test.js test/life-project-action-api.test.js test/provenance-contracts.test.js test/content-registry-contracts.test.js test/content-verification-workflow.test.js test/cv-security.test.js test/auth-v1.test.js test/oauth-v1.test.js test/authenticate.test.js test/riasec-scoring.test.js test/riasec-api.test.js test/career-matching.test.js test/career-preparation-model.test.js test/career-profile-version.test.js test/career-profile-matching.test.js test/onet-import.test.js test/esco-import.test.js test/career-store-fr.test.js test/career-api.test.js test/cv-analysis.test.js test/cv-extractor.test.js test/cv-service.test.js test/cv-api.test.js test/cv-report.test.js test/cv-api-disabled.test.js test/profile-api.test.js test/profile-synthesis-builder.test.js test/profile-synthesis-api.test.js test/field-validation-protocol.test.js",
+    "test": "node --test test/capabilities.test.js test/life-project-contracts.test.js test/life-project-orchestration.test.js test/life-project-action-tracking.test.js test/life-project-store.test.js test/life-project-api.test.js test/life-project-action-api.test.js test/provenance-contracts.test.js test/content-registry-contracts.test.js test/content-verification-workflow.test.js test/cv-security.test.js test/auth-v1.test.js test/oauth-v1.test.js test/authenticate.test.js test/riasec-scoring.test.js test/riasec-api.test.js test/career-matching.test.js test/career-preparation-model.test.js test/career-profile-version.test.js test/career-profile-matching.test.js test/onet-import.test.js test/esco-import.test.js test/career-store-fr.test.js test/career-api.test.js test/cv-analysis.test.js test/cv-extractor.test.js test/cv-service.test.js test/cv-api.test.js test/cv-report.test.js test/cv-api-disabled.test.js test/profile-api.test.js test/profile-synthesis-builder.test.js test/profile-synthesis-api.test.js test/field-validation-protocol.test.js test/equity-accessibility-protocol.test.js",
     "test:capabilities": "node --test test/capabilities.test.js",
     "test:life-project": "node --test test/life-project-contracts.test.js test/life-project-orchestration.test.js test/life-project-action-tracking.test.js test/life-project-store.test.js test/life-project-api.test.js test/life-project-action-api.test.js",
     "test:life-project:mysql": "node --test --test-concurrency=1 test/life-project-mysql.test.js test/life-project-action-tracking-mysql.test.js",
@@ -23,7 +23,8 @@
     "test:profile": "node --test test/profile-api.test.js test/profile-synthesis-builder.test.js test/profile-synthesis-api.test.js",
     "test:content-registry": "node --test test/content-registry-contracts.test.js",
     "test:content-verification": "node --test test/content-verification-workflow.test.js",
-    "test:field-validation": "node --test test/field-validation-protocol.test.js"
+    "test:field-validation": "node --test test/field-validation-protocol.test.js",
+    "test:equity-accessibility": "node --test test/equity-accessibility-protocol.test.js"
   },
   "keywords": [
     "orientation",
