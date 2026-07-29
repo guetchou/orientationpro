@@ -19,7 +19,9 @@ import {
   listLifeProjects,
   moveLifeProjectToClarification,
   selectLifeProjectScenario,
+  transitionLifeProject,
 } from './api';
+import AdaptiveJourneyPanel from './AdaptiveJourneyPanel';
 import { useLifeProjectSync } from './useLifeProjectSync';
 import type { LifeProjectEnvelope, LifeProjectSummary, TriageDraft } from './types';
 
@@ -54,6 +56,16 @@ const stateLabels: Record<string, string> = {
   follow_up: 'Suivi',
   confirmation: 'Confirmation',
   reorientation: 'Réorientation',
+};
+
+const previousStates: Partial<Record<LifeProjectEnvelope['project']['state'], LifeProjectEnvelope['project']['state']>> = {
+  clarification: 'exploration',
+  comparison: 'clarification',
+  provisional_choice: 'comparison',
+  preparation: 'provisional_choice',
+  experimentation: 'preparation',
+  action: 'preparation',
+  follow_up: 'action',
 };
 
 const situations = [
@@ -249,6 +261,32 @@ export default function LifeProjectPage() {
     }
   };
 
+  const changeState = async (
+    to: LifeProjectEnvelope['project']['state'],
+    reason: string,
+  ) => {
+    if (!current) return;
+    if (!online || cached) {
+      sync.queueTransition(to, reason);
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      persistEnvelope(await transitionLifeProject(
+        current.project.id,
+        to,
+        current.persistenceVersion,
+        undefined,
+        reason,
+      ));
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Le projet n’a pas pu évoluer.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const nextActions = useMemo(() => {
     if (!current) return [];
     const actions: string[] = [];
@@ -341,7 +379,7 @@ export default function LifeProjectPage() {
                           <div key={scenario.id} className="rounded-lg border bg-background p-4">
                             <div className="flex items-start justify-between gap-2"><h3 className="font-medium">{scenario.title}</h3>{selected && <CheckCircle2 className="h-5 w-5 text-green-600" aria-label="Scénario choisi" />}</div>
                             <p className="mt-2 text-sm text-muted-foreground">{scenario.description}</p>
-                            {!selected && <Button className="mt-4 w-full" variant="outline" disabled={saving} onClick={() => void chooseScenario(scenario.id)}>{online && !cached ? 'Choisir provisoirement' : 'Enregistrer ce choix pour la reprise'}</Button>}
+                            {!selected && <Button className="mt-4 w-full" variant="outline" disabled={saving} onClick={() => void chooseScenario(scenario.id)}>{current.project.activeScenarioId ? 'Corriger ce choix provisoire' : online && !cached ? 'Choisir provisoirement' : 'Enregistrer ce choix pour la reprise'}</Button>}
                           </div>
                         );
                       })}
@@ -359,8 +397,44 @@ export default function LifeProjectPage() {
                 {current.project.state === 'exploration' && (
                   <Button disabled={saving} onClick={() => void clarify()}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}{online && !cached ? 'Passer à la clarification' : 'Enregistrer la clarification pour la reprise'}</Button>
                 )}
+                <div className="flex flex-wrap gap-2 border-t pt-4">
+                  {previousStates[current.project.state] && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={saving}
+                      onClick={() => void changeState(
+                        previousStates[current.project.state]!,
+                        'La personne revient explicitement à l’étape précédente pour corriger son projet.',
+                      )}
+                    >
+                      Revenir à l’étape précédente
+                    </Button>
+                  )}
+                  {current.project.state !== 'reorientation' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={saving}
+                      onClick={() => void changeState(
+                        'reorientation',
+                        'La personne demande explicitement une réorientation.',
+                      )}
+                    >
+                      Demander une réorientation
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
+
+            <AdaptiveJourneyPanel
+              envelope={current}
+              online={online}
+              cached={cached}
+              onEnvelope={persistEnvelope}
+              onMessage={setError}
+            />
 
             <Button variant="outline" onClick={() => void initialise()} disabled={loading}><RefreshCw className="mr-2 h-4 w-4" />Actualiser</Button>
           </div>

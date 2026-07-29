@@ -216,10 +216,24 @@ export default function AdaptiveJourneyPanel({
               </ul>
               {next.publicLimitations.length > 0 && <p className="mt-3 text-xs text-muted-foreground">Limite : {next.publicLimitations[0]}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button type="button" onClick={() => openModule(next.moduleId)}><ArrowRight className="mr-2 h-4 w-4" />Ouvrir cette étape</Button>
-                <Button type="button" variant="outline" onClick={() => skipModule(next.moduleId)}><PauseCircle className="mr-2 h-4 w-4" />Passer pour le moment</Button>
+                <Button type="button" onClick={() => openModule(next.moduleId)}><ArrowRight className="mr-2 h-4 w-4" />Commencer cette étape</Button>
+                <Button type="button" variant="outline" onClick={() => skipModule(next.moduleId)}><PauseCircle className="mr-2 h-4 w-4" />Passer explicitement</Button>
                 <Button type="button" variant="ghost" onClick={() => completeModule(next.moduleId)}><CheckCircle2 className="mr-2 h-4 w-4" />Déjà réalisé</Button>
               </div>
+            </div>
+          )}
+          {orchestration?.recommendations.some((entry) => entry.availability !== 'available') && (
+            <div className="rounded-lg border border-dashed p-4 text-sm" data-testid="unavailable-modules">
+              <p className="font-medium">Modules non disponibles</p>
+              <ul className="mt-2 space-y-2 text-muted-foreground">
+                {orchestration.recommendations
+                  .filter((entry) => entry.availability !== 'available')
+                  .map((entry) => (
+                    <li key={entry.moduleId}>
+                      {entry.label} — {entry.blockers.join(' · ') || 'indisponible dans cet environnement'}
+                    </li>
+                  ))}
+              </ul>
             </div>
           )}
         </CardContent>
