@@ -38,7 +38,7 @@ const {
 } = require('./security/rate-limit');
 const { createJsonLogger } = require('./observability/logger');
 const { createMetricsRegistry } = require('./observability/metrics');
-const { createHttpObservability } = require('./observability/http');
+const { V1_ROUTE_TEMPLATES, createHttpObservability } = require('./observability/http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,9 +55,13 @@ const allowedOrigins = new Set(
 let closeApplicationResources = async () => undefined;
 let authV1 = null;
 
-const logger = createJsonLogger();
-const metrics = createMetricsRegistry();
-const httpObservability = createHttpObservability({ logger, metrics });
+const logger = createJsonLogger({ routeTemplates: V1_ROUTE_TEMPLATES });
+const metrics = createMetricsRegistry({ routeTemplates: V1_ROUTE_TEMPLATES });
+const httpObservability = createHttpObservability({
+  logger,
+  metrics,
+  routeTemplates: V1_ROUTE_TEMPLATES,
+});
 const generalLimiter = createMemoryRateLimiter({
   windowMs: rateLimitWindowMs,
   max: process.env.RATE_LIMIT_GENERAL_MAX || 300,
@@ -263,10 +267,11 @@ app.use((err, req, res, next) => {
 });
 
 app.use('*', (req, res) => {
+  const requestPath = String(req.originalUrl || req.path).split(/[?#]/u, 1)[0];
   res.status(404).json({
     success: false,
     message: 'Route non trouvée',
-    path: req.path,
+    path: requestPath,
     method: req.method,
     timestamp: new Date().toISOString(),
     requestId: req.requestId,

@@ -22,15 +22,20 @@ test('runtime correlation and logs exclude request secrets and free-form payload
     write: (line) => { output += line; },
     clock: () => new Date('2026-07-29T00:00:00.000Z'),
   });
-  const metrics = createMetricsRegistry();
-  const runtime = createHttpObservability({ logger, metrics, clock: () => now });
+  const metrics = createMetricsRegistry({ routeTemplates: ['/api/v1/profile'] });
+  const runtime = createHttpObservability({
+    logger,
+    metrics,
+    routeTemplates: ['/api/v1/profile'],
+    clock: () => now,
+  });
   const request = {
     method: 'POST',
     path: '/api/v1/profile',
     originalUrl: '/api/v1/profile?email=canary@example.test',
     headers: {
       authorization: 'Bearer token-canary',
-      'x-request-id': 'safe-request-1234',
+      'x-request-id': '018f47a2-6b3d-7c8e-9f01-23456789abcd',
     },
     body: { document: 'document-canary', answer: 'answer-canary' },
     get(name) { return this.headers[name.toLowerCase()]; },
@@ -43,8 +48,8 @@ test('runtime correlation and logs exclude request secrets and free-form payload
   response.emit('finish');
 
   assert.equal(nextCalled, true);
-  assert.equal(request.requestId, 'safe-request-1234');
-  assert.equal(response.headers.get('X-Request-Id'), 'safe-request-1234');
+  assert.equal(request.requestId, '018f47a2-6b3d-7c8e-9f01-23456789abcd');
+  assert.equal(response.headers.get('X-Request-Id'), '018f47a2-6b3d-7c8e-9f01-23456789abcd');
   assert.match(output, /request\.completed/);
   assert.doesNotMatch(output, /token-canary|canary@example\.test|document-canary|answer-canary/);
   assert.deepEqual(metrics.snapshot(), {
@@ -61,7 +66,7 @@ test('error logging emits only a bounded technical code', () => {
   });
   runtime.logError({
     request: {
-      requestId: 'safe-request-1234',
+      requestId: '018f47a2-6b3d-7c8e-9f01-23456789abcd',
       method: 'POST',
       path: '/api/v1/cv/analyses',
       body: { email: 'private@example.test' },
