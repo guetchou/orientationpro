@@ -5,17 +5,14 @@ import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
   BriefcaseBusiness,
-  CalendarCheck,
   Compass,
   FileText,
   ShieldCheck,
   Sparkles,
   Target,
-  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-/** Apparition douce à l'entrée dans le viewport, jouée une seule fois. */
 const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => {
   const shouldReduceMotion = useReducedMotion();
   if (shouldReduceMotion) return <div>{children}</div>;
@@ -31,7 +28,6 @@ const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }
   );
 };
 
-/** <img> responsive WebP : version mobile légère (768w) + desktop (1600w). */
 const Photo = ({
   name,
   alt,
@@ -54,82 +50,93 @@ const Photo = ({
   />
 );
 
-const stats = [
-  { value: '8', label: 'tests d’orientation' },
-  { value: '100%', label: 'calcul côté serveur' },
-  { value: 'RIASEC', label: 'modèle de John Holland' },
-  { value: 'Congo', label: 'métiers et contexte locaux' },
+const situations = [
+  'Vous hésitez entre plusieurs études ou plusieurs métiers.',
+  'Vous avez des compétences, mais vous ne savez pas comment les relier à un projet.',
+  'Vous souhaitez changer de voie sans savoir par où commencer.',
 ];
 
-const pillars = [
+const benefits = [
   {
-    eyebrow: 'S’orienter',
-    title: 'Comprendre vos intérêts, pas deviner votre avenir',
+    title: 'Faire le point sur vous',
     description:
-      'Passez le questionnaire RIASEC versionné et découvrez les familles d’intérêts qui ressortent de vos réponses. Un calcul déterministe, jamais une IA qui décide à votre place.',
-    image: 'orientation-etudiants',
-    alt: 'Étudiants congolais travaillant ensemble sur un ordinateur portable devant leur campus.',
-    to: '/tests',
-    cta: 'Passer un test',
+      'Rassemblez votre parcours, vos centres d’intérêt, vos compétences et ce que vous recherchez aujourd’hui.',
     icon: Target,
   },
   {
-    eyebrow: 'Être accompagné',
-    title: 'Des conseillers et coachs autorisés, à vos côtés',
+    title: 'Découvrir plusieurs possibilités',
     description:
-      'Échangez avec un professionnel vérifié pour transformer un résultat en projet concret : choix de filière, préparation d’entretien, prochaines étapes.',
-    image: 'accompagnement-conseiller',
-    alt: 'Un conseiller d’orientation échange avec un jeune couple autour d’un bureau à Brazzaville.',
-    to: '/conseiller',
-    cta: 'Voir les conseillers',
-    icon: Users,
+      'Explorez des métiers et comprenez pourquoi certaines pistes méritent votre attention.',
+    icon: Compass,
   },
   {
-    eyebrow: 'Employabilité',
-    title: 'Un CV lisible par les recruteurs',
+    title: 'Avancer avec plus de clarté',
     description:
-      'Analysez votre CV, mesurez sa compatibilité avec les offres et renforcez les points qui comptent avant de postuler.',
-    image: 'employabilite-cv',
-    alt: 'Un professionnel relit un CV imprimé devant son ordinateur dans un bureau lumineux.',
-    to: '/cv-optimizer',
-    cta: 'Optimiser mon CV',
-    icon: FileText,
-  },
-  {
-    eyebrow: 'Emploi',
-    title: 'Des opportunités au Congo, pas ailleurs',
-    description:
-      'Explorez les postes ouverts et rapprochez-vous des recruteurs. Votre profil d’intérêts éclaire les pistes à considérer en priorité.',
-    image: 'emploi-entretien',
-    alt: 'Entretien professionnel entre trois personnes dans une salle de réunion vitrée.',
-    to: '/jobs',
-    cta: 'Voir les offres',
+      'Comparez les options, complétez votre profil à votre rythme et choisissez vos prochaines étapes.',
     icon: BriefcaseBusiness,
   },
 ];
 
+const steps = [
+  {
+    number: '1',
+    title: 'Créez votre profil',
+    description: 'Parlez de votre parcours, de votre situation et de ce que vous souhaitez changer ou construire.',
+  },
+  {
+    number: '2',
+    title: 'Répondez à quelques questions',
+    description: 'Prenez le temps de préciser ce qui vous attire, ce que vous savez faire et ce qui compte pour vous.',
+  },
+  {
+    number: '3',
+    title: 'Découvrez des pistes',
+    description: 'Consultez plusieurs métiers et les raisons pour lesquelles ils peuvent être intéressants à explorer.',
+  },
+  {
+    number: '4',
+    title: 'Affinez votre parcours',
+    description: 'Revenez sur votre profil, ajoutez de nouvelles informations et faites évoluer vos choix.',
+  },
+];
+
 const principles = [
-  'Calcul déterministe : aucune IA générative ne produit le score RIASEC.',
-  'Sources et versions conservées pour expliquer d’où viennent les données métiers.',
-  'Limites affichées : un score ne garantit ni emploi, ni salaire, ni aptitude réglementaire.',
-  'Adaptation au Congo progressive, avec revue humaine et traçabilité.',
+  {
+    title: 'Plusieurs pistes, pas une réponse unique',
+    description: 'Makoki vous aide à ouvrir le champ des possibles sans choisir à votre place.',
+  },
+  {
+    title: 'Des explications compréhensibles',
+    description: 'Vous voyez les éléments de votre profil qui ont contribué aux pistes présentées.',
+  },
+  {
+    title: 'Un profil qui peut évoluer',
+    description: 'Votre parcours n’est pas figé. Vous pouvez le compléter et le réviser au fil du temps.',
+  },
+  {
+    title: 'La décision vous appartient',
+    description: 'Makoki soutient votre réflexion. Vos choix restent personnels et doivent tenir compte de votre réalité.',
+  },
 ];
 
 export default function Home() {
-  usePageMeta({ description: 'MAKOKI aide chaque jeune du Congo à comprendre ses intérêts, explorer des métiers réels et bâtir un projet d’études ou d’emploi à partir de données explicables.', path: '/' });
+  usePageMeta({
+    description:
+      'Makoki vous aide à mieux comprendre votre profil, explorer des métiers et identifier des prochaines étapes qui ont du sens pour vous.',
+    path: '/',
+  });
+
   return (
     <main className="bg-white">
-      {/* ============================ HERO ============================ */}
       <section className="relative isolate overflow-hidden">
-        {/* Photographie plein cadre + dégradé pour la lisibilité du texte. */}
         <div className="absolute inset-0 -z-10">
           <Photo
             name="hero-orientation-campus"
-            alt="Groupe d’étudiants congolais réunis autour d’un ordinateur portable sur un campus de Brazzaville."
+            alt="Groupe de jeunes réunis autour d’un ordinateur portable."
             sizes="100vw"
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/85 to-emerald-950/60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/85 to-emerald-950/55" />
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/70 via-transparent to-transparent" />
         </div>
 
@@ -140,22 +147,22 @@ export default function Home() {
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="max-w-2xl text-white"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-900 px-4 py-1.5 text-sm font-medium text-amber-100">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-900/80 px-4 py-1.5 text-sm font-medium text-amber-100">
               <Sparkles className="h-4 w-4" />
               Orientation • Compétences • Emploi
             </span>
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Révélez votre potentiel.
-              <span className="block text-amber-200">Construisez votre avenir.</span>
+              Trouvez une direction
+              <span className="block text-amber-200">qui vous ressemble.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50">
-              MAKOKI aide chaque jeune du Congo à comprendre ses intérêts, explorer des métiers
-              réels et bâtir un projet d’études ou d’emploi à partir de données explicables.
+              Makoki vous aide à mieux comprendre votre profil, à explorer des métiers et à identifier
+              les prochaines étapes qui ont du sens pour vous.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
-                <Link to="/tests">
-                  Découvrir les métiers qui pourraient me correspondre <ArrowRight className="ml-2 h-5 w-5" />
+                <Link to="/register">
+                  Commencer mon parcours <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -164,125 +171,126 @@ export default function Home() {
                 asChild
                 className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                <Link to="/conseiller">
-                  <CalendarCheck className="mr-2 h-5 w-5" /> Être accompagné
-                </Link>
+                <a href="#comment-makoki-vous-aide">Découvrir comment Makoki peut m’aider</a>
               </Button>
             </div>
           </motion.div>
         </div>
 
-        {/* Bande de chiffres-clés en pied de hero, en verre dépoli. */}
-        <div className="relative border-t border-white/10 bg-emerald-950/70 backdrop-blur-sm">
-          <dl className="mx-auto grid max-w-7xl grid-cols-2 gap-px px-6 py-8 sm:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="px-2 text-center sm:text-left">
-                <dt className="font-heading text-3xl font-bold text-amber-200">{stat.value}</dt>
-                <dd className="mt-1 text-sm text-emerald-100">{stat.label}</dd>
-              </div>
+        <div className="relative border-t border-white/10 bg-emerald-950/75 backdrop-blur-sm">
+          <div className="mx-auto grid max-w-7xl gap-px px-6 py-7 sm:grid-cols-3">
+            {situations.map((situation) => (
+              <p key={situation} className="border-white/10 px-4 py-2 text-sm leading-6 text-emerald-50 sm:border-l sm:first:border-l-0">
+                {situation}
+              </p>
             ))}
-          </dl>
+          </div>
         </div>
       </section>
 
-      {/* ======================= PILIERS MÉTIER ======================= */}
-      <section className="mx-auto max-w-7xl px-6 py-20 lg:py-28" aria-labelledby="piliers-title">
+      <section id="comment-makoki-vous-aide" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-20 lg:py-28" aria-labelledby="benefices-title">
         <Reveal>
           <div className="mx-auto max-w-3xl text-center">
-            <p className="font-semibold text-primary">Votre parcours</p>
-            <h2
-              id="piliers-title"
-              className="mt-2 font-heading text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl"
-            >
-              De vos intérêts jusqu’à l’emploi, une étape à la fois
+            <p className="font-semibold text-primary">Ce que Makoki vous aide à faire</p>
+            <h2 id="benefices-title" className="mt-2 font-heading text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+              Mettre de l’ordre dans vos questions et avancer étape par étape
             </h2>
             <p className="mt-4 text-lg leading-8 text-stone-600">
-              Commencez par vous, confrontez vos intérêts aux métiers réels, puis avancez avec un
-              accompagnement humain et des opportunités concrètes.
+              Vous n’avez pas besoin d’avoir déjà toutes les réponses. Commencez par votre situation actuelle,
+              puis explorez les possibilités qui s’ouvrent à vous.
             </p>
           </div>
         </Reveal>
 
-        <div className="mt-16 space-y-16 lg:space-y-24">
-          {pillars.map((pillar, index) => {
-            const reversed = index % 2 === 1;
-            return (
-              <Reveal key={pillar.eyebrow}>
-                <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
-                  {/* Image */}
-                  <div className={reversed ? 'lg:order-2' : ''}>
-                    <div className="group relative overflow-hidden rounded-3xl shadow-lg">
-                      <Photo
-                        name={pillar.image}
-                        alt={pillar.alt}
-                        sizes="(min-width: 1024px) 40rem, 100vw"
-                        className="aspect-[16/10] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 ring-1 ring-inset ring-stone-900/5" />
-                    </div>
-                  </div>
-
-                  {/* Texte */}
-                  <div className={reversed ? 'lg:order-1' : ''}>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-primary">
-                      <pillar.icon className="h-4 w-4" />
-                      {pillar.eyebrow}
-                    </span>
-                    <h3 className="mt-4 font-heading text-2xl font-bold text-stone-900 sm:text-3xl">
-                      {pillar.title}
-                    </h3>
-                    <p className="mt-4 text-lg leading-8 text-stone-600">{pillar.description}</p>
-                    <Button asChild className="mt-6 bg-primary hover:bg-primary-800">
-                      <Link to={pillar.to}>
-                        {pillar.cta} <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </Reveal>
-            );
-          })}
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {benefits.map((benefit, index) => (
+            <Reveal key={benefit.title} delay={index * 0.08}>
+              <article className="h-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                  <benefit.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 text-xl font-semibold text-stone-900">{benefit.title}</h3>
+                <p className="mt-3 leading-7 text-stone-600">{benefit.description}</p>
+              </article>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      {/* ===================== TRANSPARENCE / ÉTHIQUE ===================== */}
-      <section className="border-y border-stone-200 bg-stone-50">
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:items-center">
+      <section className="border-y border-stone-200 bg-stone-50" aria-labelledby="parcours-title">
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:py-28">
+          <Reveal>
+            <div className="max-w-3xl">
+              <p className="font-semibold text-primary">Comment cela se passe</p>
+              <h2 id="parcours-title" className="mt-2 font-heading text-3xl font-bold text-stone-900 sm:text-4xl">
+                Un parcours simple, que vous pouvez reprendre à votre rythme
+              </h2>
+            </div>
+          </Reveal>
+
+          <ol className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step, index) => (
+              <Reveal key={step.number} delay={index * 0.06}>
+                <li className="h-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">
+                    {step.number}
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold text-stone-900">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-stone-600">{step.description}</p>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-20 lg:py-28" aria-labelledby="difference-title">
+        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <Reveal>
             <div>
-              <p className="font-semibold text-primary">Une orientation transparente</p>
-              <h2 className="mt-2 font-heading text-3xl font-bold text-stone-900 sm:text-4xl">
-                Des recommandations expliquées, jamais des promesses artificielles
+              <p className="font-semibold text-primary">Pourquoi Makoki</p>
+              <h2 id="difference-title" className="mt-2 font-heading text-3xl font-bold text-stone-900 sm:text-4xl">
+                Une boussole pour votre réflexion, pas une décision à votre place
               </h2>
               <p className="mt-5 text-lg leading-8 text-stone-700">
-                MAKOKI distingue vos résultats d’intérêts, les données métiers et la réalité locale.
-                Chaque couche reste explicable et sourcée — vous gardez la décision.
+                Une orientation utile ne se résume pas à un résultat isolé. Makoki vous aide à relier
+                plusieurs éléments de votre parcours et à comprendre les pistes proposées.
               </p>
               <Button asChild variant="outline" className="mt-7">
                 <Link to="/about">
-                  <Compass className="mr-2 h-4 w-4" /> Notre méthode
+                  <FileText className="mr-2 h-4 w-4" /> Découvrir notre méthode
                 </Link>
               </Button>
             </div>
           </Reveal>
 
-          <Reveal delay={0.1}>
-            <ul className="space-y-3">
-              {principles.map((principle) => (
-                <li
-                  key={principle}
-                  className="flex gap-3 rounded-xl border border-stone-200 bg-white p-4 text-sm leading-6 text-stone-700 shadow-sm"
-                >
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <span>{principle}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {principles.map((principle, index) => (
+              <Reveal key={principle.title} delay={index * 0.05}>
+                <article className="h-full rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <h3 className="mt-3 font-semibold text-stone-900">{principle.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-stone-600">{principle.description}</p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-emerald-100 bg-emerald-50/60">
+        <div className="mx-auto max-w-4xl px-6 py-16 text-center">
+          <Reveal>
+            <Compass className="mx-auto h-9 w-9 text-primary" />
+            <h2 className="mt-4 font-heading text-3xl font-bold text-stone-900">Makoki évolue avec votre parcours</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-stone-700">
+              Le service est en développement continu. De nouveaux outils viendront progressivement enrichir
+              votre réflexion, organiser vos prochaines étapes et vous aider à suivre votre progression.
+            </p>
           </Reveal>
         </div>
       </section>
 
-      {/* =========================== CTA FINAL =========================== */}
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <Photo
@@ -295,17 +303,14 @@ export default function Home() {
         </div>
         <div className="mx-auto max-w-3xl px-6 py-20 text-center text-white lg:py-24">
           <Reveal>
-            <h2 className="font-heading text-3xl font-bold sm:text-4xl">
-              Prêt à découvrir vos premières pistes ?
-            </h2>
+            <h2 className="font-heading text-3xl font-bold sm:text-4xl">Prêt à faire le point ?</h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-emerald-50/90">
-              Créez votre compte, passez le questionnaire disponible et consultez des
-              recommandations expliquées, étape par étape.
+              Créez votre profil et commencez à explorer des pistes adaptées à votre situation actuelle.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
                 <Link to="/register">
-                  Créer mon compte <ArrowRight className="ml-2 h-5 w-5" />
+                  Commencer mon parcours <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -314,7 +319,7 @@ export default function Home() {
                 asChild
                 className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                <Link to="/tests">Commencer un test</Link>
+                <Link to="/careers">Explorer les métiers</Link>
               </Button>
             </div>
           </Reveal>
