@@ -13,10 +13,22 @@ export interface CareerSource {
   id: string;
   kind: string;
   version: string;
+  locale?: string | null;
   title: string;
   licenseName: string;
   licenseUrl: string;
   attribution: string;
+  contentSha256?: string | null;
+  importedAt?: string | null;
+}
+
+export interface CareerCatalogVersionSource {
+  id: string;
+  kind: string;
+  version: string | null;
+  locale: string | null;
+  contentSha256: string | null;
+  importedAt: string | null;
 }
 
 export interface CareerCrosswalk {
@@ -94,12 +106,17 @@ export interface CareerSkillEvidence {
 export interface CareerEducationReadiness {
   available: boolean;
   score: number | null;
-  status: 'missing_education' | 'unknown_job_zone' | 'meets_reference' | 'near_reference' | 'development_gap' | 'large_gap';
+  status: 'missing_education' | 'unknown_onet_version' | 'unsupported_job_zone' | 'meets_reference' | 'near_reference' | 'development_gap' | 'large_gap';
   highestEducationLevel: string | null;
   highestEducationStatus: string | null;
   jobZone: number | null;
   requiredRank: number | null;
   gap: number | null;
+  adapterVersion: string;
+  sourceVersion: string | null;
+  frameworkId: string | null;
+  frameworkKind: 'five_level' | 'four_level' | 'unknown';
+  zoneLabel: string | null;
 }
 
 export interface CareerRecommendationExplanation {
@@ -170,8 +187,22 @@ export interface CareerMatchResponse {
   matching: CareerMatchingSummary;
 }
 
+export interface CareerRecommendationVersioning {
+  recommendationAlgorithmVersion: string;
+  riasecAlgorithmVersion: string;
+  preparationAdapterVersion: string;
+  inputFingerprint: string;
+  profileFingerprint: string;
+  catalogSources: CareerCatalogVersionSource[];
+  calculatedAt: string;
+}
+
 export interface CareerRecommendationContext {
   algorithmVersion: string;
+  preparationAdapterVersion: string;
+  profileFingerprint: string | null;
+  inputFingerprint: string | null;
+  catalogSources: CareerCatalogVersionSource[];
   profileCompletionPercent: number;
   currentSituation: string | null;
   primaryGoal: string | null;
@@ -187,8 +218,32 @@ export interface CareerRecommendationContext {
 
 export interface CareerProfileRecommendationResponse {
   result: CareerResultSummary;
+  versioning: CareerRecommendationVersioning;
   recommendationContext: CareerRecommendationContext;
   matching: CareerMatchingSummary;
+}
+
+export interface CareerRecommendationSnapshotMeta {
+  id: string;
+  immutable: true;
+  orientationResultId: string;
+  recommendationAlgorithmVersion: string;
+  riasecAlgorithmVersion: string;
+  preparationAdapterVersion: string;
+  requestedLocale: string;
+  includeLocallyExcluded: boolean;
+  limit: number;
+  inputFingerprint: string;
+  profileFingerprint: string;
+  onetSources: CareerCatalogVersionSource[];
+  escoSources: CareerCatalogVersionSource[];
+  createdAt: string;
+}
+
+export interface CareerRecommendationSnapshotResponse {
+  created?: boolean;
+  snapshot: CareerRecommendationSnapshotMeta;
+  recommendation: CareerProfileRecommendationResponse;
 }
 
 export interface CareerCatalogSourceSummary {
