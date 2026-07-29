@@ -22,7 +22,14 @@ assert.match(instrument, /status: 'draft'/u);
 assert.match(instrument, /n’est pas présentée comme psychométriquement validée/iu);
 assert.match(instrument, /originale.*MAKOKI/isu);
 assert.match(orientationRouter, /scoreRiasec/u);
-assert.match(server, /app\.use\('\/api\/v1\/orientation', createRiasecRouter/u);
+const canonicalRouteMounts = server.match(
+  /app\.use\('\/api\/v1\/orientation',(?:\s*[A-Za-z][A-Za-z0-9]*,)*\s*createRiasecRouter/gu,
+) || [];
+assert.equal(
+  canonicalRouteMounts.length,
+  1,
+  'the canonical RIASEC router must be mounted exactly once, after optional middleware',
+);
 assert.match(appRouter, /path="\/tests\/riasec".*<RiasecTest/u);
 assert.match(atsRoutes, /router\.post\('\/tests\/analyze', rejectLegacyRiasec/u);
 assert.match(atsRoutes, /router\.post\('\/tests\/execute', rejectLegacyRiasec/u);
