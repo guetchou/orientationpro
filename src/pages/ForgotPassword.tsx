@@ -4,14 +4,12 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import axios from 'axios';
 import { ArrowLeft, CheckCircle2, Loader2, Mail } from 'lucide-react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { requestPasswordReset } from '@/lib/apiClient';
 
 const schema = z.object({
   email: z.string().min(1, 'Ton adresse e-mail est requise.').email('Adresse e-mail invalide.'),
@@ -25,7 +23,6 @@ export default function ForgotPassword() {
     path: '/forgot-password',
   });
   const [sent, setSent] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -34,9 +31,8 @@ export default function ForgotPassword() {
   });
 
   const onSubmit = async (values: Values) => {
-    setServerError(null);
     try {
-      await axios.post(`${API_URL}/auth/reset-password`, { email: values.email });
+      await requestPasswordReset(values.email);
       setSent(true);
     } catch {
       // On n'expose pas l'existence d'un compte : message neutre.
@@ -79,11 +75,6 @@ export default function ForgotPassword() {
             <p className="mt-2 text-slate-600">Entre ton adresse e-mail pour recevoir un lien de réinitialisation.</p>
           </div>
 
-          {serverError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
-              {serverError}
-            </div>
-          )}
 
           <Form {...form}>
             <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
@@ -92,11 +83,11 @@ export default function ForgotPassword() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Adresse e-mail</FormLabel>
+                    <FormLabel htmlFor="forgot-password-email">Adresse e-mail</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                        <Input type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
+                        <Input id="forgot-password-email" type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />

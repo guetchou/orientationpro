@@ -102,6 +102,78 @@ test('account lifecycle persists in isolated MySQL through the HTTP interface', 
   }
 });
 
+test('password recovery changes credentials and revokes existing MySQL sessions', async () => {
+  const pool = createPool();
+  await migrateUp(pool, path.join(__dirname, '..', 'migrations'));
+  const store = createMySqlAuthStore(pool);
+  let verificationToken;
+  let passwordResetToken;
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
+    store,
+    email: {
+      sendVerification: async ({ token }) => { verificationToken = token; },
+      sendPasswordReset: async ({ token }) => { passwordResetToken = token; },
+    },
+    jwtSecret: 'mysql-test-jwt-secret-with-at-least-32-characters',
+    cookieSecure: false,
+  }));
+  const email = `mysql-reset-${Date.now()}@example.test`;
+  const oldPassword = 'old correct horse battery staple';
+  const newPassword = 'new correct horse battery staple';
+
+  try {
+    const registration = await request(app, '/api/v1/auth/register', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, password: oldPassword }),
+    });
+    assert.equal(registration.status, 201);
+    const verification = await request(app, '/api/v1/auth/verify-email', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: verificationToken }),
+    });
+    assert.equal(verification.status, 200);
+    const login = await request(app, '/api/v1/auth/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, password: oldPassword }),
+    });
+    const refreshCookie = login.headers.get('set-cookie').split(';')[0];
+    assert.equal(login.status, 200);
+    const resetRequest = await request(app, '/api/v1/auth/password-reset/request', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    assert.equal(resetRequest.status, 202);
+    assert.ok(passwordResetToken);
+    const resetConfirmation = await request(app, '/api/v1/auth/password-reset/confirm', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: passwordResetToken, password: newPassword }),
+    });
+    assert.equal(resetConfirmation.status, 204);
+    const refreshRevokedSession = await request(app, '/api/v1/auth/refresh', {
+      method: 'POST', headers: { cookie: refreshCookie },
+    });
+    assert.equal(refreshRevokedSession.status, 401);
+    const oldPasswordLogin = await request(app, '/api/v1/auth/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, password: oldPassword }),
+    });
+    assert.equal(oldPasswordLogin.status, 401);
+    const newPasswordLogin = await request(app, '/api/v1/auth/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, password: newPassword }),
+    });
+    assert.equal(newPasswordLogin.status, 200);
+    const reusedToken = await request(app, '/api/v1/auth/password-reset/confirm', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: passwordResetToken, password: newPassword }),
+    });
+    assert.equal(reusedToken.status, 400);
+  } finally {
+    await pool.end();
+  }
+});
 test('ordered migrations roll back completely and can be applied again', async () => {
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');

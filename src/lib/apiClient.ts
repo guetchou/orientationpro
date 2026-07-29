@@ -183,6 +183,19 @@ export const apiFetch = async <T>(
   }
 };
 
+export const requestPasswordReset = async (email: string): Promise<void> => {
+  await apiFetch('/v1/auth/password-reset/request', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  }, { auth: false });
+};
+
+export const confirmPasswordReset = async (token: string, password: string): Promise<void> => {
+  await apiFetch('/v1/auth/password-reset/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  }, { auth: false });
+};
 /**
  * Envoi multipart authentifie (upload de fichier). Contrairement a apiFetch,
  * on ne fixe jamais Content-Type : le navigateur pose lui-meme la frontiere
