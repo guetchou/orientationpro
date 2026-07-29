@@ -28,6 +28,10 @@ const INTERVENTION_PERMISSIONS = Object.freeze({
   disagreement: 'guidance.comment',
   correction_requested: 'guidance.comment',
 });
+const INTERVENTION_DECISIONS = Object.freeze({
+  confirmation: 'confirmed',
+  rejection: 'rejected',
+});
 
 class GuidancePolicyError extends Error {
   constructor(code, message) {
@@ -111,6 +115,7 @@ const appendConsentDecision = (ledger, input) => {
       decision: input.decision,
       actorAccountId: input.actorAccountId,
       decidedAt,
+      scope: ledger.scope,
       reason: req(input.reason, 'reason'),
     }],
   });
@@ -181,6 +186,9 @@ const appendIntervention = (journal, input) => {
       beneficiaryAccountId: req(input.beneficiaryAccountId, 'beneficiaryAccountId'),
       subjectRef: req(input.subjectRef, 'subjectRef'),
       recordedAt: timestamp(input.recordedAt, 'recordedAt'),
+      scope: req(input.scope, 'scope'),
+      decision: INTERVENTION_DECISIONS[input.type] || null,
+      reason: req(input.reason, 'reason'),
       text: req(input.text, 'text'),
       replacesUserStatement: false,
     }],

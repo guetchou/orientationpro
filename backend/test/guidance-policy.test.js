@@ -118,6 +118,18 @@ test('an exact consent replay is idempotent and a conflicting reuse is rejected'
   );
 });
 
+test('consent history preserves actor, date, scope, decision and reason', () => {
+  assert.deepEqual(consent().events[0], {
+    eventId: 'grant-1',
+    revision: 1,
+    decision: 'granted',
+    actorAccountId: owner,
+    decidedAt: '2026-07-29T08:00:00.000Z',
+    scope: 'life-project-guidance',
+    reason: 'Fixture consent',
+  });
+});
+
 test('all required intervention types use assignment permission scope and active consent', () => {
   const cases = [
     ['comment', 'guidance.comment'],
@@ -146,7 +158,7 @@ test('all required intervention types use assignment permission scope and active
   }
 });
 
-test('confirmation and rejection never overwrite beneficiary voice', () => {
+test('human confirmation and rejection preserve auditable decisions', () => {
   let journal = { events: [] };
   for (const type of ['confirmation', 'rejection']) {
     journal = appendIntervention(journal, {
@@ -159,10 +171,37 @@ test('confirmation and rejection never overwrite beneficiary voice', () => {
       recordedAt: type === 'confirmation'
         ? '2026-07-29T10:00:00Z'
         : '2026-07-29T10:01:00Z',
+      scope: 'life-project-guidance',
+      reason: `${type} reason recorded by the human actor`,
       text: `${type} recorded as a separate intervention`,
     });
   }
   assert.deepEqual(journal.events.map((event) => event.replacesUserStatement), [false, false]);
+  assert.deepEqual(
+    journal.events.map((event) => ({
+      actorAccountId: event.actorAccountId,
+      recordedAt: event.recordedAt,
+      scope: event.scope,
+      decision: event.decision,
+      reason: event.reason,
+    })),
+    [
+      {
+        actorAccountId: 'advisor-1',
+        recordedAt: '2026-07-29T10:00:00.000Z',
+        scope: 'life-project-guidance',
+        decision: 'confirmed',
+        reason: 'confirmation reason recorded by the human actor',
+      },
+      {
+        actorAccountId: 'advisor-1',
+        recordedAt: '2026-07-29T10:01:00.000Z',
+        scope: 'life-project-guidance',
+        decision: 'rejected',
+        reason: 'rejection reason recorded by the human actor',
+      },
+    ],
+  );
   assert.equal(Object.isFrozen(journal.events[0]), true);
 });
 
