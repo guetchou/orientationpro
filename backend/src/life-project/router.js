@@ -10,7 +10,12 @@ const parseExpectedVersion = (req) => {
   const candidate = header
     ? header.replace(/^W\//u, '').replace(/^"|"$/gu, '')
     : req.body?.expectedVersion;
-  if (candidate === undefined || candidate === null || candidate === '') return undefined;
+  if (candidate === undefined || candidate === null || candidate === '') {
+    throw new LifeProjectServiceError(
+      'LIFE_PROJECT_API_VERSION_REQUIRED',
+      'If-Match or expectedVersion is required for this mutation.',
+    );
+  }
   return Number(candidate);
 };
 
