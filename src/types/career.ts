@@ -7,6 +7,7 @@ export type CareerLocalRelevanceStatus = 'unreviewed' | 'relevant' | 'limited' |
 export type CareerTranslationStatus = 'available' | 'native' | 'unavailable';
 export type CareerCrosswalkReviewStatus = 'proposed' | 'official' | 'reviewed' | 'rejected';
 export type CareerConfidenceLevel = 'high' | 'medium' | 'low' | 'unknown';
+export type CareerRecommendationSignal = 'riasec' | 'skills' | 'education';
 
 export interface CareerSource {
   id: string;
@@ -76,6 +77,38 @@ export interface CareerOccupation {
   skills?: CareerOccupationSkill[];
 }
 
+export interface CareerSkillEvidence {
+  available: boolean;
+  score: number | null;
+  confirmedSkillCount: number;
+  matchedSkillCount: number;
+  matchedSkills: Array<{
+    escoUri: string;
+    label: string;
+    proficiency: string;
+    relationKind: string;
+    contribution: number;
+  }>;
+}
+
+export interface CareerEducationReadiness {
+  available: boolean;
+  score: number | null;
+  status: 'missing_education' | 'unknown_job_zone' | 'meets_reference' | 'near_reference' | 'development_gap' | 'large_gap';
+  highestEducationLevel: string | null;
+  highestEducationStatus: string | null;
+  jobZone: number | null;
+  requiredRank: number | null;
+  gap: number | null;
+}
+
+export interface CareerRecommendationExplanation {
+  code: string;
+  signal: CareerRecommendationSignal;
+  score: number | null;
+  message: string;
+}
+
 export interface CareerMatch {
   occupationId: string;
   sourceCode: string;
@@ -102,24 +135,60 @@ export interface CareerMatch {
     occupation: number;
   };
   provenance: unknown;
+  recommendationScore?: number;
+  recommendationAlgorithmVersion?: string;
+  profileComponents?: {
+    riasec: { available: true; score: number };
+    skills: CareerSkillEvidence;
+    education: CareerEducationReadiness;
+    configuredWeights: Record<CareerRecommendationSignal, number>;
+    appliedWeights: Record<CareerRecommendationSignal, number>;
+  };
+  explanations?: CareerRecommendationExplanation[];
+  cautions?: string[];
+}
+
+export interface CareerResultSummary {
+  id: string;
+  displayCode: string;
+  algorithmVersion: string;
+  createdAt: string;
+  normalizedScores: CompleteCareerRiasecVector;
+}
+
+export interface CareerMatchingSummary {
+  requestedLocale: string;
+  locale: string;
+  eligibleOccupationCount: number;
+  translatedOccupationCount: number;
+  fallbackOccupationCount: number;
+  matches: CareerMatch[];
 }
 
 export interface CareerMatchResponse {
-  result: {
-    id: string;
-    displayCode: string;
-    algorithmVersion: string;
-    createdAt: string;
-    normalizedScores: CompleteCareerRiasecVector;
-  };
-  matching: {
-    requestedLocale: string;
-    locale: string;
-    eligibleOccupationCount: number;
-    translatedOccupationCount: number;
-    fallbackOccupationCount: number;
-    matches: CareerMatch[];
-  };
+  result: CareerResultSummary;
+  matching: CareerMatchingSummary;
+}
+
+export interface CareerRecommendationContext {
+  algorithmVersion: string;
+  profileCompletionPercent: number;
+  currentSituation: string | null;
+  primaryGoal: string | null;
+  mobilityScope: string | null;
+  highestEducationLevel: string | null;
+  highestEducationStatus: string | null;
+  confirmedEscoSkillCount: number;
+  configuredWeights: Record<CareerRecommendationSignal, number>;
+  usedSignals: string[];
+  missingSignals: string[];
+  limitations: string[];
+}
+
+export interface CareerProfileRecommendationResponse {
+  result: CareerResultSummary;
+  recommendationContext: CareerRecommendationContext;
+  matching: CareerMatchingSummary;
 }
 
 export interface CareerCatalogSourceSummary {

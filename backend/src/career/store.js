@@ -1,6 +1,10 @@
 'use strict';
 
 const { rankOccupations } = require('./matching');
+const {
+  profileRecommendationContext,
+  rankProfileRecommendations,
+} = require('./profile-matching');
 
 const parseJson = (value) => {
   if (value === null || value === undefined) return value;
@@ -58,7 +62,7 @@ const rowToOccupation = (row, requestedLocale = 'fr') => {
     description: presentationAvailable ? row.presentation_description : row.description,
     status: row.status,
     iscoCode: presentationAvailable ? row.presentation_isco_code || row.isco_code : row.isco_code,
-    jobZone: row.job_zone,
+    jobZone: row.job_zone === null ? null : Number(row.job_zone),
     riasec: {
       R: row.riasec_r === null ? null : Number(row.riasec_r),
       I: row.riasec_i === null ? null : Number(row.riasec_i),
@@ -181,145 +185,14 @@ const presentationSelect = `
     ON presentation_source.id = presented.catalog_source_id
 `;
 
-const createCareerStore = (pool) => ({
-  async getCatalogSummary() {
-    const [sources] = await pool.query(
-      `SELECT s.id, s.source_kind, s.source_version, s.locale, s.title,
-              s.license_name, s.license_url, s.attribution_text,
-              s.content_sha256, s.record_count, s.imported_at,
-              COUNT(o.id) AS occupation_count,
-              SUM(o.riasec_profile_status IN ('direct', 'mapped', 'reviewed')) AS matchable_count,
-              SUM(o.local_relevance_status = 'relevant') AS locally_reviewed_relevant_count
-       FROM career_catalog_sources s
-       LEFT JOIN career_occupations o ON o.catalog_source_id = s.id
-       GROUP BY s.id, s.source_kind, s.source_version, s.locale, s.title,
-                s.license_name, s.license_url, s.attribution_text,
-                s.content_sha256, s.record_count, s.imported_at
-       ORDER BY s.source_kind, s.source_version, s.locale`,
-    );
-    return sources.map((source) => ({
-      id: source.id,
-      kind: source.source_kind,
-      version: source.source_version,
-      locale: source.locale,
-      title: source.title,
-      licenseName: source.license_name,
-      licenseUrl: source.license_url,
-      attribution: source.attribution_text,
-      contentSha256: source.content_sha256,
-      declaredRecordCount: Number(source.record_count),
-      occupationCount: Number(source.occupation_count),
-      matchableCount: Number(source.matchable_count || 0),
-      locallyReviewedRelevantCount: Number(source.locally_reviewed_relevant_count || 0),
-      importedAt: source.imported_at,
-    }));
-  },
-
-  async searchOccupations({
-    query = '',
-    locale = 'fr',
-    riasecOnly = false,
-    includeLocallyExcluded = false,
-    limit = 20,
-    offset = 0,
-  } = {}) {
-    const requestedLocale = validLocale(locale);
-    const safeLimit = boundedInteger(limit, 20, 1, 100);
-    const safeOffset = boundedInteger(offset, 0, 0, 100_000);
-    const normalizedQuery = String(query || '').trim().slice(0, 120);
-    const where = [`base.status = 'active'`, `base.locale = 'en'`];
-    const parameters = [requestedLocale];
-
-    if (riasecOnly) {
-      where.push(`base.riasec_profile_status IN ('direct', 'mapped', 'reviewed')`);
-    }
-    if (!includeLocallyExcluded) {
-      where.push(`base.local_relevance_status <> 'excluded'`);
-    }
-    if (normalizedQuery) {
-      const pattern = `%${normalizedQuery}%`;
-      where.push(`(
-        COALESCE(presented.preferred_label, base.preferred_label) LIKE ? OR
-        COALESCE(presented.description, base.description) LIKE ? OR
-        EXISTS (
-          SELECT 1 FROM career_occupation_aliases alias
-          WHERE alias.occupation_id = COALESCE(presented.id, base.id)
-            AND alias.alias LIKE ?
-        )
-      )`);
-      parameters.push(pattern, pattern, pattern);
-    }
-
-    const [rows] = await pool.query(
-      `${presentationSelect}
-       WHERE ${where.join(' AND ')}
-       ORDER BY COALESCE(presented.preferred_label, base.preferred_label), base.id
-       LIMIT ? OFFSET ?`,
-      [...parameters, safeLimit, safeOffset],
-    );
-    return rows.map((row) => rowToOccupation(row, requestedLocale));
-  },
-
-  async getOccupation({ occupationId, locale = 'fr' }) {
-    const requestedLocale = validLocale(locale);
-    const [[row]] = await pool.query(
-      `${presentationSelect}
-       WHERE base.id = ? AND base.locale = 'en' AND base.status = 'active'
-       LIMIT 1`,
-      [requestedLocale, occupationId],
-    );
-    if (!row) return null;
-
-    const occupation = rowToOccupation(row, requestedLocale);
-    const contentOccupationId = occupation.presentationOccupationId;
-    const [aliases] = await pool.query(
-      `SELECT locale, alias, alias_kind, source_reference
-       FROM career_occupation_aliases
-       WHERE occupation_id = ?
-       ORDER BY locale, alias`,
-      [contentOccupationId],
-    );
-    const [skills] = await pool.query(
-      `SELECT skill.id, skill.locale, skill.preferred_label, skill.description, skill.skill_kind,
-              link.relation_kind, link.importance_score, link.provenance_json
-       FROM career_occupation_skill_links link
-       JOIN career_skills skill ON skill.id = link.skill_id
-       WHERE link.occupation_id = ?
-       ORDER BY
-         CASE link.relation_kind WHEN 'essential' THEN 1 ELSE 2 END,
-         link.importance_score DESC,
-         skill.preferred_label`,
-      [contentOccupationId],
-    );
-
-    return {
-      ...occupation,
-      aliases: aliases.map((alias) => ({
-        locale: alias.locale,
-        label: alias.alias,
-        kind: alias.alias_kind,
-        sourceReference: alias.source_reference,
-      })),
-      skills: skills.map((skill) => ({
-        id: skill.id,
-        locale: skill.locale,
-        preferredLabel: skill.preferred_label,
-        description: skill.description,
-        kind: skill.skill_kind,
-        relationKind: skill.relation_kind,
-        importanceScore: skill.importance_score === null ? null : Number(skill.importance_score),
-        provenance: parseJson(skill.provenance_json),
-      })),
-    };
-  },
-
-  async matchOrientationResult({
+const createCareerStore = (pool) => {
+  const loadMatchContext = async ({
     accountId,
     resultId,
     locale = 'fr',
     includeLocallyExcluded = false,
-    limit = 20,
-  }) {
+    candidateLimit = 100,
+  }) => {
     const requestedLocale = validLocale(locale);
     const [[resultRow]] = await pool.query(
       `SELECT id, scores_json, display_code, algorithm_version, created_at
@@ -344,11 +217,13 @@ const createCareerStore = (pool) => ({
     );
     const occupations = rows.map((row) => rowToOccupation(row, requestedLocale));
     const userScores = normalizedResultScores(parseJson(resultRow.scores_json));
-    const matches = rankOccupations({
-      userScores,
-      occupations,
-      limit: boundedInteger(limit, 20, 1, 100),
-    });
+    const safeCandidateLimit = Math.min(
+      Math.max(Number(candidateLimit) || 1, 1),
+      Math.max(Math.min(occupations.length, 2000), 1),
+    );
+    const matches = occupations.length > 0
+      ? rankOccupations({ userScores, occupations, limit: safeCandidateLimit })
+      : [];
 
     return {
       result: {
@@ -358,7 +233,7 @@ const createCareerStore = (pool) => ({
         createdAt: resultRow.created_at,
         normalizedScores: userScores,
       },
-      matching: {
+      summary: {
         requestedLocale,
         locale: requestedLocale,
         eligibleOccupationCount: occupations.length,
@@ -368,11 +243,292 @@ const createCareerStore = (pool) => ({
         fallbackOccupationCount: occupations.filter(
           (occupation) => occupation.translationStatus === 'unavailable',
         ).length,
-        matches,
       },
+      occupations,
+      matches,
     };
-  },
-});
+  };
+
+  const loadProfileContext = async (accountId) => {
+    const [[[profile]], [education], [confirmedSkills]] = await Promise.all([
+      pool.query(
+        `SELECT account_id, current_situation, primary_goal, mobility_scope, completion_percent
+         FROM account_profiles
+         WHERE account_id = ?
+         LIMIT 1`,
+        [accountId],
+      ),
+      pool.query(
+        `SELECT education_level, status, diploma_name, field_of_study, institution,
+                country_code, start_year, end_year
+         FROM account_education_history
+         WHERE account_id = ?
+         ORDER BY start_year DESC, created_at DESC`,
+        [accountId],
+      ),
+      pool.query(
+        `SELECT label, esco_uri, proficiency, source
+         FROM account_profile_skills
+         WHERE account_id = ?
+           AND confirmation_status = 'confirmed'
+           AND esco_uri IS NOT NULL
+           AND esco_uri <> ''
+         ORDER BY label, esco_uri`,
+        [accountId],
+      ),
+    ]);
+    return { profile: profile || null, education, confirmedSkills };
+  };
+
+  const loadSkillLinks = async ({ accountId, occupations, confirmedSkills }) => {
+    const linksByOccupation = new Map();
+    if (!confirmedSkills.length || !occupations.length) return linksByOccupation;
+    const occupationIds = [...new Set(
+      occupations.map((occupation) => occupation.presentationOccupationId).filter(Boolean),
+    )];
+    if (!occupationIds.length) return linksByOccupation;
+    const placeholders = occupationIds.map(() => '?').join(', ');
+    const [rows] = await pool.query(
+      `SELECT link.occupation_id,
+              profile_skill.esco_uri,
+              catalog_skill.preferred_label AS label,
+              profile_skill.proficiency,
+              link.relation_kind,
+              link.importance_score
+       FROM account_profile_skills profile_skill
+       JOIN career_skills catalog_skill
+         ON catalog_skill.source_code = profile_skill.esco_uri
+       JOIN career_catalog_sources skill_source
+         ON skill_source.id = catalog_skill.catalog_source_id
+        AND skill_source.source_kind = 'esco'
+       JOIN career_occupation_skill_links link
+         ON link.skill_id = catalog_skill.id
+       WHERE profile_skill.account_id = ?
+         AND profile_skill.confirmation_status = 'confirmed'
+         AND profile_skill.esco_uri IS NOT NULL
+         AND link.occupation_id IN (${placeholders})
+       ORDER BY link.occupation_id,
+                CASE link.relation_kind WHEN 'essential' THEN 1 WHEN 'important' THEN 2 ELSE 3 END,
+                catalog_skill.preferred_label`,
+      [accountId, ...occupationIds],
+    );
+    for (const row of rows) {
+      const current = linksByOccupation.get(row.occupation_id) || [];
+      current.push({
+        escoUri: row.esco_uri,
+        label: row.label,
+        proficiency: row.proficiency,
+        relationKind: row.relation_kind,
+        importanceScore: row.importance_score === null ? null : Number(row.importance_score),
+      });
+      linksByOccupation.set(row.occupation_id, current);
+    }
+    return linksByOccupation;
+  };
+
+  return {
+    async getCatalogSummary() {
+      const [sources] = await pool.query(
+        `SELECT s.id, s.source_kind, s.source_version, s.locale, s.title,
+                s.license_name, s.license_url, s.attribution_text,
+                s.content_sha256, s.record_count, s.imported_at,
+                COUNT(o.id) AS occupation_count,
+                SUM(o.riasec_profile_status IN ('direct', 'mapped', 'reviewed')) AS matchable_count,
+                SUM(o.local_relevance_status = 'relevant') AS locally_reviewed_relevant_count
+         FROM career_catalog_sources s
+         LEFT JOIN career_occupations o ON o.catalog_source_id = s.id
+         GROUP BY s.id, s.source_kind, s.source_version, s.locale, s.title,
+                  s.license_name, s.license_url, s.attribution_text,
+                  s.content_sha256, s.record_count, s.imported_at
+         ORDER BY s.source_kind, s.source_version, s.locale`,
+      );
+      return sources.map((source) => ({
+        id: source.id,
+        kind: source.source_kind,
+        version: source.source_version,
+        locale: source.locale,
+        title: source.title,
+        licenseName: source.license_name,
+        licenseUrl: source.license_url,
+        attribution: source.attribution_text,
+        contentSha256: source.content_sha256,
+        declaredRecordCount: Number(source.record_count),
+        occupationCount: Number(source.occupation_count),
+        matchableCount: Number(source.matchable_count || 0),
+        locallyReviewedRelevantCount: Number(source.locally_reviewed_relevant_count || 0),
+        importedAt: source.imported_at,
+      }));
+    },
+
+    async searchOccupations({
+      query = '',
+      locale = 'fr',
+      riasecOnly = false,
+      includeLocallyExcluded = false,
+      limit = 20,
+      offset = 0,
+    } = {}) {
+      const requestedLocale = validLocale(locale);
+      const safeLimit = boundedInteger(limit, 20, 1, 100);
+      const safeOffset = boundedInteger(offset, 0, 0, 100_000);
+      const normalizedQuery = String(query || '').trim().slice(0, 120);
+      const where = [`base.status = 'active'`, `base.locale = 'en'`];
+      const parameters = [requestedLocale];
+
+      if (riasecOnly) {
+        where.push(`base.riasec_profile_status IN ('direct', 'mapped', 'reviewed')`);
+      }
+      if (!includeLocallyExcluded) {
+        where.push(`base.local_relevance_status <> 'excluded'`);
+      }
+      if (normalizedQuery) {
+        const pattern = `%${normalizedQuery}%`;
+        where.push(`(
+          COALESCE(presented.preferred_label, base.preferred_label) LIKE ? OR
+          COALESCE(presented.description, base.description) LIKE ? OR
+          EXISTS (
+            SELECT 1 FROM career_occupation_aliases alias
+            WHERE alias.occupation_id = COALESCE(presented.id, base.id)
+              AND alias.alias LIKE ?
+          )
+        )`);
+        parameters.push(pattern, pattern, pattern);
+      }
+
+      const [rows] = await pool.query(
+        `${presentationSelect}
+         WHERE ${where.join(' AND ')}
+         ORDER BY COALESCE(presented.preferred_label, base.preferred_label), base.id
+         LIMIT ? OFFSET ?`,
+        [...parameters, safeLimit, safeOffset],
+      );
+      return rows.map((row) => rowToOccupation(row, requestedLocale));
+    },
+
+    async getOccupation({ occupationId, locale = 'fr' }) {
+      const requestedLocale = validLocale(locale);
+      const [[row]] = await pool.query(
+        `${presentationSelect}
+         WHERE base.id = ? AND base.locale = 'en' AND base.status = 'active'
+         LIMIT 1`,
+        [requestedLocale, occupationId],
+      );
+      if (!row) return null;
+
+      const occupation = rowToOccupation(row, requestedLocale);
+      const contentOccupationId = occupation.presentationOccupationId;
+      const [aliases] = await pool.query(
+        `SELECT locale, alias, alias_kind, source_reference
+         FROM career_occupation_aliases
+         WHERE occupation_id = ?
+         ORDER BY locale, alias`,
+        [contentOccupationId],
+      );
+      const [skills] = await pool.query(
+        `SELECT skill.id, skill.locale, skill.preferred_label, skill.description, skill.skill_kind,
+                link.relation_kind, link.importance_score, link.provenance_json
+         FROM career_occupation_skill_links link
+         JOIN career_skills skill ON skill.id = link.skill_id
+         WHERE link.occupation_id = ?
+         ORDER BY
+           CASE link.relation_kind WHEN 'essential' THEN 1 ELSE 2 END,
+           link.importance_score DESC,
+           skill.preferred_label`,
+        [contentOccupationId],
+      );
+
+      return {
+        ...occupation,
+        aliases: aliases.map((alias) => ({
+          locale: alias.locale,
+          label: alias.alias,
+          kind: alias.alias_kind,
+          sourceReference: alias.source_reference,
+        })),
+        skills: skills.map((skill) => ({
+          id: skill.id,
+          locale: skill.locale,
+          preferredLabel: skill.preferred_label,
+          description: skill.description,
+          kind: skill.skill_kind,
+          relationKind: skill.relation_kind,
+          importanceScore: skill.importance_score === null ? null : Number(skill.importance_score),
+          provenance: parseJson(skill.provenance_json),
+        })),
+      };
+    },
+
+    async matchOrientationResult({
+      accountId,
+      resultId,
+      locale = 'fr',
+      includeLocallyExcluded = false,
+      limit = 20,
+    }) {
+      const safeLimit = boundedInteger(limit, 20, 1, 100);
+      const context = await loadMatchContext({
+        accountId,
+        resultId,
+        locale,
+        includeLocallyExcluded,
+        candidateLimit: safeLimit,
+      });
+      if (!context) return null;
+      return {
+        result: context.result,
+        matching: {
+          ...context.summary,
+          matches: context.matches.slice(0, safeLimit),
+        },
+      };
+    },
+
+    async recommendProfileCareers({
+      accountId,
+      resultId,
+      locale = 'fr',
+      includeLocallyExcluded = false,
+      limit = 20,
+    }) {
+      const safeLimit = boundedInteger(limit, 20, 1, 100);
+      const context = await loadMatchContext({
+        accountId,
+        resultId,
+        locale,
+        includeLocallyExcluded,
+        candidateLimit: 2000,
+      });
+      if (!context) return null;
+      const profileData = await loadProfileContext(accountId);
+      const skillLinksByOccupation = await loadSkillLinks({
+        accountId,
+        occupations: context.occupations,
+        confirmedSkills: profileData.confirmedSkills,
+      });
+      const occupationsById = new Map(
+        context.occupations.map((occupation) => [occupation.id, occupation]),
+      );
+      const matches = rankProfileRecommendations({
+        baseMatches: context.matches,
+        occupationsById,
+        profile: profileData.profile,
+        education: profileData.education,
+        confirmedSkills: profileData.confirmedSkills,
+        skillLinksByOccupation,
+        limit: safeLimit,
+      });
+
+      return {
+        result: context.result,
+        recommendationContext: profileRecommendationContext(profileData),
+        matching: {
+          ...context.summary,
+          matches,
+        },
+      };
+    },
+  };
+};
 
 module.exports = {
   createCareerStore,

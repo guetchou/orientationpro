@@ -90,7 +90,7 @@ const matchOccupation = ({ userScores, occupation }) => {
 };
 const rankOccupations = ({ userScores, occupations, limit = 20 }) => {
   if (!Array.isArray(occupations)) throw new TypeError('occupations must be an array');
-  if (!Number.isInteger(limit) || limit < 1 || limit > 200) throw new TypeError('limit must be an integer between 1 and 200');
+  if (!Number.isInteger(limit) || limit < 1 || limit > 2000) throw new TypeError('limit must be an integer between 1 and 2000');
   return occupations.filter((occupation) => occupation && ['direct', 'mapped', 'reviewed'].includes(occupation.riasecProfileStatus) && occupation.riasec && DIMENSIONS.every((dimension) => Number.isFinite(Number(occupation.riasec[dimension])))).map((occupation) => matchOccupation({ userScores, occupation })).sort((left, right) => right.fitScore - left.fitScore || left.preferredLabel.localeCompare(right.preferredLabel) || left.occupationId.localeCompare(right.occupationId)).slice(0, limit);
 };
 
