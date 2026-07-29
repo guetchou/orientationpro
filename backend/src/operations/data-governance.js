@@ -139,6 +139,12 @@ const serializeOrientationResult = (result) => ({
   algorithmVersion: scalar(result?.algorithmVersion, 80),
   completedAt: result?.completedAt ? validDate(result.completedAt) : null,
 });
+const serializeCvAnalysis = (analysis) => ({
+  id: scalar(analysis?.id, 64),
+  status: scalar(analysis?.status, 32),
+  analyzerVersion: scalar(analysis?.analyzerVersion, 80),
+  createdAt: analysis?.createdAt ? validDate(analysis.createdAt) : null,
+});
 const assertOwned = (requesterAccountId, entity, entityType) => {
   if (entity && entity.ownerAccountId !== requesterAccountId) {
     throw new Error(`PORTABLE_EXPORT_${entityType}_OWNERSHIP_INVALID`);
@@ -146,7 +152,8 @@ const assertOwned = (requesterAccountId, entity, entityType) => {
 };
 
 const buildPortableExport = ({
-  requesterAccountId, account, profile, lifeProjects = [], results = [], clock = () => new Date(),
+  requesterAccountId, account, profile, lifeProjects = [], results = [], cvAnalyses = [],
+  clock = () => new Date(),
 }) => {
   if (!requesterAccountId || account?.id !== requesterAccountId) {
     throw new Error('PORTABLE_EXPORT_ACCOUNT_OWNERSHIP_INVALID');
@@ -154,6 +161,7 @@ const buildPortableExport = ({
   assertOwned(requesterAccountId, profile, 'PROFILE');
   lifeProjects.forEach((project) => assertOwned(requesterAccountId, project, 'PROJECT'));
   results.forEach((result) => assertOwned(requesterAccountId, result, 'RESULT'));
+  cvAnalyses.forEach((analysis) => assertOwned(requesterAccountId, analysis, 'CV_ANALYSIS'));
   return {
     schemaVersion: 'makoki.portable-export.v2',
     exportedAt: validDate(clock()),
@@ -165,6 +173,7 @@ const buildPortableExport = ({
     profile: profile ? serializeProfile(profile) : null,
     lifeProjects: lifeProjects.map(serializeLifeProject),
     orientationResults: results.map(serializeOrientationResult),
+    cvAnalyses: cvAnalyses.map(serializeCvAnalysis),
   };
 };
 

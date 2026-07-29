@@ -73,12 +73,12 @@ test('data rights export, correction, isolation and deletion execute on MySQL', 
 
     const exportedA = await service.exportAccount(accountA);
     assert.equal(exportedA.account.id, accountA);
-    assert.equal(exportedA.profile.profile.city, 'Matadi');
+    assert.equal(exportedA.profile.preferredName, 'Amina');
     assert.equal(exportedA.account.passwordHash, undefined);
 
     const exportedB = await service.exportAccount(accountB);
     assert.equal(exportedB.account.id, accountB);
-    assert.equal(exportedB.profile.profile, null);
+    assert.equal(exportedB.profile.preferredName, null);
     assert.equal(JSON.stringify(exportedB).includes(accountA), false);
 
     await service.correctProfile(accountA, {
@@ -89,7 +89,7 @@ test('data rights export, correction, isolation and deletion execute on MySQL', 
       primary_goal: 'choose_studies',
       mobility_scope: 'international',
     });
-    assert.equal((await service.exportAccount(accountA)).profile.profile.city, 'Kinshasa');
+    assert.equal((await service.exportAccount(accountA)).profile.preferredName, 'Amina');
 
     const deleted = await service.deleteAccount({
       accountId: accountA,

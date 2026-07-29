@@ -35,17 +35,40 @@ const createFixture = async () => {
   const service = createDataRightsService({
     pool,
     profileStore: {
-      getProfile: async () => ({ profile: { city: 'Kinshasa' }, education: [], skills: [], hypotheses: [] }),
+      getProfile: async () => ({
+        profile: { first_name: 'Amina', city: 'Kinshasa', token: 'never' },
+        education: [],
+        skills: [{ label: 'analysis', internal_note: 'never' }],
+        hypotheses: [],
+      }),
       upsertProfile: async (accountId, input) => ({ accountId, ...input }),
     },
     lifeProjectStore: {
       list: async () => [{ id: 'project-1' }],
-      get: async () => ({ project: { id: 'project-1' }, persistenceVersion: 1 }),
+      get: async () => ({
+        project: {
+          id: 'project-1',
+          ownerAccountId: 'account-1',
+          title: 'Projet',
+          state: 'clarification',
+          document: 'never',
+        },
+        persistenceVersion: 1,
+      }),
     },
-    riasecStore: { listResults: async () => [{ id: 'result-1' }] },
+    riasecStore: {
+      listResults: async () => [{
+        id: 'result-1',
+        accountId: 'account-1',
+        algorithmVersion: 'v1',
+        responsePattern: 'never',
+      }],
+    },
     cvStore: {
       listAnalyses: async () => ({ analyses: [{ id: 'cv-1' }], pagination: { total: 1 } }),
-      getAnalysis: async () => ({ id: 'cv-1', snapshot: { version: 1 } }),
+      getAnalysis: async () => ({
+        id: 'cv-1', status: 'completed', analyzerVersion: 'v1', document: 'never',
+      }),
     },
     now: () => new Date('2026-07-29T00:00:00.000Z'),
     deletionReference: () => 'delete-reference-1234',
@@ -56,12 +79,14 @@ const createFixture = async () => {
 test('portable export is account-scoped and omits password hashes', async () => {
   const { service } = await createFixture();
   const output = await service.exportAccount('account-1');
-  assert.equal(output.schemaVersion, 'makoki.portable-export.v1');
-  assert.equal(output.account.email, 'person@example.test');
+  assert.equal(output.schemaVersion, 'makoki.portable-export.v2');
+  assert.equal(output.account.email, undefined);
   assert.equal(output.account.passwordHash, undefined);
-  assert.equal(output.lifeProjects[0].project.id, 'project-1');
+  assert.equal(output.profile.preferredName, 'Amina');
+  assert.equal(output.lifeProjects[0].id, 'project-1');
   assert.equal(output.orientationResults[0].id, 'result-1');
   assert.equal(output.cvAnalyses[0].id, 'cv-1');
+  assert.doesNotMatch(JSON.stringify(output), /never|token|document|responsePattern/);
 });
 
 test('profile correction delegates only for the authenticated account', async () => {

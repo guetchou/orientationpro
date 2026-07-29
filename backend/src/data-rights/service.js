@@ -88,13 +88,37 @@ const createDataRightsService = ({
     async exportAccount(accountId) {
       const account = await loadAccount(accountId);
       if (!account) throw new DataRightsError('ACCOUNT_NOT_FOUND', 'The account does not exist.', 404);
-      const [profile, lifeProjects, results, cvAnalyses] = await Promise.all([
+      const [storedProfile, lifeProjects, results, cvAnalyses] = await Promise.all([
         profileStore.getProfile(accountId),
         loadLifeProjects(accountId),
         riasecStore.listResults({ accountId, limit: 100, offset: 0 }),
         loadCvAnalyses(accountId),
       ]);
-      return buildPortableExport({ account, profile, lifeProjects, results, cvAnalyses });
+      const profile = {
+        ownerAccountId: accountId,
+        id: accountId,
+        preferredName: storedProfile?.profile?.first_name || null,
+        skills: (storedProfile?.skills || []).map((skill) => skill.label).filter(Boolean),
+      };
+      return buildPortableExport({
+        requesterAccountId: accountId,
+        account,
+        profile,
+        lifeProjects: lifeProjects.map((loaded) => loaded.project),
+        results: results.map((result) => ({
+          ...result,
+          ownerAccountId: result.accountId || accountId,
+          completedAt: result.createdAt,
+        })),
+        cvAnalyses: cvAnalyses.map((analysis) => ({
+          id: analysis.id,
+          ownerAccountId: accountId,
+          status: analysis.status,
+          analyzerVersion: analysis.analyzerVersion,
+          createdAt: analysis.createdAt,
+        })),
+        clock: now,
+      });
     },
 
     async correctProfile(accountId, input) {
