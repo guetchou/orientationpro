@@ -15,6 +15,7 @@ const matchingRoutes = require('./routes/matching.routes');
 const communicationRoutes = require('./routes/communication.routes');
 const jobScrapingRoutes = require('./routes/jobScraping.routes');
 const { createConfiguredAuthV1 } = require('./auth-v1/bootstrap');
+const { createCapabilitiesRouter } = require('./capabilities/router');
 const { createRiasecRouter } = require('./orientation/riasec/router');
 const { createRiasecStore } = require('./orientation/riasec/store');
 const { createCareerRouter } = require('./career/router');
@@ -63,6 +64,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/api/v1/capabilities', createCapabilitiesRouter({ env: process.env }));
 app.use('/api/test', testRoutes);
 if (process.env.LEGACY_AUTH_ENABLED === 'true') {
   app.use('/api/auth', authRoutes);
@@ -125,7 +127,10 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api', jobScrapingRoutes);
 
 app.get('/', (req, res) => {
-  const endpoints = { health: 'GET /api/test/health' };
+  const endpoints = {
+    health: 'GET /api/test/health',
+    capabilities: 'GET /api/v1/capabilities',
+  };
   if (process.env.AUTH_V1_ENABLED === 'true') {
     Object.assign(endpoints, {
       login: 'POST /api/v1/auth/login',
@@ -199,7 +204,7 @@ app.use('*', (req, res) => {
     path: req.originalUrl,
     method: req.method,
     timestamp: new Date().toISOString(),
-    availableEndpoints: ['GET /', 'GET /api/test/health'],
+    availableEndpoints: ['GET /', 'GET /api/test/health', 'GET /api/v1/capabilities'],
   });
 });
 
