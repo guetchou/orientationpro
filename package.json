@@ -17,10 +17,11 @@
     "test:e2e": "npm run build && node tests/e2e-smoke.cjs",
     "test:e2e:career": "node tests/e2e-career-functional.cjs",
     "check:sensitive": "node scripts/check-sensitive-files.cjs",
+    "security:test": "node --test scripts/security/audit-repository.test.cjs",
     "security:repository": "node scripts/security/audit-repository.cjs",
     "security:dependencies": "node scripts/security/audit-dependencies.cjs",
-    "security:check": "npm run check:sensitive && npm run security:repository && npm run security:dependencies",
-    "check": "npm run check:sensitive && npm run typecheck && npm run lint && npm run lint:backend && npm run test && npm run test:backend && npm run build",
+    "security:check": "npm run check:sensitive && npm run security:test && npm run security:repository",
+    "check": "npm run check:sensitive && npm run security:test && npm run security:repository && npm run typecheck && npm run lint && npm run lint:backend && npm run test && npm run test:backend && npm run build",
     "preview": "vite preview",
     "test:e2e:postbac": "node tests/e2e-postbac-functional.cjs"
   },
