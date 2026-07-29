@@ -44,7 +44,7 @@ const draft = () => createContentRecord({
     decisions: [],
   },
   trust: {
-    status: 'unknown',
+    level: 'unknown',
     reasons: ['Fixture sans évaluation de confiance.'],
   },
   assertions: { evidence: [], hypotheses: [], facts: [] },
