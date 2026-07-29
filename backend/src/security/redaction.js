@@ -53,9 +53,7 @@ const redactForLog = (value, depth = 0, seen = new WeakSet()) => {
   if (typeof value !== 'object') return `[${typeof value}]`;
   if (seen.has(value)) return '[CIRCULAR]';
   seen.add(value);
-  if (Array.isArray(value)) {
-    return value.map((item) => redactForLog(item, depth + 1, seen));
-  }
+  if (Array.isArray(value)) return `[ARRAY ${value.length} items omitted]`;
 
   return Object.fromEntries(
     Object.entries(value)

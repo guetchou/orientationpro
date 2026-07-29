@@ -58,3 +58,15 @@ test('never serializes buffers or circular allowlisted values', () => {
   });
   assert.equal(redactForLog(Buffer.from('private document')), '[BUFFER 16 bytes]');
 });
+
+test('never serializes array contents at root or under an allowlisted key', () => {
+  assert.equal(
+    redactForLog(['sk-test-private-value']),
+    '[ARRAY 1 items omitted]',
+  );
+  assert.deepEqual(redactForLog({
+    metadata: ['sk-test-private-value'],
+  }), {
+    metadata: '[ARRAY 1 items omitted]',
+  });
+});
