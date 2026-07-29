@@ -15,9 +15,9 @@ concurrency:
 
 jobs:
   web:
-    name: Web quality gate
+    name: Web quality and browser flow
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,14 +30,13 @@ jobs:
       - run: npm run lint:backend
       - run: npm test
       - run: npm run build
+      - name: Run browser smoke against existing build
+        run: node tests/e2e-smoke.cjs
 
   backend:
-    name: Backend security tests
+    name: Backend, MySQL and authenticated flows
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: backend
+    timeout-minutes: 25
     services:
       mysql:
         image: mysql:8.0
@@ -59,21 +58,29 @@ jobs:
       AUTH_TEST_DB_USER: orientationpro_test
       AUTH_TEST_DB_PASSWORD: ci_test_password
       AUTH_TEST_DB_NAME: orientationpro_auth_test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: orientationpro_test
+      DB_PASSWORD: ci_test_password
+      DB_NAME: orientationpro_auth_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20.19.4
           cache: npm
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
       - run: npm ci
-      - run: npm test
+      - run: npm --prefix backend ci
+      - run: npm --prefix backend test
       - name: Run MySQL tests
         id: mysql-tests
         shell: bash
         run: |
           set -o pipefail
-          npm run test:mysql 2>&1 | tee /tmp/mysql-test.log
+          npm --prefix backend run test:mysql 2>&1 | tee /tmp/mysql-test.log
       - name: Upload MySQL failure log
         if: failure() && steps.mysql-tests.outcome == 'failure'
         uses: actions/upload-artifact@v4
@@ -83,54 +90,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - name: Validate JavaScript syntax
-        run: find src test -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-
-  career-profile-functional:
-    name: Authenticated career snapshot flow
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: functional_root_password
-          MYSQL_DATABASE: orientationpro_career_functional
-          MYSQL_USER: orientationpro_functional
-          MYSQL_PASSWORD: functional_password
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pfunctional_root_password --silent"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-    env:
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_USER: orientationpro_functional
-      DB_PASSWORD: functional_password
-      DB_NAME: orientationpro_career_functional
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.19.4
-          cache: npm
-      - run: npm ci
-      - run: npm --prefix backend ci
-      - name: Run authenticated profile, RIASEC and snapshot flow
+        run: find backend/src backend/test tests -type f \( -name '*.js' -o -name '*.cjs' \) -print0 | xargs -0 -n1 node --check
+      - name: Run authenticated career snapshot flow
         run: node tests/e2e-career-profile-snapshot.cjs
-
-  e2e-smoke:
-    name: Browser smoke test
-    needs: web
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.19.4
-          cache: npm
-      - run: npm ci
-      - run: npm run test:e2e
+      - name: Run authenticated profile hypotheses flow
+        run: node tests/e2e-profile-hypotheses.cjs
