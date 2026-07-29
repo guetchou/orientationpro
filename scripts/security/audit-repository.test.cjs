@@ -26,26 +26,38 @@ test('requires explicit top-level read-only workflow permissions', () => {
   );
   assert.deepEqual(
     auditWorkflowPermissions('name: CI\npermissions: write-all\njobs: {}\n', 'ci.yml'),
-    ['ci.yml:2: permissions must be read-only'],
+    ['ci.yml: permissions must be read-only'],
   );
 });
 
-test('rejects write permissions at workflow and job levels', () => {
+test('rejects quoted and inline write permissions at workflow and job levels', () => {
   const failures = auditWorkflowPermissions([
     'name: CI',
-    'permissions:',
-    '  contents: read',
-    '  id-token: write',
+    'permissions: { contents: read, id-token: "write" }',
     'jobs:',
     '  build:',
-    '    permissions:',
-    '      contents: write',
+    "    permissions: { contents: 'write' }",
     '    runs-on: ubuntu-latest',
   ].join('\n'), 'ci.yml');
 
   assert.deepEqual(failures, [
-    'ci.yml:4: id-token:write is not read-only',
-    'ci.yml:8: contents:write is not read-only',
+    'ci.yml: permissions.id-token:write is not read-only',
+    'ci.yml: jobs.build.permissions.contents:write is not read-only',
+  ]);
+});
+
+test('resolves YAML aliases before validating permissions', () => {
+  const failures = auditWorkflowPermissions([
+    'name: CI',
+    'x-permissions: &unsafe',
+    '  contents: read',
+    '  id-token: write',
+    'permissions: *unsafe',
+    'jobs: {}',
+  ].join('\n'), 'ci.yml');
+
+  assert.deepEqual(failures, [
+    'ci.yml: permissions.id-token:write is not read-only',
   ]);
 });
 

@@ -25,19 +25,22 @@ test('serializes only explicitly allowlisted structured fields', () => {
 });
 
 test('redacts bearer, email, cookie and labeled secrets in allowed messages', () => {
-  const output = redactForLog(new Error(
+  const error = new Error(
     'person@example.test Cookie: session=private secret=raw Bearer abc.def.ghi',
-  ));
+  );
+  error.code = 'secret=private';
+  const output = redactForLog(error);
 
   assert.deepEqual(output, {
     name: 'Error',
     message: `${REDACTED} Cookie: ${REDACTED}`,
-    code: undefined,
+    code: `secret=${REDACTED}`,
   });
   assert.equal(
     redactText('response=raw-cv answer=private'),
     `response=${REDACTED} answer=${REDACTED}`,
   );
+  assert.equal(redactForLog('sk-test-private-value'), REDACTED);
 });
 
 test('never serializes buffers or circular allowlisted values', () => {

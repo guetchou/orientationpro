@@ -39,14 +39,14 @@ const redactText = (value) => String(value)
 const redactForLog = (value, depth = 0, seen = new WeakSet()) => {
   if (depth > MAX_DEPTH) return '[TRUNCATED]';
   if (value === null || value === undefined) return value;
-  if (typeof value === 'string') return redactText(value);
+  if (typeof value === 'string') return depth === 0 ? REDACTED : redactText(value);
   if (typeof value === 'number' || typeof value === 'boolean') return value;
   if (typeof value === 'bigint') return value.toString();
   if (value instanceof Error) {
     return {
       name: value.name,
       message: redactText(value.message),
-      code: value.code,
+      code: value.code === undefined ? undefined : redactText(value.code),
     };
   }
   if (Buffer.isBuffer(value)) return `[BUFFER ${value.length} bytes]`;

@@ -5,7 +5,8 @@ homologation ni autorisation d’activer le Parcours MAKOKI.
 
 ## Périmètre et preuves
 
-Le périmètre est reconstruit sur le `main` intégré `c561790`. Il couvre
+Le périmètre est reconstruit sur le `main` intégré `fae44f5`, qui contient
+#103 et #121. Il couvre
 identité v1, Sessions, Profils, LifeProject, Résultats d’orientation,
 accompagnement humain, Documents CV, rôles privilégiés, interfaces legacy,
 MySQL, Docker et GitHub Actions. Les issues V3 #97, V4 #98 et infrastructure
@@ -24,7 +25,8 @@ Faits vérifiés :
 - flags découverts depuis `backend/.env.example` et exigés à `false` par
   l’audit V5-A ;
 - workflows exigés avec permissions globales et par job en lecture seule ;
-- routes legacy encore montées sans flag global ;
+- routes legacy regroupées derrière `LEGACY_API_ENABLED=false`, avec inventaire
+  complet exigé et tests fail-closed par #121 ;
 - aucun rate limiter central raccordé au serveur Express ;
 - logs legacy dispersés et non systématiquement expurgés.
 
@@ -40,7 +42,8 @@ Faits vérifiés :
 | Rôles privilégiés | abus de privilège | Permissions atomiques v1 | alias legacy à retirer |
 | Administration | accès non autorisé | preuves incomplètes | bloquant |
 | Journaux | fuite token, réponse, document ou donnée personnelle | sérialisation V5-A par allowlist, non raccordée | raccord #124 bloquant |
-| CI et dépendances | supply-chain | permissions lecture, lockfiles | matrice #126 requise |
+| Routes legacy | réactivation accidentelle ou migration incomplète | flag global désactivé, inventaire vérifié, tests #121 | remplacement et retrait à prouver avant production |
+| CI et dépendances | supply-chain | permissions lecture et audit du dépôt dans la CI ; lockfiles présents | audit des dépendances exclu de `security:check` jusqu’à #126 |
 
 ## Scénarios prioritaires
 
@@ -56,8 +59,9 @@ Faits vérifiés :
    existent ; l’isolation et les limites CPU/temps restent à prouver.
 6. Erreur contenant token, réponse ou texte brut : exfiltration par logs.
    Exiger logger structuré par liste blanche et tests canaris.
-7. Route legacy contournant auth v1 : accès non autorisé. Exiger flag global
-   `false`, matrice route/Permission puis retrait après preuve de remplacement.
+7. Réactivation accidentelle d’une route legacy : accès non autorisé. Le flag
+   global est `false` et l’inventaire est testé ; exiger matrice
+   route/Permission puis retrait après preuve de remplacement.
 8. Action GitHub compromise : supply-chain. Refuser toute permission d’écriture
    et `pull_request_target` sans revue de menace dédiée.
 
@@ -68,11 +72,18 @@ Faits vérifiés :
 - matrice Session/Permission/ownership et tests multi-Compte complets ;
 - reprise LifeProject et conflits de version testés après chaque intégration ;
 - consentement actif et révocation Guidance testés sans rejeu possible ;
-- routes legacy désactivables par défaut ;
+- routes legacy désactivées par défaut et retrait prouvé avant production ;
 - vulnérabilités hautes/critiques corrigées ou acceptées formellement ;
-- raccord redaction et audits GitHub exécutés dans la CI du dernier SHA.
+- raccord redaction #124 et audits du dépôt exécutés dans la CI du dernier SHA ;
+- audit des dépendances, matrice et décisions d’exception livrés par #126.
 
-Confiance : élevée sur la présence des contrats V3/V4 dans `c561790`, moyenne
-sur leurs futurs raccordements V5, faible sur les surfaces legacy. Une
+Limites de cette revue : le helper de redaction n’est pas encore raccordé au
+logger runtime (#124) et `security:check` n’exécute pas encore
+`security:dependencies` (#126). Cette PR ne constitue donc ni une preuve
+d’absence de fuite runtime ni un audit complet des dépendances.
+
+Confiance : élevée sur la présence des contrats V3/V4 et du gate legacy #121
+dans `fae44f5`, moyenne sur leurs futurs raccordements V5, faible sur le retrait
+effectif des surfaces legacy. Une
 compilation ou une CI verte ne prouve pas l’absence d’exfiltration ni
 l’efficacité opérationnelle.
