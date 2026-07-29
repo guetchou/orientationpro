@@ -65,9 +65,7 @@ export const Header = () => {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-6">
         <Link to="/" className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-xl font-bold text-white shadow-sm">
-            M
-          </span>
+          <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="40" height="40" className="h-10 w-10 shrink-0" />
           <span>
             <span className="block text-xl font-bold tracking-tight text-slate-950">MAKOKI</span>
             <span className="block text-xs text-slate-500">Orientation • Compétences • Emploi</span>

@@ -51,9 +51,7 @@ export function AuthLayout({ headline, tagline, imageName, imageSide = 'left', c
         />
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <Link to="/" className="flex w-fit items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-xl font-bold backdrop-blur-sm">
-              M
-            </span>
+            <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="44" height="44" className="h-11 w-11 shrink-0" />
             <span className="text-xl font-bold tracking-tight">MAKOKI</span>
           </Link>
 
@@ -77,9 +75,7 @@ export function AuthLayout({ headline, tagline, imageName, imageSide = 'left', c
       {/* Zone formulaire */}
       <div className={cn('flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12', rightSide && 'lg:order-1')}>
         <Link to="/" className="mb-8 flex w-fit items-center gap-3 lg:hidden">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-lg font-bold text-white">
-            M
-          </span>
+          <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="40" height="40" className="h-10 w-10 shrink-0" />
           <span className="text-lg font-bold text-slate-900">MAKOKI</span>
         </Link>
 
