@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/apiClient';
+import { ApiError, apiFetch } from '@/lib/apiClient';
 import type {
   CapabilityRegistry,
   LifeProjectEnvelope,
@@ -95,7 +95,8 @@ export const createProjectFromTriage = async (draft: TriageDraft): Promise<LifeP
       },
     );
   } catch (error) {
-    // Le projet reste récupérable même si la connexion s’interrompt entre les deux écritures.
+    if (error instanceof ApiError) throw error;
+    // Le projet reste récupérable si la connexion s’interrompt entre les deux écritures.
     return created;
   }
 };
