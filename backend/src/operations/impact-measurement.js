@@ -1,52 +1,76 @@
 'use strict';
 
-const ALLOWED_EVENTS = new Set([
-  'journey.started',
-  'journey.completed',
-  'journey.resumed',
-  'action.created',
-  'action.completed',
-  'journey.blocked',
-  'journey.reoriented',
-  'human.support.requested',
-  'human.correction.recorded',
-]);
+const { assertActiveConsent, minimizeTelemetry } = require('./data-governance');
+const { EVENT_CATALOG } = require('./event-catalog');
 
-const validateMeasurementEvent = (event) => {
-  if (!event || !ALLOWED_EVENTS.has(event.name)) {
-    throw new Error('MEASUREMENT_EVENT_FORBIDDEN');
-  }
-  if (event.consent !== true) throw new Error('MEASUREMENT_CONSENT_REQUIRED');
+const MEASUREMENT_EVENTS = Object.freeze(Object.keys(EVENT_CATALOG).filter(
+  (name) => EVENT_CATALOG[name].classification === 'consent_required',
+));
+const ALLOWED_EVENTS = new Set(MEASUREMENT_EVENTS);
+
+const validateMeasurementEvent = (event, { consent } = {}) => {
+  if (!event || !ALLOWED_EVENTS.has(event.name)) throw new Error('MEASUREMENT_EVENT_FORBIDDEN');
   if (!/^[a-z0-9][a-z0-9_-]{2,31}$/.test(event.cohort || '')) {
     throw new Error('MEASUREMENT_COHORT_INVALID');
   }
-  const occurredAt = new Date(event.occurredAt);
-  if (Number.isNaN(occurredAt.getTime())) throw new Error('MEASUREMENT_TIME_INVALID');
+  if (!/^[A-Za-z0-9_-]{16,128}$/.test(event.participantId || '')) {
+    throw new Error('MEASUREMENT_PARTICIPANT_INVALID');
+  }
+  assertActiveConsent({ consent, accountId: event.accountId });
+  const minimized = minimizeTelemetry(event, { consent });
   return Object.freeze({
-    schemaVersion: 'makoki.measurement-event.v1',
-    name: event.name,
+    schemaVersion: 'makoki.measurement-event.v2',
+    eventCatalogVersion: minimized.schemaVersion,
+    name: minimized.name,
     cohort: event.cohort,
-    occurredAt: occurredAt.toISOString(),
+    unit: 'participant',
+    participantId: minimized.participantId,
+    occurredAt: minimized.occurredAt,
+    result: minimized.result,
+    source: Object.freeze({ ...minimized.source }),
   });
 };
 
-const summarizeCohort = ({ eligibleCount, records }) => {
-  if (!Number.isSafeInteger(eligibleCount) || eligibleCount < 0) {
-    throw new Error('ELIGIBLE_COUNT_INVALID');
+const summarizeCohort = ({ eligibleParticipants = [], records = [] }) => {
+  const eligible = new Set();
+  for (const participant of eligibleParticipants) {
+    assertActiveConsent({ consent: participant.consent, accountId: participant.accountId });
+    if (!/^[A-Za-z0-9_-]{16,128}$/.test(participant.participantId || '')) {
+      throw new Error('MEASUREMENT_PARTICIPANT_INVALID');
+    }
+    eligible.add(participant.participantId);
   }
-  const counts = Object.fromEntries([...ALLOWED_EVENTS].map((name) => [name, 0]));
-  for (const record of records || []) {
-    if (!ALLOWED_EVENTS.has(record.name)) throw new Error('MEASUREMENT_EVENT_FORBIDDEN');
-    counts[record.name] += 1;
+  const observed = new Set();
+  const eventCounts = Object.fromEntries(MEASUREMENT_EVENTS.map((name) => [name, 0]));
+  const participantsByEvent = Object.fromEntries(
+    MEASUREMENT_EVENTS.map((name) => [name, new Set()]),
+  );
+  for (const record of records) {
+    if (!ALLOWED_EVENTS.has(record.name) || record.unit !== 'participant'
+      || !eligible.has(record.participantId) || !record.source?.schemaVersion
+      || !Number.isSafeInteger(record.source.recordVersion)) {
+      throw new Error('MEASUREMENT_RECORD_INVALID');
+    }
+    eventCounts[record.name] += 1;
+    participantsByEvent[record.name].add(record.participantId);
+    observed.add(record.participantId);
   }
-  const observedCount = records?.length || 0;
-  const missingCount = Math.max(eligibleCount - observedCount, 0);
+  const eligibleParticipantCount = eligible.size;
+  const observedParticipantCount = observed.size;
+  const missingParticipantCount = eligibleParticipantCount - observedParticipantCount;
   return Object.freeze({
-    eligibleCount,
-    observedEventCount: observedCount,
-    missingCount,
-    missingRate: eligibleCount === 0 ? null : missingCount / eligibleCount,
-    counts,
+    unit: 'participant',
+    eligibleParticipantCount,
+    observedParticipantCount,
+    observedEventCount: records.length,
+    missingParticipantCount,
+    missingParticipantRate: eligibleParticipantCount === 0
+      ? null
+      : missingParticipantCount / eligibleParticipantCount,
+    eventCounts: Object.freeze(eventCounts),
+    participantCountsByEvent: Object.freeze(Object.fromEntries(
+      Object.entries(participantsByEvent).map(([name, participants]) => [name, participants.size]),
+    )),
     interpretation: 'descriptive_only_no_causal_claim',
   });
 };

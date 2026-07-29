@@ -13,10 +13,13 @@ const EVENT_CATALOG = Object.freeze({
   'version.conflict': event('essential', 'event', ['failure']),
   'journey.started': event('consent_required', 'participant', ['started']),
   'journey.completed': event('consent_required', 'participant', ['completed']),
+  'journey.resumed': event('consent_required', 'participant', ['resumed']),
   'action.created': event('consent_required', 'participant', ['created']),
   'action.completed': event('consent_required', 'participant', ['completed']),
   'journey.blocked': event('consent_required', 'participant', ['blocked']),
   'journey.reoriented': event('consent_required', 'participant', ['reoriented']),
+  'human.support.requested': event('consent_required', 'participant', ['requested']),
+  'human.correction.recorded': event('consent_required', 'participant', ['recorded']),
 });
 
 module.exports = { EVENT_CATALOG, EVENT_CATALOG_VERSION, TELEMETRY_NOTICE_VERSION };

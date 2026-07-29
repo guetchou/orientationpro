@@ -15,10 +15,16 @@ ni décision, ni action réelle.
 
 ## Cohortes et données manquantes
 
-Chaque cohorte possède un identifiant borné, une période, des critères
-d'inclusion, un canal de consentement et une version du parcours. Le rapport
-publie effectif éligible, événements observés, données manquantes et taux de
-données manquantes. Une cohorte vide produit `null`, pas un faux taux de 0 %.
+L'unité d'analyse est la personne pseudonymisée. Chaque cohorte possède un
+identifiant borné, une période, des critères d'inclusion, un consentement
+persisté actif et une version du parcours. Les participants sont dédupliqués.
+Le rapport sépare explicitement nombre de personnes et nombre d'événements,
+publie les personnes éligibles, observées, manquantes et le taux correspondant.
+Une cohorte vide produit `null`, pas un faux taux de 0 %.
+
+Chaque mesure conserve le catalogue événementiel, la source, la version du
+contrat et la version de l'enregistrement. Une révocation ou une version de
+notice obsolète exclut la personne des nouvelles mesures.
 
 Les écarts entre groupes sont exploratoires tant que taille, sélection,
 attrition, mesure et facteurs de confusion ne sont pas traités.
