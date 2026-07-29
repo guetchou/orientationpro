@@ -18,7 +18,10 @@ const createOpaqueKeyFactory = ({ secret = crypto.randomBytes(32), scope = 'gene
   const key = Buffer.isBuffer(secret) ? secret : Buffer.from(String(secret));
   if (key.length < 32) throw new TypeError('RATE_LIMIT_SECRET_TOO_SHORT');
   return (request = {}) => {
-    const accountId = request.auth?.accountId || request.account?.id || '';
+    const accountId = request.auth?.account?.id
+      || request.auth?.accountId
+      || request.account?.id
+      || '';
     const source = [scope, request.ip || request.socket?.remoteAddress || 'unknown', accountId].join('|');
     return crypto.createHmac('sha256', key).update(source).digest('hex');
   };
