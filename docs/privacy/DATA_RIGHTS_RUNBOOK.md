@@ -17,7 +17,8 @@
 La primitive `buildPortableExport` produit le format
 `makoki.portable-export.v2`. Elle contrôle la propriété au point d'entrée puis
 applique un sérialiseur allowlisté propre à chaque entité (compte, profil,
-projets, scénarios, plans, actions et résultats d'orientation). Des canaris
+projets, scénarios, plans, actions, résultats d'orientation et métadonnées
+d'analyse CV). Le document CV et son contenu dérivé brut sont exclus. Des canaris
 négatifs vérifient que tokens, champs internes et documents bruts ne traversent
 pas l'export. La pseudonymisation HMAC est testée.
 

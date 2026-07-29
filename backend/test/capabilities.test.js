@@ -31,6 +31,7 @@ test('capability registry is deterministic and never exposes environment values'
     CAREER_API_ENABLED: 'true',
     CV_API_V1_ENABLED: 'true',
     LIFE_PROJECT_API_ENABLED: 'true',
+    DATA_RIGHTS_API_ENABLED: 'true',
     LEGACY_AUTH_ENABLED: 'false',
     DB_PASSWORD: 'must-never-leak',
   };
@@ -46,6 +47,8 @@ test('capability registry is deterministic and never exposes environment values'
   assert.equal(byId(first, 'orientation.riasec').status, 'experimental');
   assert.equal(byId(first, 'career.recommendations').status, 'active');
   assert.equal(byId(first, 'cv.analysis-v1').status, 'active');
+  assert.equal(byId(first, 'privacy.data-rights-v1').status, 'experimental');
+  assert.equal(byId(first, 'privacy.data-rights-v1').configured, true);
   assert.equal(byId(first, 'identity.auth-legacy').status, 'disabled');
   assert.equal(byId(first, 'life-project.core-v1').status, 'experimental');
   assert.equal(byId(first, 'life-project.core-v1').configured, true);
@@ -60,6 +63,7 @@ test('disabled configuration produces explicit disabled capabilities', () => {
   assert.equal(byId(registry, 'orientation.riasec').status, 'disabled');
   assert.equal(byId(registry, 'career.recommendations').status, 'disabled');
   assert.equal(byId(registry, 'cv.analysis-v1').status, 'disabled');
+  assert.equal(byId(registry, 'privacy.data-rights-v1').status, 'disabled');
   assert.equal(byId(registry, 'life-project.core-v1').status, 'disabled');
 });
 
@@ -69,6 +73,7 @@ test('dependent APIs cannot be configured without Auth V1', () => {
     ['CAREER_API_ENABLED', 'career.recommendations'],
     ['CV_API_V1_ENABLED', 'cv.analysis-v1'],
     ['LIFE_PROJECT_API_ENABLED', 'life-project.core-v1'],
+    ['DATA_RIGHTS_API_ENABLED', 'privacy.data-rights-v1'],
   ]) {
     assert.throws(
       () => assertCapabilityConfiguration({ [key]: 'true' }),
@@ -91,6 +96,7 @@ test('public endpoint exposes the versioned registry without caching', async () 
       CAREER_API_ENABLED: 'false',
       CV_API_V1_ENABLED: 'false',
       LIFE_PROJECT_API_ENABLED: 'false',
+      DATA_RIGHTS_API_ENABLED: 'false',
       LEGACY_AUTH_ENABLED: 'false',
     },
   }));
@@ -103,5 +109,6 @@ test('public endpoint exposes the versioned registry without caching', async () 
   assert.equal(body.schemaVersion, SCHEMA_VERSION);
   assert.equal(byId(body, 'orientation.riasec').status, 'experimental');
   assert.equal(byId(body, 'career.recommendations').status, 'disabled');
+  assert.equal(byId(body, 'privacy.data-rights-v1').status, 'disabled');
   assert.equal(byId(body, 'life-project.core-v1').status, 'disabled');
 });
