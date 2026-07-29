@@ -57,6 +57,37 @@ test('rate limiter allows the configured quota then returns stable 429', () => {
   assert.equal(nextCalls, 3);
 });
 
+test('rate limiter bounds key cardinality and fails closed at capacity', () => {
+  let key = 'key-one';
+  const limiter = createMemoryRateLimiter({
+    max: 10,
+    maxEntries: 1,
+    windowMs: 60_000,
+    clock: () => 1_000,
+    keyGenerator: () => key,
+    scope: 'general',
+  });
+  let nextCalls = 0;
+  limiter({}, response(), () => { nextCalls += 1; });
+  key = 'key-two';
+  const saturated = response();
+  limiter({}, saturated, () => { nextCalls += 1; });
+  assert.equal(nextCalls, 1);
+  assert.equal(saturated.statusCode, 503);
+  assert.deepEqual(saturated.body, {
+    success: false,
+    code: 'RATE_LIMIT_CAPACITY_EXCEEDED',
+    message: 'Le service limite temporairement les nouvelles requêtes.',
+    scope: 'general',
+  });
+  assert.deepEqual(limiter.snapshot(), {
+    entries: 1,
+    windowMs: 60_000,
+    max: 10,
+    maxEntries: 1,
+  });
+});
+
 test('opaque keys separate IP and authenticated account without exposing either value', () => {
   const factory = createOpaqueKeyFactory({ secret: 's'.repeat(32), scope: 'expensive' });
   const first = factory({ ip: '203.0.113.7', auth: { account: { id: 'account-one' } } });
@@ -66,8 +97,9 @@ test('opaque keys separate IP and authenticated account without exposing either 
   assert.match(first, /^[0-9a-f]{64}$/);
 });
 
-test('invalid quotas and weak explicit secrets fail closed', () => {
+test('invalid quotas, capacity and weak explicit secrets fail closed', () => {
   assert.throws(() => createMemoryRateLimiter({ max: 0 }), /RATE_LIMIT_MAX_INVALID/);
+  assert.throws(() => createMemoryRateLimiter({ maxEntries: 0 }), /RATE_LIMIT_MAX_ENTRIES_INVALID/);
   assert.throws(
     () => createOpaqueKeyFactory({ secret: 'short' }),
     /RATE_LIMIT_SECRET_TOO_SHORT/,
