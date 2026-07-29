@@ -21,6 +21,7 @@ Chaque enregistrement exige :
 - une langue et un périmètre géographique explicites, y compris `unknown` ;
 - un état de fraîcheur avec date de contrôle ;
 - un statut de vérification initial `draft` ;
+- un statut de confiance descriptif, sans pourcentage artificiel ;
 - des assertions optionnelles conformes à `EvidenceV1`, `HypothesisV1` et
   `FactV1`.
 
@@ -34,6 +35,10 @@ Chaque enregistrement exige :
    un `FactV1` correspondant, confirmé par un acteur `authority`.
 6. Une confirmation humaine d’hypothèse ne remplace pas l’autorité compétente.
 7. Aucune API, persistance, capacité ou activation production n’est ajoutée.
+8. Chaque `FactV1` reste attaché à une enveloppe portant explicitement source,
+   version, périmètre, statut/date de vérification et confiance.
+9. Les listes de types sont fermées pour v1 ; tout ajout incompatible exige une
+   nouvelle version du contrat.
 
 ## Suite
 

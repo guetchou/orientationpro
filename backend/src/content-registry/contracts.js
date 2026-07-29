@@ -223,10 +223,28 @@ const initialVerification = (input = {}) => {
       { status: input.status },
     );
   }
-  return { status: 'draft', decisions: [] };
+  return {
+    status: 'draft',
+    statusChangedAt: isoTimestamp(input.statusChangedAt, 'verification.statusChangedAt'),
+    decisions: [],
+  };
 };
 
-const assertions = (input = {}, contentId) => {
+const trust = (input = {}) => {
+  if (!isPlainObject(input)) {
+    throw new ContentRegistryContractError(
+      'CONTENT_REGISTRY_OBJECT_INVALID',
+      'trust must be a plain object.',
+      { field: 'trust' },
+    );
+  }
+  return {
+    level: enumValue(input.level, 'trust.level', ['unknown', 'limited', 'supported']),
+    reasons: stringArray(input.reasons, 'trust.reasons', { required: true }),
+  };
+};
+
+const assertions = (input = {}, contentId, context) => {
   if (!isPlainObject(input)) {
     throw new ContentRegistryContractError(
       'CONTENT_REGISTRY_OBJECT_INVALID',
@@ -237,6 +255,16 @@ const assertions = (input = {}, contentId) => {
   const evidence = (input.evidence || []).map(createEvidence);
   const hypotheses = (input.hypotheses || []).map(createHypothesis);
   const facts = (input.facts || []).map(createFact);
+  const evidenceIds = new Set(evidence.map((entry) => entry.id));
+  for (const item of evidence) {
+    if (!item.subject || item.subject.id !== contentId) {
+      throw new ContentRegistryContractError(
+        'CONTENT_REGISTRY_ASSERTION_SUBJECT_MISMATCH',
+        'Every evidence item must reference its content record.',
+        { contentId, assertionId: item.id },
+      );
+    }
+  }
   for (const assertion of [...hypotheses, ...facts]) {
     if (assertion.subject.id !== contentId) {
       throw new ContentRegistryContractError(
@@ -246,7 +274,37 @@ const assertions = (input = {}, contentId) => {
       );
     }
   }
-  return { evidence, hypotheses, facts };
+  for (const hypothesis of hypotheses) {
+    if (hypothesis.evidenceIds.some((id) => !evidenceIds.has(id))) {
+      throw new ContentRegistryContractError(
+        'CONTENT_REGISTRY_EVIDENCE_REFERENCE_UNKNOWN',
+        'Hypothesis evidence references must resolve in the content record.',
+        { assertionId: hypothesis.id },
+      );
+    }
+  }
+  for (const fact of facts) {
+    if (fact.confirmation.evidenceIds.some((id) => !evidenceIds.has(id))) {
+      throw new ContentRegistryContractError(
+        'CONTENT_REGISTRY_EVIDENCE_REFERENCE_UNKNOWN',
+        'Fact evidence references must resolve in the content record.',
+        { assertionId: fact.id },
+      );
+    }
+  }
+  return {
+    evidence,
+    hypotheses,
+    facts: facts.map((fact) => ({
+      fact,
+      source: context.source,
+      geographicScope: context.geographicScope,
+      sourceVersion: context.source.version,
+      verificationStatus: context.verification.status,
+      verificationStatusChangedAt: context.verification.statusChangedAt,
+      trust: context.trust,
+    })),
+  };
 };
 
 const createContentRecord = (input = {}) => {
@@ -260,6 +318,11 @@ const createContentRecord = (input = {}) => {
       'At least one sourced language label is required.',
     );
   }
+  const contentSource = source(input.source);
+  const contentGeographicScope = geographicScope(input.geographicScope);
+  const contentFreshness = freshness(input.freshness);
+  const contentVerification = initialVerification(input.verification);
+  const contentTrust = trust(input.trust);
   return deepFreeze({
     schemaVersion: CONTENT_REGISTRY_VERSION,
     id,
@@ -270,28 +333,55 @@ const createContentRecord = (input = {}) => {
         (entry, index) => localizedText(entry, `descriptions[${index}]`),
       )
       : [],
-    source: source(input.source),
-    geographicScope: geographicScope(input.geographicScope),
+    source: contentSource,
+    geographicScope: contentGeographicScope,
     languages: stringArray(input.languages, 'languages', { required: true }),
-    freshness: freshness(input.freshness),
-    verification: initialVerification(input.verification),
-    assertions: assertions(input.assertions, id),
+    freshness: contentFreshness,
+    verification: contentVerification,
+    trust: contentTrust,
+    assertions: assertions(input.assertions, id, {
+      source: contentSource,
+      geographicScope: contentGeographicScope,
+      verification: contentVerification,
+      trust: contentTrust,
+    }),
     createdAt: isoTimestamp(input.createdAt, 'content.createdAt'),
   });
 };
 
-const authorityConfirmedRelation = (fact, relationType, sourceId, targetId) => {
+const authorityConfirmedRelation = (fact, authorityRef, relationType, sourceId, targetId) => {
   if (!fact
     || fact.confirmation?.confirmedBy?.kind !== 'authority'
+    || fact.confirmation.confirmedBy.id !== authorityRef?.authorityContentId
+    || fact.source?.type !== 'external_authority'
+    || !Array.isArray(fact.confirmation.evidenceIds)
+    || fact.confirmation.evidenceIds.length === 0
     || fact.subject?.id !== sourceId
     || fact.value?.targetId !== targetId
-    || fact.value?.relationType !== relationType) {
+    || fact.value?.relationType !== relationType
+    || !authorityRef?.competenceTypes?.includes(relationType)
+    || !authorityRef?.evidenceIds?.every((id) => fact.confirmation.evidenceIds.includes(id))) {
     throw new ContentRegistryContractError(
       'CONTENT_REGISTRY_AUTHORITY_CONFIRMATION_REQUIRED',
       'A confirmed equivalence, recognition, admission or licensing relation requires a matching FactV1 confirmed by an authority.',
       { relationType, sourceId, targetId },
     );
   }
+};
+
+const authorityReference = (input = {}) => {
+  if (!isPlainObject(input)) {
+    throw new ContentRegistryContractError(
+      'CONTENT_REGISTRY_AUTHORITY_REFERENCE_REQUIRED',
+      'A regulated confirmation requires an authority content reference.',
+    );
+  }
+  return {
+    authorityContentId: requiredString(input.authorityContentId, 'authorityRef.authorityContentId'),
+    jurisdiction: geographicScope(input.jurisdiction),
+    competenceTypes: stringArray(input.competenceTypes, 'authorityRef.competenceTypes', { required: true }),
+    evidenceIds: stringArray(input.evidenceIds, 'authorityRef.evidenceIds', { required: true }),
+  };
 };
 
 const createContentRelation = (input = {}) => {
@@ -311,6 +401,7 @@ const createContentRelation = (input = {}) => {
   const fact = input.fact ? createFact(input.fact) : null;
   const regulated = ['equivalence', 'recognition', 'admission', 'licensing']
     .includes(relationType);
+  let authorityRef = null;
 
   if (status === 'proposed' && !hypothesis) {
     throw new ContentRegistryContractError(
@@ -326,7 +417,8 @@ const createContentRelation = (input = {}) => {
       );
     }
     if (regulated) {
-      authorityConfirmedRelation(fact, relationType, sourceId, targetId);
+      authorityRef = authorityReference(input.authorityRef);
+      authorityConfirmedRelation(fact, authorityRef, relationType, sourceId, targetId);
     }
   }
   if (status === 'unknown' && (hypothesis || fact)) {
@@ -345,6 +437,7 @@ const createContentRelation = (input = {}) => {
     status,
     hypothesis,
     fact,
+    authorityRef,
     notes: requiredString(input.notes, 'relation.notes'),
     createdAt: isoTimestamp(input.createdAt, 'relation.createdAt'),
   });

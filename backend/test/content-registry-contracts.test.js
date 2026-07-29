@@ -43,7 +43,11 @@ const draftRecord = (overrides = {}) => ({
     checkedAt: at(1),
     notes: 'Aucune fraîcheur réelle déduite de cette fixture.',
   },
-  verification: { status: 'draft', decisions: [] },
+  verification: { status: 'draft', statusChangedAt: at(1), decisions: [] },
+  trust: {
+    level: 'unknown',
+    reasons: ['Aucune confiance réelle ne peut être déduite d’une fixture.'],
+  },
   assertions: { evidence: [], hypotheses: [], facts: [] },
   createdAt: at(1),
   ...overrides,
@@ -76,6 +80,7 @@ test('a content record requires source, date, scope, version, licence and verifi
   assert.equal(record.source.license, 'test-only');
   assert.equal(record.geographicScope.level, 'unknown');
   assert.equal(record.verification.status, 'draft');
+  assert.equal(record.trust.level, 'unknown');
   assert.equal(Object.isFrozen(record), true);
 
   for (const field of ['version', 'license', 'retrievedAt']) {
@@ -142,6 +147,27 @@ test('FactV1 and HypothesisV1 assertions must reference their content record', (
   );
 });
 
+test('evidence must reference the record', () => {
+  assert.throws(
+    () => createContentRecord(draftRecord({
+      assertions: {
+        evidence: [{
+          id: 'evidence-other',
+          evidenceType: 'document',
+          subject: { type: 'content_record', id: 'other-content' },
+          source: { type: 'document', id: 'document-fixture' },
+          observedAt: at(1),
+          scope: ['fixture'],
+          createdAt: at(1),
+        }],
+        hypotheses: [],
+        facts: [],
+      },
+    })),
+    (error) => error.code === 'CONTENT_REGISTRY_ASSERTION_SUBJECT_MISMATCH',
+  );
+});
+
 test('regulated relations stay unknown or proposed without authority confirmation', () => {
   const relation = createContentRelation({
     id: 'relation-fixture-unknown',
@@ -188,6 +214,12 @@ test('a regulated relation requires a matching FactV1 confirmed by an authority'
     targetId: 'qualification-b',
     status: 'confirmed',
     fact,
+    authorityRef: {
+      authorityContentId: 'authority-fixture',
+      jurisdiction: { level: 'unknown', codes: [], description: 'Juridiction synthétique.' },
+      competenceTypes: ['equivalence'],
+      evidenceIds: ['evidence-fixture'],
+    },
     notes: 'Synthetic authority-confirmed contract fixture.',
     createdAt: at(2),
   });
@@ -215,7 +247,50 @@ test('a regulated relation requires a matching FactV1 confirmed by an authority'
       targetId: 'qualification-b',
       status: 'confirmed',
       fact: humanFact,
+      authorityRef: {
+        authorityContentId: 'reviewer-fixture',
+        jurisdiction: { level: 'unknown', codes: [], description: 'Juridiction synthétique.' },
+        competenceTypes: ['equivalence'],
+        evidenceIds: ['evidence-fixture'],
+      },
       notes: 'Must fail without an authority FactV1.',
+      createdAt: at(2),
+    }),
+    (error) => error.code === 'CONTENT_REGISTRY_AUTHORITY_CONFIRMATION_REQUIRED',
+  );
+});
+
+test('an authority label alone cannot confirm a regulated relation', () => {
+  const weakFact = createFact({
+    id: 'fact-weak-authority',
+    subject: { type: 'content_record', id: 'qualification-a' },
+    predicate: 'has_authority_relation',
+    value: { relationType: 'equivalence', targetId: 'qualification-b' },
+    source: { type: 'human_decision', id: 'decision-weak', version: 'v1' },
+    confirmation: {
+      method: 'declared_authority',
+      confirmedBy: { kind: 'authority', id: 'authority-fixture' },
+      confirmedAt: at(2),
+      evidenceIds: [],
+    },
+    observedAt: at(2),
+    createdAt: at(2),
+  });
+  assert.throws(
+    () => createContentRelation({
+      id: 'relation-weak-authority',
+      relationType: 'equivalence',
+      sourceId: 'qualification-a',
+      targetId: 'qualification-b',
+      status: 'confirmed',
+      fact: weakFact,
+      authorityRef: {
+        authorityContentId: 'authority-fixture',
+        jurisdiction: { level: 'unknown', codes: [], description: 'Fixture synthétique.' },
+        competenceTypes: ['equivalence'],
+        evidenceIds: ['evidence-fixture'],
+      },
+      notes: 'Must fail without external authority evidence.',
       createdAt: at(2),
     }),
     (error) => error.code === 'CONTENT_REGISTRY_AUTHORITY_CONFIRMATION_REQUIRED',
