@@ -18,27 +18,33 @@
     "test:cv-api-disabled": "node --test test/cv-api-disabled.test.js",
     "test:profile": "node --test test/profile-api.test.js"
   },
-  "keywords": ["orientation", "backend", "api"],
+  "keywords": [
+    "orientation",
+    "backend",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^1.20.6",
     "cheerio": "^1.1.2",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^16.4.5",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "mammoth": "^1.9.1",
-    "multer": "^2.0.1",
-    "mysql2": "^3.9.5",
-    "natural": "^8.1.0",
-    "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.6",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
+    "mammoth": "^1.12.0",
+    "multer": "^2.2.0",
+    "mysql2": "^3.23.2",
+    "natural": "^8.1.1",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^7.0.13",
     "pdf-parse": "^1.1.1",
-    "pdfkit": "^0.17.1",
-    "sequelize": "^6.37.7",
+    "pdfkit": "^0.17.2",
+    "sequelize": "^6.37.8",
     "yauzl": "3.4.0"
   },
-  "devDependencies": { "nodemon": "^3.0.1" }
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
