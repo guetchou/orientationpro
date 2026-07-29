@@ -32,9 +32,17 @@ const { createLifeProjectService } = require('./life-project/service');
 const { createLifeProjectStore } = require('./life-project/store');
 const { createActionTrackingStore } = require('./life-project/action-tracking-store');
 const { mountLegacyApi } = require('./security/legacy-api');
+const {
+  createMemoryRateLimiter,
+  createOpaqueKeyFactory,
+} = require('./security/rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const jsonBodyLimit = process.env.JSON_BODY_LIMIT || '1mb';
+const urlencodedParameterLimit = Number(process.env.URLENCODED_PARAMETER_LIMIT || 200);
+const rateLimitSecret = process.env.RATE_LIMIT_KEY_SECRET || undefined;
+const rateLimitWindowMs = process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000;
 const allowedOrigins = new Set(
   String(process.env.CORS_ORIGINS || '')
     .split(',')
@@ -44,6 +52,25 @@ const allowedOrigins = new Set(
 let closeApplicationResources = async () => undefined;
 let authV1 = null;
 
+const generalLimiter = createMemoryRateLimiter({
+  windowMs: rateLimitWindowMs,
+  max: process.env.RATE_LIMIT_GENERAL_MAX || 300,
+  keyGenerator: createOpaqueKeyFactory({ secret: rateLimitSecret, scope: 'general' }),
+  scope: 'general',
+});
+const authLimiter = createMemoryRateLimiter({
+  windowMs: rateLimitWindowMs,
+  max: process.env.RATE_LIMIT_AUTH_MAX || 20,
+  keyGenerator: createOpaqueKeyFactory({ secret: rateLimitSecret, scope: 'auth' }),
+  scope: 'auth',
+});
+const expensiveLimiter = createMemoryRateLimiter({
+  windowMs: rateLimitWindowMs,
+  max: process.env.RATE_LIMIT_EXPENSIVE_MAX || 60,
+  keyGenerator: createOpaqueKeyFactory({ secret: rateLimitSecret, scope: 'expensive' }),
+  scope: 'expensive',
+});
+
 app.use(cors({
   origin: function(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
@@ -52,11 +79,18 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'If-Match'],
-  exposedHeaders: ['Content-Type', 'Authorization', 'ETag'],
+  exposedHeaders: ['Content-Type', 'Authorization', 'ETag', 'RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
 }));
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use('/api', generalLimiter);
+app.use(express.json({ limit: jsonBodyLimit, strict: true }));
+app.use(express.urlencoded({
+  extended: true,
+  limit: jsonBodyLimit,
+  parameterLimit: Number.isSafeInteger(urlencodedParameterLimit) && urlencodedParameterLimit > 0
+    ? urlencodedParameterLimit
+    : 200,
+}));
 
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
@@ -72,12 +106,12 @@ app.use((req, res, next) => {
 app.use('/api/v1/capabilities', createCapabilitiesRouter({ env: process.env }));
 app.use('/api/test', testRoutes);
 if (process.env.LEGACY_AUTH_ENABLED === 'true') {
-  app.use('/api/auth', authRoutes);
+  app.use('/api/auth', authLimiter, authRoutes);
 }
 if (process.env.AUTH_V1_ENABLED === 'true') {
   authV1 = createConfiguredAuthV1(process.env);
   closeApplicationResources = authV1.close;
-  app.use('/api/v1/auth', authV1.router);
+  app.use('/api/v1/auth', authLimiter, authV1.router);
   app.use('/api/v1/profile', createProfileRouter({
     store: createProfileStore(authV1.pool),
     authenticate: authV1.authenticate,
@@ -91,7 +125,7 @@ if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
   if (!authV1) {
     throw new Error('LIFE_PROJECT_API_ENABLED requires AUTH_V1_ENABLED=true');
   }
-  app.use('/api/v1/life-projects', createLifeProjectRouter({
+  app.use('/api/v1/life-projects', expensiveLimiter, createLifeProjectRouter({
     service: createLifeProjectService({
       store: createLifeProjectStore(authV1.pool),
       actionTrackingStore: createActionTrackingStore(authV1.pool),
@@ -103,7 +137,7 @@ if (process.env.RIASEC_API_ENABLED === 'true') {
   if (!authV1) {
     throw new Error('RIASEC_API_ENABLED requires AUTH_V1_ENABLED=true');
   }
-  app.use('/api/v1/orientation', createRiasecRouter({
+  app.use('/api/v1/orientation', expensiveLimiter, createRiasecRouter({
     store: createRiasecStore(authV1.pool),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
@@ -114,7 +148,7 @@ if (process.env.CAREER_API_ENABLED === 'true') {
   if (!authV1) {
     throw new Error('CAREER_API_ENABLED requires AUTH_V1_ENABLED=true');
   }
-  app.use('/api/v1/career', createCareerRouter({
+  app.use('/api/v1/career', expensiveLimiter, createCareerRouter({
     store: createCareerStore(authV1.pool),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
@@ -125,7 +159,7 @@ if (process.env.CV_API_V1_ENABLED === 'true') {
     throw new Error('CV_API_V1_ENABLED requires AUTH_V1_ENABLED=true');
   }
 
-  app.use('/api/v1/cv', createCvRouter({
+  app.use('/api/v1/cv', expensiveLimiter, createCvRouter({
     service: createCvService({ store: createCvStore(authV1.pool) }),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
@@ -208,11 +242,12 @@ app.get('/', (req, res) => {
     port: PORT,
     endpoints,
     corsOriginsConfigured: allowedOrigins.size,
-    jsonLimit: '1mb',
+    jsonLimit: jsonBodyLimit,
   });
 });
 
 app.use((err, req, res, next) => {
+  const statusCode = err?.type === 'entity.too.large' ? 413 : 500;
   console.error('Global request error:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
@@ -221,9 +256,10 @@ app.use((err, req, res, next) => {
     timestamp: new Date().toISOString(),
   });
 
-  res.status(500).json({
+  res.status(statusCode).json({
     success: false,
-    message: 'Erreur interne du serveur',
+    code: statusCode === 413 ? 'REQUEST_ENTITY_TOO_LARGE' : 'INTERNAL_SERVER_ERROR',
+    message: statusCode === 413 ? 'La requête dépasse la taille autorisée' : 'Erreur interne du serveur',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Une erreur s\'est produite',
     timestamp: new Date().toISOString(),
     path: req.path,
