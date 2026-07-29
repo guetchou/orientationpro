@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import Header from '@/components/layout/Header';
 import About from './About';
 import Home from './Home';
@@ -10,6 +10,25 @@ vi.mock('@/hooks/usePageMeta', () => ({ usePageMeta: vi.fn() }));
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: null, signOut: vi.fn() }),
 }));
+
+beforeAll(() => {
+  class IntersectionObserverMock implements IntersectionObserver {
+    readonly root = null;
+    readonly rootMargin = '';
+    readonly thresholds: readonly number[] = [];
+
+    disconnect() {}
+    observe() {}
+    takeRecords(): IntersectionObserverEntry[] { return []; }
+    unobserve() {}
+  }
+
+  Object.defineProperty(globalThis, 'IntersectionObserver', {
+    configurable: true,
+    writable: true,
+    value: IntersectionObserverMock,
+  });
+});
 
 const renderWithRouter = (element: ReactNode) => render(
   <MemoryRouter>{element}</MemoryRouter>,
