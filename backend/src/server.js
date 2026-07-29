@@ -27,6 +27,9 @@ const { createProfileRouter } = require('./profile/router');
 const { createProfileStore } = require('./profile/store');
 const { createProfileSynthesisRouter } = require('./profile/synthesis-router');
 const { createProfileSynthesisStore } = require('./profile/synthesis-store');
+const { createLifeProjectRouter } = require('./life-project/router');
+const { createLifeProjectService } = require('./life-project/service');
+const { createLifeProjectStore } = require('./life-project/store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,8 +49,8 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'If-Match'],
+  exposedHeaders: ['Content-Type', 'Authorization', 'ETag'],
 }));
 
 app.use(express.json({ limit: '1mb' }));
@@ -79,6 +82,17 @@ if (process.env.AUTH_V1_ENABLED === 'true') {
   }));
   app.use('/api/v1/profile/syntheses', createProfileSynthesisRouter({
     store: createProfileSynthesisStore(authV1.pool),
+    authenticate: authV1.authenticate,
+  }));
+}
+if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('LIFE_PROJECT_API_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+  app.use('/api/v1/life-projects', createLifeProjectRouter({
+    service: createLifeProjectService({
+      store: createLifeProjectStore(authV1.pool),
+    }),
     authenticate: authV1.authenticate,
   }));
 }
@@ -138,6 +152,15 @@ app.get('/', (req, res) => {
       session: 'GET /api/v1/auth/session',
       profile: 'GET|PUT /api/v1/profile',
       profileSyntheses: 'GET|POST /api/v1/profile/syntheses',
+    });
+  }
+  if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      lifeProjects: 'GET|POST /api/v1/life-projects',
+      lifeProject: 'GET /api/v1/life-projects/:projectId',
+      lifeProjectScenarios: 'POST /api/v1/life-projects/:projectId/scenarios',
+      lifeProjectTransitions: 'POST /api/v1/life-projects/:projectId/transitions',
+      lifeProjectActionPlans: 'POST|PUT /api/v1/life-projects/:projectId/action-plans',
     });
   }
   if (process.env.RIASEC_API_ENABLED === 'true') {
@@ -213,6 +236,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Authentication v1 enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
   console.log(`Profile API enabled: ${process.env.AUTH_V1_ENABLED === 'true'}`);
+  console.log(`LifeProject API enabled: ${process.env.LIFE_PROJECT_API_ENABLED === 'true'}`);
   console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
   console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
   console.log(`CV API v1 enabled: ${process.env.CV_API_V1_ENABLED === 'true'}`);
