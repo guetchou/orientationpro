@@ -72,6 +72,7 @@ const RecruitmentPage = lazy(() => import('@/pages/RecruitmentPage'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const TestResults = lazy(() => import('@/pages/TestResults'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const LifeProjectPage = lazy(() => import('@/features/life-project/LifeProjectPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const SuperAdmin = lazy(() => import('@/pages/admin/SuperAdmin'));
@@ -144,6 +145,7 @@ export const AppRouter = () => (
             <Route path="/recruitment" element={<RecruitmentPage />} />
 
             <Route path="/dashboard" element={<UserRoute><Dashboard /></UserRoute>} />
+            <Route path="/parcours" element={<UserRoute><LifeProjectPage /></UserRoute>} />
             <Route path="/test-results" element={<UserRoute><TestResults /></UserRoute>} />
             <Route path="/profile" element={<UserRoute><Profile /></UserRoute>} />
 
