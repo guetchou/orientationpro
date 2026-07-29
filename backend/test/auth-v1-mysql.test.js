@@ -23,23 +23,12 @@ const request = async (app, requestPath, options = {}) => {
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   try {
-    return await fetch(`http://127.0.0.1:${server.address().port}${requestPath}`, options);
+    const address = server.address();
+    return await fetch(`http://127.0.0.1:${address.port}${requestPath}`, options);
   } finally {
     server.closeAllConnections();
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
-};
-
-const authApplication = ({ store, email, jwtSecret }) => {
-  const app = express();
-  app.use(express.json());
-  app.use('/api/v1/auth', createAuthRouter({
-    store,
-    email,
-    jwtSecret,
-    cookieSecure: false,
-  }));
-  return app;
 };
 
 test('account lifecycle persists in isolated MySQL through the HTTP interface', async () => {
@@ -47,49 +36,127 @@ test('account lifecycle persists in isolated MySQL through the HTTP interface', 
   await migrateUp(pool, path.join(__dirname, '..', 'migrations'));
   const store = createMySqlAuthStore(pool);
   let verificationToken;
-  const app = authApplication({
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
     store,
     email: {
       sendVerification: async ({ token }) => { verificationToken = token; },
       sendPasswordReset: async () => undefined,
     },
     jwtSecret: 'mysql-test-jwt-secret-with-at-least-32-characters',
-  });
+    cookieSecure: false,
+  }));
   const email = `mysql-${Date.now()}@example.test`;
 
   try {
     const registration = await request(app, '/api/v1/auth/register', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password: 'correct horse battery staple' }),
     });
     assert.equal(registration.status, 201);
-    assert.equal((await request(app, '/api/v1/auth/verify-email', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
+
+    const verification = await request(app, '/api/v1/auth/verify-email', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ token: verificationToken }),
-    })).status, 200);
+    });
+    assert.equal(verification.status, 200);
+
     const login = await request(app, '/api/v1/auth/login', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password: 'correct horse battery staple' }),
     });
     const loginBody = await login.json();
     const refreshCookie = login.headers.get('set-cookie').split(';')[0];
     assert.equal(login.status, 200);
     assert.deepEqual(loginBody.account.roles, ['user']);
-    assert.equal((await request(app, '/api/v1/auth/session', {
+
+    const current = await request(app, '/api/v1/auth/session', {
       headers: { authorization: `Bearer ${loginBody.accessToken}` },
-    })).status, 200);
+    });
+    assert.equal(current.status, 200);
+
     const refreshed = await request(app, '/api/v1/auth/refresh', {
-      method: 'POST', headers: { cookie: refreshCookie },
+      method: 'POST',
+      headers: { cookie: refreshCookie },
     });
     const rotatedCookie = refreshed.headers.get('set-cookie').split(';')[0];
     assert.equal(refreshed.status, 200);
     assert.notEqual(rotatedCookie, refreshCookie);
-    assert.equal((await request(app, '/api/v1/auth/logout', {
-      method: 'POST', headers: { cookie: rotatedCookie },
-    })).status, 204);
-    assert.equal((await request(app, '/api/v1/auth/session', {
+
+    const logout = await request(app, '/api/v1/auth/logout', {
+      method: 'POST',
+      headers: { cookie: rotatedCookie },
+    });
+    assert.equal(logout.status, 204);
+
+    const afterLogout = await request(app, '/api/v1/auth/session', {
       headers: { authorization: `Bearer ${loginBody.accessToken}` },
-    })).status, 401);
+    });
+    assert.equal(afterLogout.status, 401);
+  } finally {
+    await pool.end();
+  }
+});
+
+test('verification resend rotates pending MySQL tokens and remains neutral for active and unknown accounts', async () => {
+  const pool = createPool();
+  await migrateUp(pool, path.join(__dirname, '..', 'migrations'));
+  const store = createMySqlAuthStore(pool);
+  const deliveredTokens = [];
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
+    store,
+    email: {
+      sendVerification: async ({ email, token }) => deliveredTokens.push({ email, token }),
+      sendPasswordReset: async () => undefined,
+    },
+    jwtSecret: 'mysql-test-jwt-secret-with-at-least-32-characters',
+    cookieSecure: false,
+  }));
+  const pendingEmail = `mysql-resend-pending-${Date.now()}@example.test`;
+  const activeEmail = `mysql-resend-active-${Date.now()}@example.test`;
+  const post = (requestPath, body) => request(app, requestPath, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  try {
+    assert.equal((await post('/api/v1/auth/register', {
+      email: pendingEmail,
+      password: 'correct horse battery staple',
+    })).status, 201);
+    const firstPendingToken = deliveredTokens.at(-1).token;
+
+    assert.equal((await post('/api/v1/auth/register', {
+      email: activeEmail,
+      password: 'correct horse battery staple',
+    })).status, 201);
+    const activeToken = deliveredTokens.at(-1).token;
+    assert.equal((await post('/api/v1/auth/verify-email', { token: activeToken })).status, 200);
+
+    const pendingResponse = await post('/api/v1/auth/verification/request', { email: pendingEmail });
+    const replacementToken = deliveredTokens.at(-1).token;
+    const activeResponse = await post('/api/v1/auth/verification/request', { email: activeEmail });
+    const unknownResponse = await post('/api/v1/auth/verification/request', {
+      email: `mysql-resend-unknown-${Date.now()}@example.test`,
+    });
+
+    assert.equal(pendingResponse.status, 202);
+    assert.equal(activeResponse.status, 202);
+    assert.equal(unknownResponse.status, 202);
+    assert.equal(await pendingResponse.text(), '');
+    assert.equal(await activeResponse.text(), '');
+    assert.equal(await unknownResponse.text(), '');
+    assert.equal(deliveredTokens.length, 3);
+    assert.notEqual(replacementToken, firstPendingToken);
+    assert.equal((await post('/api/v1/auth/verify-email', { token: firstPendingToken })).status, 400);
+    assert.equal((await post('/api/v1/auth/verify-email', { token: replacementToken })).status, 200);
   } finally {
     await pool.end();
   }
@@ -101,57 +168,68 @@ test('password recovery changes credentials and revokes existing MySQL sessions'
   const store = createMySqlAuthStore(pool);
   let verificationToken;
   let passwordResetToken;
-  const app = authApplication({
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
     store,
     email: {
       sendVerification: async ({ token }) => { verificationToken = token; },
       sendPasswordReset: async ({ token }) => { passwordResetToken = token; },
     },
     jwtSecret: 'mysql-test-jwt-secret-with-at-least-32-characters',
-  });
+    cookieSecure: false,
+  }));
   const email = `mysql-reset-${Date.now()}@example.test`;
   const oldPassword = 'old correct horse battery staple';
   const newPassword = 'new correct horse battery staple';
 
   try {
-    assert.equal((await request(app, '/api/v1/auth/register', {
+    const registration = await request(app, '/api/v1/auth/register', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password: oldPassword }),
-    })).status, 201);
-    assert.equal((await request(app, '/api/v1/auth/verify-email', {
+    });
+    assert.equal(registration.status, 201);
+    const verification = await request(app, '/api/v1/auth/verify-email', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ token: verificationToken }),
-    })).status, 200);
+    });
+    assert.equal(verification.status, 200);
     const login = await request(app, '/api/v1/auth/login', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password: oldPassword }),
     });
     const refreshCookie = login.headers.get('set-cookie').split(';')[0];
     assert.equal(login.status, 200);
-    assert.equal((await request(app, '/api/v1/auth/password-reset/request', {
+    const resetRequest = await request(app, '/api/v1/auth/password-reset/request', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email }),
-    })).status, 202);
+    });
+    assert.equal(resetRequest.status, 202);
     assert.ok(passwordResetToken);
-    assert.equal((await request(app, '/api/v1/auth/password-reset/confirm', {
+    const resetConfirmation = await request(app, '/api/v1/auth/password-reset/confirm', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ token: passwordResetToken, password: newPassword }),
-    })).status, 204);
-    assert.equal((await request(app, '/api/v1/auth/refresh', {
+    });
+    assert.equal(resetConfirmation.status, 204);
+    const refreshRevokedSession = await request(app, '/api/v1/auth/refresh', {
       method: 'POST', headers: { cookie: refreshCookie },
-    })).status, 401);
-    assert.equal((await request(app, '/api/v1/auth/login', {
+    });
+    assert.equal(refreshRevokedSession.status, 401);
+    const oldPasswordLogin = await request(app, '/api/v1/auth/login', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password: oldPassword }),
-    })).status, 401);
-    assert.equal((await request(app, '/api/v1/auth/login', {
+    });
+    assert.equal(oldPasswordLogin.status, 401);
+    const newPasswordLogin = await request(app, '/api/v1/auth/login', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password: newPassword }),
-    })).status, 200);
-    assert.equal((await request(app, '/api/v1/auth/password-reset/confirm', {
+    });
+    assert.equal(newPasswordLogin.status, 200);
+    const reusedToken = await request(app, '/api/v1/auth/password-reset/confirm', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ token: passwordResetToken, password: newPassword }),
-    })).status, 400);
+    });
+    assert.equal(reusedToken.status, 400);
   } finally {
     await pool.end();
   }
@@ -162,16 +240,19 @@ test('ordered migrations roll back completely and can be applied again', async (
   const directory = path.join(__dirname, '..', 'migrations');
   try {
     await migrateUp(pool, directory);
+
     const [appliedRows] = await pool.query(
       'SELECT version FROM schema_migrations ORDER BY applied_at DESC, version DESC',
     );
     const expectedRollbackOrder = appliedRows.map((row) => row.version);
     const rolledBack = [];
+
     while (true) {
       const version = await migrateDown(pool, directory);
       if (!version) break;
       rolledBack.push(version);
     }
+
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
       '010_profile_synthesis_snapshots',
@@ -187,35 +268,63 @@ test('ordered migrations roll back completely and can be applied again', async (
     ]);
 
     const [[afterRollback]] = await pool.query(
-      `SELECT COUNT(*) AS table_count FROM information_schema.tables
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
        WHERE table_schema = DATABASE()
-         AND (table_name LIKE 'auth\\_%' OR table_name LIKE 'orientation\\_%'
-              OR table_name LIKE 'career\\_%' OR table_name LIKE 'profile_synthesis\\_%'
-              OR table_name LIKE 'cv\\_%')`,
+         AND (
+           table_name LIKE 'auth\\_%'
+           OR table_name LIKE 'orientation\\_%'
+           OR table_name LIKE 'career\\_%'
+           OR table_name LIKE 'profile_synthesis\\_%'
+           OR table_name LIKE 'cv\\_%'
+         )`,
     );
     assert.equal(Number(afterRollback.table_count), 0);
 
     await migrateUp(pool, directory);
-    const tableCount = async (pattern) => {
-      const [[row]] = await pool.query(
-        `SELECT COUNT(*) AS table_count FROM information_schema.tables
-         WHERE table_schema = DATABASE() AND table_name LIKE ?`,
-        [pattern],
-      );
-      return Number(row.table_count);
-    };
-    assert.equal(await tableCount('auth\\_%'), 11);
-    assert.equal(await tableCount('orientation\\_%'), 5);
-    assert.equal(await tableCount('career\\_%'), 8);
-    assert.equal(await tableCount('profile_synthesis\\_%'), 1);
-    assert.equal(await tableCount('cv\\_%'), 1);
+
+    const [[authTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'auth\\_%'`,
+    );
+    const [[orientationTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'orientation\\_%'`,
+    );
+    const [[careerTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'career\\_%'`,
+    );
+    const [[profileSynthesisTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name LIKE 'profile_synthesis\\_%'`,
+    );
+    const [[cvTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE()
+         AND table_name LIKE 'cv\\_%'`,
+    );
     const [[careerPermissions]] = await pool.query(
-      `SELECT COUNT(*) AS permission_count FROM auth_permissions
+      `SELECT COUNT(*) AS permission_count
+       FROM auth_permissions
        WHERE id IN ('career.catalog.read', 'career.match.read_own')`,
     );
     const [[cvPermissions]] = await pool.query(
-      `SELECT COUNT(*) AS permission_count FROM auth_permissions WHERE id LIKE 'cv.%'`,
+      `SELECT COUNT(*) AS permission_count
+       FROM auth_permissions
+       WHERE id LIKE 'cv.%'`,
     );
+
+    assert.equal(Number(authTables.table_count), 11);
+    assert.equal(Number(orientationTables.table_count), 5);
+    assert.equal(Number(careerTables.table_count), 8);
+    assert.equal(Number(profileSynthesisTables.table_count), 1);
+    assert.equal(Number(cvTables.table_count), 1);
     assert.equal(Number(careerPermissions.permission_count), 2);
     assert.equal(Number(cvPermissions.permission_count), 4);
   } finally {
