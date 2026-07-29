@@ -50,7 +50,7 @@ export const Footer = () => {
         <div className="grid gap-10 lg:grid-cols-[1.2fr_3fr]">
           <div className="max-w-sm">
             <Link to="/" className="inline-flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-xl font-bold">M</span>
+              <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="44" height="44" className="h-11 w-11 shrink-0" />
               <span>
                 <span className="block text-2xl font-bold">MAKOKI</span>
                 <span className="block text-xs text-slate-400">Orientation • Compétences • Emploi</span>
