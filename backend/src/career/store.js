@@ -1,10 +1,14 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const { rankOccupations } = require('./matching');
 const {
+  PROFILE_RECOMMENDATION_ALGORITHM_VERSION,
   profileRecommendationContext,
   rankProfileRecommendations,
 } = require('./profile-matching');
+const { PREPARATION_ADAPTER_VERSION } = require('./preparation-model');
+const { buildRecommendationInputVersion } = require('./profile-version');
 
 const parseJson = (value) => {
   if (value === null || value === undefined) return value;
@@ -29,10 +33,13 @@ const sourceFromRow = (row, prefix) => {
     id,
     kind: row[`${prefix}_source_kind`],
     version: row[`${prefix}_source_version`],
+    locale: row[`${prefix}_source_locale`] || null,
     title: row[`${prefix}_source_title`],
     licenseName: row[`${prefix}_license_name`],
     licenseUrl: row[`${prefix}_license_url`],
     attribution: row[`${prefix}_attribution_text`],
+    contentSha256: row[`${prefix}_content_sha256`] || null,
+    importedAt: row[`${prefix}_imported_at`] || null,
   };
 };
 
@@ -112,10 +119,13 @@ const presentationSelect = `
          riasec_source.id AS riasec_source_id,
          riasec_source.source_kind AS riasec_source_kind,
          riasec_source.source_version AS riasec_source_version,
+         riasec_source.locale AS riasec_source_locale,
          riasec_source.title AS riasec_source_title,
          riasec_source.license_name AS riasec_license_name,
          riasec_source.license_url AS riasec_license_url,
          riasec_source.attribution_text AS riasec_attribution_text,
+         riasec_source.content_sha256 AS riasec_content_sha256,
+         riasec_source.imported_at AS riasec_imported_at,
          presented.id AS presentation_occupation_id,
          presented.locale AS presentation_locale,
          presented.preferred_label AS presentation_preferred_label,
@@ -124,10 +134,13 @@ const presentationSelect = `
          presentation_source.id AS presentation_source_id,
          presentation_source.source_kind AS presentation_source_kind,
          presentation_source.source_version AS presentation_source_version,
+         presentation_source.locale AS presentation_source_locale,
          presentation_source.title AS presentation_source_title,
          presentation_source.license_name AS presentation_license_name,
          presentation_source.license_url AS presentation_license_url,
          presentation_source.attribution_text AS presentation_attribution_text,
+         presentation_source.content_sha256 AS presentation_content_sha256,
+         presentation_source.imported_at AS presentation_imported_at,
          selected_crosswalk.mapping_kind AS crosswalk_mapping_kind,
          selected_crosswalk.confidence_score AS crosswalk_confidence_score,
          selected_crosswalk.confidence_level AS crosswalk_confidence_level,
@@ -184,6 +197,33 @@ const presentationSelect = `
   LEFT JOIN career_catalog_sources presentation_source
     ON presentation_source.id = presented.catalog_source_id
 `;
+
+const uniqueSources = (sources = []) => [...new Map(
+  sources.filter((source) => source?.id).map((source) => [source.id, source]),
+).values()];
+
+const snapshotFromRow = (row) => {
+  if (!row) return null;
+  return {
+    snapshot: {
+      id: row.id,
+      immutable: true,
+      orientationResultId: row.orientation_result_id,
+      recommendationAlgorithmVersion: row.recommendation_algorithm_version,
+      riasecAlgorithmVersion: row.riasec_algorithm_version,
+      preparationAdapterVersion: row.preparation_adapter_version,
+      requestedLocale: row.requested_locale,
+      includeLocallyExcluded: Boolean(row.include_locally_excluded),
+      limit: Number(row.limit_count),
+      inputFingerprint: row.input_fingerprint,
+      profileFingerprint: row.profile_fingerprint,
+      onetSources: parseJson(row.onet_sources_json) || [],
+      escoSources: parseJson(row.esco_sources_json) || [],
+      createdAt: row.created_at,
+    },
+    recommendation: parseJson(row.snapshot_json),
+  };
+};
 
 const createCareerStore = (pool) => {
   const loadMatchContext = async ({
@@ -252,7 +292,8 @@ const createCareerStore = (pool) => {
   const loadProfileContext = async (accountId) => {
     const [[[profile]], [education], [confirmedSkills]] = await Promise.all([
       pool.query(
-        `SELECT account_id, current_situation, primary_goal, mobility_scope, completion_percent
+        `SELECT account_id, current_situation, primary_goal, mobility_scope,
+                completion_percent, updated_at
          FROM account_profiles
          WHERE account_id = ?
          LIMIT 1`,
@@ -260,14 +301,14 @@ const createCareerStore = (pool) => {
       ),
       pool.query(
         `SELECT education_level, status, diploma_name, field_of_study, institution,
-                country_code, start_year, end_year
+                country_code, start_year, end_year, updated_at
          FROM account_education_history
          WHERE account_id = ?
          ORDER BY start_year DESC, created_at DESC`,
         [accountId],
       ),
       pool.query(
-        `SELECT label, esco_uri, proficiency, source
+        `SELECT label, esco_uri, proficiency, source, updated_at
          FROM account_profile_skills
          WHERE account_id = ?
            AND confirmation_status = 'confirmed'
@@ -282,11 +323,12 @@ const createCareerStore = (pool) => {
 
   const loadSkillLinks = async ({ accountId, occupations, confirmedSkills }) => {
     const linksByOccupation = new Map();
-    if (!confirmedSkills.length || !occupations.length) return linksByOccupation;
+    const sources = [];
+    if (!confirmedSkills.length || !occupations.length) return { linksByOccupation, sources };
     const occupationIds = [...new Set(
       occupations.map((occupation) => occupation.presentationOccupationId).filter(Boolean),
     )];
-    if (!occupationIds.length) return linksByOccupation;
+    if (!occupationIds.length) return { linksByOccupation, sources };
     const placeholders = occupationIds.map(() => '?').join(', ');
     const [rows] = await pool.query(
       `SELECT link.occupation_id,
@@ -294,7 +336,17 @@ const createCareerStore = (pool) => {
               catalog_skill.preferred_label AS label,
               profile_skill.proficiency,
               link.relation_kind,
-              link.importance_score
+              link.importance_score,
+              skill_source.id AS skill_source_id,
+              skill_source.source_kind AS skill_source_kind,
+              skill_source.source_version AS skill_source_version,
+              skill_source.locale AS skill_source_locale,
+              skill_source.title AS skill_source_title,
+              skill_source.license_name AS skill_license_name,
+              skill_source.license_url AS skill_license_url,
+              skill_source.attribution_text AS skill_attribution_text,
+              skill_source.content_sha256 AS skill_content_sha256,
+              skill_source.imported_at AS skill_imported_at
        FROM account_profile_skills profile_skill
        JOIN career_skills catalog_skill
          ON catalog_skill.source_code = profile_skill.esco_uri
@@ -322,8 +374,196 @@ const createCareerStore = (pool) => {
         importanceScore: row.importance_score === null ? null : Number(row.importance_score),
       });
       linksByOccupation.set(row.occupation_id, current);
+      sources.push(sourceFromRow(row, 'skill'));
     }
-    return linksByOccupation;
+    return { linksByOccupation, sources: uniqueSources(sources) };
+  };
+
+  const recommendProfileCareers = async ({
+    accountId,
+    resultId,
+    locale = 'fr',
+    includeLocallyExcluded = false,
+    limit = 20,
+  }) => {
+    const safeLimit = boundedInteger(limit, 20, 1, 100);
+    const requestedLocale = validLocale(locale);
+    const context = await loadMatchContext({
+      accountId,
+      resultId,
+      locale: requestedLocale,
+      includeLocallyExcluded,
+      candidateLimit: 2000,
+    });
+    if (!context) return null;
+    const profileData = await loadProfileContext(accountId);
+    const skillLinkData = await loadSkillLinks({
+      accountId,
+      occupations: context.occupations,
+      confirmedSkills: profileData.confirmedSkills,
+    });
+    const occupationsById = new Map(
+      context.occupations.map((occupation) => [occupation.id, occupation]),
+    );
+    const catalogSources = uniqueSources([
+      ...context.occupations.flatMap((occupation) => [occupation.riasecSource, occupation.presentationSource]),
+      ...skillLinkData.sources,
+    ]);
+    const inputVersion = buildRecommendationInputVersion({
+      recommendationAlgorithmVersion: PROFILE_RECOMMENDATION_ALGORITHM_VERSION,
+      result: context.result,
+      profile: profileData.profile,
+      education: profileData.education,
+      confirmedSkills: profileData.confirmedSkills,
+      catalogSources,
+      locale: requestedLocale,
+      includeLocallyExcluded,
+      limit: safeLimit,
+    });
+    const matches = rankProfileRecommendations({
+      baseMatches: context.matches,
+      occupationsById,
+      profile: profileData.profile,
+      education: profileData.education,
+      confirmedSkills: profileData.confirmedSkills,
+      skillLinksByOccupation: skillLinkData.linksByOccupation,
+      limit: safeLimit,
+    });
+    const versioning = {
+      recommendationAlgorithmVersion: PROFILE_RECOMMENDATION_ALGORITHM_VERSION,
+      riasecAlgorithmVersion: context.result.algorithmVersion,
+      preparationAdapterVersion: PREPARATION_ADAPTER_VERSION,
+      inputFingerprint: inputVersion.fingerprint,
+      profileFingerprint: inputVersion.profileFingerprint,
+      catalogSources: inputVersion.catalogSources,
+      calculatedAt: new Date().toISOString(),
+    };
+
+    return {
+      result: context.result,
+      versioning,
+      recommendationContext: profileRecommendationContext({
+        ...profileData,
+        versioning,
+      }),
+      matching: {
+        ...context.summary,
+        matches,
+      },
+    };
+  };
+
+  const findSnapshotByInput = async ({
+    accountId,
+    resultId,
+    locale,
+    includeLocallyExcluded,
+    limit,
+    inputFingerprint,
+  }) => {
+    const [[row]] = await pool.query(
+      `SELECT *
+       FROM career_recommendation_snapshots
+       WHERE account_id = ?
+         AND orientation_result_id = ?
+         AND recommendation_algorithm_version = ?
+         AND requested_locale = ?
+         AND include_locally_excluded = ?
+         AND limit_count = ?
+         AND input_fingerprint = ?
+       LIMIT 1`,
+      [
+        accountId,
+        resultId,
+        PROFILE_RECOMMENDATION_ALGORITHM_VERSION,
+        locale,
+        includeLocallyExcluded ? 1 : 0,
+        limit,
+        inputFingerprint,
+      ],
+    );
+    return snapshotFromRow(row);
+  };
+
+  const createRecommendationSnapshot = async ({
+    accountId,
+    resultId,
+    locale = 'fr',
+    includeLocallyExcluded = false,
+    limit = 20,
+  }) => {
+    const safeLimit = boundedInteger(limit, 20, 1, 100);
+    const requestedLocale = validLocale(locale);
+    const recommendation = await recommendProfileCareers({
+      accountId,
+      resultId,
+      locale: requestedLocale,
+      includeLocallyExcluded,
+      limit: safeLimit,
+    });
+    if (!recommendation) return null;
+    const existing = await findSnapshotByInput({
+      accountId,
+      resultId,
+      locale: requestedLocale,
+      includeLocallyExcluded,
+      limit: safeLimit,
+      inputFingerprint: recommendation.versioning.inputFingerprint,
+    });
+    if (existing) return { ...existing, created: false };
+
+    const snapshotId = crypto.randomUUID();
+    const onetSources = recommendation.versioning.catalogSources.filter((source) => source.kind === 'onet');
+    const escoSources = recommendation.versioning.catalogSources.filter((source) => source.kind === 'esco');
+    try {
+      await pool.execute(
+        `INSERT INTO career_recommendation_snapshots (
+           id, account_id, orientation_result_id,
+           recommendation_algorithm_version, riasec_algorithm_version,
+           preparation_adapter_version, requested_locale,
+           include_locally_excluded, limit_count, input_fingerprint,
+           profile_fingerprint, onet_sources_json, esco_sources_json,
+           snapshot_json
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          snapshotId,
+          accountId,
+          resultId,
+          recommendation.versioning.recommendationAlgorithmVersion,
+          recommendation.versioning.riasecAlgorithmVersion,
+          recommendation.versioning.preparationAdapterVersion,
+          requestedLocale,
+          includeLocallyExcluded ? 1 : 0,
+          safeLimit,
+          recommendation.versioning.inputFingerprint,
+          recommendation.versioning.profileFingerprint,
+          JSON.stringify(onetSources),
+          JSON.stringify(escoSources),
+          JSON.stringify(recommendation),
+        ],
+      );
+    } catch (error) {
+      if (error?.code !== 'ER_DUP_ENTRY') throw error;
+      const raced = await findSnapshotByInput({
+        accountId,
+        resultId,
+        locale: requestedLocale,
+        includeLocallyExcluded,
+        limit: safeLimit,
+        inputFingerprint: recommendation.versioning.inputFingerprint,
+      });
+      if (raced) return { ...raced, created: false };
+      throw error;
+    }
+    const created = await findSnapshotByInput({
+      accountId,
+      resultId,
+      locale: requestedLocale,
+      includeLocallyExcluded,
+      limit: safeLimit,
+      inputFingerprint: recommendation.versioning.inputFingerprint,
+    });
+    return { ...created, created: true };
   };
 
   return {
@@ -375,12 +615,8 @@ const createCareerStore = (pool) => {
       const where = [`base.status = 'active'`, `base.locale = 'en'`];
       const parameters = [requestedLocale];
 
-      if (riasecOnly) {
-        where.push(`base.riasec_profile_status IN ('direct', 'mapped', 'reviewed')`);
-      }
-      if (!includeLocallyExcluded) {
-        where.push(`base.local_relevance_status <> 'excluded'`);
-      }
+      if (riasecOnly) where.push(`base.riasec_profile_status IN ('direct', 'mapped', 'reviewed')`);
+      if (!includeLocallyExcluded) where.push(`base.local_relevance_status <> 'excluded'`);
       if (normalizedQuery) {
         const pattern = `%${normalizedQuery}%`;
         where.push(`(
@@ -483,49 +719,18 @@ const createCareerStore = (pool) => {
       };
     },
 
-    async recommendProfileCareers({
-      accountId,
-      resultId,
-      locale = 'fr',
-      includeLocallyExcluded = false,
-      limit = 20,
-    }) {
-      const safeLimit = boundedInteger(limit, 20, 1, 100);
-      const context = await loadMatchContext({
-        accountId,
-        resultId,
-        locale,
-        includeLocallyExcluded,
-        candidateLimit: 2000,
-      });
-      if (!context) return null;
-      const profileData = await loadProfileContext(accountId);
-      const skillLinksByOccupation = await loadSkillLinks({
-        accountId,
-        occupations: context.occupations,
-        confirmedSkills: profileData.confirmedSkills,
-      });
-      const occupationsById = new Map(
-        context.occupations.map((occupation) => [occupation.id, occupation]),
-      );
-      const matches = rankProfileRecommendations({
-        baseMatches: context.matches,
-        occupationsById,
-        profile: profileData.profile,
-        education: profileData.education,
-        confirmedSkills: profileData.confirmedSkills,
-        skillLinksByOccupation,
-        limit: safeLimit,
-      });
+    recommendProfileCareers,
+    createRecommendationSnapshot,
 
-      return {
-        result: context.result,
-        recommendationContext: profileRecommendationContext(profileData),
-        matching: {
-          ...context.summary,
-          matches,
-        },
-      };
+    async getRecommendationSnapshot({ accountId, snapshotId }) {
+      const [[row]] = await pool.query(
+        `SELECT *
+         FROM career_recommendation_snapshots
+         WHERE id = ? AND account_id = ?
+         LIMIT 1`,
+        [snapshotId, accountId],
+      );
+      return snapshotFromRow(row);
     },
   };
 };
