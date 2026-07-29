@@ -223,10 +223,12 @@ describe('LifeProjectPage', () => {
     });
 
     renderPage();
-    await screen.findByTestId('life-project-triage');
+    const triage = await screen.findByTestId('life-project-triage');
 
     fireEvent.change(screen.getByLabelText('Ma situation actuelle'), { target: { value: 'lycee' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Créer mon premier projet' }));
+    const form = triage.querySelector('form');
+    expect(form).not.toBeNull();
+    fireEvent.submit(form!);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('réponses déjà saisies sont conservées');
     expect(screen.getByLabelText('Ma situation actuelle')).toHaveValue('lycee');
