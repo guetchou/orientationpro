@@ -6,6 +6,7 @@ import type { LifeProjectEnvelope } from './types';
 
 vi.mock('./api', () => ({
   createProjectFromTriage: vi.fn(),
+  executeLifeProjectSyncCommand: vi.fn(),
   getCapabilityRegistry: vi.fn(),
   getLifeProject: vi.fn(),
   listLifeProjects: vi.fn(),
@@ -51,6 +52,19 @@ const enableCapability = () => {
   });
 };
 
+const loadExistingProject = () => {
+  vi.mocked(api.listLifeProjects).mockResolvedValue({
+    schemaVersion: 'makoki-life-project-api-v1',
+    projects: [{
+      id: 'project-1',
+      title: envelope.project.title,
+      state: 'exploration',
+      persistenceVersion: 2,
+    }],
+  });
+  vi.mocked(api.getLifeProject).mockResolvedValue(envelope);
+};
+
 describe('LifeProjectPage', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -58,7 +72,10 @@ describe('LifeProjectPage', () => {
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    cleanup();
+  });
 
   it('n’appelle pas l’API projet lorsque la capacité est désactivée', async () => {
     vi.mocked(api.getCapabilityRegistry).mockResolvedValue({
@@ -97,16 +114,7 @@ describe('LifeProjectPage', () => {
 
   it('reprend le dernier projet du compte et affiche scénarios et prochaines étapes', async () => {
     enableCapability();
-    vi.mocked(api.listLifeProjects).mockResolvedValue({
-      schemaVersion: 'makoki-life-project-api-v1',
-      projects: [{
-        id: 'project-1',
-        title: envelope.project.title,
-        state: 'exploration',
-        persistenceVersion: 2,
-      }],
-    });
-    vi.mocked(api.getLifeProject).mockResolvedValue(envelope);
+    loadExistingProject();
 
     render(<LifeProjectPage />);
 
@@ -150,7 +158,26 @@ describe('LifeProjectPage', () => {
     render(<LifeProjectPage />);
 
     expect(await screen.findByTestId('life-project-shell')).toBeInTheDocument();
-    expect(screen.getByText('Version locale en lecture seule.')).toBeInTheDocument();
+    expect(screen.getByText(/Version locale en lecture seule/)).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('dernière version enregistrée');
+  });
+
+  it('met en file un choix hors ligne uniquement après confirmation explicite', async () => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    enableCapability();
+    loadExistingProject();
+
+    render(<LifeProjectPage />);
+    await screen.findByTestId('life-project-shell');
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer ce choix pour la reprise' }));
+
+    await waitFor(() => {
+      const raw = localStorage.getItem('makoki.life-project.sync-queue.v1');
+      expect(raw).toContain('select_scenario');
+      expect(raw).toContain('scenario-1');
+    });
+    expect(api.selectLifeProjectScenario).not.toHaveBeenCalled();
+    expect(await screen.findByTestId('life-project-sync-queue')).toHaveTextContent('1 modification');
   });
 });
