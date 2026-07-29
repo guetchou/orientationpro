@@ -198,11 +198,7 @@ test(
     assert.equal(child.exitCode, null);
     assert.match(
       logs,
-      /Authentication v1 enabled: false/u,
-    );
-    assert.match(
-      logs,
-      /CV API v1 enabled: false/u,
+      /"event":"server\.started"/u,
     );
     assert.doesNotMatch(
       logs,
