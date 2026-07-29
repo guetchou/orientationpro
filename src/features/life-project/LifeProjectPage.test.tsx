@@ -48,6 +48,55 @@ const envelope: LifeProjectEnvelope = {
   },
 };
 
+const advancedEnvelope: LifeProjectEnvelope = {
+  ...envelope,
+  persistenceVersion: 6,
+  project: {
+    ...envelope.project,
+    state: 'action',
+    activeScenarioId: 'scenario-1',
+    missingInformation: ['Budget disponible'],
+    actionPlans: [{
+      id: 'plan-1',
+      scenarioId: 'scenario-1',
+      title: 'Vérifier la piste',
+      status: 'active',
+      missingInformation: [],
+      items: [
+        {
+          id: 'action-1',
+          title: 'Contacter une formation',
+          description: null,
+          status: 'completed',
+          dueAt: null,
+          completedAt: '2026-07-29T09:00:00.000Z',
+          evidenceIds: [],
+          blockingReasons: [],
+        },
+        {
+          id: 'action-2',
+          title: 'Comparer les conditions',
+          description: null,
+          status: 'in_progress',
+          dueAt: null,
+          evidenceIds: [],
+          blockingReasons: [],
+        },
+        {
+          id: 'action-3',
+          title: 'Réunir les documents',
+          description: null,
+          status: 'blocked',
+          dueAt: null,
+          evidenceIds: [],
+          blockingReasons: ['Document manquant'],
+        },
+      ],
+    }],
+    updatedAt: '2026-07-29T10:30:00.000Z',
+  },
+};
+
 const enableCapability = () => {
   vi.mocked(api.getCapabilityRegistry).mockResolvedValue({
     schemaVersion: 'makoki-capability-registry-v1',
@@ -60,17 +109,17 @@ const enableCapability = () => {
   });
 };
 
-const loadExistingProject = () => {
+const loadExistingProject = (loadedEnvelope = envelope) => {
   vi.mocked(api.listLifeProjects).mockResolvedValue({
     schemaVersion: 'makoki-life-project-api-v1',
     projects: [{
       id: 'project-1',
-      title: envelope.project.title,
-      state: 'exploration',
-      persistenceVersion: 2,
+      title: loadedEnvelope.project.title,
+      state: loadedEnvelope.project.state,
+      persistenceVersion: loadedEnvelope.persistenceVersion,
     }],
   });
-  vi.mocked(api.getLifeProject).mockResolvedValue(envelope);
+  vi.mocked(api.getLifeProject).mockResolvedValue(loadedEnvelope);
 };
 
 describe('LifeProjectPage', () => {
@@ -147,7 +196,7 @@ describe('LifeProjectPage', () => {
     expect(api.listLifeProjects).not.toHaveBeenCalled();
   });
 
-  it('affiche le triage court et conserve chaque réponse dans le brouillon local', async () => {
+  it('affiche le triage court, sauvegarde chaque réponse et annonce la sauvegarde', async () => {
     enableCapability();
     vi.mocked(api.listLifeProjects).mockResolvedValue({
       schemaVersion: 'makoki-life-project-api-v1',
@@ -163,6 +212,26 @@ describe('LifeProjectPage', () => {
     const saved = JSON.parse(localStorage.getItem('makoki.life-project.triage-draft.v1') || '{}');
     expect(saved.situation).toBe('lycee');
     expect(saved.need).toBe('studies');
+    expect(screen.getByRole('status')).toHaveTextContent('Brouillon enregistré sur cet appareil');
+  });
+
+  it('conserve les réponses déjà saisies lorsque la validation échoue', async () => {
+    enableCapability();
+    vi.mocked(api.listLifeProjects).mockResolvedValue({
+      schemaVersion: 'makoki-life-project-api-v1',
+      projects: [],
+    });
+
+    renderPage();
+    await screen.findByTestId('life-project-triage');
+
+    fireEvent.change(screen.getByLabelText('Ma situation actuelle'), { target: { value: 'lycee' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Créer mon premier projet' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('réponses déjà saisies sont conservées');
+    expect(screen.getByLabelText('Ma situation actuelle')).toHaveValue('lycee');
+    expect(localStorage.getItem('makoki.life-project.triage-draft.v1')).toContain('lycee');
+    expect(api.createProjectFromTriage).not.toHaveBeenCalled();
   });
 
   it('reprend le dernier projet du compte et affiche scénarios et prochaines étapes', async () => {
@@ -175,6 +244,23 @@ describe('LifeProjectPage', () => {
     expect(screen.getByText('Études et formation')).toBeInTheDocument();
     expect(screen.getByText('Choisir provisoirement un scénario à vérifier.')).toBeInTheDocument();
     expect(localStorage.getItem('makoki.life-project.last-readable.v1')).toContain('project-1');
+  });
+
+  it('montre la valeur accumulée sans pourcentage de réussite', async () => {
+    enableCapability();
+    loadExistingProject(advancedEnvelope);
+
+    renderPage();
+
+    const summary = await screen.findByTestId('life-project-progress-summary');
+    expect(summary).toHaveTextContent('Mon avancée');
+    expect(summary).toHaveTextContent('Action');
+    expect(summary).toHaveTextContent('Études et formation');
+    expect(summary).toHaveTextContent('1 terminée(s) · 1 en cours');
+    expect(summary).toHaveTextContent('1 information(s)');
+    expect(summary).toHaveTextContent('1 action(s) sont bloquée(s)');
+    expect(summary).toHaveTextContent('Projet créé et disponible pour la reprise');
+    expect(summary).not.toHaveTextContent('%');
   });
 
   it('crée un projet depuis le triage puis efface seulement le brouillon confirmé', async () => {
@@ -213,6 +299,23 @@ describe('LifeProjectPage', () => {
     expect(await screen.findByTestId('life-project-shell')).toBeInTheDocument();
     expect(screen.getByText(/Version locale en lecture seule/)).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('dernière version enregistrée');
+  });
+
+  it('explique pourquoi la création est indisponible hors ligne sans perdre le brouillon', async () => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    enableCapability();
+    vi.mocked(api.listLifeProjects).mockResolvedValue({
+      schemaVersion: 'makoki-life-project-api-v1',
+      projects: [],
+    });
+
+    renderPage();
+    await screen.findByTestId('life-project-triage');
+    fireEvent.change(screen.getByLabelText('Ma situation actuelle'), { target: { value: 'lycee' } });
+
+    expect(screen.getByText(/La création est indisponible hors ligne/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Créer mon premier projet' })).toBeDisabled();
+    expect(localStorage.getItem('makoki.life-project.triage-draft.v1')).toContain('lycee');
   });
 
   it('met en file un choix hors ligne uniquement après confirmation explicite', async () => {
