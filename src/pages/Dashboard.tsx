@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { isLifeProjectFrontendEnabled } from '@/features/life-project/config';
 
 interface TestResultRow {
   id: string;
@@ -21,6 +22,8 @@ const testLabels: Record<string, string> = {
   personality: 'Test de personnalité',
   skills: 'Test de compétences',
 };
+
+const lifeProjectFrontendEnabled = isLifeProjectFrontendEnabled();
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -104,20 +107,24 @@ export default function Dashboard() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Badge variant="secondary" className="self-center"><User className="mr-1 h-4 w-4" />{user?.role || 'Utilisateur'}</Badge>
-            <Button onClick={() => navigate('/parcours')}><Compass className="mr-2 h-4 w-4" />Mon parcours</Button>
+            {lifeProjectFrontendEnabled && (
+              <Button onClick={() => navigate('/parcours')}><Compass className="mr-2 h-4 w-4" />Mon parcours</Button>
+            )}
             <Button variant="outline" onClick={() => navigate('/profile')}><Settings className="mr-2 h-4 w-4" />Mon profil</Button>
           </div>
         </div>
 
-        <Card className="mb-8 border-blue-200 bg-blue-50/70">
-          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-semibold text-gray-900">Un résultat de test ne suffit pas.</p>
-              <p className="mt-1 text-sm text-gray-600">Le Parcours MAKOKI relie votre situation, vos scénarios et vos prochaines actions.</p>
-            </div>
-            <Button variant="outline" className="bg-white" onClick={() => navigate('/parcours')}>Ouvrir mon projet de vie</Button>
-          </CardContent>
-        </Card>
+        {lifeProjectFrontendEnabled && (
+          <Card className="mb-8 border-blue-200 bg-blue-50/70">
+            <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-gray-900">Un résultat de test ne suffit pas.</p>
+                <p className="mt-1 text-sm text-gray-600">Le Parcours MAKOKI relie votre situation, vos scénarios et vos prochaines actions.</p>
+              </div>
+              <Button variant="outline" className="bg-white" onClick={() => navigate('/parcours')}>Ouvrir mon projet de vie</Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="mb-8 grid gap-6 md:grid-cols-2">
           <Card><CardContent className="flex items-center justify-between p-6"><div><p className="text-sm text-gray-600">Tests complétés</p><p className="text-3xl font-bold">{results.length}</p></div><CheckCircle className="h-9 w-9 text-blue-600" /></CardContent></Card>
