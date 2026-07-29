@@ -301,11 +301,15 @@ const createAuthRouter = ({
     });
 
     if (account) {
-      await email.sendVerification({
-        accountId: account.id,
-        email: account.email,
-        token: verificationToken,
-      });
+      try {
+        await email.sendVerification({
+          accountId: account.id,
+          email: account.email,
+          token: verificationToken,
+        });
+      } catch {
+        // Keep the response indistinguishable from requests for unknown accounts.
+      }
     }
 
     return res.status(202).end();
