@@ -4,14 +4,19 @@ Statut : composants prêts mais non raccordés au serveur central.
 
 ## Classification
 
-Les journaux sont construits par liste blanche. Autorisés : événement,
-identifiant de corrélation aléatoire, méthode, modèle de route, classe de statut,
-durée, code d'erreur technique, version et environnement.
+Les journaux sont construits par liste blanche et validateur propre à chaque
+champ. Autorisés : événement technique borné, UUID de corrélation validé ou
+généré, méthode HTTP connue, modèle de route enregistré, statut HTTP 100–599,
+durée positive, code d'erreur technique majuscule borné, version et
+environnement énuméré.
 
 Interdits : headers, query string, body, e-mail, identifiant de Compte, token,
 cookie, réponse d'orientation, texte ou fichier de Document CV, message,
-preuve utilisateur et stack brute. Les métriques remplacent identifiants
-numériques et UUID par `:id`.
+preuve utilisateur et stack brute. Les query strings et fragments ne sont
+jamais sérialisés. Les métriques n'acceptent que des modèles de route
+explicitement enregistrés (200 maximum) ; toute autre route devient `unknown`.
+Le nombre de séries est ainsi borné par les modèles, méthodes, classes HTTP et
+buckets déclarés.
 
 ## Signaux
 
