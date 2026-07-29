@@ -1,8 +1,8 @@
 # Registre de livraison — Vague 1
 
-Statut : actif
+Statut : clôturé
 
-Ce registre réserve les chemins, migrations et ordres de fusion de la première vague d’intégration du Parcours MAKOKI. Il ne prouve pas qu’une capacité utilisateur est disponible.
+Ce registre décrit les fondations techniques fusionnées de la première vague d’intégration du Parcours MAKOKI. Il ne constitue ni une validation scientifique ou terrain, ni une décision d’activation en production.
 
 ## Lots
 
@@ -10,9 +10,9 @@ Ce registre réserve les chemins, migrations et ordres de fusion de la première
 |---|---|---|---|---|---|---|
 | W1-A | Persistance MySQL du projet de vie | merged | Vague 0 | `backend/src/life-project/store.js`, tests MySQL, migrations | `011_life_projects` fusionnée | #90 |
 | W1-B | API LifeProject v1 et feature flag | merged | W1-A | routeur, service, capacités et raccord serveur | aucune | #91 |
-| W1-C | Triage et shell du Parcours MAKOKI | active | W1-B | `src/features/life-project/**`, page, dashboard et raccord routeur | aucune | issue #89, branche `agent/life-project-triage-shell-v1` |
+| W1-C | Triage et shell du Parcours MAKOKI | merged | W1-B | `src/features/life-project/**`, page, dashboard et raccord routeur | aucune | #92 |
 
-## Réservations centrales
+## Ressources après clôture
 
 | Ressource | Statut | Propriétaire |
 |---|---|---|
@@ -20,27 +20,35 @@ Ce registre réserve les chemins, migrations et ordres de fusion de la première
 | `backend/src/life-project/**` | fusionné, extension par lot dédié | mainteneur |
 | `backend/src/server.js` | libre, intégration seulement | mainteneur |
 | `backend/src/capabilities/**` | fusionné, modification par lot dédié | mainteneur |
-| `src/features/life-project/**` | réservée | W1-C |
-| `src/router/AppRouter.tsx` | réservée pour raccord court | W1-C / mainteneur |
-| `src/pages/Dashboard.tsx` | réservée pour point d’entrée | W1-C |
+| `src/features/life-project/**` | fusionné, extension par lot dédié | mainteneur |
+| `src/router/AppRouter.tsx` | libre, intégration seulement | mainteneur |
+| `src/pages/Dashboard.tsx` | libre | mainteneur |
 
-## Invariants W1-C
+## Capacités réellement livrées
 
-- l’API et la capacité sont vérifiées avant tout appel au projet de vie ;
-- l’expérience commence par la situation et le besoin, pas par le choix d’un test ;
-- le triage reste court, compréhensible et révisable ;
-- le brouillon est conservé localement jusqu’à création réussie ;
-- le dernier projet lisible est mis en cache pour consultation hors ligne ;
-- aucune déclaration n’est présentée comme un fait vérifié ;
-- les tests historiques ne sont pas supprimés ;
-- aucune promesse d’emploi, d’admission ou de réussite ;
-- navigation clavier, mobile et états chargement/hors ligne/erreur couverts.
+- contrat et machine à états `makoki-life-project-v1` ;
+- persistance MySQL transactionnelle et historique append-only ;
+- API authentifiée derrière `LIFE_PROJECT_API_ENABLED=false` par défaut ;
+- capacité publique au statut `experimental` lorsqu’elle est activée ;
+- route frontend `/parcours` conditionnée par le registre des capacités ;
+- triage initial, reprise, cache local en lecture seule et premières transitions explicites.
 
-## Ordre immédiat
+## Limites maintenues
+
+- aucune efficacité scientifique ou terrain démontrée ;
+- aucune activation de production décidée par ce registre ;
+- aucune recommandation automatique de métier, formation ou pays dans le shell ;
+- le triage est encore sérialisé en description déclarative, pas en faits structurés de provenance ;
+- édition détaillée des scénarios, critères et plans encore incomplète ;
+- cache local non canonique et non synchronisé entre appareils.
+
+## Chantiers candidats de la Vague 2
 
 ```text
-W1-C triage et shell
-→ clôture de la Vague 1
+W2-A structurer le triage avec Fact/Hypothesis/Evidence
+W2-B éditer scénarios, critères et plans d’action
+W2-C orchestrer progressivement profil, RIASEC, compétences et parcours
+W2-D préparer observation terrain, équité et accompagnement humain
 ```
 
-Aucune migration ou modification backend n’est prévue dans W1-C.
+Ces chantiers sont des candidats. Ils ne sont ni ouverts, ni assignés, ni implémentés par la clôture de la Vague 1.
