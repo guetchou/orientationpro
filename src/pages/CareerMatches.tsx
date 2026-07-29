@@ -19,6 +19,8 @@ const signalLabel: Record<string, string> = {
   primary_goal: 'Objectif principal',
 };
 
+const sourceKindLabel = (kind: string) => kind.toLowerCase() === 'onet' ? 'O*NET' : kind.toUpperCase();
+
 export default function CareerMatches() {
   const { resultId } = useParams<{ resultId: string }>();
   const [data, setData] = useState<CareerProfileRecommendationResponse | null>(null);
@@ -64,7 +66,7 @@ export default function CareerMatches() {
 
   const dominant = dominantDimensions(data.result.normalizedScores);
   const sourceVersions = data.versioning.catalogSources
-    .map((source) => `${source.kind.toUpperCase()} ${source.version || 'version inconnue'}`)
+    .map((source) => `${sourceKindLabel(source.kind)} ${source.version || 'version inconnue'}`)
     .filter((value, index, values) => values.indexOf(value) === index);
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-10">
