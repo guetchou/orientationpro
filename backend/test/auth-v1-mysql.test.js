@@ -255,6 +255,7 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
+      '012_life_project_action_tracking',
       '011_life_projects',
       '010_profile_synthesis_snapshots',
       '009_career_recommendation_snapshots',
@@ -334,7 +335,7 @@ test('ordered migrations roll back completely and can be applied again', async (
     assert.equal(Number(careerTables.table_count), 8);
     assert.equal(Number(profileSynthesisTables.table_count), 1);
     assert.equal(Number(cvTables.table_count), 1);
-    assert.equal(Number(lifeProjectTables.table_count), 7);
+    assert.equal(Number(lifeProjectTables.table_count), 8);
     assert.equal(Number(careerPermissions.permission_count), 2);
     assert.equal(Number(cvPermissions.permission_count), 4);
   } finally {

@@ -238,13 +238,22 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(rolledBack, undefined);
 
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?)', [accountA, accountB]);
-    const version = await migrateDown(pool, directory);
-    assert.equal(version, '011_life_projects');
+    const trackingVersion = await migrateDown(pool, directory);
+    assert.equal(trackingVersion, '012_life_project_action_tracking');
+    const [trackingAfterDown] = await pool.query("SHOW TABLES LIKE 'life_project_action_tracking'");
+    assert.equal(trackingAfterDown.length, 0);
+    const [projectsAfterTrackingDown] = await pool.query("SHOW TABLES LIKE 'life_projects'");
+    assert.equal(projectsAfterTrackingDown.length, 1);
+
+    const lifeProjectVersion = await migrateDown(pool, directory);
+    assert.equal(lifeProjectVersion, '011_life_projects');
     const [tablesAfterDown] = await pool.query("SHOW TABLES LIKE 'life_projects'");
     assert.equal(tablesAfterDown.length, 0);
     await migrateUp(pool, directory);
     const [tablesAfterUp] = await pool.query("SHOW TABLES LIKE 'life_projects'");
     assert.equal(tablesAfterUp.length, 1);
+    const [trackingAfterUp] = await pool.query("SHOW TABLES LIKE 'life_project_action_tracking'");
+    assert.equal(trackingAfterUp.length, 1);
   } finally {
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?)', [accountA, accountB]);
     await migrateUp(pool, directory);

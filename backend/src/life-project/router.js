@@ -2,6 +2,8 @@
 
 const express = require('express');
 const { LifeProjectContractError } = require('./contracts');
+const { ActionTrackingError } = require('./action-tracking');
+const { ActionTrackingPersistenceError } = require('./action-tracking-store');
 const { LifeProjectPersistenceError } = require('./store');
 const { LifeProjectServiceError } = require('./service');
 
@@ -20,18 +22,24 @@ const parseExpectedVersion = (req) => {
 };
 
 const errorStatus = (error) => {
-  if (error instanceof LifeProjectContractError) return 400;
+  if (error instanceof LifeProjectContractError || error instanceof ActionTrackingError) return 400;
   if (error instanceof LifeProjectServiceError) {
     if (error.code === 'LIFE_PROJECT_NOT_FOUND'
-      || error.code === 'LIFE_PROJECT_ACTION_PLAN_NOT_FOUND') return 404;
+      || error.code === 'LIFE_PROJECT_ACTION_PLAN_NOT_FOUND'
+      || error.code === 'LIFE_PROJECT_ACTION_NOT_FOUND') return 404;
     if (error.code === 'LIFE_PROJECT_COMMAND_CONFLICT') return 409;
     if (error.code === 'LIFE_PROJECT_API_VERSION_REQUIRED') return 428;
+    if (error.code === 'ACTION_TRACKING_UNAVAILABLE') return 503;
     return 400;
   }
   if (error instanceof LifeProjectPersistenceError) {
     if (error.code === 'LIFE_PROJECT_VERSION_CONFLICT'
       || error.code === 'LIFE_PROJECT_ALREADY_EXISTS') return 409;
     if (error.code === 'LIFE_PROJECT_VERSION_REQUIRED') return 428;
+    return 400;
+  }
+  if (error instanceof ActionTrackingPersistenceError) {
+    if (error.code === 'ACTION_TRACKING_PROJECT_NOT_FOUND') return 404;
     return 400;
   }
   return null;
@@ -87,6 +95,12 @@ const createLifeProjectRouter = ({ service, authenticate } = {}) => {
     await service.get(req.auth.account.id, req.params.projectId),
   )));
 
+  router.get('/:projectId/progress', route(async (req, res) => {
+    const result = await service.getProgress(req.auth.account.id, req.params.projectId);
+    if (result?.persistenceVersion) res.set('ETag', `"${result.persistenceVersion}"`);
+    return res.status(200).json(result);
+  }));
+
   router.post('/:projectId/scenarios', route(async (req, res) => sendProject(
     res,
     await service.addScenario(
@@ -136,6 +150,18 @@ const createLifeProjectRouter = ({ service, authenticate } = {}) => {
       req.auth.account.id,
       req.params.projectId,
       req.params.planId,
+      req.body || {},
+      parseExpectedVersion(req),
+    ),
+  )));
+
+  router.patch('/:projectId/action-plans/:planId/actions/:actionId', route(async (req, res) => sendProject(
+    res,
+    await service.updateActionItem(
+      req.auth.account.id,
+      req.params.projectId,
+      req.params.planId,
+      req.params.actionId,
       req.body || {},
       parseExpectedVersion(req),
     ),
