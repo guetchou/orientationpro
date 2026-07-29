@@ -4,6 +4,7 @@ import type {
   CareerMatchResponse,
   CareerOccupation,
   CareerProfileRecommendationResponse,
+  CareerRecommendationSnapshotResponse,
 } from '@/types/career';
 
 export interface CareerSearchOptions {
@@ -78,6 +79,18 @@ export const getProfileCareerRecommendations = async (
   options: Pick<CareerSearchOptions, 'locale' | 'includeLocallyExcluded' | 'limit'> = {},
 ) => apiFetch<CareerProfileRecommendationResponse>(
   `/v1/career/recommendations/${encodeURIComponent(resultId)}?${matchingParameters(options).toString()}`,
+);
+
+export const createCareerRecommendationSnapshot = async (
+  resultId: string,
+  options: Pick<CareerSearchOptions, 'locale' | 'includeLocallyExcluded' | 'limit'> = {},
+) => apiFetch<CareerRecommendationSnapshotResponse>(
+  `/v1/career/recommendations/${encodeURIComponent(resultId)}/snapshots?${matchingParameters(options).toString()}`,
+  { method: 'POST' },
+);
+
+export const getCareerRecommendationSnapshot = async (snapshotId: string) => apiFetch<CareerRecommendationSnapshotResponse>(
+  `/v1/career/recommendation-snapshots/${encodeURIComponent(snapshotId)}`,
 );
 
 export { DEFAULT_PRESENTATION_LOCALE };
