@@ -4,6 +4,7 @@ import type {
   CapabilityRegistry,
   LifeProjectActionStatus,
   LifeProjectEnvelope,
+  LifeProjectOrchestrationEnvelope,
   LifeProjectProgressEnvelope,
   LifeProjectSummary,
   LifeProjectState,
@@ -28,6 +29,20 @@ export const getLifeProject = (projectId: string) => apiFetch<LifeProjectEnvelop
 export const getLifeProjectProgress = (projectId: string) => apiFetch<LifeProjectProgressEnvelope>(
   `/v1/life-projects/${encodeURIComponent(projectId)}/progress`,
 );
+
+export const getLifeProjectOrchestration = (
+  projectId: string,
+  completedModuleIds: string[] = [],
+  skippedModuleIds: string[] = [],
+) => {
+  const query = new URLSearchParams();
+  if (completedModuleIds.length > 0) query.set('completed', completedModuleIds.join(','));
+  if (skippedModuleIds.length > 0) query.set('skipped', skippedModuleIds.join(','));
+  const suffix = query.size > 0 ? `?${query.toString()}` : '';
+  return apiFetch<LifeProjectOrchestrationEnvelope>(
+    `/v1/life-projects/${encodeURIComponent(projectId)}/orchestration${suffix}`,
+  );
+};
 
 const needLabels: Record<string, string> = {
   studies: 'Construire mon parcours d’études',
@@ -154,6 +169,30 @@ export const moveLifeProjectToClarification = (
   persistenceVersion,
   commandId,
   'La personne souhaite préciser les informations manquantes.',
+);
+
+export const createLifeProjectActionPlan = (
+  projectId: string,
+  scenarioId: string,
+  persistenceVersion: number,
+  title: string,
+  actionTitle: string,
+) => apiFetch<LifeProjectEnvelope>(
+  `/v1/life-projects/${encodeURIComponent(projectId)}/action-plans`,
+  {
+    method: 'POST',
+    body: JSON.stringify({
+      expectedVersion: persistenceVersion,
+      scenarioId,
+      title,
+      status: 'active',
+      items: [{
+        title: actionTitle,
+        status: 'planned',
+      }],
+      provenanceNotes: 'Plan et première action créés depuis le Parcours MAKOKI.',
+    }),
+  },
 );
 
 export interface UpdateLifeProjectActionInput {
