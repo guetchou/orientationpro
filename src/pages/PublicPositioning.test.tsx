@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import Header from '@/components/layout/Header';
@@ -10,7 +11,7 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: null, signOut: vi.fn() }),
 }));
 
-const renderWithRouter = (element: React.ReactNode) => render(
+const renderWithRouter = (element: ReactNode) => render(
   <MemoryRouter>{element}</MemoryRouter>,
 );
 
@@ -51,6 +52,9 @@ describe('public positioning', () => {
 
   it('uses Emploi in the public navigation on desktop and mobile', () => {
     renderWithRouter(<Header />);
+
+    expect(screen.getByRole('link', { name: 'Emploi' })).toHaveAttribute('href', '/jobs');
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir le menu' }));
 
     const employmentLinks = screen.getAllByRole('link', { name: 'Emploi' });
     expect(employmentLinks).toHaveLength(2);
