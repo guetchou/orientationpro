@@ -1,34 +1,9 @@
 import { apiFetch } from '@/lib/apiClient';
 
-export type CurrentSituation =
-  | 'student'
-  | 'employee'
-  | 'job_seeker'
-  | 'entrepreneur'
-  | 'career_change'
-  | 'other';
-
-export type PrimaryGoal =
-  | 'choose_studies'
-  | 'find_job'
-  | 'career_change'
-  | 'improve_skills'
-  | 'start_business'
-  | 'other';
-
+export type CurrentSituation = 'student' | 'employee' | 'job_seeker' | 'entrepreneur' | 'career_change' | 'other';
+export type PrimaryGoal = 'choose_studies' | 'find_job' | 'career_change' | 'improve_skills' | 'start_business' | 'other';
 export type MobilityScope = 'local' | 'national' | 'international' | 'remote' | 'unknown';
-export type EducationLevel =
-  | 'primary'
-  | 'middle_school'
-  | 'high_school'
-  | 'baccalaureate'
-  | 'vocational'
-  | 'bac_plus_1'
-  | 'bac_plus_2'
-  | 'licence'
-  | 'master'
-  | 'doctorate'
-  | 'other';
+export type EducationLevel = 'primary' | 'middle_school' | 'high_school' | 'baccalaureate' | 'vocational' | 'bac_plus_1' | 'bac_plus_2' | 'licence' | 'master' | 'doctorate' | 'other';
 export type EducationStatus = 'in_progress' | 'completed' | 'interrupted';
 export type SkillProficiency = 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'unknown';
 export type HypothesisDecision = 'confirmed' | 'rejected';
@@ -69,13 +44,33 @@ export interface ProfileSkill {
   evidence?: string | null;
 }
 
+export interface HypothesisValue {
+  key?: string;
+  title?: string;
+  question?: string;
+  action?: string;
+  evidence?: unknown[];
+  generator?: { version: string; profileFingerprint: string };
+  [key: string]: unknown;
+}
+
 export interface ProfileHypothesis {
   id: string;
   hypothesis_type: string;
-  value_json: unknown;
+  value_json: HypothesisValue | unknown;
   rationale: string;
   confidence: number | null;
   status: 'proposed' | 'confirmed' | 'rejected';
+}
+
+export interface HypothesisGenerationSummary {
+  generatorVersion: string;
+  profileFingerprint: string;
+  candidateCount: number;
+  createdCount: number;
+  reusedCount: number;
+  preservedDecisionCount: number;
+  removedObsoleteCount: number;
 }
 
 export interface AdaptiveProfilePayload {
@@ -83,6 +78,7 @@ export interface AdaptiveProfilePayload {
   education: EducationRecord[];
   skills: ProfileSkill[];
   hypotheses: ProfileHypothesis[];
+  hypothesisGeneration?: HypothesisGenerationSummary;
 }
 
 export interface EscoSkillSuggestion {
@@ -97,44 +93,14 @@ export interface EscoSkillSuggestion {
 
 export type ProfileInput = Omit<ProfileRecord, 'account_id' | 'completion_percent'>;
 
-export const getAdaptiveProfile = () =>
-  apiFetch<AdaptiveProfilePayload>('/v1/profile');
+export const getAdaptiveProfile = () => apiFetch<AdaptiveProfilePayload>('/v1/profile');
+export const saveProfileDetails = (profile: ProfileInput) => apiFetch<AdaptiveProfilePayload>('/v1/profile', { method: 'PUT', body: JSON.stringify(profile) });
+export const saveEducationHistory = (education: EducationRecord[]) => apiFetch<AdaptiveProfilePayload>('/v1/profile/education', { method: 'PUT', body: JSON.stringify({ education }) });
+export const saveDeclaredSkills = (skills: ProfileSkill[]) => apiFetch<AdaptiveProfilePayload>('/v1/profile/skills', { method: 'PUT', body: JSON.stringify({ skills }) });
+export const generateProfileHypotheses = () => apiFetch<AdaptiveProfilePayload>('/v1/profile/hypotheses/generate', { method: 'POST' });
+export const decideProfileHypothesis = (hypothesisId: string, status: HypothesisDecision) => apiFetch<AdaptiveProfilePayload>(`/v1/profile/hypotheses/${encodeURIComponent(hypothesisId)}`, { method: 'PATCH', body: JSON.stringify({ status }) });
 
-export const saveProfileDetails = (profile: ProfileInput) =>
-  apiFetch<AdaptiveProfilePayload>('/v1/profile', {
-    method: 'PUT',
-    body: JSON.stringify(profile),
-  });
-
-export const saveEducationHistory = (education: EducationRecord[]) =>
-  apiFetch<AdaptiveProfilePayload>('/v1/profile/education', {
-    method: 'PUT',
-    body: JSON.stringify({ education }),
-  });
-
-export const saveDeclaredSkills = (skills: ProfileSkill[]) =>
-  apiFetch<AdaptiveProfilePayload>('/v1/profile/skills', {
-    method: 'PUT',
-    body: JSON.stringify({ skills }),
-  });
-
-export const decideProfileHypothesis = (hypothesisId: string, status: HypothesisDecision) =>
-  apiFetch<AdaptiveProfilePayload>(`/v1/profile/hypotheses/${encodeURIComponent(hypothesisId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  });
-
-export const searchEscoSkills = (
-  query: string,
-  options: { locale?: string; limit?: number; signal?: AbortSignal } = {},
-) => {
-  const params = new URLSearchParams({
-    q: query,
-    locale: options.locale || 'fr',
-    limit: String(options.limit || 10),
-  });
-  return apiFetch<{ skills: EscoSkillSuggestion[] }>(
-    `/v1/profile/skills/search?${params.toString()}`,
-    { signal: options.signal },
-  );
+export const searchEscoSkills = (query: string, options: { locale?: string; limit?: number; signal?: AbortSignal } = {}) => {
+  const params = new URLSearchParams({ q: query, locale: options.locale || 'fr', limit: String(options.limit || 10) });
+  return apiFetch<{ skills: EscoSkillSuggestion[] }>(`/v1/profile/skills/search?${params.toString()}`, { signal: options.signal });
 };

@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { GENERATOR_VERSION, generateProfileHypotheses } = require('./hypothesis-generator');
 
 const parseJson = (value) => typeof value === 'string' ? JSON.parse(value) : value;
 
@@ -145,6 +146,9 @@ const boundedLimit = (value, fallback = 10, maximum = 20) => {
   return Math.min(number, maximum);
 };
 
+const generatedMetadata = (hypothesis) => hypothesis?.value_json?.generator || null;
+const generatedKey = (hypothesis) => hypothesis?.value_json?.key || null;
+
 const createProfileStore = (pool) => {
   if (!pool || typeof pool.execute !== 'function') {
     throw new Error('A MySQL pool is required for the profile store.');
@@ -180,8 +184,88 @@ const createProfileStore = (pool) => {
     };
   };
 
+  const generateHypotheses = async (accountId) => {
+    const current = await getProfile(accountId);
+    const generated = generateProfileHypotheses(current);
+    const decidedKeys = new Set(
+      current.hypotheses
+        .filter((item) => item.status !== 'proposed' && generatedMetadata(item)?.version === GENERATOR_VERSION)
+        .map(generatedKey)
+        .filter(Boolean),
+    );
+    const reusable = new Map(
+      current.hypotheses
+        .filter((item) => (
+          item.status === 'proposed'
+          && generatedMetadata(item)?.version === GENERATOR_VERSION
+          && generatedMetadata(item)?.profileFingerprint === generated.profileFingerprint
+          && generatedKey(item)
+        ))
+        .map((item) => [generatedKey(item), item]),
+    );
+    const candidateKeys = new Set(generated.candidates.map((candidate) => candidate.key));
+    const stale = current.hypotheses.filter((item) => (
+      item.status === 'proposed'
+      && generatedMetadata(item)?.version === GENERATOR_VERSION
+      && (
+        generatedMetadata(item)?.profileFingerprint !== generated.profileFingerprint
+        || !candidateKeys.has(generatedKey(item))
+      )
+    ));
+    const pending = generated.candidates.filter((candidate) => (
+      !decidedKeys.has(candidate.key) && !reusable.has(candidate.key)
+    ));
+
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      for (const item of stale) {
+        await connection.execute(
+          `DELETE FROM account_profile_hypotheses
+           WHERE id = ? AND account_id = ? AND status = 'proposed'`,
+          [item.id, accountId],
+        );
+      }
+      for (const candidate of pending) {
+        await connection.execute(
+          `INSERT INTO account_profile_hypotheses (
+             id, account_id, hypothesis_type, value_json, rationale, confidence, status
+           ) VALUES (?, ?, ?, ?, ?, ?, 'proposed')`,
+          [
+            crypto.randomUUID(),
+            accountId,
+            candidate.hypothesisType,
+            JSON.stringify(candidate.value),
+            candidate.rationale,
+            candidate.confidence,
+          ],
+        );
+      }
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback().catch(() => undefined);
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    return {
+      ...(await getProfile(accountId)),
+      hypothesisGeneration: {
+        generatorVersion: generated.generatorVersion,
+        profileFingerprint: generated.profileFingerprint,
+        candidateCount: generated.candidates.length,
+        createdCount: pending.length,
+        reusedCount: generated.candidates.filter((candidate) => reusable.has(candidate.key)).length,
+        preservedDecisionCount: generated.candidates.filter((candidate) => decidedKeys.has(candidate.key)).length,
+        removedObsoleteCount: stale.length,
+      },
+    };
+  };
+
   return {
     getProfile,
+    generateHypotheses,
 
     async upsertProfile(accountId, input = {}) {
       const profile = normalizeProfileInput(input);
