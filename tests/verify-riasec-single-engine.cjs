@@ -34,10 +34,10 @@ assert.match(readme, /outil d’exploration des intérêts/iu);
 
 const migrationIndex = deployScript.indexOf('api node scripts/migrate.js up');
 const seedIndex = deployScript.indexOf('api node scripts/seed-riasec.js');
-const apiRestartIndex = deployScript.indexOf('up -d --no-deps --force-recreate api');
+const apiRestartIndex = deployScript.lastIndexOf('up -d --no-deps --force-recreate api');
 assert.ok(migrationIndex >= 0, 'production deploy must apply migrations');
 assert.ok(seedIndex > migrationIndex, 'RIASEC seed must run after migrations');
-assert.ok(apiRestartIndex > seedIndex, 'RIASEC seed must finish before the API restarts');
+assert.ok(apiRestartIndex > seedIndex, 'RIASEC seed must finish before the final API restart');
 assert.match(deployScript, /riasec-seed-report\.json/u);
 assert.match(deployScript, /instrumentId.*riasec-makoki-fr-draft-v2/u);
 assert.match(deployScript, /itemCount.*60/u);
