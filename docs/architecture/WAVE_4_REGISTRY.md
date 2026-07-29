@@ -7,7 +7,7 @@ Issue : #98
 | ID | Lot | État | Dépend de | Chemins réservés |
 |---|---|---|---|---|
 | V4-A | Registre de contenus et provenance | in review | provenance v1 (#84) | PR #100 |
-| V4-B | Workflow de vérification humaine | blocked | V4-A | `backend/src/content-registry/**` |
+| V4-B | Workflow de vérification humaine | active | V4-A (#100 fusionnée) | `backend/src/content-registry/**` |
 | V4-C | Protocole terrain | ready | aucun runtime | `docs/field-validation/**` |
 | V4-D | Équité, accessibilité et sécurité humaine | ready | aucun runtime | `docs/equity/**` |
 | V4-E | Accompagnement humain | blocked runtime | V3-A et contrats V4-A/B | `backend/src/guidance/**`, `src/features/guidance/**` |
