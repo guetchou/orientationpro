@@ -44,9 +44,21 @@ const dateValue = (value) => {
   return value instanceof Date ? value.toISOString() : String(value);
 };
 
+const semanticValue = (value) => {
+  if (Array.isArray(value)) return value.map(semanticValue);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !['updatedAt', 'createdAt'].includes(key))
+        .map(([key, item]) => [key, semanticValue(item)]),
+    );
+  }
+  return value;
+};
+
 const fingerprint = (value) => crypto
   .createHash('sha256')
-  .update(JSON.stringify(stableValue(value)))
+  .update(JSON.stringify(stableValue(semanticValue(value))))
   .digest('hex');
 
 const selectedProfile = (profile) => profile ? {
@@ -155,10 +167,7 @@ const selectedRecommendations = (snapshot) => {
 
 const highestEducation = (education = []) => education
   .filter((entry) => ['completed', 'in_progress'].includes(entry.status))
-  .map((entry) => ({
-    ...entry,
-    rank: EDUCATION_RANK[entry.level] ?? -1,
-  }))
+  .map((entry) => ({ ...entry, rank: EDUCATION_RANK[entry.level] ?? -1 }))
   .sort((left, right) => right.rank - left.rank || String(left.level).localeCompare(String(right.level)))[0] || null;
 
 const confirmedHypothesisTitles = (hypotheses) => hypotheses
@@ -183,23 +192,16 @@ const buildSummary = ({ profile, education, skills, hypotheses, orientation, rec
   if (education.length === 0) missingInformation.push('parcours d’études');
   if (skills.length === 0) missingInformation.push('compétences ESCO confirmées');
 
-  const strengths = [
-    ...skills.slice(0, 5).map((skill) => skill.label),
-    ...confirmed,
-  ].filter(Boolean).slice(0, 8);
-
+  const strengths = [...skills.slice(0, 5).map((skill) => skill.label), ...confirmed]
+    .filter(Boolean)
+    .slice(0, 8);
   const explorationPriorities = [
     ...topCareers.map((label) => `Examiner la piste « ${label} » et vérifier son adéquation concrète.`),
     ...missingInformation.map((label) => `Compléter ou préciser : ${label}.`),
   ].slice(0, 6);
-
   const nextActions = [];
-  if (topCareers.length > 0) {
-    nextActions.push(`Comparer les trois premières pistes : ${topCareers.join(', ')}.`);
-  }
-  if (skills.length < 3) {
-    nextActions.push('Ajouter des compétences ESCO confirmées pour enrichir les rapprochements métiers.');
-  }
+  if (topCareers.length > 0) nextActions.push(`Comparer les trois premières pistes : ${topCareers.join(', ')}.`);
+  if (skills.length < 3) nextActions.push('Ajouter des compétences ESCO confirmées pour enrichir les rapprochements métiers.');
   if (hypotheses.some((item) => item.decision === 'rejected')) {
     nextActions.push('Conserver les hypothèses rejetées comme décisions explicites lors des prochaines analyses.');
   }
@@ -207,7 +209,6 @@ const buildSummary = ({ profile, education, skills, hypotheses, orientation, rec
 
   const goal = GOAL_LABELS[profile?.primaryGoal] || GOAL_LABELS.other;
   const code = orientation.displayCode || 'RIASEC non déterminé';
-
   return {
     headline: `Profil RIASEC ${code} orienté vers l’objectif : ${goal}.`,
     keySignals: {
@@ -246,7 +247,6 @@ const buildProfileSynthesis = ({
     orientation: selectedOrientation(orientationResult),
     recommendations: selectedRecommendations(recommendationSnapshot),
   };
-
   const inputFingerprint = fingerprint({
     schemaVersion: SYNTHESIS_SCHEMA_VERSION,
     engineVersion: SYNTHESIS_ENGINE_VERSION,
