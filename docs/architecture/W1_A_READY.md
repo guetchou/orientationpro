@@ -1,0 +1,1 @@
+Le lot W1-A est prêt pour validation CI. Ce fichier ne constitue pas une preuve de réussite des contrôles.
