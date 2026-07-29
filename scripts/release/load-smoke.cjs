@@ -6,7 +6,9 @@ const target = process.argv[2];
 const requestCount = Number(process.argv[3] || 300);
 const concurrency = Number(process.argv[4] || 10);
 if (!/^http:\/\/127\.0\.0\.1:\d+\/api\/test\/health$/.test(target || '')) {
-  throw new Error('Target must be an isolated localhost health endpoint');
+  throw new Error(
+    'Target must be an isolated localhost health endpoint; this script is not a functional load test',
+  );
 }
 if (!Number.isSafeInteger(requestCount) || requestCount < 1 || requestCount > 2000) {
   throw new Error('Request count must be between 1 and 2000');
@@ -39,6 +41,8 @@ Promise.all(Array.from({ length: concurrency }, () => worker())).then(() => {
   latencies.sort((a, b) => a - b);
   const percentile = (ratio) => latencies[Math.ceil(latencies.length * ratio) - 1];
   const result = {
+    schemaVersion: 'makoki.infrastructure-load-smoke.v1',
+    scope: 'infrastructure-health-only',
     target: 'isolated-local-health',
     requestCount,
     concurrency,
@@ -47,6 +51,11 @@ Promise.all(Array.from({ length: concurrency }, () => worker())).then(() => {
     p50Ms: Math.round(percentile(0.5)),
     p95Ms: Math.round(percentile(0.95)),
     p99Ms: Math.round(percentile(0.99)),
+    limitations: [
+      'not authenticated',
+      'not a business endpoint',
+      'not production impact evidence',
+    ],
   };
   process.stdout.write(`${JSON.stringify(result)}\n`);
   if (failures > 0 || result.p95Ms > 750) process.exitCode = 1;

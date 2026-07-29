@@ -1,27 +1,33 @@
-# Revue accessibilité WCAG 2.2
+# Gate accessibilité WCAG 2.2
 
-## Cible
+## Conclusion
 
-Niveau AA pour la future expérience intégrée. La revue suit POUR : perceptible,
-utilisable, compréhensible et robuste.
+**NO-GO.** Le gate vise le niveau AA, mais les preuves disponibles sont
+incomplètes. Aucun statut de conformité n’est revendiqué.
 
-## Vérifications requises
+## Faits observés
 
-- alternatives textuelles et noms accessibles des boutons icônes ;
-- contraste texte 4,5:1, composants/focus 3:1 ;
-- clavier complet, ordre logique, aucun piège, lien d'évitement ;
-- focus visible et non masqué par les barres fixes ;
-- cibles au moins 24 × 24 CSS px ;
-- réduction des animations ;
-- langue de page, landmarks, titres et labels ;
-- erreurs annoncées, `aria-invalid`, aide cohérente ;
-- zoom 200 %, fort contraste et lecteur d'écran ;
-- alternative aux gestes et fonctionnement faible bande passante.
+- Firefox Playwright 150.0.2 et WebKit Playwright 26.4 ont exécuté 8 tests sur
+  le SHA de contenu `b607a2d430ab66d18d5b155740b0039adcdf42c0` ;
+- les labels de connexion, le contraste du séparateur et la cible du bouton
+  d’affichage du mot de passe ont été corrigés ;
+- axe ne rapporte plus de violation parmi les règles A/AA sélectionnées sur la
+  page de connexion ;
+- le flag du parcours reste désactivé par défaut et `/parcours` échoue fermé ;
+- le reflow à 320 px et une recharge hors ligne limitée passent dans les deux
+  moteurs.
 
-## Conclusion actuelle
+## Preuves manquantes
 
-Les tests automatisés et le smoke Chromium peuvent détecter certaines
-régressions, mais ne valident pas lecteur d'écran, ordre de focus réel, contraste
-de chaque état, zoom, Safari/Firefox ou compréhension. Tant que ces essais
-manuels sur la version intégrée ne sont pas consignés, l'accessibilité reste un
-bloquant de production et non une conformité revendiquée.
+- Safari réel sur macOS ;
+- lecteur d’écran réel ;
+- zoom navigateur exact à 200 % ;
+- navigation clavier complète et focus sur tous les états ;
+- parcours authentifié, blocage, reprise et réorientation ;
+- reprise sous faible bande passante sans perte d’état.
+
+WebKit Playwright n’est pas Safari. Un viewport à 320 px n’est pas une preuve de
+zoom à 200 %. Axe et une interface qui s’affiche ne prouvent ni la compréhension
+ni l’utilisabilité complète. Les fichiers exigés par
+`scripts/release/accessibility-evidence-gate.cjs` restent donc manquants et le
+gate doit retourner `no-go`.
