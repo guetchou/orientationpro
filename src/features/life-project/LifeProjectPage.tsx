@@ -1,5 +1,14 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, ArrowRight, CheckCircle2, Compass, Loader2, RefreshCw, WifiOff } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  CloudUpload,
+  Compass,
+  Loader2,
+  RefreshCw,
+  WifiOff,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +20,7 @@ import {
   moveLifeProjectToClarification,
   selectLifeProjectScenario,
 } from './api';
+import { useLifeProjectSync } from './useLifeProjectSync';
 import type { LifeProjectEnvelope, LifeProjectSummary, TriageDraft } from './types';
 
 const DRAFT_KEY = 'makoki.life-project.triage-draft.v1';
@@ -86,6 +96,13 @@ export default function LifeProjectPage() {
     setCached(false);
     localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
   }, []);
+
+  const sync = useLifeProjectSync({
+    current,
+    online,
+    onEnvelope: persistEnvelope,
+    onMessage: setError,
+  });
 
   const loadProject = useCallback(async (projectId: string) => {
     setLoading(true);
@@ -192,7 +209,11 @@ export default function LifeProjectPage() {
   };
 
   const chooseScenario = async (scenarioId: string) => {
-    if (!current || !online || cached) return;
+    if (!current) return;
+    if (!online || cached) {
+      sync.queueScenarioSelection(scenarioId);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -209,7 +230,11 @@ export default function LifeProjectPage() {
   };
 
   const clarify = async () => {
-    if (!current || !online || cached) return;
+    if (!current) return;
+    if (!online || cached) {
+      sync.queueTransition('clarification', 'La personne souhaite préciser les informations manquantes.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -266,11 +291,29 @@ export default function LifeProjectPage() {
           <p className="max-w-3xl text-muted-foreground">Makoki organise votre situation déclarée, plusieurs possibilités et les prochaines étapes. Il ne choisit pas votre avenir et ne garantit ni admission, ni emploi, ni réussite.</p>
         </header>
 
-        {!online && <div role="status" className="flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900"><WifiOff className="mt-0.5 h-5 w-5 shrink-0" /><p>Vous êtes hors ligne. Le brouillon et la dernière version lisible restent disponibles sur cet appareil.</p></div>}
+        {!online && <div role="status" className="flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900"><WifiOff className="mt-0.5 h-5 w-5 shrink-0" /><p>Vous êtes hors ligne. Le brouillon, la dernière version lisible et les modifications explicitement confirmées restent sur cet appareil.</p></div>}
         {error && <div role="alert" className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><p>{error}</p></div>}
 
         {current ? (
           <div className="space-y-6" data-testid="life-project-shell">
+            {sync.pendingCount > 0 && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-950" data-testid="life-project-sync-queue">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-medium">{sync.pendingCount} modification(s) en attente sur cet appareil</p>
+                    <p className="mt-1 text-sm">Aucune écriture n’est reprise automatiquement. Le projet distant est relu avant synchronisation.</p>
+                  </div>
+                  {online && (
+                    <Button type="button" disabled={sync.syncing} onClick={() => void sync.resume()}>
+                      {sync.syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CloudUpload className="mr-2 h-4 w-4" />}
+                      Vérifier et reprendre
+                    </Button>
+                  )}
+                </div>
+                {sync.conflict && <p className="mt-3 text-sm font-medium">Conflit détecté : {sync.conflict.message}</p>}
+              </div>
+            )}
+
             {projects.length > 1 && (
               <label className="block text-sm font-medium">Projet affiché
                 <select className={fieldClass} value={current.project.id} onChange={(event) => void loadProject(event.target.value)}>
@@ -287,14 +330,20 @@ export default function LifeProjectPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-5">
-                {cached && <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">Version locale en lecture seule.</p>}
+                {cached && <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">Version locale en lecture seule. Vous pouvez enregistrer une intention de modification pour la reprendre plus tard.</p>}
                 <div>
                   <h2 className="font-semibold">Scénarios à explorer</h2>
                   {current.project.scenarios.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">Le projet existe, mais son premier scénario n’a pas encore été enregistré. Rechargez avec une connexion stable.</p> : (
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       {current.project.scenarios.map((scenario) => {
                         const selected = current.project.activeScenarioId === scenario.id;
-                        return <div key={scenario.id} className="rounded-lg border bg-background p-4"><div className="flex items-start justify-between gap-2"><h3 className="font-medium">{scenario.title}</h3>{selected && <CheckCircle2 className="h-5 w-5 text-green-600" aria-label="Scénario choisi" />}</div><p className="mt-2 text-sm text-muted-foreground">{scenario.description}</p>{!selected && <Button className="mt-4 w-full" variant="outline" disabled={saving || !online || cached} onClick={() => void chooseScenario(scenario.id)}>Choisir provisoirement</Button>}</div>;
+                        return (
+                          <div key={scenario.id} className="rounded-lg border bg-background p-4">
+                            <div className="flex items-start justify-between gap-2"><h3 className="font-medium">{scenario.title}</h3>{selected && <CheckCircle2 className="h-5 w-5 text-green-600" aria-label="Scénario choisi" />}</div>
+                            <p className="mt-2 text-sm text-muted-foreground">{scenario.description}</p>
+                            {!selected && <Button className="mt-4 w-full" variant="outline" disabled={saving} onClick={() => void chooseScenario(scenario.id)}>{online && !cached ? 'Choisir provisoirement' : 'Enregistrer ce choix pour la reprise'}</Button>}
+                          </div>
+                        );
                       })}
                     </div>
                   )}
@@ -308,7 +357,7 @@ export default function LifeProjectPage() {
                 </div>
 
                 {current.project.state === 'exploration' && (
-                  <Button disabled={saving || !online || cached} onClick={() => void clarify()}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}Passer à la clarification</Button>
+                  <Button disabled={saving} onClick={() => void clarify()}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}{online && !cached ? 'Passer à la clarification' : 'Enregistrer la clarification pour la reprise'}</Button>
                 )}
               </CardContent>
             </Card>

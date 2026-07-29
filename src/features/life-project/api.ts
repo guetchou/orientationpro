@@ -1,8 +1,12 @@
 import { ApiError, apiFetch } from '@/lib/apiClient';
+import type { LifeProjectSyncCommand } from './sync';
 import type {
   CapabilityRegistry,
+  LifeProjectActionStatus,
   LifeProjectEnvelope,
+  LifeProjectProgressEnvelope,
   LifeProjectSummary,
+  LifeProjectState,
   TriageDraft,
 } from './types';
 
@@ -19,6 +23,10 @@ export const listLifeProjects = () => apiFetch<{
 
 export const getLifeProject = (projectId: string) => apiFetch<LifeProjectEnvelope>(
   `/v1/life-projects/${encodeURIComponent(projectId)}`,
+);
+
+export const getLifeProjectProgress = (projectId: string) => apiFetch<LifeProjectProgressEnvelope>(
+  `/v1/life-projects/${encodeURIComponent(projectId)}/progress`,
 );
 
 const needLabels: Record<string, string> = {
@@ -96,7 +104,6 @@ export const createProjectFromTriage = async (draft: TriageDraft): Promise<LifeP
     );
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    // Le projet reste récupérable si la connexion s’interrompt entre les deux écritures.
     return created;
   }
 };
@@ -105,14 +112,34 @@ export const selectLifeProjectScenario = (
   projectId: string,
   scenarioId: string,
   persistenceVersion: number,
+  commandId = crypto.randomUUID(),
 ) => apiFetch<LifeProjectEnvelope>(
   `/v1/life-projects/${encodeURIComponent(projectId)}/scenarios/${encodeURIComponent(scenarioId)}/select`,
   {
     method: 'POST',
     body: JSON.stringify({
       expectedVersion: persistenceVersion,
-      commandId: crypto.randomUUID(),
-      reason: 'Scénario choisi provisoirement depuis le shell du Parcours MAKOKI.',
+      commandId,
+      reason: 'Scénario choisi provisoirement depuis le Parcours MAKOKI.',
+    }),
+  },
+);
+
+export const transitionLifeProject = (
+  projectId: string,
+  to: LifeProjectState,
+  persistenceVersion: number,
+  commandId = crypto.randomUUID(),
+  reason = 'La personne fait évoluer explicitement son projet.',
+) => apiFetch<LifeProjectEnvelope>(
+  `/v1/life-projects/${encodeURIComponent(projectId)}/transitions`,
+  {
+    method: 'POST',
+    body: JSON.stringify({
+      expectedVersion: persistenceVersion,
+      commandId,
+      to,
+      reason,
     }),
   },
 );
@@ -120,15 +147,73 @@ export const selectLifeProjectScenario = (
 export const moveLifeProjectToClarification = (
   projectId: string,
   persistenceVersion: number,
+  commandId = crypto.randomUUID(),
+) => transitionLifeProject(
+  projectId,
+  'clarification',
+  persistenceVersion,
+  commandId,
+  'La personne souhaite préciser les informations manquantes.',
+);
+
+export interface UpdateLifeProjectActionInput {
+  status?: LifeProjectActionStatus;
+  position?: number;
+  title?: string;
+  description?: string | null;
+  dueAt?: string | null;
+  completedAt?: string | null;
+  evidenceIds?: string[];
+  blockingReasons?: string[];
+  reason?: string;
+}
+
+export const updateLifeProjectAction = (
+  projectId: string,
+  planId: string,
+  actionId: string,
+  persistenceVersion: number,
+  input: UpdateLifeProjectActionInput,
+  commandId = crypto.randomUUID(),
 ) => apiFetch<LifeProjectEnvelope>(
-  `/v1/life-projects/${encodeURIComponent(projectId)}/transitions`,
+  `/v1/life-projects/${encodeURIComponent(projectId)}/action-plans/${encodeURIComponent(planId)}/actions/${encodeURIComponent(actionId)}`,
   {
-    method: 'POST',
+    method: 'PATCH',
     body: JSON.stringify({
       expectedVersion: persistenceVersion,
-      commandId: crypto.randomUUID(),
-      to: 'clarification',
-      reason: 'La personne souhaite préciser les informations manquantes.',
+      commandId,
+      ...input,
     }),
   },
 );
+
+export const executeLifeProjectSyncCommand = (
+  command: LifeProjectSyncCommand,
+  currentVersion: number,
+): Promise<LifeProjectEnvelope> => {
+  if (command.kind === 'select_scenario') {
+    return selectLifeProjectScenario(
+      command.projectId,
+      String(command.payload.scenarioId),
+      currentVersion,
+      command.commandId,
+    );
+  }
+  if (command.kind === 'transition') {
+    return transitionLifeProject(
+      command.projectId,
+      String(command.payload.to) as LifeProjectState,
+      currentVersion,
+      command.commandId,
+      typeof command.payload.reason === 'string' ? command.payload.reason : undefined,
+    );
+  }
+  return updateLifeProjectAction(
+    command.projectId,
+    String(command.payload.planId),
+    String(command.payload.actionId),
+    currentVersion,
+    command.payload.input as UpdateLifeProjectActionInput,
+    command.commandId,
+  );
+};
