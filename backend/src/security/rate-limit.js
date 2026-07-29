@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 
 const DEFAULT_WINDOW_MS = 15 * 60 * 1000;
 const DEFAULT_MAX = 300;
+const DEFAULT_MAX_ENTRIES = 10_000;
 
 const normalizePositiveInteger = (value, fallback, field) => {
   if (value === undefined || value === null || value === '') return fallback;
@@ -30,12 +31,14 @@ const createOpaqueKeyFactory = ({ secret = crypto.randomBytes(32), scope = 'gene
 const createMemoryRateLimiter = ({
   windowMs = DEFAULT_WINDOW_MS,
   max = DEFAULT_MAX,
+  maxEntries = DEFAULT_MAX_ENTRIES,
   keyGenerator = createOpaqueKeyFactory(),
   clock = () => Date.now(),
   scope = 'general',
 } = {}) => {
   const normalizedWindow = normalizePositiveInteger(windowMs, DEFAULT_WINDOW_MS, 'RATE_LIMIT_WINDOW');
   const normalizedMax = normalizePositiveInteger(max, DEFAULT_MAX, 'RATE_LIMIT_MAX');
+  const normalizedMaxEntries = normalizePositiveInteger(maxEntries, DEFAULT_MAX_ENTRIES, 'RATE_LIMIT_MAX_ENTRIES');
   const entries = new Map();
   let lastSweepAt = 0;
 
@@ -52,6 +55,16 @@ const createMemoryRateLimiter = ({
     sweep(now);
     const key = keyGenerator(request);
     const current = entries.get(key);
+    if (!current && entries.size >= normalizedMaxEntries) {
+      response.setHeader('Retry-After', String(Math.max(Math.ceil(normalizedWindow / 1000), 1)));
+      return response.status(503).json({
+        success: false,
+        code: 'RATE_LIMIT_CAPACITY_EXCEEDED',
+        message: 'Le service limite temporairement les nouvelles requêtes.',
+        scope,
+      });
+    }
+
     const entry = !current || current.resetAt <= now
       ? { count: 0, resetAt: now + normalizedWindow }
       : current;
@@ -76,12 +89,18 @@ const createMemoryRateLimiter = ({
   };
 
   middleware.reset = () => entries.clear();
-  middleware.snapshot = () => ({ entries: entries.size, windowMs: normalizedWindow, max: normalizedMax });
+  middleware.snapshot = () => ({
+    entries: entries.size,
+    windowMs: normalizedWindow,
+    max: normalizedMax,
+    maxEntries: normalizedMaxEntries,
+  });
   return middleware;
 };
 
 module.exports = {
   DEFAULT_MAX,
+  DEFAULT_MAX_ENTRIES,
   DEFAULT_WINDOW_MS,
   createMemoryRateLimiter,
   createOpaqueKeyFactory,
