@@ -11,6 +11,7 @@
 /backend/src/auth-v1/ @guetchou
 /backend/src/capabilities/ @guetchou
 /backend/src/profile/ @guetchou
+/backend/src/provenance/ @guetchou
 /backend/src/orientation/ @guetchou
 /backend/src/career/ @guetchou
 /backend/src/cv/ @guetchou
