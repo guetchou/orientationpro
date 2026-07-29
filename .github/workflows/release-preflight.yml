@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Validate VPS preflight syntax
         run: bash -n scripts/cv-release-preflight-vps.sh
@@ -168,7 +168,7 @@ jobs:
       DB_NAME: orientationpro_release_preflight
       RELEASE_PREFLIGHT_CONFIRM_CLONE: 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:

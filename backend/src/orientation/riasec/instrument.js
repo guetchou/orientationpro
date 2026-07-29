@@ -1,5 +1,5 @@
-const INSTRUMENT_ID = 'riasec-opc-fr-draft-v1';
-const INSTRUMENT_VERSION = 1;
+const INSTRUMENT_ID = 'riasec-makoki-fr-draft-v2';
+const INSTRUMENT_VERSION = 2;
 
 const dimensions = Object.freeze({
   R: {
@@ -127,7 +127,7 @@ const instrument = Object.freeze({
   id: INSTRUMENT_ID,
   version: INSTRUMENT_VERSION,
   slug: 'riasec',
-  locale: 'fr-CG',
+  locale: 'fr',
   status: 'draft',
   title: 'Exploration des intérêts professionnels RIASEC',
   responseScale: Object.freeze([
@@ -137,13 +137,13 @@ const instrument = Object.freeze({
     Object.freeze({ value: 4, label: 'Plutôt d’accord' }),
     Object.freeze({ value: 5, label: 'Tout à fait d’accord' }),
   ]),
-  methodology: 'Somme des réponses par dimension après inversion des items concernés, puis transformation linéaire sur une échelle descriptive de 0 à 100.',
+  methodology: 'Somme des réponses par dimension après inversion des items concernés, transformation linéaire descriptive de 0 à 100, puis classement par groupes d’égalité. Aucun percentile ni indice de confiance n’est calculé sans population normative documentée.',
   source: {
     kind: 'original-draft',
-    reference: 'Banque originale rédigée pour Orientation Pro Congo — version de travail à soumettre à une revue métier et à un prétest de compréhension.',
-    license: 'Propriétaire Orientation Pro Congo ; aucune reproduction de la clé IPH-T.',
+    reference: 'Banque originale MAKOKI rédigée en français. Elle n’est pas dérivée des items de l’outil O*NET Interest Profiler. Gouvernance et provenance : docs/riasec/INSTRUMENT_PROVENANCE.md.',
+    license: 'Statut de diffusion non ouvert : usage interne au projet MAKOKI jusqu’à décision explicite du titulaire. Aucune licence O*NET ne s’applique à ces items originaux.',
   },
-  disclaimer: 'Cet outil explore des intérêts professionnels. Il ne constitue ni un diagnostic psychologique, ni une garantie de réussite, ni un instrument psychométrique validé à ce stade.',
+  disclaimer: 'Cet outil sert à explorer des intérêts professionnels. Il ne constitue ni un diagnostic psychologique, ni une mesure d’aptitude, ni une garantie de réussite. Cette banque MAKOKI est en statut draft et n’est pas présentée comme psychométriquement validée.',
   dimensions,
   items: Object.freeze(items),
 });

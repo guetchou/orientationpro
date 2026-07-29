@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 20.19.4
@@ -64,7 +64,7 @@ jobs:
       DB_PASSWORD: ci_test_password
       DB_NAME: orientationpro_auth_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 20.19.4
@@ -91,6 +91,8 @@ jobs:
           retention-days: 1
       - name: Validate JavaScript syntax
         run: find backend/src backend/test tests -type f \( -name '*.js' -o -name '*.cjs' \) -print0 | xargs -0 -n1 node --check
+      - name: Prove one active RIASEC engine
+        run: node tests/verify-riasec-single-engine.cjs
       - name: Run authenticated career snapshot flow
         run: node tests/e2e-career-profile-snapshot.cjs
       - name: Run authenticated profile hypotheses flow

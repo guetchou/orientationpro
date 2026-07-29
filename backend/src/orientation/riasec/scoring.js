@@ -1,5 +1,10 @@
 const DIMENSIONS = Object.freeze(['R', 'I', 'A', 'S', 'E', 'C']);
-const ALGORITHM_VERSION = 'riasec-opc-scoring-v1';
+const LEGACY_ALGORITHM_VERSION = 'riasec-opc-scoring-v1';
+const ALGORITHM_VERSION = 'riasec-makoki-scoring-v2';
+const SUPPORTED_ALGORITHM_VERSIONS = Object.freeze([
+  LEGACY_ALGORITHM_VERSION,
+  ALGORITHM_VERSION,
+]);
 
 class RiasecValidationError extends Error {
   constructor(code, message, details = {}) {
@@ -102,10 +107,14 @@ const validateResponses = (responses, itemIds) => {
   return responseMap;
 };
 
-const buildRanking = (normalizedScores) => {
+const groupRankedScores = (normalizedScores, tieOrder) => {
   const ordered = DIMENSIONS
     .map((dimension) => ({ dimension, score: normalizedScores[dimension] }))
-    .sort((left, right) => right.score - left.score || left.dimension.localeCompare(right.dimension));
+    .sort((left, right) => {
+      const scoreDifference = right.score - left.score;
+      if (scoreDifference !== 0) return scoreDifference;
+      return tieOrder(left.dimension, right.dimension);
+    });
 
   const groups = [];
   for (const entry of ordered) {
@@ -126,9 +135,8 @@ const buildRanking = (normalizedScores) => {
   }
 
   const hasLeadingTie = leadingGroups.some((group) => group.dimensions.length > 1);
-  const exactTopThree = leadingGroups.flatMap((group) => group.dimensions).slice(0, 3);
-  const primaryCode = !hasLeadingTie && exactTopThree.length === 3
-    ? exactTopThree.join('')
+  const primaryCode = !hasLeadingTie && leadingGroups.length === 3
+    ? leadingGroups.map((group) => group.dimensions[0]).join('')
     : null;
   const displayCode = leadingGroups
     .map((group) => group.dimensions.join('/'))
@@ -137,10 +145,25 @@ const buildRanking = (normalizedScores) => {
   return {
     ordered,
     groups,
+    leadingGroups,
     primaryCode,
     displayCode,
+    codeStatus: primaryCode ? 'determinate' : 'tied',
     hasLeadingTie,
   };
+};
+
+const buildLegacyRanking = (normalizedScores) => groupRankedScores(
+  normalizedScores,
+  (left, right) => left.localeCompare(right),
+);
+
+const buildRanking = (normalizedScores) => {
+  const canonicalIndex = new Map(DIMENSIONS.map((dimension, index) => [dimension, index]));
+  return groupRankedScores(
+    normalizedScores,
+    (left, right) => canonicalIndex.get(left) - canonicalIndex.get(right),
+  );
 };
 
 const describeResponsePattern = (responseValues) => {
@@ -158,6 +181,14 @@ const describeResponsePattern = (responseValues) => {
 };
 
 const scoreRiasec = ({ items, responses, algorithmVersion = ALGORITHM_VERSION }) => {
+  if (!SUPPORTED_ALGORITHM_VERSIONS.includes(algorithmVersion)) {
+    throw new RiasecValidationError(
+      'UNSUPPORTED_RIASEC_ALGORITHM',
+      'The requested RIASEC scoring algorithm is not supported.',
+      { algorithmVersion, supportedVersions: SUPPORTED_ALGORITHM_VERSIONS },
+    );
+  }
+
   const { ids: itemIds, counts } = validateItems(items);
   const responseMap = validateResponses(responses, itemIds);
   const rawScores = Object.fromEntries(DIMENSIONS.map((dimension) => [dimension, 0]));
@@ -185,32 +216,49 @@ const scoreRiasec = ({ items, responses, algorithmVersion = ALGORITHM_VERSION })
     normalizedScores[dimension] = normalized;
   }
 
-  const ranking = buildRanking(normalizedScores);
+  const ranking = algorithmVersion === LEGACY_ALGORITHM_VERSION
+    ? buildLegacyRanking(normalizedScores)
+    : buildRanking(normalizedScores);
   const normalizedValues = DIMENSIONS.map((dimension) => normalizedScores[dimension]);
   const responseValues = responses.map((response) => response.value);
+  const differentiation = {
+    range: round(Math.max(...normalizedValues) - Math.min(...normalizedValues)),
+    standardDeviation: round(standardDeviation(normalizedValues)),
+  };
+
+  if (algorithmVersion !== LEGACY_ALGORITHM_VERSION) {
+    differentiation.kind = 'descriptive';
+    differentiation.normativeBasis = null;
+    differentiation.percentile = null;
+  }
 
   return {
     algorithmVersion,
+    resultSchemaVersion: algorithmVersion === LEGACY_ALGORITHM_VERSION
+      ? 'riasec-result-v1'
+      : 'riasec-result-v2',
     scale: { minimum: 1, maximum: 5 },
     scores,
     ranking: {
       ordered: ranking.ordered,
       tieGroups: ranking.groups,
+      leadingGroups: ranking.leadingGroups,
       primaryCode: ranking.primaryCode,
       displayCode: ranking.displayCode,
+      codeStatus: ranking.codeStatus,
       hasLeadingTie: ranking.hasLeadingTie,
     },
-    differentiation: {
-      range: round(Math.max(...normalizedValues) - Math.min(...normalizedValues)),
-      standardDeviation: round(standardDeviation(normalizedValues)),
-    },
+    differentiation,
     responsePattern: describeResponsePattern(responseValues),
   };
 };
 
 module.exports = {
   ALGORITHM_VERSION,
+  LEGACY_ALGORITHM_VERSION,
+  SUPPORTED_ALGORITHM_VERSIONS,
   DIMENSIONS,
   RiasecValidationError,
+  buildRanking,
   scoreRiasec,
 };

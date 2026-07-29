@@ -2,7 +2,12 @@ const crypto = require('node:crypto');
 const express = require('express');
 
 const { INSTRUMENT_ID } = require('./instrument');
-const { ALGORITHM_VERSION, RiasecValidationError, scoreRiasec } = require('./scoring');
+const {
+  ALGORITHM_VERSION,
+  SUPPORTED_ALGORITHM_VERSIONS,
+  RiasecValidationError,
+  scoreRiasec,
+} = require('./scoring');
 const { RiasecStoreError } = require('./store');
 
 const route = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
@@ -17,13 +22,14 @@ const shuffle = (values) => {
 };
 
 const ensureSupportedScoringVersion = (instrument) => {
-  if (instrument.scoringVersion !== ALGORITHM_VERSION) {
+  if (!SUPPORTED_ALGORITHM_VERSIONS.includes(instrument.scoringVersion)) {
     const error = new Error('The instrument requires a scoring algorithm that this API version does not support.');
     error.code = 'UNSUPPORTED_RIASEC_ALGORITHM';
     error.details = {
       instrumentId: instrument.id,
       requiredVersion: instrument.scoringVersion,
-      supportedVersion: ALGORITHM_VERSION,
+      supportedVersions: SUPPORTED_ALGORITHM_VERSIONS,
+      currentVersion: ALGORITHM_VERSION,
     };
     throw error;
   }
@@ -60,16 +66,19 @@ const publicInstrument = (instrument, itemOrder = instrument.items.map((item) =>
 
 const resultSnapshot = ({ instrument, result }) => ({
   resultType: 'riasec',
+  resultSchemaVersion: result.resultSchemaVersion || 'riasec-result-v1',
   instrument: {
     id: instrument.id,
     slug: instrument.slug,
     version: instrument.version,
     locale: instrument.locale,
+    status: instrument.status,
     title: instrument.title,
     responseScale: instrument.responseScale,
     methodology: instrument.methodology,
     source: instrument.source,
     disclaimer: instrument.disclaimer,
+    scoringVersion: instrument.scoringVersion,
     contentHash: instrument.contentHash,
   },
   dimensions: instrument.dimensions,
@@ -272,5 +281,6 @@ const createRiasecRouter = ({
 
 module.exports = {
   createRiasecRouter,
+  ensureSupportedScoringVersion,
   publicInstrument,
 };

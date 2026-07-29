@@ -58,6 +58,11 @@ export interface RiasecRankingEntry {
   score: number;
 }
 
+export interface RiasecTieGroup {
+  score: number;
+  dimensions: RiasecDimensionCode[];
+}
+
 export interface RiasecResult {
   id: string;
   attemptId: string;
@@ -65,19 +70,25 @@ export interface RiasecResult {
   instrumentId: string;
   resultType: 'riasec';
   algorithmVersion: string;
+  resultSchemaVersion?: 'riasec-result-v1' | 'riasec-result-v2' | string;
   primaryCode: string | null;
   displayCode: string;
   scores: Record<RiasecDimensionCode, RiasecScore>;
   ranking: {
     ordered: RiasecRankingEntry[];
-    tieGroups: Array<{ score: number; dimensions: RiasecDimensionCode[] }>;
+    tieGroups: RiasecTieGroup[];
+    leadingGroups?: RiasecTieGroup[];
     primaryCode: string | null;
     displayCode: string;
+    codeStatus?: 'determinate' | 'tied';
     hasLeadingTie: boolean;
   };
   differentiation: {
     range: number;
     standardDeviation: number;
+    kind?: 'descriptive';
+    normativeBasis?: null;
+    percentile?: null;
   };
   responsePattern: {
     completionRate: number;
@@ -86,16 +97,19 @@ export interface RiasecResult {
   };
   snapshot: {
     resultType: 'riasec';
+    resultSchemaVersion?: string;
     instrument: {
       id: string;
       slug: string;
       version: number;
       locale: string;
+      status?: 'draft' | 'pilot' | 'active' | 'retired';
       title: string;
       responseScale: RiasecResponseOption[];
       methodology: string;
       disclaimer: string;
       contentHash: string;
+      scoringVersion?: string;
       source?: {
         kind: string;
         reference: string;
