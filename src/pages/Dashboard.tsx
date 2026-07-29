@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, BookOpen, CheckCircle, Loader2, Settings, User } from 'lucide-react';
+import { BarChart3, BookOpen, CheckCircle, Compass, Loader2, Settings, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,13 +100,24 @@ export default function Dashboard() {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Bienvenue, {user?.displayName || user?.email?.split('@')[0] || 'Utilisateur'} !</h1>
-            <p className="mt-2 text-gray-600">Consultez vos tests réellement enregistrés et votre progression.</p>
+            <p className="mt-2 text-gray-600">Construisez votre parcours et consultez les résultats réellement enregistrés.</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Badge variant="secondary" className="self-center"><User className="mr-1 h-4 w-4" />{user?.role || 'Utilisateur'}</Badge>
+            <Button onClick={() => navigate('/parcours')}><Compass className="mr-2 h-4 w-4" />Mon parcours</Button>
             <Button variant="outline" onClick={() => navigate('/profile')}><Settings className="mr-2 h-4 w-4" />Mon profil</Button>
           </div>
         </div>
+
+        <Card className="mb-8 border-blue-200 bg-blue-50/70">
+          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-gray-900">Un résultat de test ne suffit pas.</p>
+              <p className="mt-1 text-sm text-gray-600">Le Parcours MAKOKI relie votre situation, vos scénarios et vos prochaines actions.</p>
+            </div>
+            <Button variant="outline" className="bg-white" onClick={() => navigate('/parcours')}>Ouvrir mon projet de vie</Button>
+          </CardContent>
+        </Card>
 
         <div className="mb-8 grid gap-6 md:grid-cols-2">
           <Card><CardContent className="flex items-center justify-between p-6"><div><p className="text-sm text-gray-600">Tests complétés</p><p className="text-3xl font-bold">{results.length}</p></div><CheckCircle className="h-9 w-9 text-blue-600" /></CardContent></Card>
