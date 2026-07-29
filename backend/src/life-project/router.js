@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { createCapabilityRegistry } = require('../capabilities/registry');
 const { LifeProjectContractError } = require('./contracts');
 const { ActionTrackingError } = require('./action-tracking');
 const { ActionTrackingPersistenceError } = require('./action-tracking-store');
@@ -85,7 +86,7 @@ const sendProject = (res, result, status = 200) => {
 const createLifeProjectRouter = ({
   service,
   authenticate,
-  capabilityRegistry = null,
+  capabilityRegistry = createCapabilityRegistry(process.env),
   clock = () => new Date(),
 } = {}) => {
   if (!service || typeof authenticate !== 'function') {
@@ -112,15 +113,6 @@ const createLifeProjectRouter = ({
   )));
 
   router.get('/:projectId/orchestration', route(async (req, res) => {
-    if (!capabilityRegistry) {
-      return res.status(503).json({
-        error: {
-          code: 'LIFE_PROJECT_ORCHESTRATION_UNAVAILABLE',
-          message: 'Adaptive orchestration is not configured.',
-          details: {},
-        },
-      });
-    }
     const loaded = await service.get(req.auth.account.id, req.params.projectId);
     const orchestration = createAdaptiveOrchestration({
       project: loaded.project,
