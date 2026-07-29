@@ -1,6 +1,11 @@
 'use strict';
 
-const PROFILE_RECOMMENDATION_ALGORITHM_VERSION = 'career-profile-context-v1';
+const {
+  PREPARATION_ADAPTER_VERSION,
+  resolvePreparationReference,
+} = require('./preparation-model');
+
+const PROFILE_RECOMMENDATION_ALGORITHM_VERSION = 'career-profile-context-v2';
 
 const GOAL_WEIGHTS = Object.freeze({
   choose_studies: Object.freeze({ riasec: 0.80, skills: 0.20, education: 0 }),
@@ -25,7 +30,6 @@ const EDUCATION_RANK = Object.freeze({
   other: null,
 });
 
-const JOB_ZONE_REQUIRED_RANK = Object.freeze({ 1: 2, 2: 3, 3: 5, 4: 6, 5: 7 });
 const PROFICIENCY_WEIGHT = Object.freeze({ beginner: 0.40, intermediate: 0.65, advanced: 0.85, expert: 1, unknown: 0.50 });
 const RELATION_WEIGHT = Object.freeze({ essential: 1, important: 0.85, optional: 0.60, related: 0.40 });
 
@@ -52,8 +56,16 @@ const highestEducation = (education = []) => {
     .sort((left, right) => right.effectiveRank - left.effectiveRank || left.level.localeCompare(right.level))[0] || null;
 };
 
-const educationReadiness = ({ education = [], jobZone = null } = {}) => {
+const educationReadiness = ({ education = [], jobZone = null, onetSourceVersion = null } = {}) => {
   const highest = highestEducation(education);
+  const reference = resolvePreparationReference({ sourceVersion: onetSourceVersion, jobZone });
+  const provenance = {
+    adapterVersion: reference.adapterVersion,
+    sourceVersion: reference.sourceVersion,
+    frameworkId: reference.frameworkId,
+    frameworkKind: reference.frameworkKind,
+    zoneLabel: reference.zoneLabel,
+  };
   if (!highest) {
     return {
       available: false,
@@ -61,28 +73,29 @@ const educationReadiness = ({ education = [], jobZone = null } = {}) => {
       status: 'missing_education',
       highestEducationLevel: null,
       highestEducationStatus: null,
-      jobZone: Number.isInteger(Number(jobZone)) ? Number(jobZone) : null,
-      requiredRank: null,
+      jobZone: reference.jobZone,
+      requiredRank: reference.requiredRank,
       gap: null,
+      ...provenance,
     };
   }
-
-  const normalizedZone = Number(jobZone);
-  if (!Number.isInteger(normalizedZone) || !JOB_ZONE_REQUIRED_RANK[normalizedZone]) {
+  if (!reference.available) {
     return {
       available: true,
       score: 50,
-      status: 'unknown_job_zone',
+      status: reference.reason === 'unknown_onet_version'
+        ? 'unknown_onet_version'
+        : 'unsupported_job_zone',
       highestEducationLevel: highest.level,
       highestEducationStatus: highest.status,
-      jobZone: null,
+      jobZone: reference.jobZone,
       requiredRank: null,
       gap: null,
+      ...provenance,
     };
   }
 
-  const requiredRank = JOB_ZONE_REQUIRED_RANK[normalizedZone];
-  const gap = round(highest.effectiveRank - requiredRank, 1);
+  const gap = round(highest.effectiveRank - reference.requiredRank, 1);
   let score = 20;
   let status = 'large_gap';
   if (gap >= 0) {
@@ -102,9 +115,10 @@ const educationReadiness = ({ education = [], jobZone = null } = {}) => {
     status,
     highestEducationLevel: highest.level,
     highestEducationStatus: highest.status,
-    jobZone: normalizedZone,
-    requiredRank,
+    jobZone: reference.jobZone,
+    requiredRank: reference.requiredRank,
     gap,
+    ...provenance,
   };
 };
 
@@ -154,8 +168,11 @@ const normalizeWeights = ({ weights, skillAvailable, educationAvailable }) => {
 
 const explanationForEducation = (education) => {
   if (!education.available) return null;
-  if (education.status === 'unknown_job_zone') {
-    return 'Le niveau d’études déclaré est connu, mais ce métier ne possède pas de repère Job Zone exploitable.';
+  if (education.status === 'unknown_onet_version') {
+    return 'Le niveau d’études déclaré est connu, mais la version O*NET de ce métier ne permet pas de sélectionner un modèle Job Zone fiable.';
+  }
+  if (education.status === 'unsupported_job_zone') {
+    return 'Le niveau d’études déclaré est connu, mais la Job Zone de ce métier n’est pas valide pour la version O*NET utilisée.';
   }
   if (education.status === 'meets_reference') return 'Le niveau d’études déclaré atteint le repère de préparation associé à ce métier.';
   if (education.status === 'near_reference') return 'Le niveau d’études déclaré est proche du repère de préparation associé à ce métier.';
@@ -172,7 +189,11 @@ const buildRecommendation = ({
 }) => {
   const weights = configuredWeights(profile?.primary_goal);
   const skills = skillEvidence({ matchedSkills, confirmedSkillCount });
-  const academic = educationReadiness({ education, jobZone: occupation?.jobZone });
+  const academic = educationReadiness({
+    education,
+    jobZone: occupation?.jobZone,
+    onetSourceVersion: occupation?.riasecSource?.version,
+  });
   const normalized = normalizeWeights({
     weights,
     skillAvailable: skills.available,
@@ -190,7 +211,7 @@ const buildRecommendation = ({
       code: 'RIASEC_ALIGNMENT',
       signal: 'riasec',
       score: match.fitScore,
-      message: `La proximité RIASEC entre le Résultat d’orientation et ce métier est de ${match.fitScore} %.` ,
+      message: `La proximité RIASEC entre le Résultat d’orientation et ce métier est de ${match.fitScore} %.`,
     },
   ];
   if (skills.available) {
@@ -217,9 +238,8 @@ const buildRecommendation = ({
     'Ce classement aide à explorer des pistes. Il ne garantit ni emploi, ni salaire, ni réussite, ni aptitude réglementaire.',
     'Les profils RIASEC et Job Zone viennent d’O*NET ; les libellés et relations de compétences viennent d’ESCO lorsqu’un rapprochement traçable existe.',
   ];
-  if (academic.available) cautions.push('Le repère Job Zone n’est pas une équivalence officielle de diplôme au Congo ou dans un autre pays.');
-  if (profile?.mobility_scope) cautions.push('La mobilité déclarée est affichée comme contexte mais n’entre pas encore dans le score faute de données géographiques locales versionnées.');
-  if (occupation?.localRelevanceStatus === 'unreviewed') cautions.push('La pertinence locale de ce métier n’a pas encore été revue pour le contexte congolais.');
+  if (academic.available) cautions.push('Le repère Job Zone n’est pas une équivalence officielle de diplôme dans un pays donné.');
+  if (profile?.mobility_scope) cautions.push('La mobilité déclarée est affichée comme contexte mais n’entre pas dans le score sans référentiel géographique versionné.');
 
   return {
     ...match,
@@ -269,7 +289,12 @@ const rankProfileRecommendations = ({
     .slice(0, limit);
 };
 
-const profileRecommendationContext = ({ profile = null, education = [], confirmedSkills = [] } = {}) => {
+const profileRecommendationContext = ({
+  profile = null,
+  education = [],
+  confirmedSkills = [],
+  versioning = {},
+} = {}) => {
   const highest = highestEducation(education);
   const usedSignals = ['riasec'];
   const missingSignals = [];
@@ -283,6 +308,10 @@ const profileRecommendationContext = ({ profile = null, education = [], confirme
 
   return {
     algorithmVersion: PROFILE_RECOMMENDATION_ALGORITHM_VERSION,
+    preparationAdapterVersion: PREPARATION_ADAPTER_VERSION,
+    profileFingerprint: versioning.profileFingerprint || null,
+    inputFingerprint: versioning.inputFingerprint || null,
+    catalogSources: versioning.catalogSources || [],
     profileCompletionPercent: profile?.completion_percent ?? 0,
     currentSituation: profile?.current_situation ?? null,
     primaryGoal: profile?.primary_goal ?? null,
@@ -294,8 +323,8 @@ const profileRecommendationContext = ({ profile = null, education = [], confirme
     usedSignals,
     missingSignals,
     limitations: [
-      'Aucune donnée de salaire ou de débouché local n’entre dans le score.',
-      'La mobilité n’est pas encore scorée faute de référentiel géographique local versionné.',
+      'Aucune donnée de salaire, de débouché local ou de catalogue national n’entre dans le score.',
+      'La mobilité n’est pas scorée sans référentiel géographique versionné.',
       'Les compétences sans URI ESCO confirmée restent visibles dans le profil mais ne modifient pas ce score.',
     ],
   };
