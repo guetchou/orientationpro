@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdaptiveProfileWizard from '@/features/profile/AdaptiveProfileWizard';
 import ProfileHypothesisPanel from '@/features/profile/ProfileHypothesisPanel';
+import ProfileSynthesisPanel from '@/features/profile/ProfileSynthesisPanel';
 
 export default function Profile() {
   return (
@@ -12,6 +13,7 @@ export default function Profile() {
           Retour au tableau de bord
         </Link>
         <ProfileHypothesisPanel />
+        <ProfileSynthesisPanel />
         <AdaptiveProfileWizard />
       </div>
     </main>
