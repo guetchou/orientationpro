@@ -35,6 +35,9 @@ export interface LifeProjectScenario {
   description: string | null;
   status: 'exploring' | 'candidate' | 'active' | 'paused' | 'discarded';
   optionType: string;
+  assumptions?: string[];
+  barriers?: string[];
+  supports?: string[];
   missingInformation: string[];
   uncertainty: { level: 'unknown' | 'low' | 'medium' | 'high'; reasons: string[] };
 }
@@ -116,6 +119,49 @@ export interface LifeProjectProgressEnvelope {
   schemaVersion: string;
   persistenceVersion: number;
   progress: LifeProjectProgress;
+}
+
+export interface OrchestrationReason {
+  code: string;
+  message: string;
+}
+
+export interface OrchestrationRecommendation {
+  moduleId: string;
+  label: string;
+  capabilityId: string;
+  availability: 'available' | 'disabled' | 'unavailable';
+  capabilityStatus: string;
+  completion: 'pending' | 'completed' | 'skipped';
+  priority: number;
+  reasons: OrchestrationReason[];
+  blockers: string[];
+  publicLimitations: string[];
+}
+
+export interface LifeProjectOrchestration {
+  schemaVersion: string;
+  projectId: string;
+  projectState: LifeProjectState;
+  generatedAt: string;
+  signals: {
+    missingInformationCount: number;
+    uncertaintyLevel: string;
+    scenarioCount: number;
+    activeScenarioId: string | null;
+    actions: Record<LifeProjectActionStatus | 'total', number>;
+  };
+  completedModuleIds: string[];
+  skippedModuleIds: string[];
+  recommendations: OrchestrationRecommendation[];
+  nextModuleId: string | null;
+  nextModuleReasons: OrchestrationReason[];
+}
+
+export interface LifeProjectOrchestrationEnvelope {
+  schemaVersion: string;
+  persistenceVersion: number;
+  orchestration: LifeProjectOrchestration;
 }
 
 export interface TriageDraft {

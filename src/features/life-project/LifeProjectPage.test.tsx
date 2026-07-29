@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import LifeProjectPage from './LifeProjectPage';
 import * as api from './api';
 import type { LifeProjectEnvelope } from './types';
@@ -9,10 +10,17 @@ vi.mock('./api', () => ({
   executeLifeProjectSyncCommand: vi.fn(),
   getCapabilityRegistry: vi.fn(),
   getLifeProject: vi.fn(),
+  getLifeProjectOrchestration: vi.fn(),
+  getLifeProjectProgress: vi.fn(),
   listLifeProjects: vi.fn(),
   moveLifeProjectToClarification: vi.fn(),
   selectLifeProjectScenario: vi.fn(),
+  transitionLifeProject: vi.fn(),
+  createLifeProjectActionPlan: vi.fn(),
+  updateLifeProjectAction: vi.fn(),
 }));
+
+const renderPage = () => render(<MemoryRouter><LifeProjectPage /></MemoryRouter>);
 
 const envelope: LifeProjectEnvelope = {
   schemaVersion: 'makoki-life-project-api-v1',
@@ -70,6 +78,51 @@ describe('LifeProjectPage', () => {
     localStorage.clear();
     vi.clearAllMocks();
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+    vi.mocked(api.getLifeProjectOrchestration).mockResolvedValue({
+      schemaVersion: 'makoki-life-project-orchestration-api-v1',
+      persistenceVersion: 2,
+      orchestration: {
+        schemaVersion: 'makoki-life-path-orchestration-v1',
+        projectId: 'project-1',
+        projectState: 'exploration',
+        generatedAt: '2026-07-29T08:00:00.000Z',
+        signals: {
+          missingInformationCount: 1,
+          uncertaintyLevel: 'high',
+          scenarioCount: 1,
+          activeScenarioId: null,
+          actions: { total: 0, planned: 0, in_progress: 0, completed: 0, blocked: 0, cancelled: 0 },
+        },
+        completedModuleIds: [],
+        skippedModuleIds: [],
+        recommendations: [{
+          moduleId: 'life-project.clarification',
+          label: 'Clarifier la situation',
+          capabilityId: 'life-project.core-v1',
+          availability: 'available',
+          capabilityStatus: 'experimental',
+          completion: 'pending',
+          priority: 1,
+          reasons: [{ code: 'MISSING', message: 'Une information reste à préciser.' }],
+          blockers: [],
+          publicLimitations: ['Cette proposition ne décide pas à la place de la personne.'],
+        }],
+        nextModuleId: 'life-project.clarification',
+        nextModuleReasons: [{ code: 'MISSING', message: 'Une information reste à préciser.' }],
+      },
+    });
+    vi.mocked(api.getLifeProjectProgress).mockResolvedValue({
+      schemaVersion: 'makoki-life-project-progress-api-v1',
+      persistenceVersion: 2,
+      progress: {
+        schemaVersion: 'makoki-life-project-progress-v1',
+        projectId: 'project-1',
+        state: 'not_started',
+        counts: { planned: 0, in_progress: 0, completed: 0, blocked: 0, cancelled: 0 },
+        nextActions: [],
+        completedActions: [],
+      },
+    });
   });
 
   afterEach(() => {
@@ -88,7 +141,7 @@ describe('LifeProjectPage', () => {
       }],
     });
 
-    render(<LifeProjectPage />);
+    renderPage();
 
     expect(await screen.findByText('Parcours MAKOKI non activé')).toBeInTheDocument();
     expect(api.listLifeProjects).not.toHaveBeenCalled();
@@ -101,7 +154,7 @@ describe('LifeProjectPage', () => {
       projects: [],
     });
 
-    render(<LifeProjectPage />);
+    renderPage();
 
     expect(await screen.findByTestId('life-project-triage')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Ma situation actuelle'), { target: { value: 'lycee' } });
@@ -116,7 +169,7 @@ describe('LifeProjectPage', () => {
     enableCapability();
     loadExistingProject();
 
-    render(<LifeProjectPage />);
+    renderPage();
 
     expect(await screen.findByTestId('life-project-shell')).toBeInTheDocument();
     expect(screen.getByText('Études et formation')).toBeInTheDocument();
@@ -132,7 +185,7 @@ describe('LifeProjectPage', () => {
     });
     vi.mocked(api.createProjectFromTriage).mockResolvedValue(envelope);
 
-    render(<LifeProjectPage />);
+    renderPage();
     await screen.findByTestId('life-project-triage');
 
     fireEvent.change(screen.getByLabelText('Ma situation actuelle'), { target: { value: 'lycee' } });
@@ -155,7 +208,7 @@ describe('LifeProjectPage', () => {
     localStorage.setItem('makoki.life-project.last-readable.v1', JSON.stringify(envelope));
     vi.mocked(api.getCapabilityRegistry).mockRejectedValue(new Error('réseau indisponible'));
 
-    render(<LifeProjectPage />);
+    renderPage();
 
     expect(await screen.findByTestId('life-project-shell')).toBeInTheDocument();
     expect(screen.getByText(/Version locale en lecture seule/)).toBeInTheDocument();
@@ -168,7 +221,7 @@ describe('LifeProjectPage', () => {
     enableCapability();
     loadExistingProject();
 
-    render(<LifeProjectPage />);
+    renderPage();
     await screen.findByTestId('life-project-shell');
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer ce choix pour la reprise' }));
 
@@ -179,5 +232,49 @@ describe('LifeProjectPage', () => {
     });
     expect(api.selectLifeProjectScenario).not.toHaveBeenCalled();
     expect(await screen.findByTestId('life-project-sync-queue')).toHaveTextContent('1 modification');
+  });
+
+  it('affiche la prochaine étape, ses raisons, sa limite et les catégories de connaissance', async () => {
+    enableCapability();
+    loadExistingProject();
+
+    renderPage();
+
+    expect(await screen.findByText('Clarifier la situation')).toBeInTheDocument();
+    expect(screen.getByText(/Une information reste à préciser/)).toBeInTheDocument();
+    expect(screen.getByText(/Cette proposition ne décide pas/)).toBeInTheDocument();
+    expect(screen.getByText('Déclarations de départ')).toBeInTheDocument();
+    expect(screen.getByText('Hypothèses à vérifier')).toBeInTheDocument();
+    expect(screen.getByText(/Informations vérifiées/)).toBeInTheDocument();
+    expect(screen.getByText('Inconnues actuelles')).toBeInTheDocument();
+  });
+
+  it('permet le passage explicite et la réorientation sans score ni métier idéal', async () => {
+    enableCapability();
+    loadExistingProject();
+    vi.mocked(api.transitionLifeProject).mockResolvedValue({
+      ...envelope,
+      persistenceVersion: 3,
+      project: { ...envelope.project, state: 'reorientation' },
+    });
+
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Passer explicitement' }));
+    await waitFor(() => expect(api.getLifeProjectOrchestration).toHaveBeenCalledWith(
+      'project-1',
+      [],
+      ['life-project.clarification'],
+    ));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Demander une réorientation' }));
+    await waitFor(() => expect(api.transitionLifeProject).toHaveBeenCalledWith(
+      'project-1',
+      'reorientation',
+      2,
+      undefined,
+      expect.stringMatching(/réorientation/),
+    ));
+    expect(screen.queryByText(/métier idéal|score de réussite/i)).not.toBeInTheDocument();
   });
 });

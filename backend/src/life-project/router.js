@@ -1,9 +1,14 @@
 'use strict';
 
 const express = require('express');
+const { createCapabilityRegistry } = require('../capabilities/registry');
 const { LifeProjectContractError } = require('./contracts');
 const { ActionTrackingError } = require('./action-tracking');
 const { ActionTrackingPersistenceError } = require('./action-tracking-store');
+const {
+  LifeProjectOrchestrationError,
+  createAdaptiveOrchestration,
+} = require('./orchestration');
 const { LifeProjectPersistenceError } = require('./store');
 const { LifeProjectServiceError } = require('./service');
 
@@ -21,8 +26,15 @@ const parseExpectedVersion = (req) => {
   return Number(candidate);
 };
 
+const parseModuleIds = (value) => String(value || '')
+  .split(',')
+  .map((entry) => entry.trim())
+  .filter(Boolean);
+
 const errorStatus = (error) => {
-  if (error instanceof LifeProjectContractError || error instanceof ActionTrackingError) return 400;
+  if (error instanceof LifeProjectContractError
+    || error instanceof ActionTrackingError
+    || error instanceof LifeProjectOrchestrationError) return 400;
   if (error instanceof LifeProjectServiceError) {
     if (error.code === 'LIFE_PROJECT_NOT_FOUND'
       || error.code === 'LIFE_PROJECT_ACTION_PLAN_NOT_FOUND'
@@ -71,7 +83,12 @@ const sendProject = (res, result, status = 200) => {
   });
 };
 
-const createLifeProjectRouter = ({ service, authenticate } = {}) => {
+const createLifeProjectRouter = ({
+  service,
+  authenticate,
+  capabilityRegistry = createCapabilityRegistry(process.env),
+  clock = () => new Date(),
+} = {}) => {
   if (!service || typeof authenticate !== 'function') {
     throw new Error('Life-project service and authentication are required.');
   }
@@ -94,6 +111,23 @@ const createLifeProjectRouter = ({ service, authenticate } = {}) => {
     res,
     await service.get(req.auth.account.id, req.params.projectId),
   )));
+
+  router.get('/:projectId/orchestration', route(async (req, res) => {
+    const loaded = await service.get(req.auth.account.id, req.params.projectId);
+    const orchestration = createAdaptiveOrchestration({
+      project: loaded.project,
+      capabilityRegistry,
+      generatedAt: clock().toISOString(),
+      completedModuleIds: parseModuleIds(req.query.completed),
+      skippedModuleIds: parseModuleIds(req.query.skipped),
+    });
+    res.set('ETag', `"${loaded.persistenceVersion}"`);
+    return res.status(200).json({
+      schemaVersion: 'makoki-life-project-orchestration-api-v1',
+      persistenceVersion: loaded.persistenceVersion,
+      orchestration,
+    });
+  }));
 
   router.get('/:projectId/progress', route(async (req, res) => {
     const result = await service.getProgress(req.auth.account.id, req.params.projectId);
