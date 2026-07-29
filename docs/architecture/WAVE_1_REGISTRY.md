@@ -9,37 +9,38 @@ Ce registre réserve les chemins, migrations et ordres de fusion de la première
 | ID | Lot | État | Dépend de | Chemins principaux | Migration | Fusion |
 |---|---|---|---|---|---|---|
 | W1-A | Persistance MySQL du projet de vie | merged | Vague 0 | `backend/src/life-project/store.js`, tests MySQL, migrations | `011_life_projects` fusionnée | #90 |
-| W1-B | API LifeProject v1 et feature flag | active | W1-A | routeur, service, capacités et raccord serveur | aucune | issue #88, branche `agent/life-project-api-v1` |
-| W1-C | Triage et shell du Parcours MAKOKI | blocked | W1-B | `src/features/life-project/**`, raccord routeur dédié | aucune | issue #89 |
+| W1-B | API LifeProject v1 et feature flag | merged | W1-A | routeur, service, capacités et raccord serveur | aucune | #91 |
+| W1-C | Triage et shell du Parcours MAKOKI | active | W1-B | `src/features/life-project/**`, page, dashboard et raccord routeur | aucune | issue #89, branche `agent/life-project-triage-shell-v1` |
 
 ## Réservations centrales
 
 | Ressource | Statut | Propriétaire |
 |---|---|---|
 | `backend/migrations/011_life_projects.*.sql` | fusionnée, modification par lot dédié | mainteneur |
-| `backend/src/life-project/store.js` | fusionné, extension contrôlée | W1-B / mainteneur |
-| `backend/src/life-project/router.js` | réservée | W1-B |
-| `backend/src/life-project/service.js` | réservée | W1-B |
-| `backend/src/server.js` | réservée pour raccord court | W1-B / mainteneur |
-| `backend/src/capabilities/**` | réservée pour le flag LifeProject | W1-B |
-| `src/router/AppRouter.tsx` | libre, intégration seulement | mainteneur / futur raccord W1-C |
+| `backend/src/life-project/**` | fusionné, extension par lot dédié | mainteneur |
+| `backend/src/server.js` | libre, intégration seulement | mainteneur |
+| `backend/src/capabilities/**` | fusionné, modification par lot dédié | mainteneur |
+| `src/features/life-project/**` | réservée | W1-C |
+| `src/router/AppRouter.tsx` | réservée pour raccord court | W1-C / mainteneur |
+| `src/pages/Dashboard.tsx` | réservée pour point d’entrée | W1-C |
 
-## Invariants W1-B
+## Invariants W1-C
 
-- API inactive par défaut ;
-- activation conditionnée par `AUTH_V1_ENABLED=true` et `LIFE_PROJECT_API_ENABLED=true` ;
-- toutes les lectures et écritures utilisent le compte authentifié ;
-- les identifiants, dates et provenance techniques sont contrôlés côté serveur ;
-- les transitions passent par la machine à états v1 ;
-- les commandes historisées exigent un identifiant stable et sont rejouables sans dupliquer un événement ;
-- les mises à jour exigent une version de persistance attendue ;
-- aucune interface frontend dans ce lot.
+- l’API et la capacité sont vérifiées avant tout appel au projet de vie ;
+- l’expérience commence par la situation et le besoin, pas par le choix d’un test ;
+- le triage reste court, compréhensible et révisable ;
+- le brouillon est conservé localement jusqu’à création réussie ;
+- le dernier projet lisible est mis en cache pour consultation hors ligne ;
+- aucune déclaration n’est présentée comme un fait vérifié ;
+- les tests historiques ne sont pas supprimés ;
+- aucune promesse d’emploi, d’admission ou de réussite ;
+- navigation clavier, mobile et états chargement/hors ligne/erreur couverts.
 
 ## Ordre immédiat
 
 ```text
-W1-B API derrière feature flag
-→ W1-C triage et shell
+W1-C triage et shell
+→ clôture de la Vague 1
 ```
 
-Aucune nouvelle migration n’est prévue dans W1-B.
+Aucune migration ou modification backend n’est prévue dans W1-C.
