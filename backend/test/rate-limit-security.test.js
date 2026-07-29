@@ -57,10 +57,10 @@ test('rate limiter allows the configured quota then returns stable 429', () => {
   assert.equal(nextCalls, 3);
 });
 
-test('opaque keys separate IP and account without exposing either value', () => {
+test('opaque keys separate IP and authenticated account without exposing either value', () => {
   const factory = createOpaqueKeyFactory({ secret: 's'.repeat(32), scope: 'expensive' });
-  const first = factory({ ip: '203.0.113.7', auth: { accountId: 'account-one' } });
-  const second = factory({ ip: '203.0.113.7', auth: { accountId: 'account-two' } });
+  const first = factory({ ip: '203.0.113.7', auth: { account: { id: 'account-one' } } });
+  const second = factory({ ip: '203.0.113.7', auth: { account: { id: 'account-two' } } });
   assert.notEqual(first, second);
   assert.doesNotMatch(first, /203\.0\.113\.7|account-one/);
   assert.match(first, /^[0-9a-f]{64}$/);
