@@ -34,7 +34,10 @@
     "test:security:observability": "node --test test/observability-runtime.test.js",
     "test:data-rights": "node --test test/data-rights-service.test.js test/data-rights-router.test.js"
   },
-  "keywords": ["orientation"],
+  "keywords": [
+    "orientation",
+    "backend"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -56,5 +59,7 @@
     "sequelize": "^6.37.8",
     "yauzl": "3.4.0"
   },
-  "devDependencies": {"nodemon": "^3.1.14"}
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
