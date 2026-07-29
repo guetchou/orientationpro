@@ -41,6 +41,7 @@ const Cookies = lazy(() => import('@/pages/Cookies'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const Tests = lazy(() => import('@/pages/Tests'));
 const RiasecTest = lazy(() => import('@/pages/RiasecTest'));
@@ -111,6 +112,7 @@ export const AppRouter = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/tests" element={<Tests />} />
             <Route path="/post-bac" element={<PostBac />} />
