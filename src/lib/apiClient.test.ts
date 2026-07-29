@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { confirmPasswordReset, requestPasswordReset } from './apiClient';
+import {
+  confirmPasswordReset,
+  requestEmailVerification,
+  requestPasswordReset,
+} from './apiClient';
 
 describe('récupération du Compte via Auth V1', () => {
   beforeEach(() => {
@@ -46,6 +50,25 @@ describe('récupération du Compte via Auth V1', () => {
           token: 'jeton-valide',
           password: 'nouveau mot de passe robuste',
         }),
+      }),
+    );
+    const headers = new Headers(fetchMock.mock.calls[0][1]?.headers);
+    expect(headers.get('Authorization')).toBeNull();
+  });
+
+  it('redemande un lien de vérification sans authentification', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, { status: 202 }),
+    );
+
+    await requestEmailVerification('personne@example.cg');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/auth/verification/request',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ email: 'personne@example.cg' }),
       }),
     );
     const headers = new Headers(fetchMock.mock.calls[0][1]?.headers);
