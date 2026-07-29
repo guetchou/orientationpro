@@ -24,6 +24,8 @@ const { createCvService } = require('./cv/service');
 const { createCvStore } = require('./cv/store');
 const { createProfileRouter } = require('./profile/router');
 const { createProfileStore } = require('./profile/store');
+const { createProfileSynthesisRouter } = require('./profile/synthesis-router');
+const { createProfileSynthesisStore } = require('./profile/synthesis-store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +75,10 @@ if (process.env.AUTH_V1_ENABLED === 'true') {
     store: createProfileStore(authV1.pool),
     authenticate: authV1.authenticate,
   }));
+  app.use('/api/v1/profile/syntheses', createProfileSynthesisRouter({
+    store: createProfileSynthesisStore(authV1.pool),
+    authenticate: authV1.authenticate,
+  }));
 }
 if (process.env.RIASEC_API_ENABLED === 'true') {
   if (!authV1) {
@@ -101,9 +107,7 @@ if (process.env.CV_API_V1_ENABLED === 'true') {
   }
 
   app.use('/api/v1/cv', createCvRouter({
-    service: createCvService({
-      store: createCvStore(authV1.pool),
-    }),
+    service: createCvService({ store: createCvStore(authV1.pool) }),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
     uploadDirectory: process.env.CV_UPLOAD_DIR,
@@ -128,6 +132,7 @@ app.get('/', (req, res) => {
       register: 'POST /api/v1/auth/register',
       session: 'GET /api/v1/auth/session',
       profile: 'GET|PUT /api/v1/profile',
+      profileSyntheses: 'GET|POST /api/v1/profile/syntheses',
     });
   }
   if (process.env.RIASEC_API_ENABLED === 'true') {
@@ -221,7 +226,5 @@ const stopServer = (reason) => {
   });
 };
 
-process.on('SIGTERM', () => stopServer());
-process.on('SIGINT', () => stopServer('after interrupt'));
-
-module.exports = app;
+process.on('SIGTERM', () => stopServer('after SIGTERM'));
+process.on('SIGINT', () => stopServer('after SIGINT'));
