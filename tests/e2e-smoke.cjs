@@ -89,6 +89,7 @@ async function main() {
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
     const page = await browser.newPage();
+    await page.setCacheEnabled(false);
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
 
