@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint src --max-warnings 350",
-    "lint:backend": "eslint backend/src/security backend/src/auth-v1 backend/src/capabilities backend/src/life-project backend/src/provenance backend/src/db backend/src/orientation backend/src/career backend/src/profile backend/scripts backend/test",
+    "lint:backend": "eslint backend/src/security backend/src/auth-v1 backend/src/capabilities backend/src/life-project backend/src/provenance backend/src/content-registry backend/src/guidance backend/src/db backend/src/orientation backend/src/career backend/src/profile backend/scripts backend/test",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
