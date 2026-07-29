@@ -21,7 +21,7 @@ Ce registre réserve les contrats, chemins et ordres de fusion. Il ne prouve pas
 | W0-A2 | Audit `as-is` | merged | W0-A | `docs/architecture/MAKOKI_AS_IS_AUDIT.md` | aucune | #74 |
 | W0-E | Gouvernance multi-agents | merged | W0-A2 | `.github/CODEOWNERS`, `.github/pull_request_template.md`, documentation de gouvernance | aucune | #76 |
 | W0-B | Registre des capacités et feature flags | merged | W0-E | `backend/src/capabilities/**`, raccord serveur et tests | aucune | #80 |
-| W0-C | Contrats `LifeProject`, `Scenario`, `ActionPlan` | planned | W0-E | `backend/src/life-project/**`, schémas partagés dédiés | aucune dans la première PR | issue #78 |
+| W0-C | Contrats `LifeProject`, `Scenario`, `ActionPlan` | active | W0-E | `backend/src/life-project/**`, test et ADR dédiés | aucune | issue #78, branche `agent/life-project-contracts-v1` |
 | W0-D | Contrats `Fact`, `Hypothesis`, `Evidence` | planned | W0-E | module transversal à décider par ADR, sans modifier le profil au premier lot | aucune dans la première PR | issue #79 |
 
 ## Réservations centrales
