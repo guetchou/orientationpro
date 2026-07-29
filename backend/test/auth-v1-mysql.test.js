@@ -255,6 +255,7 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
+      '011_life_projects',
       '010_profile_synthesis_snapshots',
       '009_career_recommendation_snapshots',
       '008_profile_intelligence_v1',
@@ -272,11 +273,13 @@ test('ordered migrations roll back completely and can be applied again', async (
        FROM information_schema.tables
        WHERE table_schema = DATABASE()
          AND (
-           table_name LIKE 'auth\\_%'
-           OR table_name LIKE 'orientation\\_%'
-           OR table_name LIKE 'career\\_%'
-           OR table_name LIKE 'profile_synthesis\\_%'
-           OR table_name LIKE 'cv\\_%'
+           table_name LIKE 'auth\_%'
+           OR table_name LIKE 'orientation\_%'
+           OR table_name LIKE 'career\_%'
+           OR table_name LIKE 'profile_synthesis\_%'
+           OR table_name LIKE 'cv\_%'
+           OR table_name = 'life_projects'
+           OR table_name LIKE 'life_project\_%'
          )`,
     );
     assert.equal(Number(afterRollback.table_count), 0);
@@ -286,28 +289,34 @@ test('ordered migrations roll back completely and can be applied again', async (
     const [[authTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
-       WHERE table_schema = DATABASE() AND table_name LIKE 'auth\\_%'`,
+       WHERE table_schema = DATABASE() AND table_name LIKE 'auth\_%'`,
     );
     const [[orientationTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
-       WHERE table_schema = DATABASE() AND table_name LIKE 'orientation\\_%'`,
+       WHERE table_schema = DATABASE() AND table_name LIKE 'orientation\_%'`,
     );
     const [[careerTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
-       WHERE table_schema = DATABASE() AND table_name LIKE 'career\\_%'`,
+       WHERE table_schema = DATABASE() AND table_name LIKE 'career\_%'`,
     );
     const [[profileSynthesisTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
-       WHERE table_schema = DATABASE() AND table_name LIKE 'profile_synthesis\\_%'`,
+       WHERE table_schema = DATABASE() AND table_name LIKE 'profile_synthesis\_%'`,
     );
     const [[cvTables]] = await pool.query(
       `SELECT COUNT(*) AS table_count
        FROM information_schema.tables
        WHERE table_schema = DATABASE()
-         AND table_name LIKE 'cv\\_%'`,
+         AND table_name LIKE 'cv\_%'`,
+    );
+    const [[lifeProjectTables]] = await pool.query(
+      `SELECT COUNT(*) AS table_count
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE()
+         AND (table_name = 'life_projects' OR table_name LIKE 'life_project\_%')`,
     );
     const [[careerPermissions]] = await pool.query(
       `SELECT COUNT(*) AS permission_count
@@ -325,6 +334,7 @@ test('ordered migrations roll back completely and can be applied again', async (
     assert.equal(Number(careerTables.table_count), 8);
     assert.equal(Number(profileSynthesisTables.table_count), 1);
     assert.equal(Number(cvTables.table_count), 1);
+    assert.equal(Number(lifeProjectTables.table_count), 7);
     assert.equal(Number(careerPermissions.permission_count), 2);
     assert.equal(Number(cvPermissions.permission_count), 4);
   } finally {
