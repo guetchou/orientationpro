@@ -1,8 +1,8 @@
 # Registre de livraison — Vague 0
 
-Statut : actif
+Statut : clôturée
 
-Ce registre réserve les contrats, chemins et ordres de fusion. Il ne prouve pas qu’un lot est implémenté.
+Ce registre décrit les fondations fusionnées dans `main`. Il ne signifie pas que le Parcours MAKOKI, sa persistance, ses API ou son interface sont déjà disponibles aux utilisateurs.
 
 ## États
 
@@ -22,9 +22,9 @@ Ce registre réserve les contrats, chemins et ordres de fusion. Il ne prouve pas
 | W0-E | Gouvernance multi-agents | merged | W0-A2 | `.github/CODEOWNERS`, `.github/pull_request_template.md`, documentation de gouvernance | aucune | #76 |
 | W0-B | Registre des capacités et feature flags | merged | W0-E | `backend/src/capabilities/**`, raccord serveur et tests | aucune | #80 |
 | W0-C | Contrats `LifeProject`, `Scenario`, `ActionPlan` | merged | W0-E | `backend/src/life-project/**`, test et ADR dédiés | aucune | #83 |
-| W0-D | Contrats `Fact`, `Hypothesis`, `Evidence` | active | W0-E | `backend/src/provenance/**`, test et ADR dédiés, sans modifier le profil | aucune | issue #79, branche `agent/provenance-contracts-v1` |
+| W0-D | Contrats `Fact`, `Hypothesis`, `Evidence` | merged | W0-E | `backend/src/provenance/**`, test et ADR dédiés, sans modifier le profil | aucune | #84 |
 
-## Réservations centrales
+## Réservations centrales après clôture
 
 Aucune modification parallèle sans issue d’intégration :
 
@@ -35,28 +35,29 @@ Aucune modification parallèle sans issue d’intégration :
 | `.github/workflows/**` | libre, intégration seulement | mainteneur |
 | `backend/migrations/**` | réservation obligatoire | mainteneur |
 | machine à états `LifeProject` | contrat fusionné, modifications via lot dédié | mainteneur |
-| provenance générique | réservée à W0-D | W0-D |
+| provenance générique | contrat fusionné, modifications via lot dédié | mainteneur |
 
 ## Registre des migrations
 
-Source observable : `backend/migrations/`. Avant ouverture d’un lot persistant, vérifier le dernier numéro sur `main` puis ajouter une ligne.
+Source observable : `backend/migrations/`. Aucun lot de la Vague 0 n’a créé ou réservé une migration.
 
 | Numéro | Lot | Branche/PR | État |
 |---|---|---|---|
 | prochain numéro | non réservé | — | libre après inspection de `main` |
 
-La mention « prochain numéro » n’autorise aucune création. Le numéro exact doit être vérifié et réservé dans la même mise à jour de ce registre.
+La mention « prochain numéro » n’autorise aucune création. Le numéro exact doit être vérifié et réservé dans la même mise à jour du registre de la vague concernée.
 
-## Ordre immédiat
+## Suite autorisée par les fondations
 
 ```text
-W0-D provenance générique
--> clôture de la Vague 0
--> intégration Vague 1
+Vague 0 clôturée
+-> Vague 1A : persistance et API du projet de vie derrière feature flag
+-> Vague 1B : triage et shell du Parcours MAKOKI
+-> orchestration progressive du profil, de RIASEC, de la carrière et des synthèses
 ```
 
-L’intégration au serveur et aux migrations reste séquentielle et fera l’objet de lots distincts.
+Les contrats fusionnés ne doivent pas être présentés comme une capacité produit déjà active. L’intégration au serveur, les migrations et l’interface restent des lots distincts, séquentiels et testés.
 
-## Mise à jour du registre
+## Règle de maintien
 
-Toute PR qui prend ou libère une réservation modifie ce fichier dans son premier commit ou dépend d’une PR de coordination dédiée. Une ligne n’est passée à `merged` qu’après observation de la fusion dans `main`.
+Toute évolution d’un contrat fusionné passe par une issue dédiée et une nouvelle version en cas de rupture. Les registres des vagues suivantes doivent continuer à distinguer ce qui est conçu, implémenté, exécuté, testé et validé.
