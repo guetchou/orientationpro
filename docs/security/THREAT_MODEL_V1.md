@@ -5,8 +5,8 @@ homologation ni autorisation d’activer le Parcours MAKOKI.
 
 ## Périmètre et preuves
 
-Le périmètre est reconstruit sur le `main` intégré `fae44f5`, qui contient
-#103 et #121. Il couvre
+Le périmètre est reconstruit sur le `main` intégré `de5a298`, qui contient
+#103, #121 et #123. Il couvre
 identité v1, Sessions, Profils, LifeProject, Résultats d’orientation,
 accompagnement humain, Documents CV, rôles privilégiés, interfaces legacy,
 MySQL, Docker et GitHub Actions. Les issues V3 #97, V4 #98 et infrastructure
@@ -27,14 +27,15 @@ Faits vérifiés :
 - workflows exigés avec permissions globales et par job en lecture seule ;
 - routes legacy regroupées derrière `LEGACY_API_ENABLED=false`, avec inventaire
   complet exigé et tests fail-closed par #121 ;
-- aucun rate limiter central raccordé au serveur Express ;
+- limiteurs centralisés par portée (`general`, `auth`, `expensive`) raccordés au
+  serveur Express, avec clés opaques et cardinalité mémoire bornée par #123 ;
 - logs legacy dispersés et non systématiquement expurgés.
 
 ## Actifs et frontières
 
 | Actif | Menace | Contrôle observé | État |
 |---|---|---|---|
-| Identité et Sessions | vol, rejeu, brute force | cookie HttpOnly, rotation, révocation, JWT borné | rate limit manquant |
+| Identité et Sessions | vol, rejeu, brute force | cookie HttpOnly, rotation, révocation, JWT borné, limites par portée | charge réelle et comportement multi-instance à prouver |
 | Profil et LifeProject | lecture inter-Compte, écriture obsolète, reprise divergente | ownership, version, historique, tests multi-Compte V3 | revalider après chaque raccord V5 |
 | Guidance | consentement rejoué, conseiller non autorisé, parole écrasée | attribution, permission, révocation chronologique, événements append-only | module non activé |
 | Résultats d’orientation | divulgation ou falsification | Session, Permission, calcul serveur | revalider dans le gate |
@@ -48,7 +49,8 @@ Faits vérifiés :
 ## Scénarios prioritaires
 
 1. Automatisation de login/reset/vérification : prise de Compte ou déni de
-   service. Exiger limites par IP et identité pseudonymisée, 429 et métriques.
+   service. Les limites par IP/Compte pseudonymisés et 429 sont testées ;
+   exiger charge réelle, métriques et validation multi-instance dans #112.
 2. Modification d’un identifiant : exposition inter-Compte. Exiger des tests
    MySQL multi-Compte négatifs sur chaque point d’entrée et chaque store.
 3. Reprise LifeProject hors ligne : écrasement d’une version plus récente.
@@ -82,8 +84,9 @@ logger runtime (#124) et `security:check` n’exécute pas encore
 `security:dependencies` (#126). Cette PR ne constitue donc ni une preuve
 d’absence de fuite runtime ni un audit complet des dépendances.
 
-Confiance : élevée sur la présence des contrats V3/V4 et du gate legacy #121
-dans `fae44f5`, moyenne sur leurs futurs raccordements V5, faible sur le retrait
-effectif des surfaces legacy. Une
+Confiance : élevée sur la présence des contrats V3/V4, du gate legacy #121 et
+des limites en mémoire #123 dans `de5a298`, moyenne sur leurs futurs
+raccordements V5, faible sur le retrait effectif des surfaces legacy et le
+comportement distribué. Une
 compilation ou une CI verte ne prouve pas l’absence d’exfiltration ni
 l’efficacité opérationnelle.
