@@ -8,6 +8,7 @@ import {
   createLifeProjectActionPlan,
   getLifeProjectOrchestration,
   getLifeProjectProgress,
+  moveLifeProjectToClarification,
   updateLifeProjectAction,
 } from './api';
 import type {
@@ -43,6 +44,14 @@ const moduleRoutes: Record<string, string> = {
   'career.exploration': '/careers',
 };
 
+const knownModuleLabels: Record<string, string> = {
+  'life-project.clarification': 'Clarifier la situation',
+  'profile.review': 'Relire le profil',
+  'profile.skills-review': 'Vérifier les compétences',
+  'orientation.interests': 'Explorer les intérêts',
+  'career.exploration': 'Explorer des possibilités',
+};
+
 const statusLabels: Record<LifeProjectActionStatus, string> = {
   planned: 'Planifiée',
   in_progress: 'En cours',
@@ -65,7 +74,12 @@ export default function AdaptiveJourneyPanel({
   onMessage: (message: string | null) => void;
 }) {
   const navigate = useNavigate();
-  const [moduleState, setModuleState] = useState<ModuleState>(() => readModuleState(envelope.project.id));
+  const initialModuleState = useMemo(
+    () => readModuleState(envelope.project.id),
+    [envelope.project.id],
+  );
+  const [moduleStates, setModuleStates] = useState<Record<string, ModuleState>>({});
+  const moduleState = moduleStates[envelope.project.id] || initialModuleState;
   const [orchestration, setOrchestration] = useState<LifeProjectOrchestration | null>(null);
   const [progress, setProgress] = useState<LifeProjectProgress | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +87,13 @@ export default function AdaptiveJourneyPanel({
   const [planTitle, setPlanTitle] = useState('Mon premier plan d’action');
   const [actionTitle, setActionTitle] = useState('');
   const [blockingReasons, setBlockingReasons] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setOrchestration(null);
+    setProgress(null);
+    setLoading(true);
+    setBlockingReasons({});
+  }, [envelope.project.id]);
 
   const load = useCallback(async () => {
     if (!online || cached) {
@@ -103,7 +124,10 @@ export default function AdaptiveJourneyPanel({
   }, [load, envelope.persistenceVersion]);
 
   const persistModuleState = (next: ModuleState) => {
-    setModuleState(next);
+    setModuleStates((current) => ({
+      ...current,
+      [envelope.project.id]: next,
+    }));
     localStorage.setItem(moduleStateKey(envelope.project.id), JSON.stringify(next));
   };
 
@@ -114,6 +138,13 @@ export default function AdaptiveJourneyPanel({
     });
   };
 
+  const resumeModule = (moduleId: string) => {
+    persistModuleState({
+      completed: moduleState.completed.filter((id) => id !== moduleId),
+      skipped: moduleState.skipped.filter((id) => id !== moduleId),
+    });
+  };
+
   const completeModule = (moduleId: string) => {
     persistModuleState({
       completed: [...new Set([...moduleState.completed, moduleId])],
@@ -121,10 +152,31 @@ export default function AdaptiveJourneyPanel({
     });
   };
 
-  const openModule = (moduleId: string) => {
+  const openModule = async (moduleId: string) => {
+    if (moduleId === 'life-project.clarification') {
+      if (!online || cached) {
+        onMessage('La clarification nécessite une connexion. Utilisez le bouton de clarification du projet pour enregistrer une reprise hors ligne.');
+        return;
+      }
+      setSaving(true);
+      onMessage(null);
+      try {
+        const updated = await moveLifeProjectToClarification(
+          envelope.project.id,
+          envelope.persistenceVersion,
+        );
+        onEnvelope(updated);
+        onMessage('Le projet est passé en clarification. Vous pouvez maintenant préciser les informations manquantes.');
+      } catch (error) {
+        onMessage(error instanceof Error ? error.message : 'La clarification n’a pas pu être enregistrée.');
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     const route = moduleRoutes[moduleId];
     if (route) navigate(route);
-    else document.getElementById('life-project-workspace')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const createPlan = async (event: FormEvent) => {
@@ -187,6 +239,14 @@ export default function AdaptiveJourneyPanel({
   };
 
   const next = orchestration?.recommendations.find((entry) => entry.moduleId === orchestration.nextModuleId) || null;
+  const nextActionAvailable = Boolean(next && (
+    next.moduleId === 'life-project.clarification'
+    || moduleRoutes[next.moduleId]
+  ));
+  const moduleLabel = (moduleId: string) => orchestration?.recommendations
+    .find((entry) => entry.moduleId === moduleId)?.label
+    || knownModuleLabels[moduleId]
+    || moduleId;
   const activeScenario = envelope.project.scenarios.find((scenario) => scenario.id === envelope.project.activeScenarioId);
   const hasActions = envelope.project.actionPlans.some((plan) => plan.items.length > 0);
   const hypotheses = useMemo(() => envelope.project.scenarios.flatMap((scenario) => [
@@ -215,11 +275,32 @@ export default function AdaptiveJourneyPanel({
                 {next.reasons.map((reason) => <li key={reason.code}>• {reason.message}</li>)}
               </ul>
               {next.publicLimitations.length > 0 && <p className="mt-3 text-xs text-muted-foreground">Limite : {next.publicLimitations[0]}</p>}
+              {!nextActionAvailable && (
+                <p className="mt-3 text-sm text-amber-800" role="status">
+                  Cette étape n’est pas encore raccordée à une action ou une page. Elle reste visible, mais ne peut pas être commencée depuis cet écran.
+                </p>
+              )}
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button type="button" onClick={() => openModule(next.moduleId)}><ArrowRight className="mr-2 h-4 w-4" />Commencer cette étape</Button>
+                <Button type="button" disabled={saving || !nextActionAvailable} onClick={() => void openModule(next.moduleId)}><ArrowRight className="mr-2 h-4 w-4" />Commencer cette étape</Button>
                 <Button type="button" variant="outline" onClick={() => skipModule(next.moduleId)}><PauseCircle className="mr-2 h-4 w-4" />Passer explicitement</Button>
                 <Button type="button" variant="ghost" onClick={() => completeModule(next.moduleId)}><CheckCircle2 className="mr-2 h-4 w-4" />Déjà réalisé</Button>
               </div>
+            </div>
+          )}
+          {moduleState.skipped.length > 0 && (
+            <div className="rounded-lg border border-dashed p-4 text-sm" data-testid="skipped-modules">
+              <p className="font-medium">Étapes passées</p>
+              <p className="mt-1 text-muted-foreground">Vous pouvez reprendre une étape passée. Ce choix reste propre à ce projet.</p>
+              <ul className="mt-3 space-y-2">
+                {moduleState.skipped.map((moduleId) => (
+                  <li key={moduleId} className="flex flex-wrap items-center justify-between gap-2">
+                    <span>{moduleLabel(moduleId)}</span>
+                    <Button type="button" size="sm" variant="outline" onClick={() => resumeModule(moduleId)}>
+                      Reprendre {moduleLabel(moduleId)}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           {orchestration?.recommendations.some((entry) => entry.availability !== 'available') && (
@@ -247,7 +328,7 @@ export default function AdaptiveJourneyPanel({
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border p-4"><h3 className="font-medium">Déclarations de départ</h3><p className="mt-2 text-sm text-muted-foreground">{envelope.project.purpose || 'Aucune déclaration résumée.'}</p></div>
           <div className="rounded-lg border p-4"><h3 className="font-medium">Hypothèses à vérifier</h3><p className="mt-2 text-sm text-muted-foreground">{hypotheses[0] || 'Les scénarios restent des possibilités, pas des verdicts.'}</p></div>
-          <div className="rounded-lg border p-4"><h3 className="font-medium">Informations vérifiées</h3><p className="mt-2 text-sm text-muted-foreground">Aucune information vérifiée supplémentaire n’est affichée dans cette version.</p></div>
+          <div className="rounded-lg border p-4" data-testid="verified-information-unavailable"><h3 className="font-medium">Informations vérifiées — capacité non raccordée</h3><p className="mt-2 text-sm text-muted-foreground">Aucune source, autorité, date de vérification, fraîcheur ou périmètre géographique n’est disponible dans ce parcours. Aucune donnée n’est donc présentée comme vérifiée.</p></div>
           <div className="rounded-lg border p-4"><h3 className="font-medium">Inconnues actuelles</h3><p className="mt-2 text-sm text-muted-foreground">{envelope.project.missingInformation[0] || 'Aucune inconnue explicitement enregistrée.'}</p></div>
         </CardContent>
       </Card>
