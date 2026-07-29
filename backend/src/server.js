@@ -16,6 +16,7 @@ const communicationRoutes = require('./routes/communication.routes');
 const jobScrapingRoutes = require('./routes/jobScraping.routes');
 const { createConfiguredAuthV1 } = require('./auth-v1/bootstrap');
 const { createCapabilitiesRouter } = require('./capabilities/router');
+const { createConfiguredDataRightsRouter } = require('./data-rights/bootstrap');
 const { createRiasecRouter } = require('./orientation/riasec/router');
 const { createRiasecStore } = require('./orientation/riasec/store');
 const { createCareerRouter } = require('./career/router');
@@ -126,6 +127,15 @@ if (process.env.AUTH_V1_ENABLED === 'true') {
     authenticate: authV1.authenticate,
   }));
 }
+if (process.env.DATA_RIGHTS_API_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('DATA_RIGHTS_API_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+  app.use('/api/v1/data-rights', expensiveLimiter, createConfiguredDataRightsRouter({
+    authV1,
+    env: process.env,
+  }));
+}
 if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
   if (!authV1) {
     throw new Error('LIFE_PROJECT_API_ENABLED requires AUTH_V1_ENABLED=true');
@@ -201,6 +211,13 @@ app.get('/', (req, res) => {
       session: 'GET /api/v1/auth/session',
       profile: 'GET|PUT /api/v1/profile',
       profileSyntheses: 'GET|POST /api/v1/profile/syntheses',
+    });
+  }
+  if (process.env.DATA_RIGHTS_API_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      dataExport: 'GET /api/v1/data-rights/export',
+      dataCorrection: 'PATCH /api/v1/data-rights/profile',
+      accountDeletion: 'POST /api/v1/data-rights/delete-account',
     });
   }
   if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
