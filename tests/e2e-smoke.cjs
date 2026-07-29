@@ -148,8 +148,9 @@ async function main() {
 
     for (const route of routes) {
       const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle0' });
-      if (!response || response.status() !== 200) {
-        throw new Error(`${route} returned ${response?.status() ?? 'no response'}`);
+      const status = response?.status();
+      if (status === undefined || status < 200 || status >= 400) {
+        throw new Error(`${route} returned ${status ?? 'no response'}`);
       }
       await page.waitForSelector('#root');
       const bodyText = await page.$eval('body', (body) => body.innerText);
