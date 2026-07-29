@@ -35,6 +35,7 @@ const createDataRightsService = ({
   riasecStore,
   cvStore,
   now = () => new Date(),
+  deletionReference = () => crypto.randomUUID(),
 } = {}) => {
   if (!pool || typeof pool.query !== 'function' || typeof pool.getConnection !== 'function') {
     throw new TypeError('DATA_RIGHTS_POOL_REQUIRED');
@@ -114,6 +115,10 @@ const createDataRightsService = ({
         const verified = await bcrypt.compare(currentPassword, account.passwordHash);
         if (!verified) throw new DataRightsError('REAUTHENTICATION_FAILED', 'Reauthentication failed.', 401);
         const deletedAt = now();
+        const reference = deletionReference();
+        if (typeof reference !== 'string' || !/^[A-Za-z0-9._:-]{8,128}$/.test(reference)) {
+          throw new DataRightsError('DELETION_REFERENCE_INVALID', 'Deletion reference generation failed.', 500);
+        }
 
         await connection.query('UPDATE auth_sessions SET revoked_at = COALESCE(revoked_at, ?) WHERE account_id = ?', [deletedAt, accountId]);
         await connection.query(
@@ -148,7 +153,7 @@ const createDataRightsService = ({
 
         return Object.freeze({
           schemaVersion: 'makoki.data-deletion-result.v1',
-          accountIdHash: crypto.createHash('sha256').update(accountId).digest('hex'),
+          deletionReference: reference,
           deletedAt: deletedAt.toISOString(),
           status: 'deleted',
         });
