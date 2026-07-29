@@ -25,7 +25,8 @@
     "test:content-verification": "node --test test/content-verification-workflow.test.js",
     "test:field-validation": "node --test test/field-validation-protocol.test.js",
     "test:equity-accessibility": "node --test test/equity-accessibility-protocol.test.js",
-    "test:guidance": "node --test test/guidance-policy.test.js"
+    "test:guidance": "node --test test/guidance-policy.test.js",
+    "test:security": "node --test test/security-redaction.test.js"
   },
   "keywords": [
     "orientation",
