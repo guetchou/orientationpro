@@ -1,0 +1,32 @@
+# Propriétaire de revue initial
+
+* @guetchou
+
+# Architecture, contrats et gouvernance
+/docs/architecture/ @guetchou
+/.github/CODEOWNERS @guetchou
+/.github/pull_request_template.md @guetchou
+
+# Frontières canoniques
+/backend/src/auth-v1/ @guetchou
+/backend/src/profile/ @guetchou
+/backend/src/orientation/ @guetchou
+/backend/src/career/ @guetchou
+/backend/src/cv/ @guetchou
+
+# Futurs domaines du Parcours MAKOKI
+/backend/src/life-project/ @guetchou
+/backend/src/education/ @guetchou
+/backend/src/employment/ @guetchou
+/backend/src/entrepreneurship/ @guetchou
+/backend/src/guidance/ @guetchou
+/src/features/life-project/ @guetchou
+/src/features/profile/ @guetchou
+/src/features/orientation/ @guetchou
+/src/features/education/ @guetchou
+
+# Points d’intégration à forte collision
+/src/router/AppRouter.tsx @guetchou
+/backend/src/server.js @guetchou
+/backend/migrations/ @guetchou
+/.github/workflows/ @guetchou
