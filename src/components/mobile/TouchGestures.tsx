@@ -1,5 +1,5 @@
 import { useGesture } from '@use-gesture/react';
-import { useSpring, animated } from 'react-spring';
+import { useSpring, animated } from '@react-spring/web';
 import { ReactNode, useRef } from 'react';
 
 interface TouchGesturesProps {
