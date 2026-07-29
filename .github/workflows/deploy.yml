@@ -97,3 +97,5 @@ jobs:
         run: node tests/e2e-career-profile-snapshot.cjs
       - name: Run authenticated profile hypotheses flow
         run: node tests/e2e-profile-hypotheses.cjs
+      - name: Run authenticated profile synthesis flow
+        run: node tests/e2e-profile-synthesis.cjs
