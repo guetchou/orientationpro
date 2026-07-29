@@ -2,33 +2,42 @@
 
 ## Décision actuelle
 
-**NO-GO.** Chromium automatisé ne remplace ni Firefox, ni WebKit/Safari, ni une
-revue avec technologie d’assistance. Aucun fichier de preuve ne doit être créé
-sans exécution réelle.
+**NO-GO.** Le 29 juillet 2026, Firefox Playwright et WebKit Playwright ont été
+exécutés sur la page de connexion et des contrôles limités. Ces exécutions ne
+remplacent ni Safari sur macOS, ni un lecteur d’écran, ni le parcours
+authentifié. Aucun fichier de preuve ne doit être créé sans exécution réelle.
 
 ## Matrice obligatoire
 
 | Cible | Scénarios minimaux | Preuve attendue |
 |---|---|---|
-| Firefox dernière version stable | connexion, `/parcours`, erreur, reprise | `firefox.json` |
-| WebKit/Safari cible | connexion, `/parcours`, formulaires, hors ligne | `webkit.json` |
+| Firefox Playwright | connexion, fail-closed de `/parcours`, reflow, reprise hors ligne limitée | `firefox.json` |
+| WebKit Playwright | connexion, fail-closed de `/parcours`, reflow, reprise hors ligne limitée | `webkit.json` |
+| Safari réel sur macOS | connexion, `/parcours` authentifié, formulaires, hors ligne | `safari-macos.json` |
 | lecteur d’écran | landmarks, titres, labels, erreurs, statut dynamique, focus | `screen-reader.json` |
 | clavier/zoom/contraste | tabulation complète, aucun piège, zoom 200 %, focus visible, contraste | `keyboard-zoom-contrast.json` |
 
-Chaque preuve suit `makoki.accessibility-evidence.v1`, nomme l’exécuteur,
-l’environnement, la date, les scénarios et les défauts. Un défaut bloquant non
-résolu force `no-go`.
+Chaque preuve suit `makoki.accessibility-evidence.v1` et contient le SHA Git
+complet, la commande exacte, l’exécuteur, l’environnement et son OS, les
+versions de l’application et de la cible, la date, les scénarios, le seuil, les
+limites, les défauts, ainsi que le chemin et le SHA-256 de l’artefact. Un défaut
+bloquant non résolu force `no-go`.
 
 ## Commande du gate
 
 ```bash
 node --test scripts/release/accessibility-evidence-gate.test.cjs
+npm run build
+npm run test:e2e:accessibility
 node scripts/release/accessibility-evidence-gate.cjs artifacts/accessibility
 ```
 
 L’absence d’un fichier, une preuve invalide ou un résultat autre que `pass`
 fait échouer la commande. La CI ne peut pas fabriquer une preuve manuelle de
-lecteur d’écran ou de Safari réel.
+lecteur d’écran ou de Safari réel. Le gate contrôle la structure et la
+traçabilité déclarée ; il ne peut pas, à lui seul, prouver qu’un fichier JSON
+correspond à une exécution réelle. Les rapports générés par l’outil et la revue
+humaine restent obligatoires.
 
 ## Scénarios de revue
 
@@ -45,4 +54,6 @@ lecteur d’écran ou de Safari réel.
 
 Les résultats doivent porter sur la version intégrée finale. Une exécution sur
 une branche antérieure ne satisfait pas le gate après rebase ou modification du
-parcours.
+parcours. L’exécution automatisée actuelle ne couvre pas Safari macOS, le
+lecteur d’écran, le zoom navigateur exact à 200 %, ni un parcours authentifié.
+Le reflow à 320 px est un contrôle utile, pas une preuve de zoom 200 %.

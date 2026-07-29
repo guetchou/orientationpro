@@ -133,7 +133,7 @@ export default function Login() {
             Continuer avec Facebook
           </a>
         </Button>
-        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400" aria-hidden="true">
+        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-600" aria-hidden="true">
           <span className="h-px flex-1 bg-gray-200" />
           ou avec ton mot de passe
           <span className="h-px flex-1 bg-gray-200" />
@@ -147,11 +147,11 @@ export default function Login() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Adresse e-mail</FormLabel>
+                <FormLabel htmlFor="login-email">Adresse e-mail</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <Input type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
+                    <Input id="login-email" type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -164,7 +164,7 @@ export default function Login() {
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between">
-                  <FormLabel>Mot de passe</FormLabel>
+                  <FormLabel htmlFor="login-password">Mot de passe</FormLabel>
                   <Link to="/forgot-password" className="text-sm font-medium text-emerald-700 hover:underline">
                     Mot de passe oublié ?
                   </Link>
@@ -173,6 +173,7 @@ export default function Login() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <Input
+                      id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
                       className="px-10"
@@ -181,7 +182,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((value) => !value)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-600"
                       aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

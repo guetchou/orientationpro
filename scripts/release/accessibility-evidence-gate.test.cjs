@@ -16,7 +16,13 @@ const createEvidence = (entry, overrides = {}) => ({
   defects: [],
   executedAt: '2026-07-29T00:00:00.000Z',
   executor: 'named-reviewer',
-  environment: 'isolated-preproduction-build',
+  commitSha: 'a'.repeat(40),
+  command: 'npm run test:e2e:accessibility',
+  environment: { name: 'isolated-preproduction-build', os: 'ubuntu-24.04' },
+  versions: { application: 'a'.repeat(40), target: 'firefox-150.0.2' },
+  threshold: 'zero unresolved blocking defects',
+  limitations: ['not a production impact measurement'],
+  artifact: { path: 'artifacts/accessibility/result.json', sha256: 'b'.repeat(64) },
   ...overrides,
 });
 
@@ -59,5 +65,22 @@ test('unresolved blocking defects force no-go even when result claims pass', asy
     const result = evaluateDirectory(directory);
     assert.equal(result.decision, 'no-go');
     assert.equal(result.results.find((entry) => entry.file === 'screen-reader.json').status, 'failed');
+  });
+});
+
+test('a claimed pass without traceable provenance forces no-go', async () => {
+  await withDirectory(async (directory) => {
+    for (const entry of REQUIRED_EVIDENCE) {
+      const overrides = entry.file === 'firefox.json'
+        ? { commitSha: undefined, command: undefined, artifact: undefined }
+        : {};
+      fs.writeFileSync(path.join(directory, entry.file), JSON.stringify(createEvidence(entry, overrides)));
+    }
+    const result = evaluateDirectory(directory);
+    const firefox = result.results.find((entry) => entry.file === 'firefox.json');
+    assert.equal(result.decision, 'no-go');
+    assert.equal(firefox.status, 'failed');
+    assert.match(firefox.failures.join('\n'), /commitSha/);
+    assert.match(firefox.failures.join('\n'), /artifact/);
   });
 });
