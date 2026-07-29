@@ -13,6 +13,7 @@ const atsRoutes = read('backend/src/routes/ats.routes.js');
 const server = read('backend/src/server.js');
 const appRouter = read('src/router/AppRouter.tsx');
 const readme = read('README.md');
+const deployScript = read('scripts/deploy-production-vps.sh');
 
 assert.match(scoring, /riasec-makoki-scoring-v2/u);
 assert.match(scoring, /SUPPORTED_ALGORITHM_VERSIONS/u);
@@ -31,6 +32,16 @@ assert.equal(exists('src/data/riasecQuestions.ts'), false);
 assert.doesNotMatch(readme, /RIASEC scientifiquement valid/u);
 assert.match(readme, /outil d’exploration des intérêts/iu);
 
+const migrationIndex = deployScript.indexOf('api node scripts/migrate.js up');
+const seedIndex = deployScript.indexOf('api node scripts/seed-riasec.js');
+const apiRestartIndex = deployScript.indexOf('up -d --no-deps --force-recreate api');
+assert.ok(migrationIndex >= 0, 'production deploy must apply migrations');
+assert.ok(seedIndex > migrationIndex, 'RIASEC seed must run after migrations');
+assert.ok(apiRestartIndex > seedIndex, 'RIASEC seed must finish before the API restarts');
+assert.match(deployScript, /riasec-seed-report\.json/u);
+assert.match(deployScript, /instrumentId.*riasec-makoki-fr-draft-v2/u);
+assert.match(deployScript, /itemCount.*60/u);
+
 console.log(JSON.stringify({
   status: 'passed',
   canonicalEngine: 'backend/src/orientation/riasec/scoring.js',
@@ -38,5 +49,6 @@ console.log(JSON.stringify({
   canonicalRoute: '/api/v1/orientation',
   retiredFrontendAnalyzers: 1,
   retiredLegacyAtsRoutes: 2,
+  productionSeed: 'migration -> seed-riasec -> api restart',
 }, null, 2));
 console.log('RIASEC SINGLE ENGINE VERIFICATION PASSED');
