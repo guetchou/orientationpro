@@ -20,7 +20,7 @@ Ce registre réserve les contrats, chemins et ordres de fusion. Il ne prouve pas
 | W0-A | Architecture cible | merged | — | `docs/architecture/MAKOKI_LIFE_PATH_ENGINE.md` | aucune | #67 |
 | W0-A2 | Audit `as-is` | merged | W0-A | `docs/architecture/MAKOKI_AS_IS_AUDIT.md` | aucune | #74 |
 | W0-E | Gouvernance multi-agents | merged | W0-A2 | `.github/CODEOWNERS`, `.github/pull_request_template.md`, documentation de gouvernance | aucune | #76 |
-| W0-B | Registre des capacités et feature flags | active | W0-E | `backend/src/capabilities/**`, raccord serveur et tests | aucune | issue #77, branche `agent/capability-registry-v1` |
+| W0-B | Registre des capacités et feature flags | merged | W0-E | `backend/src/capabilities/**`, raccord serveur et tests | aucune | #80 |
 | W0-C | Contrats `LifeProject`, `Scenario`, `ActionPlan` | planned | W0-E | `backend/src/life-project/**`, schémas partagés dédiés | aucune dans la première PR | issue #78 |
 | W0-D | Contrats `Fact`, `Hypothesis`, `Evidence` | planned | W0-E | module transversal à décider par ADR, sans modifier le profil au premier lot | aucune dans la première PR | issue #79 |
 
@@ -31,7 +31,7 @@ Aucune modification parallèle sans issue d’intégration :
 | Ressource | Statut | Propriétaire de fusion |
 |---|---|---|
 | `src/router/AppRouter.tsx` | libre, intégration seulement | mainteneur |
-| `backend/src/server.js` | réservé à W0-B jusqu’à fusion | W0-B / mainteneur |
+| `backend/src/server.js` | libre, intégration seulement | mainteneur |
 | `.github/workflows/**` | libre, intégration seulement | mainteneur |
 | `backend/migrations/**` | réservation obligatoire | mainteneur |
 | machine à états `LifeProject` | réservée à W0-C | W0-C |
@@ -50,10 +50,9 @@ La mention « prochain numéro » n’autorise aucune création. Le numéro exac
 ## Ordre immédiat
 
 ```text
-W0-B capacités/flags
--> W0-C contrats projet de vie ┐
-                              ├-> intégration Vague 1
--> W0-D provenance générique ┘
+W0-C contrats projet de vie ┐
+                            ├-> intégration Vague 1
+W0-D provenance générique ──┘
 ```
 
 W0-C et W0-D peuvent être préparés en parallèle avec des chemins sans chevauchement. Leur intégration au serveur et aux migrations reste séquentielle.
