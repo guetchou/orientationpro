@@ -31,6 +31,7 @@ const { createLifeProjectRouter } = require('./life-project/router');
 const { createLifeProjectService } = require('./life-project/service');
 const { createLifeProjectStore } = require('./life-project/store');
 const { createActionTrackingStore } = require('./life-project/action-tracking-store');
+const { mountLegacyApi } = require('./security/legacy-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -131,16 +132,23 @@ if (process.env.CV_API_V1_ENABLED === 'true') {
     uploadDirectory: process.env.CV_UPLOAD_DIR,
   }));
 }
-app.use('/api/cv', cvRoutes);
-app.use('/api/candidates', candidatesRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/ats', atsRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/messaging', messagingRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/matching', matchingRoutes);
-app.use('/api/communication', communicationRoutes);
-app.use('/api', jobScrapingRoutes);
+
+mountLegacyApi({
+  app,
+  env: process.env,
+  routes: {
+    cv: cvRoutes,
+    candidates: candidatesRoutes,
+    jobs: jobRoutes,
+    ats: atsRoutes,
+    appointments: appointmentRoutes,
+    messaging: messagingRoutes,
+    applications: applicationRoutes,
+    matching: matchingRoutes,
+    communication: communicationRoutes,
+    jobScraping: jobScrapingRoutes,
+  },
+});
 
 app.get('/', (req, res) => {
   const endpoints = {
@@ -244,6 +252,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`RIASEC API enabled: ${process.env.RIASEC_API_ENABLED === 'true'}`);
   console.log(`Career API enabled: ${process.env.CAREER_API_ENABLED === 'true'}`);
   console.log(`CV API v1 enabled: ${process.env.CV_API_V1_ENABLED === 'true'}`);
+  console.log(`Legacy API enabled: ${process.env.LEGACY_API_ENABLED === 'true'}`);
 });
 
 server.on('error', (err) => {
