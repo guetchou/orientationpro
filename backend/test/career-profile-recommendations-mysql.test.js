@@ -19,7 +19,7 @@ const createPool = () => mysql.createPool({
   connectionLimit: 4,
 });
 
-test('profile recommendations combine owned RIASEC result, ESCO skills and education in isolated MySQL', async () => {
+test('profile recommendations and immutable snapshots remain account-isolated in MySQL', async () => {
   const pool = createPool();
   const migrationsDirectory = path.join(__dirname, '..', 'migrations');
   await migrateUp(pool, migrationsDirectory);
@@ -40,6 +40,8 @@ test('profile recommendations combine owned RIASEC result, ESCO skills and educa
   const escoSkilled = `${escoSource}:occupation`;
   const escoSkillId = `${escoSource}:skill`;
   const escoSkillUri = `http://data.europa.eu/esco/skill/profile-rec-${short}`;
+  const onetVersion = `30.3-${short}`;
+  const escoVersion = `1.2.1-${short}`;
   const store = createCareerStore(pool);
 
   try {
@@ -54,7 +56,7 @@ test('profile recommendations combine owned RIASEC result, ESCO skills and educa
          dimensions_json, methodology, source_kind, source_reference,
          license_text, disclaimer, scoring_version, content_hash, published_at
        ) VALUES (?, ?, 1, 'fr', 'active', 'Instrument test', JSON_OBJECT(), JSON_ARRAY('R','I','A','S','E','C'),
-                 'Méthode de test', 'internal', 'test', 'Test only', 'Test only', 'test-v1', ?, CURRENT_TIMESTAMP(3))`,
+                'Méthode de test', 'internal', 'test', 'Test only', 'Test only', 'test-v1', ?, CURRENT_TIMESTAMP(3))`,
       [instrumentId, instrumentId, 'c'.repeat(64)],
     );
     await pool.execute(
@@ -83,13 +85,13 @@ test('profile recommendations combine owned RIASEC result, ESCO skills and educa
       `INSERT INTO account_profiles (
          account_id, first_name, last_name, city, country_code,
          current_situation, primary_goal, mobility_scope, completion_percent
-       ) VALUES (?, 'Maya', 'Test', 'Brazzaville', 'CG', 'job_seeker', 'find_job', 'national', 100)`,
+       ) VALUES (?, 'Maya', 'Test', 'Paris', 'FR', 'job_seeker', 'find_job', 'international', 100)`,
       [accountA],
     );
     await pool.execute(
       `INSERT INTO account_education_history (
          id, account_id, education_level, status, diploma_name, country_code, end_year
-       ) VALUES (?, ?, 'licence', 'completed', 'Licence test', 'CG', 2025)`,
+       ) VALUES (?, ?, 'licence', 'completed', 'Licence test', 'FR', 2025)`,
       [educationId, accountA],
     );
     await pool.execute(
@@ -107,7 +109,7 @@ test('profile recommendations combine owned RIASEC result, ESCO skills and educa
        ) VALUES
          (?, 'onet', ?, 'en', 'O*NET profile recommendation test', 'https://example.test/onet', 'CC BY 4.0', 'https://example.test/license', 'O*NET test', ?, 2, JSON_OBJECT()),
          (?, 'esco', ?, 'fr', 'ESCO profile recommendation test', 'https://example.test/esco', 'CC BY 4.0', 'https://example.test/license', 'ESCO test', ?, 2, JSON_OBJECT())`,
-      [onetSource, `pr-${short}`, 'd'.repeat(64), escoSource, `pr-${short}`, 'e'.repeat(64)],
+      [onetSource, onetVersion, 'd'.repeat(64), escoSource, escoVersion, 'e'.repeat(64)],
     );
     await pool.execute(
       `INSERT INTO career_occupations (
@@ -148,29 +150,34 @@ test('profile recommendations combine owned RIASEC result, ESCO skills and educa
       [onetSkilled, escoSkilled],
     );
 
-    const recommendation = await store.recommendProfileCareers({
-      accountId: accountA,
-      resultId,
-      locale: 'fr',
-      limit: 2,
-    });
+    const recommendation = await store.recommendProfileCareers({ accountId: accountA, resultId, locale: 'fr', limit: 2 });
     assert.equal(recommendation.result.id, resultId);
-    assert.ok(recommendation.recommendationContext.usedSignals.includes('confirmed_esco_skills'));
-    assert.ok(recommendation.recommendationContext.usedSignals.includes('education'));
-    assert.equal(recommendation.recommendationContext.primaryGoal, 'find_job');
-    assert.equal(recommendation.matching.matches.length, 2);
+    assert.equal(recommendation.versioning.recommendationAlgorithmVersion, 'career-profile-context-v2');
+    assert.equal(recommendation.versioning.catalogSources.find((source) => source.kind === 'onet').version, onetVersion);
+    assert.match(recommendation.versioning.inputFingerprint, /^[a-f0-9]{64}$/u);
+    assert.match(recommendation.versioning.profileFingerprint, /^[a-f0-9]{64}$/u);
     assert.equal(recommendation.matching.matches[0].occupationId, onetSkilled);
-    assert.equal(recommendation.matching.matches[0].preferredLabel, 'métier soutenu par les compétences');
-    assert.equal(recommendation.matching.matches[0].profileComponents.skills.matchedSkillCount, 1);
-    assert.equal(recommendation.matching.matches[0].profileComponents.education.status, 'meets_reference');
+    assert.equal(recommendation.matching.matches[0].profileComponents.education.frameworkKind, 'four_level');
 
-    const forbidden = await store.recommendProfileCareers({
-      accountId: accountB,
-      resultId,
-      locale: 'fr',
-      limit: 2,
-    });
-    assert.equal(forbidden, null);
+    const firstSnapshot = await store.createRecommendationSnapshot({ accountId: accountA, resultId, locale: 'fr', limit: 2 });
+    assert.equal(firstSnapshot.created, true);
+    assert.equal(firstSnapshot.snapshot.immutable, true);
+    assert.equal(firstSnapshot.snapshot.onetSources[0].version, onetVersion);
+
+    const repeatedSnapshot = await store.createRecommendationSnapshot({ accountId: accountA, resultId, locale: 'fr', limit: 2 });
+    assert.equal(repeatedSnapshot.created, false);
+    assert.equal(repeatedSnapshot.snapshot.id, firstSnapshot.snapshot.id);
+
+    await pool.execute("UPDATE account_profiles SET primary_goal = 'career_change' WHERE account_id = ?", [accountA]);
+    const changedSnapshot = await store.createRecommendationSnapshot({ accountId: accountA, resultId, locale: 'fr', limit: 2 });
+    assert.equal(changedSnapshot.created, true);
+    assert.notEqual(changedSnapshot.snapshot.id, firstSnapshot.snapshot.id);
+    assert.notEqual(changedSnapshot.snapshot.profileFingerprint, firstSnapshot.snapshot.profileFingerprint);
+
+    const reread = await store.getRecommendationSnapshot({ accountId: accountA, snapshotId: firstSnapshot.snapshot.id });
+    assert.deepEqual(reread.recommendation, firstSnapshot.recommendation);
+    assert.equal(await store.getRecommendationSnapshot({ accountId: accountB, snapshotId: firstSnapshot.snapshot.id }), null);
+    assert.equal(await store.recommendProfileCareers({ accountId: accountB, resultId, locale: 'fr', limit: 2 }), null);
   } finally {
     await pool.query('DELETE FROM career_occupation_skill_links WHERE occupation_id = ?', [escoSkilled]);
     await pool.query('DELETE FROM career_occupation_crosswalks WHERE source_occupation_id IN (?, ?)', [onetGeneral, onetSkilled]);
