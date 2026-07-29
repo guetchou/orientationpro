@@ -10,6 +10,13 @@ export type LifeProjectState =
   | 'confirmation'
   | 'reorientation';
 
+export type LifeProjectActionStatus =
+  | 'planned'
+  | 'in_progress'
+  | 'completed'
+  | 'blocked'
+  | 'cancelled';
+
 export interface Capability {
   id: string;
   status: 'active' | 'experimental' | 'disabled' | 'legacy';
@@ -36,8 +43,10 @@ export interface LifeProjectActionItem {
   id: string;
   title: string;
   description: string | null;
-  status: 'planned' | 'in_progress' | 'completed' | 'blocked' | 'cancelled';
+  status: LifeProjectActionStatus;
   dueAt: string | null;
+  completedAt?: string | null;
+  evidenceIds: string[];
   blockingReasons: string[];
 }
 
@@ -81,6 +90,32 @@ export interface LifeProjectSummary {
   actionPlanCount?: number;
   persistenceVersion: number;
   updatedAt?: string;
+}
+
+export interface LifeProjectProgressAction {
+  planId: string;
+  actionId: string;
+  title: string;
+  status: LifeProjectActionStatus;
+  dueAt: string | null;
+  position: number;
+  blockingReasons: string[];
+  evidenceIds: string[];
+}
+
+export interface LifeProjectProgress {
+  schemaVersion: string;
+  projectId: string;
+  state: 'not_started' | 'planned' | 'underway' | 'blocked' | 'completed';
+  counts: Record<LifeProjectActionStatus, number>;
+  nextActions: LifeProjectProgressAction[];
+  completedActions: LifeProjectProgressAction[];
+}
+
+export interface LifeProjectProgressEnvelope {
+  schemaVersion: string;
+  persistenceVersion: number;
+  progress: LifeProjectProgress;
 }
 
 export interface TriageDraft {
