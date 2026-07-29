@@ -78,3 +78,11 @@ test('changing a confirmed source changes the fingerprint', () => {
   second.skills[0].proficiency = 'expert';
   assert.notEqual(buildProfileSynthesis(first).inputFingerprint, buildProfileSynthesis(second).inputFingerprint);
 });
+
+test('technical timestamps do not change the semantic fingerprint', () => {
+  const first = input();
+  const second = input();
+  second.profile.updated_at = '2026-07-30T00:00:00.000Z';
+  second.skills[0].updated_at = '2026-07-30T00:00:00.000Z';
+  assert.equal(buildProfileSynthesis(first).inputFingerprint, buildProfileSynthesis(second).inputFingerprint);
+});
