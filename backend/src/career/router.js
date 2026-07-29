@@ -70,6 +70,27 @@ const createCareerRouter = ({ store, authenticate, hasPermission }) => {
     return res.status(200).json(result);
   }));
 
+  router.post('/recommendations/:resultId/snapshots', requirePermission(hasPermission, 'career.match.read_own'), route(async (req, res) => {
+    const result = await store.createRecommendationSnapshot({
+      accountId: req.auth.account.id,
+      resultId: req.params.resultId,
+      locale: requestedLocale(req),
+      includeLocallyExcluded: req.query.includeLocallyExcluded === 'true',
+      limit: req.query.limit,
+    });
+    if (!result) return res.status(404).json({ error: { code: 'ORIENTATION_RESULT_NOT_FOUND', message: 'The orientation result does not exist for the authenticated account.' } });
+    return res.status(result.created ? 201 : 200).json(result);
+  }));
+
+  router.get('/recommendation-snapshots/:snapshotId', requirePermission(hasPermission, 'career.match.read_own'), route(async (req, res) => {
+    const result = await store.getRecommendationSnapshot({
+      accountId: req.auth.account.id,
+      snapshotId: req.params.snapshotId,
+    });
+    if (!result) return res.status(404).json({ error: { code: 'CAREER_SNAPSHOT_NOT_FOUND', message: 'The recommendation snapshot does not exist for the authenticated account.' } });
+    return res.status(200).json(result);
+  }));
+
   return router;
 };
 

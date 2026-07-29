@@ -122,6 +122,7 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
+      '009_career_recommendation_snapshots',
       '008_profile_intelligence_v1',
       '007_social_auth',
       '006_esco_fr_catalog',
@@ -181,7 +182,7 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.equal(Number(authTables.table_count), 11);
     assert.equal(Number(orientationTables.table_count), 5);
-    assert.equal(Number(careerTables.table_count), 7);
+    assert.equal(Number(careerTables.table_count), 8);
     assert.equal(Number(cvTables.table_count), 1);
     assert.equal(Number(careerPermissions.permission_count), 2);
     assert.equal(Number(cvPermissions.permission_count), 4);

@@ -85,6 +85,42 @@ jobs:
       - name: Validate JavaScript syntax
         run: find src test -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
+  career-profile-functional:
+    name: Authenticated career snapshot flow
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: functional_root_password
+          MYSQL_DATABASE: orientationpro_career_functional
+          MYSQL_USER: orientationpro_functional
+          MYSQL_PASSWORD: functional_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pfunctional_root_password --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: orientationpro_functional
+      DB_PASSWORD: functional_password
+      DB_NAME: orientationpro_career_functional
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.4
+          cache: npm
+      - run: npm ci
+      - run: npm --prefix backend ci
+      - name: Run authenticated profile, RIASEC and snapshot flow
+        run: node tests/e2e-career-profile-snapshot.cjs
+
   e2e-smoke:
     name: Browser smoke test
     needs: web
