@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  createCareerRecommendationSnapshot,
   getCareerMatches,
   getCareerOccupation,
+  getCareerRecommendationSnapshot,
   getProfileCareerRecommendations,
   searchCareerOccupations,
 } from './careerApi';
@@ -43,5 +45,18 @@ describe('careerApi French presentation defaults', () => {
     expect(url).toContain('locale=fr');
     expect(url).toContain('includeLocallyExcluded=false');
     expect(url).toContain('limit=100');
+  });
+
+  it('creates and reads immutable snapshots through authenticated API calls', async () => {
+    mockedApiFetch.mockResolvedValueOnce({ snapshot: { id: 'snapshot-1' }, recommendation: {} });
+    await createCareerRecommendationSnapshot('result-1', { locale: 'fr', limit: 50 });
+    expect(mockedApiFetch).toHaveBeenLastCalledWith(
+      expect.stringContaining('/v1/career/recommendations/result-1/snapshots?'),
+      { method: 'POST' },
+    );
+
+    mockedApiFetch.mockResolvedValueOnce({ snapshot: { id: 'snapshot-1' }, recommendation: {} });
+    await getCareerRecommendationSnapshot('snapshot/1');
+    expect(mockedApiFetch).toHaveBeenLastCalledWith('/v1/career/recommendation-snapshots/snapshot%2F1');
   });
 });
