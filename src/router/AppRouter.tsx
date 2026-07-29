@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
 import { RouteTracker } from '@/components/analytics/RouteTracker';
+import { isLifeProjectFrontendEnabled } from '@/features/life-project/config';
 import {
   AdminRoute,
   CoachRoute,
@@ -84,6 +85,7 @@ const RecruteurDashboard = lazy(() => import('@/pages/recruteur/Dashboard'));
 const CoachDashboard = lazy(() => import('@/pages/coach/Dashboard'));
 const RhDashboard = lazy(() => import('@/pages/rh/Dashboard'));
 const SuperAdminDashboard = lazy(() => import('@/pages/superadmin/Dashboard'));
+const lifeProjectFrontendEnabled = isLifeProjectFrontendEnabled();
 
 export const AppRouter = () => (
   <Router>
@@ -145,7 +147,9 @@ export const AppRouter = () => (
             <Route path="/recruitment" element={<RecruitmentPage />} />
 
             <Route path="/dashboard" element={<UserRoute><Dashboard /></UserRoute>} />
-            <Route path="/parcours" element={<UserRoute><LifeProjectPage /></UserRoute>} />
+            {lifeProjectFrontendEnabled && (
+              <Route path="/parcours" element={<UserRoute><LifeProjectPage /></UserRoute>} />
+            )}
             <Route path="/test-results" element={<UserRoute><TestResults /></UserRoute>} />
             <Route path="/profile" element={<UserRoute><Profile /></UserRoute>} />
 
