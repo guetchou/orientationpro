@@ -7,6 +7,12 @@ const {
   createLifeProjectScenario,
 } = require('./contracts');
 const { selectActiveScenario, transitionLifeProject } = require('./state-machine');
+const {
+  ActionTrackingError,
+  createActionTrackingRecord,
+  summarizeActionProgress,
+  transitionActionTracking,
+} = require('./action-tracking');
 
 class LifeProjectServiceError extends Error {
   constructor(code, message, details = {}) {
@@ -42,6 +48,7 @@ const expectedVersion = (value) => {
 
 const createLifeProjectService = ({
   store,
+  actionTrackingStore = null,
   idFactory = crypto.randomUUID,
   clock = () => new Date(),
 } = {}) => {
@@ -58,6 +65,19 @@ const createLifeProjectService = ({
     notes,
   });
   const actor = (accountId) => ({ kind: 'user', id: accountId });
+
+  const requireTracking = () => {
+    if (!actionTrackingStore
+      || typeof actionTrackingStore.list !== 'function'
+      || typeof actionTrackingStore.get !== 'function'
+      || typeof actionTrackingStore.save !== 'function') {
+      throw new LifeProjectServiceError(
+        'ACTION_TRACKING_UNAVAILABLE',
+        'Action tracking is not configured for this service.',
+      );
+    }
+    return actionTrackingStore;
+  };
 
   const getRequired = async (accountId, projectId) => {
     const loaded = await store.get(accountId, projectId);
@@ -121,6 +141,85 @@ const createLifeProjectService = ({
     });
   };
 
+  const initialTracking = ({ projectId, planId, item, position, accountId, now }) => (
+    createActionTrackingRecord({
+      projectId,
+      planId,
+      actionId: item.id,
+      position,
+      statusHistory: [{
+        eventId: idFactory(),
+        from: null,
+        to: item.status,
+        occurredAt: now,
+        actor: actor(accountId),
+        reason: 'Action créée dans le plan.',
+      }],
+      createdAt: now,
+      updatedAt: now,
+    })
+  );
+
+  const syncTrackingForProject = async (accountId, project, now) => {
+    if (!actionTrackingStore) return;
+    const trackingStore = requireTracking();
+    const actionIds = [];
+    for (const plan of project.actionPlans) {
+      for (let index = 0; index < plan.items.length; index += 1) {
+        const item = plan.items[index];
+        actionIds.push(item.id);
+        const existing = await trackingStore.get(accountId, project.id, item.id);
+        let record = existing || initialTracking({
+          projectId: project.id,
+          planId: plan.id,
+          item,
+          position: index,
+          accountId,
+          now,
+        });
+        if (existing && existing.statusHistory.at(-1)?.to !== item.status) {
+          record = transitionActionTracking(existing, {
+            eventId: idFactory(),
+            to: item.status,
+            occurredAt: now,
+            actor: actor(accountId),
+            reason: 'Statut modifié lors de la mise à jour du plan.',
+          });
+        }
+        record = createActionTrackingRecord({
+          ...record,
+          planId: plan.id,
+          position: index,
+          updatedAt: now,
+        });
+        await trackingStore.save(accountId, record);
+      }
+    }
+    if (typeof trackingStore.deleteMissing === 'function') {
+      await trackingStore.deleteMissing(accountId, project.id, actionIds);
+    }
+  };
+
+  const findAction = (project, planId, actionId) => {
+    const plan = project.actionPlans.find((entry) => entry.id === planId);
+    if (!plan) {
+      throw new LifeProjectServiceError(
+        'LIFE_PROJECT_ACTION_PLAN_NOT_FOUND',
+        'The action plan does not exist in this project.',
+        { planId },
+      );
+    }
+    const item = plan.items.find((entry) => entry.id === actionId);
+    if (!item) {
+      throw new LifeProjectServiceError(
+        'LIFE_PROJECT_ACTION_NOT_FOUND',
+        'The action does not exist in this plan.',
+        { planId, actionId },
+      );
+    }
+    return { plan, item };
+  };
+
   return {
     async create(accountId, input = {}) {
       const now = timestamp();
@@ -150,6 +249,21 @@ const createLifeProjectService = ({
 
     async get(accountId, projectId) {
       return getRequired(accountId, projectId);
+    },
+
+    async getProgress(accountId, projectId) {
+      const loaded = await getRequired(accountId, projectId);
+      const trackingRecords = actionTrackingStore
+        ? await requireTracking().list(accountId, projectId)
+        : [];
+      return {
+        schemaVersion: 'makoki-life-project-progress-v1',
+        persistenceVersion: loaded.persistenceVersion,
+        progress: summarizeActionProgress({
+          project: loaded.project,
+          trackingRecords,
+        }),
+      };
     },
 
     async addScenario(accountId, projectId, input = {}, version) {
@@ -225,7 +339,9 @@ const createLifeProjectService = ({
         actionPlans: [...loaded.project.actionPlans, plan],
         updatedAt: now,
       });
-      return save(loaded, project, version);
+      const saved = await save(loaded, project, version);
+      await syncTrackingForProject(accountId, saved.project, now);
+      return saved;
     },
 
     async replaceActionPlan(accountId, projectId, planId, input = {}, version) {
@@ -254,7 +370,101 @@ const createLifeProjectService = ({
         )),
         updatedAt: now,
       });
-      return save(loaded, project, version);
+      const saved = await save(loaded, project, version);
+      await syncTrackingForProject(accountId, saved.project, now);
+      return saved;
+    },
+
+    async updateActionItem(accountId, projectId, planId, actionId, input = {}, version) {
+      const trackingStore = requireTracking();
+      const loaded = await getRequired(accountId, projectId);
+      const { plan, item } = findAction(loaded.project, planId, actionId);
+      const commandId = requiredString(input.commandId, 'commandId');
+      const now = timestamp();
+      const requestedStatus = input.status || item.status;
+      let tracking = await trackingStore.get(accountId, projectId, actionId);
+      tracking = tracking || initialTracking({
+        projectId,
+        planId,
+        item,
+        position: plan.items.findIndex((entry) => entry.id === actionId),
+        accountId,
+        now,
+      });
+
+      const replayed = tracking.statusHistory.find((entry) => entry.eventId === commandId);
+      if (replayed) {
+        if (replayed.to !== requestedStatus) {
+          throw new LifeProjectServiceError(
+            'LIFE_PROJECT_COMMAND_CONFLICT',
+            'The command identifier was already used for a different action status.',
+            { commandId, actionId },
+          );
+        }
+        return { ...loaded, replayed: true, actionTracking: tracking };
+      }
+
+      if (requestedStatus === 'blocked'
+        && (!Array.isArray(input.blockingReasons) || input.blockingReasons.length === 0)) {
+        throw new LifeProjectServiceError(
+          'LIFE_PROJECT_BLOCKING_REASON_REQUIRED',
+          'A blocked action requires at least one blocking reason.',
+          { actionId },
+        );
+      }
+
+      try {
+        tracking = transitionActionTracking(tracking, {
+          eventId: commandId,
+          to: requestedStatus,
+          occurredAt: now,
+          actor: actor(accountId),
+          reason: input.reason,
+        });
+      } catch (error) {
+        if (error instanceof ActionTrackingError) {
+          throw new LifeProjectServiceError(error.code, error.message, error.details);
+        }
+        throw error;
+      }
+
+      tracking = createActionTrackingRecord({
+        ...tracking,
+        position: input.position ?? tracking.position,
+        updatedAt: now,
+      });
+
+      const updatedItem = {
+        ...item,
+        title: input.title ?? item.title,
+        description: input.description === undefined ? item.description : input.description,
+        status: requestedStatus,
+        dueAt: input.dueAt === undefined ? item.dueAt : input.dueAt,
+        completedAt: requestedStatus === 'completed'
+          ? (input.completedAt || item.completedAt || now)
+          : null,
+        evidenceIds: input.evidenceIds ?? item.evidenceIds,
+        blockingReasons: requestedStatus === 'blocked'
+          ? input.blockingReasons
+          : (input.blockingReasons ?? []),
+        provenance: userProvenance(accountId, now, input.provenanceNotes || null),
+        updatedAt: now,
+      };
+      const replacementPlan = createActionPlan({
+        ...plan,
+        items: plan.items.map((entry) => entry.id === actionId ? updatedItem : entry),
+        updatedAt: now,
+      });
+      const project = createLifeProject({
+        ...loaded.project,
+        actionPlans: loaded.project.actionPlans.map((entry) => (
+          entry.id === planId ? replacementPlan : entry
+        )),
+        updatedAt: now,
+      });
+      const saved = await save(loaded, project, version);
+      await trackingStore.save(accountId, tracking);
+      return { ...saved, actionTracking: tracking };
     },
   };
 };
