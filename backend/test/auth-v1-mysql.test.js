@@ -102,6 +102,66 @@ test('account lifecycle persists in isolated MySQL through the HTTP interface', 
   }
 });
 
+test('verification resend rotates pending MySQL tokens and remains neutral for active and unknown accounts', async () => {
+  const pool = createPool();
+  await migrateUp(pool, path.join(__dirname, '..', 'migrations'));
+  const store = createMySqlAuthStore(pool);
+  const deliveredTokens = [];
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
+    store,
+    email: {
+      sendVerification: async ({ email, token }) => deliveredTokens.push({ email, token }),
+      sendPasswordReset: async () => undefined,
+    },
+    jwtSecret: 'mysql-test-jwt-secret-with-at-least-32-characters',
+    cookieSecure: false,
+  }));
+  const pendingEmail = `mysql-resend-pending-${Date.now()}@example.test`;
+  const activeEmail = `mysql-resend-active-${Date.now()}@example.test`;
+  const post = (requestPath, body) => request(app, requestPath, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  try {
+    assert.equal((await post('/api/v1/auth/register', {
+      email: pendingEmail,
+      password: 'correct horse battery staple',
+    })).status, 201);
+    const firstPendingToken = deliveredTokens.at(-1).token;
+
+    assert.equal((await post('/api/v1/auth/register', {
+      email: activeEmail,
+      password: 'correct horse battery staple',
+    })).status, 201);
+    const activeToken = deliveredTokens.at(-1).token;
+    assert.equal((await post('/api/v1/auth/verify-email', { token: activeToken })).status, 200);
+
+    const pendingResponse = await post('/api/v1/auth/verification/request', { email: pendingEmail });
+    const replacementToken = deliveredTokens.at(-1).token;
+    const activeResponse = await post('/api/v1/auth/verification/request', { email: activeEmail });
+    const unknownResponse = await post('/api/v1/auth/verification/request', {
+      email: `mysql-resend-unknown-${Date.now()}@example.test`,
+    });
+
+    assert.equal(pendingResponse.status, 202);
+    assert.equal(activeResponse.status, 202);
+    assert.equal(unknownResponse.status, 202);
+    assert.equal(await pendingResponse.text(), '');
+    assert.equal(await activeResponse.text(), '');
+    assert.equal(await unknownResponse.text(), '');
+    assert.equal(deliveredTokens.length, 3);
+    assert.notEqual(replacementToken, firstPendingToken);
+    assert.equal((await post('/api/v1/auth/verify-email', { token: firstPendingToken })).status, 400);
+    assert.equal((await post('/api/v1/auth/verify-email', { token: replacementToken })).status, 200);
+  } finally {
+    await pool.end();
+  }
+});
+
 test('password recovery changes credentials and revokes existing MySQL sessions', async () => {
   const pool = createPool();
   await migrateUp(pool, path.join(__dirname, '..', 'migrations'));

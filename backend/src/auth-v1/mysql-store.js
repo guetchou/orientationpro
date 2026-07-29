@@ -147,6 +147,34 @@ const createMySqlAuthStore = (pool) => ({
     );
   },
 
+  async issueVerificationToken({ email, tokenHash, expiresAt }) {
+    return transaction(pool, async (connection) => {
+      const [[row]] = await connection.query(
+        `SELECT id
+         FROM auth_accounts
+         WHERE email = ? AND status = 'pending_verification'
+         FOR UPDATE`,
+        [email],
+      );
+      if (!row) return null;
+
+      const now = new Date();
+      await connection.query(
+        `UPDATE auth_email_verification_tokens
+         SET consumed_at = ?
+         WHERE account_id = ? AND consumed_at IS NULL`,
+        [now, row.id],
+      );
+      await connection.query(
+        `INSERT INTO auth_email_verification_tokens
+         (token_hash, account_id, expires_at)
+         VALUES (?, ?, ?)`,
+        [tokenHash, row.id, expiresAt],
+      );
+      return findAccountById(connection, row.id);
+    });
+  },
+
   async consumeVerificationToken({ tokenHash, now }) {
     return transaction(pool, async (connection) => {
       const [[token]] = await connection.query(

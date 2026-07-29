@@ -190,6 +190,13 @@ export const requestPasswordReset = async (email: string): Promise<void> => {
   }, { auth: false });
 };
 
+export const requestEmailVerification = async (email: string): Promise<void> => {
+  await apiFetch('/v1/auth/verification/request', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  }, { auth: false });
+};
+
 export const confirmPasswordReset = async (token: string, password: string): Promise<void> => {
   await apiFetch('/v1/auth/password-reset/confirm', {
     method: 'POST',

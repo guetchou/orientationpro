@@ -156,6 +156,89 @@ test('email verification activates the account with the issued one-time token', 
   assert.equal(verificationRecord, null);
 });
 
+test('verification resend is neutral and only delivers a fresh 30 minute token to pending accounts', async () => {
+  const pending = {
+    id: 'account-pending',
+    email: 'pending@example.test',
+    status: 'pending_verification',
+    role: 'user',
+  };
+  const issuedTokens = [];
+  const sentMessages = [];
+  const store = {
+    issueVerificationToken: async (record) => {
+      issuedTokens.push(record);
+      return record.email === pending.email ? pending : null;
+    },
+  };
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
+    store,
+    email: { sendVerification: async (message) => sentMessages.push(message) },
+    jwtSecret: 'test-jwt-secret-with-at-least-32-characters',
+    cookieSecure: false,
+  }));
+  const resend = (email) => request(app, '/api/v1/auth/verification/request', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const before = Date.now();
+  const pendingResponse = await resend(' Pending@Example.Test ');
+  const unknownResponse = await resend('unknown@example.test');
+  const activeResponse = await resend('active@example.test');
+  const after = Date.now();
+
+  assert.equal(pendingResponse.status, 202);
+  assert.equal(unknownResponse.status, 202);
+  assert.equal(activeResponse.status, 202);
+  assert.equal(await pendingResponse.text(), '');
+  assert.equal(await unknownResponse.text(), '');
+  assert.equal(await activeResponse.text(), '');
+  assert.equal(sentMessages.length, 1);
+  assert.equal(sentMessages[0].email, pending.email);
+  assert.match(sentMessages[0].token, /^[A-Za-z0-9_-]+$/);
+  assert.equal(issuedTokens[0].email, pending.email);
+  assert.match(issuedTokens[0].tokenHash, /^[a-f0-9]{64}$/);
+  assert.ok(issuedTokens[0].expiresAt.getTime() >= before + (30 * 60 * 1000));
+  assert.ok(issuedTokens[0].expiresAt.getTime() <= after + (30 * 60 * 1000));
+});
+
+test('verification resend remains an empty 202 when delivery fails for a pending account', async () => {
+  const pending = {
+    id: 'account-pending',
+    email: 'pending@example.test',
+    status: 'pending_verification',
+    role: 'user',
+  };
+  const store = {
+    issueVerificationToken: async ({ email }) => email === pending.email ? pending : null,
+  };
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter({
+    store,
+    email: { sendVerification: async () => { throw new Error('SMTP unavailable'); } },
+    jwtSecret: 'test-jwt-secret-with-at-least-32-characters',
+    cookieSecure: false,
+  }));
+  const resend = (email) => request(app, '/api/v1/auth/verification/request', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const pendingResponse = await resend(pending.email);
+  const unknownResponse = await resend('unknown@example.test');
+
+  assert.equal(pendingResponse.status, 202);
+  assert.equal(await pendingResponse.text(), '');
+  assert.equal(pendingResponse.status, unknownResponse.status);
+  assert.equal(await unknownResponse.text(), '');
+});
+
 test('an active account starts a revocable session without exposing the refresh token in JSON', async () => {
   const jwtSecret = 'test-jwt-secret-with-at-least-32-characters';
   const passwordHash = await bcrypt.hash('correct horse battery staple', 4);

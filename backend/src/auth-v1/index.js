@@ -291,6 +291,30 @@ const createAuthRouter = ({
     return res.status(200).json({ account: publicAccount(account) });
   }));
 
+  router.post('/verification/request', route(async (req, res) => {
+    const normalizedEmail = normalizeEmail(req.body?.email);
+    const verificationToken = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const account = await store.issueVerificationToken({
+      email: normalizedEmail,
+      tokenHash: hashToken(verificationToken),
+      expiresAt: new Date(Date.now() + VERIFICATION_TTL_MS),
+    });
+
+    if (account) {
+      try {
+        await email.sendVerification({
+          accountId: account.id,
+          email: account.email,
+          token: verificationToken,
+        });
+      } catch {
+        // Keep the response indistinguishable from requests for unknown accounts.
+      }
+    }
+
+    return res.status(202).end();
+  }));
+
   router.post('/refresh', route(async (req, res) => {
     const refreshToken = readCookie(req, REFRESH_COOKIE);
     if (!refreshToken) {
