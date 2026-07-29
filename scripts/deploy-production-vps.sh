@@ -97,6 +97,13 @@ trap rollback_on_error ERR
 db_id_before=$(docker inspect -f '{{.Id}}' "${compose_project}-db-1")
 "${compose[@]}" run --rm --no-deps api node scripts/migrate.js up
 
+riasec_seed_report="${backup}/riasec-seed-report.json"
+"${compose[@]}" run --rm --no-deps \
+  api node scripts/seed-riasec.js | tee "${riasec_seed_report}"
+grep -Eq '"status":"(created|unchanged|updated-draft)"' "${riasec_seed_report}"
+grep -q '"instrumentId":"riasec-makoki-fr-draft-v2"' "${riasec_seed_report}"
+grep -q '"itemCount":60' "${riasec_seed_report}"
+
 # Remove only the temporary ESCO bootstrap created before the canonical importer existed.
 "${compose[@]}" run --rm --no-deps \
   -e EXPECTED_BOOTSTRAP_HASH="${bootstrap_hash}" \
