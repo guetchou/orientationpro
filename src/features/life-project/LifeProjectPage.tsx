@@ -92,11 +92,22 @@ const needs = [
 
 const fieldClass = 'mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
+const formatUpdatedAt = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date de mise à jour inconnue';
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+};
+
 export default function LifeProjectPage() {
+  const storedDraft = useMemo(() => readJson<TriageDraft>(DRAFT_KEY), []);
   const [capability, setCapability] = useState<'loading' | 'enabled' | 'disabled' | 'error'>('loading');
   const [projects, setProjects] = useState<LifeProjectSummary[]>([]);
   const [current, setCurrent] = useState<LifeProjectEnvelope | null>(null);
-  const [draft, setDraft] = useState<TriageDraft>(() => readJson<TriageDraft>(DRAFT_KEY) || emptyDraft);
+  const [draft, setDraft] = useState<TriageDraft>(() => storedDraft || emptyDraft);
+  const [draftStatus, setDraftStatus] = useState<'idle' | 'restored' | 'saved'>(() => storedDraft ? 'restored' : 'idle');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -188,16 +199,17 @@ export default function LifeProjectPage() {
     const next = { ...draft, [field]: value };
     setDraft(next);
     localStorage.setItem(DRAFT_KEY, JSON.stringify(next));
+    setDraftStatus('saved');
   };
 
   const createProject = async (event: FormEvent) => {
     event.preventDefault();
     if (!draft.situation || !draft.need || !draft.mobility || !draft.urgency) {
-      setError('Renseignez les quatre premières étapes du triage.');
+      setError('Renseignez les quatre premières étapes du triage. Vos réponses déjà saisies sont conservées.');
       return;
     }
     if (!online) {
-      setError('Le brouillon est conservé sur cet appareil. Une connexion est nécessaire pour créer le projet.');
+      setError('Le brouillon est conservé sur cet appareil. Reconnectez-vous pour créer le projet sans ressaisir vos réponses.');
       return;
     }
     setSaving(true);
@@ -213,8 +225,9 @@ export default function LifeProjectPage() {
       }, ...existing.filter((item) => item.id !== envelope.project.id)]);
       localStorage.removeItem(DRAFT_KEY);
       setDraft(emptyDraft);
+      setDraftStatus('idle');
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Le projet n’a pas pu être créé. Le brouillon reste enregistré.');
+      setError(saveError instanceof Error ? saveError.message : 'Le projet n’a pas pu être créé. Le brouillon reste enregistré sur cet appareil.');
     } finally {
       setSaving(false);
     }
@@ -305,6 +318,21 @@ export default function LifeProjectPage() {
     return actions.slice(0, 4);
   }, [current]);
 
+  const progressSummary = useMemo(() => {
+    if (!current) return null;
+    const actionItems = current.project.actionPlans.flatMap((plan) => plan.items);
+    const count = (status: string) => actionItems.filter((action) => action.status === status).length;
+    return {
+      activeScenario: current.project.scenarios.find((scenario) => scenario.id === current.project.activeScenarioId) || null,
+      scenarioCount: current.project.scenarios.length,
+      completed: count('completed'),
+      inProgress: count('in_progress'),
+      blocked: count('blocked'),
+      planned: count('planned'),
+      missing: current.project.missingInformation.length,
+    };
+  }, [current]);
+
   if (capability === 'loading' || (loading && !current)) {
     return <div className="flex min-h-[60vh] items-center justify-center" role="status"><Loader2 className="h-8 w-8 animate-spin" /><span className="sr-only">Chargement du Parcours MAKOKI</span></div>;
   }
@@ -330,6 +358,7 @@ export default function LifeProjectPage() {
         </header>
 
         {!online && <div role="status" className="flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900"><WifiOff className="mt-0.5 h-5 w-5 shrink-0" /><p>Vous êtes hors ligne. Le brouillon, la dernière version lisible et les modifications explicitement confirmées restent sur cet appareil.</p></div>}
+        {saving && <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-lg border bg-background p-3 text-sm"><Loader2 className="h-4 w-4 animate-spin" />Enregistrement en cours…</div>}
         {error && <div role="alert" className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><p>{error}</p></div>}
 
         {current ? (
@@ -358,6 +387,32 @@ export default function LifeProjectPage() {
                   {projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}
                 </select>
               </label>
+            )}
+
+            {progressSummary && (
+              <Card data-testid="life-project-progress-summary">
+                <CardHeader>
+                  <CardTitle>Mon avancée</CardTitle>
+                  <CardDescription>Cette synthèse montre uniquement des éléments enregistrés. Elle ne calcule ni potentiel, ni probabilité de réussite.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-lg border bg-background p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Étape actuelle</p><p className="mt-2 font-semibold">{stateLabels[current.project.state] || current.project.state}</p></div>
+                    <div className="rounded-lg border bg-background p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Scénario retenu</p><p className="mt-2 font-semibold">{progressSummary.activeScenario?.title || 'À choisir provisoirement'}</p></div>
+                    <div className="rounded-lg border bg-background p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Actions</p><p className="mt-2 font-semibold">{progressSummary.completed} terminée(s) · {progressSummary.inProgress} en cours</p></div>
+                    <div className="rounded-lg border bg-background p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">À clarifier</p><p className="mt-2 font-semibold">{progressSummary.missing} information(s)</p></div>
+                  </div>
+                  <ul className="space-y-2 text-sm" aria-label="Réalisations enregistrées">
+                    <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" /><span>Projet créé et disponible pour la reprise.</span></li>
+                    {progressSummary.scenarioCount > 0 && <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" /><span>{progressSummary.scenarioCount} scénario(s) enregistré(s) pour exploration.</span></li>}
+                    {progressSummary.activeScenario && <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" /><span>Choix provisoire enregistré : {progressSummary.activeScenario.title}.</span></li>}
+                    {progressSummary.completed > 0 && <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" /><span>{progressSummary.completed} action(s) marquée(s) comme terminée(s).</span></li>}
+                  </ul>
+                  {progressSummary.blocked > 0 && <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">{progressSummary.blocked} action(s) sont bloquée(s). Consultez la raison enregistrée dans la section « Actions et suivi » pour décider de la prochaine étape.</p>}
+                  {progressSummary.planned > 0 && <p className="text-sm text-muted-foreground">{progressSummary.planned} action(s) restent planifiée(s).</p>}
+                  <p className="text-xs text-muted-foreground">Dernière mise à jour connue : {formatUpdatedAt(current.project.updatedAt)}.</p>
+                </CardContent>
+              </Card>
             )}
 
             <Card>
@@ -442,7 +497,7 @@ export default function LifeProjectPage() {
           <Card data-testid="life-project-triage">
             <CardHeader><CardTitle className="flex items-center gap-2"><Compass className="h-5 w-5" />Où en êtes-vous aujourd’hui ?</CardTitle><CardDescription>Ces réponses sont des déclarations de départ, pas des faits vérifiés. Elles servent à créer une première hypothèse de parcours que vous pourrez corriger.</CardDescription></CardHeader>
             <CardContent>
-              <form className="space-y-5" onSubmit={(event) => void createProject(event)}>
+              <form className="space-y-5" aria-busy={saving} onSubmit={(event) => void createProject(event)}>
                 <label className="block text-sm font-medium">Ma situation actuelle
                   <select required className={fieldClass} value={draft.situation} onChange={(event) => updateDraft('situation', event.target.value)}><option value="">Choisir une situation</option>{situations.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                 </label>
@@ -458,7 +513,9 @@ export default function LifeProjectPage() {
                 <label className="block text-sm font-medium">Une précision utile <span className="font-normal text-muted-foreground">(facultatif)</span>
                   <textarea className={`${fieldClass} min-h-24`} value={draft.detail} onChange={(event) => updateDraft('detail', event.target.value)} maxLength={500} placeholder="Décrivez une contrainte, une idée, une responsabilité ou une question importante." />
                 </label>
-                <Button type="submit" className="w-full sm:w-auto" disabled={saving || !online}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Créer mon premier projet</Button>
+                {draftStatus !== 'idle' && <p role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-green-700"><CheckCircle2 className="h-4 w-4" />{draftStatus === 'restored' ? 'Brouillon retrouvé sur cet appareil.' : 'Brouillon enregistré sur cet appareil.'}</p>}
+                {!online && <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">La création est indisponible hors ligne. Vos réponses sont conservées : reconnectez-vous, puis utilisez le même bouton sans recommencer.</p>}
+                <Button type="submit" className="w-full sm:w-auto" disabled={saving || !online}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{saving ? 'Création en cours…' : 'Créer mon premier projet'}</Button>
               </form>
             </CardContent>
           </Card>
