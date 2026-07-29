@@ -50,9 +50,14 @@ export function AuthLayout({ headline, tagline, imageName, imageSide = 'left', c
           )}
         />
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
-          <Link to="/" className="flex w-fit items-center gap-3">
-            <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="44" height="44" className="h-11 w-11 shrink-0" />
-            <span className="text-xl font-bold tracking-tight">MAKOKI</span>
+          <Link to="/" className="flex w-fit items-center" aria-label="MAKOKI — accueil">
+            <img
+              src="/logo/makoki-wordmark-white.png"
+              alt="MAKOKI — Orientation, Compétences, Emploi"
+              width={399}
+              height={133}
+              className="h-10 w-auto"
+            />
           </Link>
 
           <div>
@@ -74,9 +79,14 @@ export function AuthLayout({ headline, tagline, imageName, imageSide = 'left', c
 
       {/* Zone formulaire */}
       <div className={cn('flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12', rightSide && 'lg:order-1')}>
-        <Link to="/" className="mb-8 flex w-fit items-center gap-3 lg:hidden">
-          <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="40" height="40" className="h-10 w-10 shrink-0" />
-          <span className="text-lg font-bold text-slate-900">MAKOKI</span>
+        <Link to="/" className="mb-8 flex w-fit items-center lg:hidden" aria-label="MAKOKI — accueil">
+          <img
+            src="/logo/makoki-wordmark.png"
+            alt="MAKOKI — Orientation, Compétences, Emploi"
+            width={405}
+            height={133}
+            className="h-9 w-auto"
+          />
         </Link>
 
         <motion.div

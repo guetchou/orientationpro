@@ -152,7 +152,10 @@ async function main() {
       }
       await page.waitForSelector('#root');
       const bodyText = await page.$eval('body', (body) => body.innerText);
-      if (!bodyText.includes('MAKOKI')) {
+      const brandInAltText = await page.evaluate(() =>
+        Array.from(document.images).some((img) => (img.alt || '').includes('MAKOKI')),
+      );
+      if (!bodyText.includes('MAKOKI') && !brandInAltText) {
         throw new Error(`${route} does not expose the MAKOKI brand`);
       }
       for (const claim of forbiddenPublicClaims) {

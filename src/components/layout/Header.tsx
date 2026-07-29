@@ -64,12 +64,14 @@ export const Header = () => {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-6">
-        <Link to="/" className="flex items-center gap-3">
-          <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="40" height="40" className="h-10 w-10 shrink-0" />
-          <span>
-            <span className="block text-xl font-bold tracking-tight text-slate-950">MAKOKI</span>
-            <span className="block text-xs text-slate-500">Orientation • Compétences • Emploi</span>
-          </span>
+        <Link to="/" className="flex items-center" aria-label="MAKOKI — accueil">
+          <img
+            src="/logo/makoki-wordmark.png"
+            alt="MAKOKI — Orientation, Compétences, Emploi"
+            width={405}
+            height={133}
+            className="h-9 w-auto lg:h-11"
+          />
         </Link>
 
         <nav className="hidden items-center gap-2 lg:flex" aria-label="Navigation principale">

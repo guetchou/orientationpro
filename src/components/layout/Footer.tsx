@@ -49,12 +49,14 @@ export const Footer = () => {
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_3fr]">
           <div className="max-w-sm">
-            <Link to="/" className="inline-flex items-center gap-3">
-              <img src="/logo/makoki-mark.png" alt="Logo MAKOKI" width="44" height="44" className="h-11 w-11 shrink-0" />
-              <span>
-                <span className="block text-2xl font-bold">MAKOKI</span>
-                <span className="block text-xs text-slate-400">Orientation • Compétences • Emploi</span>
-              </span>
+            <Link to="/" className="inline-flex items-center" aria-label="MAKOKI — accueil">
+              <img
+                src="/logo/makoki-wordmark-white.png"
+                alt="MAKOKI — Orientation, Compétences, Emploi"
+                width={399}
+                height={133}
+                className="h-11 w-auto"
+              />
             </Link>
             <p className="mt-5 text-sm leading-7 text-slate-300">
               MAKOKI aide chacun à mieux comprendre ses intérêts, explorer des métiers et préparer son parcours. Les résultats d’orientation organisent des pistes à approfondir ; ils ne garantissent ni emploi, ni salaire, ni aptitude à exercer un métier réglementé.
