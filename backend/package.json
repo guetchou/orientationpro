@@ -12,7 +12,7 @@
     "test:life-project:mysql": "node --test --test-concurrency=1 test/life-project-mysql.test.js test/life-project-action-tracking-mysql.test.js",
     "test:provenance": "node --test test/provenance-contracts.test.js",
     "test:career": "node --test test/career-matching.test.js test/career-preparation-model.test.js test/career-profile-version.test.js test/career-profile-matching.test.js test/onet-import.test.js test/esco-import.test.js test/career-store-fr.test.js test/career-api.test.js",
-    "test:mysql": "node --test --test-concurrency=1 test/auth-v1-mysql.test.js test/riasec-mysql.test.js test/career-catalog-mysql.test.js test/esco-catalog-mysql.test.js test/career-profile-recommendations-mysql.test.js test/cv-migration-mysql.test.js test/cv-store-mysql.test.js test/profile-mysql.test.js test/profile-synthesis-mysql.test.js test/life-project-mysql.test.js test/life-project-action-tracking-mysql.test.js",
+    "test:mysql": "node --test --test-concurrency=1 test/auth-v1-mysql.test.js test/riasec-mysql.test.js test/career-catalog-mysql.test.js test/esco-catalog-mysql.test.js test/career-profile-recommendations-mysql.test.js test/cv-migration-mysql.test.js test/cv-store-mysql.test.js test/profile-mysql.test.js test/profile-synthesis-mysql.test.js test/life-project-mysql.test.js test/life-project-action-tracking-mysql.test.js test/data-rights-mysql.test.js",
     "migrate:up": "node scripts/migrate.js up",
     "migrate:down": "node scripts/migrate.js down",
     "seed:riasec": "node scripts/seed-riasec.js",
@@ -32,7 +32,8 @@
     "test:observability": "node --test test/observability.test.js",
     "test:data-governance": "node --test test/data-governance.test.js",
     "test:security:observability": "node --test test/observability-runtime.test.js",
-    "test:data-rights": "node --test test/data-rights-service.test.js test/data-rights-router.test.js"
+    "test:data-rights": "node --test test/data-rights-service.test.js test/data-rights-router.test.js",
+    "test:data-rights:mysql": "node --test --test-concurrency=1 test/data-rights-mysql.test.js"
   },
   "keywords": [
     "orientation",
