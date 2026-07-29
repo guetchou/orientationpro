@@ -8,6 +8,7 @@ const dependencyRules = Object.freeze([
   Object.freeze({ capabilityId: 'orientation.riasec', key: 'RIASEC_API_ENABLED', requires: 'AUTH_V1_ENABLED' }),
   Object.freeze({ capabilityId: 'career.recommendations', key: 'CAREER_API_ENABLED', requires: 'AUTH_V1_ENABLED' }),
   Object.freeze({ capabilityId: 'cv.analysis-v1', key: 'CV_API_V1_ENABLED', requires: 'AUTH_V1_ENABLED' }),
+  Object.freeze({ capabilityId: 'life-project.core-v1', key: 'LIFE_PROJECT_API_ENABLED', requires: 'AUTH_V1_ENABLED' }),
 ]);
 
 const configurationErrors = (env = {}) => dependencyRules
@@ -61,6 +62,7 @@ const createCapabilityRegistry = (env = {}) => {
   const riasec = enabled(env, 'RIASEC_API_ENABLED');
   const career = enabled(env, 'CAREER_API_ENABLED');
   const cv = enabled(env, 'CV_API_V1_ENABLED');
+  const lifeProject = enabled(env, 'LIFE_PROJECT_API_ENABLED');
 
   const capabilities = [
     capability({
@@ -130,10 +132,16 @@ const createCapabilityRegistry = (env = {}) => {
     capability({
       id: 'life-project.core-v1',
       domain: 'life-project',
-      version: 'not-implemented',
-      status: 'disabled',
-      configured: false,
-      publicLimitations: ['Contrats et implémentation non encore livrés ; aucune capacité publique ne doit être annoncée.'],
+      version: 'makoki-life-project-api-v1',
+      status: lifeProject ? 'experimental' : 'disabled',
+      configured: lifeProject,
+      configurationKey: 'LIFE_PROJECT_API_ENABLED',
+      dependencies: ['identity.auth-v1'],
+      publicLimitations: [
+        'API technique expérimentale ; aucune interface Parcours MAKOKI n’est encore activée.',
+        'Le projet de vie organise des scénarios et actions sans garantir admission, emploi ou réussite.',
+        'Les déclarations utilisateur ne deviennent pas automatiquement des faits vérifiés.',
+      ],
     }),
   ];
 
