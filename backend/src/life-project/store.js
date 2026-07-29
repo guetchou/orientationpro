@@ -25,6 +25,7 @@ const isoDate = (value) => {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 };
 
+const databaseDate = (value) => value ? new Date(value) : null;
 const serialize = (value) => JSON.stringify(value);
 
 const assertHistoryChronology = (history) => {
@@ -35,7 +36,11 @@ const assertHistoryChronology = (history) => {
       throw new LifeProjectPersistenceError(
         'LIFE_PROJECT_HISTORY_ORDER_INVALID',
         'Life-project history must remain chronological.',
-        { index, previousEventId: history[index - 1].eventId, eventId: history[index].eventId },
+        {
+          index,
+          previousEventId: history[index - 1].eventId,
+          eventId: history[index].eventId,
+        },
       );
     }
   }
@@ -195,27 +200,25 @@ const loadProject = async (executor, accountId, projectId) => {
     updatedAt: isoDate(row.updated_at),
   }));
 
-  const project = createLifeProject({
-    schemaVersion: projectRow.schema_version,
-    id: projectRow.id,
-    ownerAccountId: projectRow.owner_account_id,
-    title: projectRow.title,
-    purpose: projectRow.purpose,
-    state: projectRow.state,
-    activeScenarioId: projectRow.active_scenario_id,
-    scenarios: scenarioRows.map(rowToScenario),
-    criteria: criterionRows.map(rowToCriterion),
-    actionPlans,
-    stateHistory: eventRows.map(rowToHistory),
-    missingInformation: parseJson(projectRow.missing_information_json, []),
-    uncertainty: parseJson(projectRow.uncertainty_json, {}),
-    provenance: parseJson(projectRow.provenance_json, {}),
-    createdAt: isoDate(projectRow.created_at),
-    updatedAt: isoDate(projectRow.updated_at),
-  });
-
   return {
-    project,
+    project: createLifeProject({
+      schemaVersion: projectRow.schema_version,
+      id: projectRow.id,
+      ownerAccountId: projectRow.owner_account_id,
+      title: projectRow.title,
+      purpose: projectRow.purpose,
+      state: projectRow.state,
+      activeScenarioId: projectRow.active_scenario_id,
+      scenarios: scenarioRows.map(rowToScenario),
+      criteria: criterionRows.map(rowToCriterion),
+      actionPlans,
+      stateHistory: eventRows.map(rowToHistory),
+      missingInformation: parseJson(projectRow.missing_information_json, []),
+      uncertainty: parseJson(projectRow.uncertainty_json, {}),
+      provenance: parseJson(projectRow.provenance_json, {}),
+      createdAt: isoDate(projectRow.created_at),
+      updatedAt: isoDate(projectRow.updated_at),
+    }),
     persistenceVersion: Number(projectRow.lock_version),
   };
 };
@@ -238,8 +241,8 @@ const insertProjectRow = async (connection, project, lockVersion = 1) => {
       serialize(project.uncertainty),
       serialize(project.provenance),
       lockVersion,
-      project.createdAt,
-      project.updatedAt,
+      databaseDate(project.createdAt),
+      databaseDate(project.updatedAt),
     ],
   );
 };
@@ -268,8 +271,8 @@ const insertScenarios = async (connection, project) => {
         serialize(scenario.missingInformation),
         serialize(scenario.uncertainty),
         serialize(scenario.provenance),
-        scenario.createdAt,
-        scenario.updatedAt,
+        databaseDate(scenario.createdAt),
+        databaseDate(scenario.updatedAt),
       ],
     );
   }
@@ -277,7 +280,7 @@ const insertScenarios = async (connection, project) => {
     await connection.execute(
       `INSERT INTO life_project_active_scenarios (project_id, scenario_id, selected_at)
        VALUES (?, ?, ?)`,
-      [project.id, project.activeScenarioId, project.updatedAt],
+      [project.id, project.activeScenarioId, databaseDate(project.updatedAt)],
     );
   }
 };
@@ -319,8 +322,8 @@ const insertActionPlans = async (connection, project) => {
         plan.status,
         serialize(plan.missingInformation),
         serialize(plan.provenance),
-        plan.createdAt,
-        plan.updatedAt,
+        databaseDate(plan.createdAt),
+        databaseDate(plan.updatedAt),
       ],
     );
     for (const item of plan.items) {
@@ -338,13 +341,13 @@ const insertActionPlans = async (connection, project) => {
           item.title,
           item.description,
           item.status,
-          item.dueAt,
-          item.completedAt,
+          databaseDate(item.dueAt),
+          databaseDate(item.completedAt),
           serialize(item.evidenceIds),
           serialize(item.blockingReasons),
           serialize(item.provenance),
-          item.createdAt,
-          item.updatedAt,
+          databaseDate(item.createdAt),
+          databaseDate(item.updatedAt),
         ],
       );
     }
@@ -366,7 +369,7 @@ const insertEvents = async (connection, projectId, events, offset = 0) => {
         event.eventType,
         event.from,
         event.to,
-        event.occurredAt,
+        databaseDate(event.occurredAt),
         event.actor.kind,
         event.actor.id,
         event.reason,
@@ -471,6 +474,7 @@ const createLifeProjectStore = (pool) => {
           [project.id, project.ownerAccountId],
         );
         if (!locked) return { found: false };
+
         const currentVersion = Number(locked.lock_version);
         if (currentVersion !== expectedVersion) {
           throw new LifeProjectPersistenceError(
@@ -503,7 +507,7 @@ const createLifeProjectStore = (pool) => {
             serialize(project.missingInformation),
             serialize(project.uncertainty),
             serialize(project.provenance),
-            project.updatedAt,
+            databaseDate(project.updatedAt),
             project.id,
             project.ownerAccountId,
           ],
