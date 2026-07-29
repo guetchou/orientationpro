@@ -159,7 +159,6 @@ const transitionActionTracking = (recordInput, transition = {}) => {
     }
     return record;
   }
-  if (current === destination) return record;
   const event = createActionStatusEvent({
     eventId: transition.eventId,
     from: current,
