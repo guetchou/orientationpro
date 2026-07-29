@@ -19,7 +19,7 @@ const navigation = [
     : []),
   { name: 'Découvrir mon profil', path: '/tests' },
   { name: 'Explorer les métiers', path: '/careers' },
-  { name: 'Offres', path: '/jobs' },
+  { name: 'Emploi', path: '/jobs' },
   { name: 'Ressources', path: '/blog' },
 ];
 
