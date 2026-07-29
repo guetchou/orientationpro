@@ -245,7 +245,7 @@ describe('LifeProjectPage', () => {
     expect(screen.getByText(/Cette proposition ne décide pas/)).toBeInTheDocument();
     expect(screen.getByText('Déclarations de départ')).toBeInTheDocument();
     expect(screen.getByText('Hypothèses à vérifier')).toBeInTheDocument();
-    expect(screen.getByText('Informations vérifiées')).toBeInTheDocument();
+    expect(screen.getByText(/Informations vérifiées/)).toBeInTheDocument();
     expect(screen.getByText('Inconnues actuelles')).toBeInTheDocument();
   });
 
