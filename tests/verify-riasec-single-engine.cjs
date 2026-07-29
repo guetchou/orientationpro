@@ -18,7 +18,7 @@ assert.match(scoring, /riasec-makoki-scoring-v2/u);
 assert.match(scoring, /SUPPORTED_ALGORITHM_VERSIONS/u);
 assert.doesNotMatch(scoring, /confidenceScore|reliability|validity|percentile_ranking/u);
 assert.match(instrument, /status: 'draft'/u);
-assert.match(instrument, /ne constitue.*instrument psychométrique validé/isu);
+assert.match(instrument, /n’est pas présentée comme psychométriquement validée/iu);
 assert.match(instrument, /originale.*MAKOKI/isu);
 assert.match(orientationRouter, /scoreRiasec/u);
 assert.match(server, /app\.use\('\/api\/v1\/orientation', createRiasecRouter/u);
