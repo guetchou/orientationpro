@@ -128,7 +128,7 @@ export default function Home() {
 
   return (
     <main className="bg-white">
-      <section className="relative isolate overflow-hidden">
+      <section className="relative isolate overflow-hidden bg-emerald-950">
         <div className="absolute inset-0 -z-10">
           <Photo
             name="hero-orientation-campus"
@@ -230,15 +230,18 @@ export default function Home() {
 
           <ol className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
-              <Reveal key={step.number} delay={index * 0.06}>
-                <li className="h-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+              <li
+                key={step.number}
+                className="h-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+              >
+                <Reveal delay={index * 0.06}>
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">
                     {step.number}
                   </span>
                   <h3 className="mt-5 text-lg font-semibold text-stone-900">{step.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-stone-600">{step.description}</p>
-                </li>
-              </Reveal>
+                </Reveal>
+              </li>
             ))}
           </ol>
         </div>

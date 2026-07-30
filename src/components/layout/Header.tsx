@@ -94,12 +94,12 @@ export const Header = () => {
           <button
             type="button"
             onClick={openSearch}
-            aria-label="Rechercher (Ctrl+K)"
+            aria-keyshortcuts="Control+K"
             className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 transition-colors hover:border-emerald-300 hover:text-slate-700"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-4 w-4" aria-hidden="true" />
             <span>Rechercher</span>
-            <kbd className="ml-1 rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-400">⌘K</kbd>
+            <kbd aria-hidden="true" className="ml-1 rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-600">⌘K</kbd>
           </button>
           {user ? (
             <DropdownMenu>
