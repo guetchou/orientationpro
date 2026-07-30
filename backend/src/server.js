@@ -34,6 +34,7 @@ const { createLifeProjectStore } = require('./life-project/store');
 const { createActionTrackingStore } = require('./life-project/action-tracking-store');
 const { createCongoLocalOptionProvider } = require('./life-project/local-options-cg');
 const { mountLegacyApi } = require('./security/legacy-api');
+const { CorsOriginRejectedError, createCorsOriginValidator } = require('./security/cors-policy');
 const {
   createMemoryRateLimiter,
   createOpaqueKeyFactory,
@@ -84,10 +85,7 @@ const expensiveLimiter = createMemoryRateLimiter({
 });
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
-    return callback(new Error('Origin not allowed by CORS policy'));
-  },
+  origin: createCorsOriginValidator(allowedOrigins),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'If-Match', 'X-Request-Id'],
@@ -273,13 +271,16 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  const statusCode = err?.type === 'entity.too.large' ? 413 : 500;
+  const isCorsRejection = err instanceof CorsOriginRejectedError;
+  const statusCode = isCorsRejection ? err.statusCode : err?.type === 'entity.too.large' ? 413 : 500;
   httpObservability.logError({ request: req, error: err, statusCode });
 
   res.status(statusCode).json({
     success: false,
-    code: statusCode === 413 ? 'REQUEST_ENTITY_TOO_LARGE' : 'INTERNAL_SERVER_ERROR',
-    message: statusCode === 413 ? 'La requête dépasse la taille autorisée' : 'Erreur interne du serveur',
+    code: isCorsRejection ? err.code : statusCode === 413 ? 'REQUEST_ENTITY_TOO_LARGE' : 'INTERNAL_SERVER_ERROR',
+    message: isCorsRejection
+      ? 'Origine non autorisée par la politique CORS'
+      : statusCode === 413 ? 'La requête dépasse la taille autorisée' : 'Erreur interne du serveur',
     timestamp: new Date().toISOString(),
     path: req.path,
     method: req.method,
