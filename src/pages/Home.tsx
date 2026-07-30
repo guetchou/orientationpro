@@ -1,5 +1,4 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -13,22 +12,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Reveal } from '@/components/motion/Reveal';
 import { CompassMarker, TrajectoryLine } from '@/components/home/PathMotifs';
-
-const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => {
-  const shouldReduceMotion = useReducedMotion();
-  if (shouldReduceMotion) return <div>{children}</div>;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.6, ease: 'easeOut', delay }}
-    >
-      {children}
-    </motion.div>
-  );
-};
 
 const Photo = ({
   name,
@@ -133,6 +118,7 @@ export default function Home() {
       'Makoki vous aide à mieux comprendre votre profil, explorer des métiers et identifier des prochaines étapes qui ont du sens pour vous.',
     path: '/',
   });
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <main className="bg-white">
@@ -150,9 +136,9 @@ export default function Home() {
 
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28 lg:py-36">
           <motion.div
-            initial={{ opacity: 0, y: 28 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, ease: 'easeOut' }}
             className="max-w-2xl text-white"
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-900/80 px-4 py-1.5 text-sm font-medium text-amber-100">

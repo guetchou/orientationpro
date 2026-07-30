@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, LogOut, Menu, Search, User, X } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { isAuthRoute } from '@/lib/authRoutes';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const shouldReduceMotion = useReducedMotion();
   const location = useLocation();
 
   useEffect(() => {
@@ -148,6 +149,7 @@ export const Header = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
+            transition={shouldReduceMotion ? { duration: 0 } : undefined}
             className="overflow-hidden border-t border-slate-200 bg-white lg:hidden"
           >
             <div className="space-y-1 px-4 py-4">
