@@ -11,6 +11,8 @@ const V1_ROUTE_TEMPLATES = Object.freeze([
   '/api/v1/profile/syntheses',
   '/api/v1/life-projects',
   '/api/v1/life-projects/:projectId',
+  '/api/v1/life-projects/:projectId/diagnostic',
+  '/api/v1/life-projects/:projectId/recommendations',
   '/api/v1/life-projects/:projectId/orchestration',
   '/api/v1/life-projects/:projectId/progress',
   '/api/v1/life-projects/:projectId/scenarios',
