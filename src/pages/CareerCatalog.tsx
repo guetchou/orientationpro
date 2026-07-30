@@ -35,6 +35,12 @@ export default function CareerCatalog() {
           getCareerCatalogSummary(),
           searchCareerOccupations({ query, locale: 'fr', riasecOnly, limit: PAGE_SIZE, offset }),
         ]);
+        // Défense contre une réponse "réussie" mais de forme inattendue (voir #165) :
+        // sans ce contrôle, un payload non-tableau plante plus loin sur
+        // `sources.find(...)` au lieu d'afficher la carte d'erreur.
+        if (!Array.isArray(catalogSources) || !Array.isArray(results)) {
+          throw new Error('Réponse du catalogue incomplète.');
+        }
         if (active) {
           setSources(catalogSources);
           setOccupations(results);

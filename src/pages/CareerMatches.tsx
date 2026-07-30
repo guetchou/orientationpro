@@ -36,6 +36,10 @@ export default function CareerMatches() {
       if (!resultId) { setError('Identifiant de résultat manquant.'); setLoading(false); return; }
       try {
         const response = await getProfileCareerRecommendations(resultId, { locale: 'fr', limit: 50 });
+        // Défense contre une réponse "réussie" mais de forme inattendue (voir #165) :
+        // sans ce contrôle, un `response.result` manquant plante plus loin sur
+        // `data.result.normalizedScores` au lieu d'afficher la carte d'erreur.
+        if (!response?.result) throw new Error('Réponse de classement incomplète.');
         if (active) setData(response);
       } catch (caught) {
         if (active) setError(errorMessage(caught));
