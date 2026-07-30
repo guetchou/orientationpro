@@ -58,6 +58,7 @@ export default function CareerCatalog() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-10">
+      <h1 className="sr-only">Explorer les métiers en français</h1>
       <div className="mx-auto min-w-0 max-w-6xl space-y-6">
         <Button asChild variant="ghost"><Link to="/orientation/results"><ArrowLeft className="mr-2 h-4 w-4" />Mes résultats</Link></Button>
         <Card className="border-0 shadow-xl">
