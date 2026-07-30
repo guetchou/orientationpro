@@ -119,11 +119,14 @@ for service in api web; do
   fi
 done
 
-compose=(
+rollback_compose=(
   docker compose
   --project-name "${compose_project}"
   --env-file "${env_file}"
   -f "${compose_file}"
+)
+compose=(
+  "${rollback_compose[@]}"
   -f "${compose_override}"
 )
 "${compose[@]}" config --quiet
@@ -146,7 +149,7 @@ rollback_on_error() {
       docker image tag "${rollback_image}" "${compose_project}-${service}:latest"
     fi
   done
-  "${compose[@]}" up -d --no-deps --force-recreate api web || true
+  "${rollback_compose[@]}" up -d --no-deps --force-recreate api web || true
   exit "${status}"
 }
 trap rollback_on_error ERR
