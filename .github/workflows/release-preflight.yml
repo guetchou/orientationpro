@@ -20,18 +20,36 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Validate VPS preflight syntax
-        run: bash -n scripts/cv-release-preflight-vps.sh
+      - name: Validate release scripts and Projet de vie flags
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash -n scripts/cv-release-preflight-vps.sh
+          bash -n scripts/deploy-production-vps.sh
+          bash -n scripts/release/activate-life-project-flags.sh
+
+          cp scripts/release/environments/production.env /tmp/production-life-project.env
+          bash scripts/release/activate-life-project-flags.sh /tmp/production-life-project.env
+
+          grep -qx 'AUTH_V1_ENABLED=true' /tmp/production-life-project.env
+          grep -qx 'LIFE_PROJECT_API_ENABLED=true' /tmp/production-life-project.env
+          grep -qx 'VITE_LIFE_PROJECT_ENABLED=true' /tmp/production-life-project.env
+          grep -qx 'FEATURE_CHATBOT=false' /tmp/production-life-project.env
+          grep -qx 'FEATURE_ANALYTICS=false' /tmp/production-life-project.env
+          grep -qx 'RIASEC_API_ENABLED=false' /tmp/production-life-project.env
+          grep -qx 'CAREER_API_ENABLED=false' /tmp/production-life-project.env
+          grep -qx 'CV_API_V1_ENABLED=false' /tmp/production-life-project.env
 
       - uses: docker/setup-buildx-action@v3
 
-      - name: Build web image
+      - name: Build web image with Projet de vie enabled
         run: |
           docker build \
             --pull \
             --tag makoki-web:preflight \
             --build-arg VITE_BACKEND_URL=https://example.invalid \
             --build-arg VITE_API_URL=https://example.invalid/api \
+            --build-arg VITE_LIFE_PROJECT_ENABLED=true \
             .
 
       - name: Build API image
