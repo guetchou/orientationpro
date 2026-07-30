@@ -4,17 +4,21 @@ on:
   push:
     branches:
       - agent/makoki-life-comparison-facts-v2
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.head_ref == 'agent/makoki-life-comparison-facts-v2' || github.ref_name == 'agent/makoki-life-comparison-facts-v2'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
 
       - name: Apply structured comparison facts
@@ -247,16 +251,11 @@ jobs:
 
           workflow = Path('.github/workflows/agent-life-comparison-facts-v2.yml')
           workflow.unlink()
+          Path('.agent-life-comparison-trigger').unlink(missing_ok=True)
           PY
 
           git config user.name "makoki-agent"
           git config user.email "makoki-agent@users.noreply.github.com"
-          git add backend/src/life-project/recommendation-contracts.js \
-            backend/src/life-project/recommendation-engine.js \
-            backend/test/life-project-recommendation-engine.test.js \
-            src/features/life-project/advisor-types.ts \
-            src/features/life-project/AdvisorLifeProjectPage.tsx \
-            src/features/life-project/AdvisorLifeProjectPage.test.tsx \
-            .github/workflows/agent-life-comparison-facts-v2.yml
+          git add -A
           git commit -m "feat(life-project): exposer les faits structurés de comparaison"
-          git push origin HEAD:${{ github.ref_name }}
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
