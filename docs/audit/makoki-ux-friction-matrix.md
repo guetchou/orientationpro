@@ -49,7 +49,7 @@ Pages : `RiasecTest.tsx` (`/tests/riasec`), `RiasecResults.tsx` (`/orientation/r
 
 | Axe | Page | Comportement observé | Preuve | Risque | Règle UX | Correction proposée | Priorité | Statut |
 |---|---|---|---|---|---|---|---|---|
-| 24. Titres | RiasecTest | **Aucun `<h1>`** sur les écrans intro/erreur/question — uniquement `CardTitle` (h3) | `RiasecTest.tsx:283` (intro), `246` (erreur) | Page de tâche la plus utilisée du produit sans repère de niveau 1 | Hiérarchie de titres continue | Ajouter un `<h1>` | **P0** (page centrale du produit) | INSPECTÉ |
+| 24. Titres | RiasecTest | ~~Aucun `<h1>`~~ **Corrigé (PR #148)** — `<h1 className="sr-only">Test RIASEC</h1>` ajouté dans les 4 branches de rendu | `RiasecTest.tsx` (loading/error/intro/questions) | Résolu | Hiérarchie de titres continue | — | **P0** | **VALIDÉ** (2 tests Playwright réels, firefox + webkit, 12/12) |
 | 24. Titres | RiasecResult | **Aucun `<h1>`** — `CardTitle` (h3) uniquement | `RiasecResult.tsx:150` | Idem | Idem | Ajouter un `<h1>` | P1 | INSPECTÉ |
 | 24. Titres | CareerMatches | **Aucun `<h1>`** — `CardTitle` (h3) uniquement | `CareerMatches.tsx:78` | Idem | Idem | Ajouter un `<h1>` | P1 | INSPECTÉ |
 | 24. Titres | RiasecResults | Conforme — `<h1>` présent | `RiasecResults.tsx:57` | — | — | Aucune | — | INSPECTÉ |
@@ -65,7 +65,8 @@ Composants : `AdaptiveProfileWizard.tsx`, `ProfileHypothesisPanel.tsx`, `Profile
 
 | Axe | Comportement observé | Preuve | Risque | Règle UX | Correction proposée | Priorité | Statut |
 |---|---|---|---|---|---|---|---|
-| 24. Titres | **Aucun `<h1>`** sur toute la page `/profile` — le premier titre est `CardTitle` « Mon profil intelligent » (h3) | `AdaptiveProfileWizard.tsx:356` | Page de tâche centrale (identité, objectif, formation, compétences) sans repère de niveau 1 | Hiérarchie de titres continue | Ajouter un `<h1>` | **P0** (page centrale, 5-6 étapes) | INSPECTÉ |
+| 24. Titres | ~~Aucun `<h1>`~~ **Corrigé (PR #148)** — `<h1 className="sr-only">Mon profil</h1>` ajouté une fois au niveau de `Profile.tsx` (pas dans `AdaptiveProfileWizard`, qui n'est qu'un des 3 sous-composants de la page) | `Profile.tsx` | Résolu | Hiérarchie de titres continue | — | **P0** | **VALIDÉ** (2 tests Playwright réels, firefox + webkit, 12/12) |
+| 24. Titres (résiduel) | Saut h1→h3 : le nouveau `<h1>` est immédiatement suivi d'un `<h3>` (`CardTitle`), pas d'un `<h2>` intermédiaire | `AdaptiveProfileWizard.tsx:356`, `ProfileHypothesisPanel.tsx`, `ProfileSynthesisPanel.tsx` | Faible — règle axe `heading-order` est une *best-practice* (`cat.semantics`), non mappée à un critère WCAG (pas de tag `wcag2a`/`wcag2aa`) | Hiérarchie continue si possible sans changement disproportionné | Changer le niveau sémantique de `CardTitle` dans ces contextes précis, ou accepter le saut — décision de composant partagé, hors périmètre du lot #148 | P2 | INSPECTÉ (trouvé en écrivant le test du lot #148, non corrigé) |
 | 5. Préremplissage | E-mail du compte préaffiché en lecture seule dans l'étape identité | `AdaptiveProfileWizard.tsx:392` | — | Anticipation contextuelle | Aucune — conforme sur ce champ | — | INSPECTÉ |
 | 7. Autosauvegarde entre étapes | Chaque étape sauvegarde côté serveur au clic sur « Enregistrer et continuer » (`saveProfileDetails`) — mais **aucune persistance locale au sein d'une étape en cours de saisie** | `AdaptiveProfileWizard.tsx:265` (`saveProfileDetails`), aucune occurrence de `localStorage` dans le fichier | Fermeture d'onglet ou perte de session **pendant** la saisie d'une étape (avant le clic « Enregistrer et continuer ») perd les champs en cours | Assistant multi-étapes → sauvegarde/restauration | Ajouter un brouillon local par étape (pattern déjà éprouvé dans `RiasecTest.tsx`), **après confirmation par un test de perte de données réel** (fermer l'onglet à l'étape 3, revenir) | P1 | INSPECTÉ, comportement de perte **non confirmé en conditions réelles** — hypothèse à valider avant de coder |
 | 17. Suppression réversible sans confirmation ni annulation | Retrait d'une formation ou d'une compétence déclarée : suppression **immédiate**, aucune confirmation, **aucune option Annuler** | `AdaptiveProfileWizard.tsx:416` (formation), `432` (compétence) | Perte accidentelle d'une saisie sur un clic malencontreux, sans recours | Suppression locale réversible → immédiate **avec** Annuler (pas de confirmation bloquante — ce serait le mauvais correctif) | Ajouter un toast « Compétence retirée — Annuler » (pattern déjà cohérent avec le poids réel de l'action : ne pas ajouter de modale de confirmation, ce serait disproportionné) | P2 | INSPECTÉ |
@@ -118,6 +119,15 @@ Pages : `CvOptimizerPage.tsx` (`/cv-optimizer`), `CvUploadStep.tsx`, `JobTargetS
 | 10. Double-soumission | JobTargetStep | `disabled={submitting}` sur les boutons Retour/Analyser | `JobTargetStep.tsx:64,69,76` | — | Aucune — conforme | — | INSPECTÉ |
 | 10. Double-soumission | CvUploadStep | Bouton « Continuer » gardé par `disabled={!file}` uniquement — **vérifié non problématique** : ce bouton ne déclenche qu'une transition d'état locale synchrone (`setPhase('target')`), pas d'appel réseau ; l'analyse réelle se fait plus tard dans `JobTargetStep`, correctement gardée | `CvUploadStep.tsx:110`, `CvOptimizerPage.tsx:83-95` (le composant est démonté dès le changement de phase) | — | Aucune — hypothèse initiale de bug infirmée après vérification, documentée ici pour éviter qu'un futur agent reparte sur une fausse piste | — | INSPECTÉ |
 
+## J. Découvertes en écrivant les tests du lot #148 (h1 RiasecTest/Profile)
+
+Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés en exécutant un scan axe complet sur `/tests/riasec` et `/profile` avant de restreindre le scan aux règles de structure de titres. Non corrigés dans le lot #148 pour ne pas mélanger les catégories de défauts — à traiter dans des lots séparés.
+
+| Axe | Page(s) | Comportement observé | Preuve | Risque | Règle UX | Correction proposée | Priorité | Statut |
+|---|---|---|---|---|---|---|---|---|
+| 24. Structure de liste | Global (composant Sonner / toasts, donc potentiellement toute page affichant un toast) | `<li role="status">` à l'intérieur du `<ol class="toaster">` casse la sémantique de liste pour axe (règle `list`, `only-listitems`) | Scan axe réel sur `/tests/riasec` avec session simulée, violation `id: "list"`, cible `.toaster` | Lecteur d'écran : la liste de notifications n'est pas annoncée comme une liste cohérente | Structure de liste valide (`<li>` sans rôle qui neutralise `listitem`, ou wrapper hors `<ol>`) | À investiguer dans le composant Sonner partagé (`src/components/ui/sonner.tsx` ou équivalent) — probablement globale, pas spécifique à une page | P1 (composant partagé, large surface) | VALIDÉ (violation axe réelle observée, non corrigée) |
+| 24. Contraste | `/profile` (`AdaptiveProfileWizard`) | Badge « Complété à X % » (`variant="secondary"`, `bg-secondary text-secondary-foreground`) ne respecte pas le ratio de contraste WCAG AA 4,5:1 | Scan axe réel, violation `id: "color-contrast"`, cible `.text-2xl` (le badge), `expectedContrastRatio: "4.5:1"` | Lisibilité réduite, notamment en malvoyance | Contraste AA minimum sur le texte informatif | Ajuster la classe de couleur du badge `secondary` dans ce contexte, ou le variant utilisé | P1 | VALIDÉ (violation axe réelle observée, non corrigée) |
+
 ## I. Hors périmètre de cette passe
 
 - Tableaux de bord internes (`admin/*`, `conseiller/dashboard`, `recruteur/dashboard`, `coach/dashboard`, `rh/dashboard`, `superadmin/dashboard`) et outils ATS admin — non audités.
@@ -131,45 +141,53 @@ Pages : `CvOptimizerPage.tsx` (`/cv-optimizer`), `CvUploadStep.tsx`, `JobTargetS
 
 ## Synthèse des écarts prioritaires
 
-| # | Constat | Pages concernées | Priorité |
-|---|---|---|---|
-| 1 | **Absence systémique de `<h1>` sur les pages dont le titre visuel repose sur `CardTitle`** — 7 pages confirmées : RiasecTest, AdaptiveProfileWizard, VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail | 7 pages, dont les 2 plus centrales du produit (RiasecTest, AdaptiveProfileWizard) | **P0/P1** |
-| 2 | Aucune persistance locale dans `AdaptiveProfileWizard` pendant la saisie d'une étape (contrairement à `RiasecTest`) | `/profile` | P1 (hypothèse de perte de données à confirmer avant correction) |
-| 3 | Aucune persistance dans le flux CV Optimizer — perte du fichier/de la description en cas de rafraîchissement | `/cv-optimizer` | P1 |
-| 4 | Suppression immédiate sans option Annuler pour les compétences/formations du profil | `/profile` | P2 |
-| 5 | Champ téléphone sans explication d'usage | `/profile` | P2 |
-| 6 | CORS mal configuré → 500 au lieu de 403 | backend, register/login | P2 |
-| 7 | Bug `getByLabel` sur `/register` (déjà signalé PR #145, non corrigé) | `/register` | P1 |
+| # | Constat | Pages concernées | Priorité | Statut |
+|---|---|---|---|---|
+| 1 | **Absence systémique de `<h1>` sur les pages dont le titre visuel repose sur `CardTitle`** — 7 pages confirmées | 7 pages | **P0/P1** | **2/7 corrigées (PR #148 : RiasecTest, Profile)** ; 5 restantes (VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail) |
+| 2 | Aucune persistance locale dans `AdaptiveProfileWizard` pendant la saisie d'une étape (contrairement à `RiasecTest`) | `/profile` | P1 (hypothèse de perte de données à confirmer avant correction) | Non traité |
+| 3 | Aucune persistance dans le flux CV Optimizer — perte du fichier/de la description en cas de rafraîchissement | `/cv-optimizer` | P1 | Non traité |
+| 4 | Suppression immédiate sans option Annuler pour les compétences/formations du profil | `/profile` | P2 | Non traité |
+| 5 | Champ téléphone sans explication d'usage | `/profile` | P2 | Non traité |
+| 6 | CORS mal configuré → 500 au lieu de 403 | backend, register/login | P2 | Non traité |
+| 7 | Bug `getByLabel` sur `/register` (déjà signalé PR #145, non corrigé) | `/register` | P1 | Non traité |
+| 8 | Structure de liste invalide dans le composant Sonner (toasts) — trouvé en testant le lot 1 | Global | P1 | Non traité |
+| 9 | Contraste insuffisant du badge « Complété à X % » | `/profile` | P1 | Non traité |
+| 10 | Saut de niveau h1→h3 résiduel après le lot 1 (règle best-practice, pas un critère WCAG) | `/profile` (et probablement d'autres pages utilisant `CardTitle` juste après un `<h1>`) | P2 | Non traité |
 
 ## PR proposées (indépendantes, non mélangées)
 
-1. **Lot accessibilité — `<h1>` manquants + extension des tests a11y.** Ajout d'un `<h1>` (visible ou `sr-only` selon le design) sur `RiasecTest.tsx` et `AdaptiveProfileWizard.tsx` en priorité (P0/P1, pages les plus centrales), extension de `tests/accessibility/browser-accessibility.spec.ts` pour couvrir ces deux parcours. **Premier lot demandé, à traiter maintenant.**
-2. **Lot accessibilité (suite) — `<h1>` sur VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail.** Même nature que le lot 1, séparé pour rester dans le même périmètre (accessibilité des titres) sans le mélanger à d'autres corrections, mais peut être une PR distincte pour rester petite et review-able.
-3. **Lot `Register.tsx` — association label/input.** Correction ciblée du bug `FormControl`/`id` déjà signalé. Indépendant de l'accessibilité des titres (nature différente : association ARIA, pas structure de titres).
+1. ~~**Lot accessibilité — `<h1>` manquants (RiasecTest, Profile) + extension des tests a11y.**~~ **Fait — PR #148, fusionnable.** `<h1 className="sr-only">` ajouté sur les 2 pages les plus centrales, 2 nouveaux tests Playwright réels (firefox + webkit, 12/12).
+2. **Lot accessibilité (suite) — `<h1>` sur VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail.** Même nature que le lot 1, non commencé.
+3. **Lot `Register.tsx` — association label/input.** Correction ciblée du bug `FormControl`/`id` déjà signalé. Indépendant.
 4. **Lot autosauvegarde `AdaptiveProfileWizard`.** Conditionné à une validation préalable de la perte de données réelle (voir Validations nécessaires). Ne pas coder avant cette validation.
-5. **Lot persistance `CvOptimizerPage`.** Indépendant du lot 4 malgré la similarité conceptuelle — pages et code différents, pas de bénéfice à les mélanger.
-6. **Lot suppression réversible avec Annuler (`AdaptiveProfileWizard`).** Indépendant — nature différente (pattern d'annulation, pas de persistance).
+5. **Lot persistance `CvOptimizerPage`.** Indépendant du lot 4 malgré la similarité conceptuelle.
+6. **Lot suppression réversible avec Annuler (`AdaptiveProfileWizard`).** Indépendant.
 7. **Lot CORS backend.** Indépendant — backend, pas frontend.
+8. **Lot structure de liste Sonner (toasts).** Nouveau, trouvé en testant le lot 1. Composant partagé, large surface d'impact — à investiguer avant de coder (combien de pages affichent réellement un toast ? le correctif est-il local au composant ou nécessite-t-il de changer l'usage de `role="status"` sur le `<li>` ?).
+9. **Lot contraste badge `secondary`.** Nouveau, trouvé en testant le lot 1. Vérifier si `bg-secondary`/`text-secondary-foreground` est utilisé ailleurs avec le même problème avant de corriger uniquement ce cas.
+10. **Lot saut h1→h3 résiduel.** Nouveau, priorité basse (best-practice, pas un critère WCAG) — nécessite de changer le niveau sémantique de `CardTitle` dans des contextes précis, décision de composant partagé à ne pas prendre à la légère.
 
 ## Dépendances entre lots
 
-- Le lot 1 (h1 RiasecTest/AdaptiveProfileWizard) n'a aucune dépendance — peut démarrer immédiatement.
+- Le lot 1 est fait (PR #148). Les lots 2, 3, 6, 7, 8, 9, 10 sont indépendants entre eux et n'ont pas de dépendance sur le lot 1.
 - Le lot 4 (autosauvegarde profil) **dépend d'une validation préalable** (test de perte de données réel) — ne pas l'implémenter avant.
-- Les lots 2, 3, 6, 7 sont indépendants entre eux et du lot 1.
+- Le lot 8 (Sonner) et le lot 9 (contraste badge) touchent des composants partagés — vérifier leur usage repo-wide avant de coder, pas seulement sur la page où ils ont été trouvés.
 - Aucun lot ne dépend des 8 axes encore non vérifiés (onboarding détaillé, préremplissage au-delà de ce qui est documenté, hiérarchie visuelle au-delà des titres, etc.) — ces axes restent à auditer avant de proposer d'autres lots.
 
 ## Risques
 
-- Le lot 1 touche des pages à fort trafic (test RIASEC, profil) — risque de régression visuelle si le `<h1>` ajouté n'est pas correctement stylé (`sr-only` recommandé pour ne pas perturber la direction artistique existante, à confirmer en revue).
+- Le lot 1 (fait) n'a introduit aucune régression visuelle (`sr-only`, aucun changement visible), confirmé par build + tests.
 - Le lot 4 (autosauvegarde profil) ne doit pas être codé sur une simple intuition — l'instruction explicite est de vérifier avant d'agir automatiquement.
+- Les lots 8 et 9 touchent des composants partagés (Sonner, Badge) — risque de régression plus large que les lots précédents si le correctif n'est pas vérifié sur tous les usages existants.
 - Aucun des lots proposés ne touche de code de suppression irréversible ou de données financières — risque produit globalement faible.
 
 ## Validations nécessaires avant d'aller plus loin
 
 - Confirmer par un test réel (fermer l'onglet à l'étape 3 de l'assistant profil, revenir) que la perte de données décrite au lot 4 se produit effectivement, avant de la corriger.
-- Étendre la couverture a11y CI au-delà de `/login` uniquement après le lot 1, pour que les nouveaux tests aient quelque chose à vérifier.
-- Revue humaine sur le choix `sr-only` vs `<h1>` visible pour chaque page du lot 1 (décision de direction artistique, pas seulement technique).
+- Lot 1 fait — la couverture a11y CI reste à étendre aux 5 pages restantes du constat n°1 (lot 2).
+- Revue humaine sur le choix `sr-only` (fait pour le lot 1) vs `<h1>` visible pour les 5 pages du lot 2 (décision de direction artistique, pas seulement technique).
+- Avant les lots 8/9 : recenser tous les usages de Sonner et du badge `secondary` dans le dépôt pour évaluer la surface réelle du correctif.
 
 ## Recommandation argumentée sur le prochain lot
 
-**Lot 1 (h1 RiasecTest + AdaptiveProfileWizard + extension tests a11y)**, pour trois raisons : (1) c'est le constat le mieux étayé de cette passe (7 pages confirmées par lecture directe du composant `CardTitle`, preuve non ambiguë) ; (2) il touche les deux pages où l'utilisateur passe le plus de temps concentré, donc le bénéfice d'accessibilité est le plus élevé ; (3) c'est un changement à risque de régression faible (ajout d'un élément, pas de modification de logique), cohérent avec la demande explicite de ne pas mélanger les catégories de correctifs. Les axes encore non vérifiés (onboarding détaillé, préremplissage au-delà de l'e-mail, hiérarchie visuelle au-delà des titres, responsive à 320px, reduced motion au-delà de Home) restent à auditer en parallèle ou juste après, avant de proposer les lots suivants — conformément à la demande de ne pas fermer l'Issue tant que tous les axes n'ont pas été évalués.
+**Lot 1 fait (PR #148).** Pour la suite, poursuivre l'audit des 8 axes encore non vérifiés (voir Issue #140) **avant** de choisir les prochains gros correctifs, conformément à la demande explicite. Une fois cet audit complété, les candidats les mieux étayés pour le prochain lot de correction sont, par ordre de valeur/risque : (1) le lot 2 (h1 sur les 5 pages restantes — même nature que le lot 1, risque tout aussi faible, bénéfice immédiat) ; (2) la validation de perte de données sur `AdaptiveProfileWizard` (lot 4), qui doit précéder tout code d'autosauvegarde. Le lot 8 (Sonner) mérite d'être recensé rapidement (surface d'impact) avant d'être priorisé, sans être nécessairement le prochain codé.
