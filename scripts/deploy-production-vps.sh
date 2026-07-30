@@ -53,18 +53,43 @@ cp -a "${source_checkout}/.vps/." "${release}/.vps/"
 install -m 644 "${source_checkout}/backend/Dockerfile.vps" "${release}/backend/Dockerfile.vps"
 install -m 644 "${source_checkout}/backend/.dockerignore" "${release}/backend/.dockerignore"
 install -m 600 "${source_checkout}/.env.vps" "${env_file}"
-sed -i "s/^APP_VERSION=.*/APP_VERSION=${sha}/" "${env_file}"
-grep -q "^APP_VERSION=${sha}$" "${env_file}"
 
 mkdir -m 700 "${backup}"
+cp -a "${env_file}" "${backup}/env-before.vps"
+chmod 600 "${backup}/env-before.vps"
+
+sed -i "s/^APP_VERSION=.*/APP_VERSION=${sha}/" "${env_file}"
+grep -q "^APP_VERSION=${sha}$" "${env_file}"
+bash "${release}/scripts/release/activate-life-project-flags.sh" "${env_file}"
+
+for expected in \
+  AUTH_V1_ENABLED=true \
+  LIFE_PROJECT_API_ENABLED=true \
+  VITE_LIFE_PROJECT_ENABLED=true; do
+  grep -qx "${expected}" "${env_file}"
+done
+
+for expected in \
+  LEGACY_AUTH_ENABLED=false \
+  LEGACY_API_ENABLED=false \
+  DATA_RIGHTS_API_ENABLED=false \
+  RIASEC_API_ENABLED=false \
+  RIASEC_ALLOW_DRAFT=false \
+  CAREER_API_ENABLED=false \
+  CV_API_V1_ENABLED=false \
+  FEATURE_CHATBOT=false \
+  FEATURE_ANALYTICS=false; do
+  grep -qx "${expected}" "${env_file}"
+done
+
 docker exec "${compose_project}-db-1" bash -c \
   'mysqldump --single-transaction --quick --triggers --routines --events --hex-blob -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' \
   | gzip -c >"${backup}/db-before.sql.gz"
 gzip -t "${backup}/db-before.sql.gz"
 sha256sum "${backup}/db-before.sql.gz" >"${backup}/db-before.sql.gz.sha256"
 cp -a "${compose_file}" "${backup}/docker-compose.yml"
-cp -a "${env_file}" "${backup}/env.vps"
-chmod 600 "${backup}/env.vps"
+cp -a "${env_file}" "${backup}/env-release.vps"
+chmod 600 "${backup}/env-release.vps"
 cp -a /etc/nginx/sites-available/makoki.org "${backup}/nginx-makoki.org" 2>/dev/null || true
 
 for service in api web; do
@@ -80,7 +105,9 @@ compose=(docker compose --project-name "${compose_project}" --env-file "${env_fi
 rollback_on_error() {
   status=$?
   trap - ERR
-  echo "deployment failed; restoring previous application images" >&2
+  echo "deployment failed; restoring previous application images and release flags" >&2
+  cp -a "${backup}/env-before.vps" "${env_file}" || true
+  chmod 600 "${env_file}" || true
   for service in api web; do
     rollback_image="${compose_project}-${service}:rollback-${stamp}"
     if docker image inspect "${rollback_image}" >/dev/null 2>&1; then
@@ -92,7 +119,8 @@ rollback_on_error() {
 }
 trap rollback_on_error ERR
 
-"${compose[@]}" build api web
+"${compose[@]}" build api
+"${compose[@]}" build --build-arg VITE_LIFE_PROJECT_ENABLED=true web
 
 db_id_before=$(docker inspect -f '{{.Id}}' "${compose_project}-db-1")
 "${compose[@]}" run --rm --no-deps api node scripts/migrate.js up
@@ -134,6 +162,7 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 curl --fail --silent http://127.0.0.1:8088/ >/dev/null
+curl --fail --silent http://127.0.0.1:8088/parcours >/dev/null
 curl --fail --silent http://127.0.0.1:8088/api/test/health >/dev/null
 
 test "$(docker inspect -f '{{.Id}}' "${compose_project}-db-1")" = "${db_id_before}"
