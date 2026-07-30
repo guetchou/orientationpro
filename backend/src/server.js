@@ -32,6 +32,7 @@ const { createLifeProjectRouter } = require('./life-project/router');
 const { createLifeProjectService } = require('./life-project/service');
 const { createLifeProjectStore } = require('./life-project/store');
 const { createActionTrackingStore } = require('./life-project/action-tracking-store');
+const { createCongoLocalOptionProvider } = require('./life-project/local-options-cg');
 const { mountLegacyApi } = require('./security/legacy-api');
 const {
   createMemoryRateLimiter,
@@ -144,6 +145,7 @@ if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
     service: createLifeProjectService({
       store: createLifeProjectStore(authV1.pool),
       actionTrackingStore: createActionTrackingStore(authV1.pool),
+      optionProvider: createCongoLocalOptionProvider(),
     }),
     authenticate: authV1.authenticate,
   }));
@@ -224,6 +226,8 @@ app.get('/', (req, res) => {
     Object.assign(endpoints, {
       lifeProjects: 'GET|POST /api/v1/life-projects',
       lifeProject: 'GET /api/v1/life-projects/:projectId',
+      lifeProjectDiagnostic: 'PUT /api/v1/life-projects/:projectId/diagnostic',
+      lifeProjectRecommendations: 'POST /api/v1/life-projects/:projectId/recommendations',
       lifeProjectProgress: 'GET /api/v1/life-projects/:projectId/progress',
       lifeProjectScenarios: 'POST /api/v1/life-projects/:projectId/scenarios',
       lifeProjectTransitions: 'POST /api/v1/life-projects/:projectId/transitions',
