@@ -175,7 +175,7 @@ export interface AdvisorEnvelope extends Omit<LifeProjectEnvelope, 'project'> {
   project: AdvisorLifeProject;
 }
 
-export interface AdvisorProjectSummary extends LifeProjectSummary {}
+export type AdvisorProjectSummary = LifeProjectSummary;
 
 export interface AdvisorDiagnosticInput {
   objective: AdvisorObjective;
@@ -226,5 +226,3 @@ export interface AdvisorDiagnosticInput {
   priorities: AdvisorPriority[];
   notes?: string;
 }
-
-export type AdvisorProjectBase = Pick<LifeProject, 'id' | 'title' | 'purpose' | 'state'>;
