@@ -125,7 +125,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pb-8 pt-24 lg:pt-28">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="h-14 w-14 border-2 border-white shadow-sm">
