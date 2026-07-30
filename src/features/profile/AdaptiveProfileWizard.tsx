@@ -294,6 +294,34 @@ export default function AdaptiveProfileWizard() {
     )));
   };
 
+  // Suppression locale et réversible (issue #153) : pas encore enregistrée côté
+  // serveur à ce stade, donc une action immédiate + Annuler suffit — une modale
+  // de confirmation serait disproportionnée pour ce niveau de risque.
+  const removeEducation = (index: number) => {
+    const removed = education[index];
+    setEducation((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    toast('Formation retirée', {
+      action: {
+        label: 'Annuler',
+        onClick: () => setEducation((current) => {
+          const next = [...current];
+          next.splice(index, 0, removed);
+          return next;
+        }),
+      },
+    });
+  };
+
+  const removeSkill = (skill: ProfileSkill) => {
+    setSkills((current) => current.filter((item) => item !== skill));
+    toast('Compétence retirée', {
+      action: {
+        label: 'Annuler',
+        onClick: () => setSkills((current) => [...current, skill]),
+      },
+    });
+  };
+
   const saveStep = async (step: StepKey) => {
     if (step === 'education') {
       return saveEducationHistory(education.map(({ id: _id, ...entry }) => entry));
@@ -465,7 +493,7 @@ export default function AdaptiveProfileWizard() {
               {!education.length && <div className="rounded-lg border border-dashed p-8 text-center"><BookOpen className="mx-auto mb-3 h-8 w-8 text-gray-400" /><p className="font-medium">Aucune formation ajoutée</p></div>}
               {education.map((entry, index) => (
                 <div key={entry.id || index} className="space-y-4 rounded-xl border p-4">
-                  <div className="flex items-center justify-between"><h4 className="font-semibold">Formation {index + 1}</h4><Button type="button" variant="ghost" size="sm" onClick={() => setEducation((current) => current.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="mr-2 h-4 w-4" /> Retirer</Button></div>
+                  <div className="flex items-center justify-between"><h4 className="font-semibold">Formation {index + 1}</h4><Button type="button" variant="ghost" size="sm" onClick={() => removeEducation(index)}><Trash2 className="mr-2 h-4 w-4" /> Retirer</Button></div>
                   <div className="grid gap-4 md:grid-cols-2"><div><Label htmlFor={`level-${index}`}>Niveau</Label><select id={`level-${index}`} className={selectClassName} value={entry.education_level} onChange={(event) => updateEducation(index, { education_level: event.target.value as EducationRecord['education_level'] })}>{Object.entries(educationLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div><div><Label htmlFor={`status-${index}`}>Statut</Label><select id={`status-${index}`} className={selectClassName} value={entry.status} onChange={(event) => updateEducation(index, { status: event.target.value as EducationRecord['status'] })}>{Object.entries(educationStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div></div>
                   <div className="grid gap-4 md:grid-cols-2"><div><Label htmlFor={`diploma-${index}`}>Diplôme</Label><Input id={`diploma-${index}`} value={entry.diploma_name || ''} onChange={(event) => updateEducation(index, { diploma_name: event.target.value || null })} /></div><div><Label htmlFor={`field-${index}`}>Domaine</Label><Input id={`field-${index}`} value={entry.field_of_study || ''} onChange={(event) => updateEducation(index, { field_of_study: event.target.value || null })} /></div></div>
                   <div><Label htmlFor={`institution-${index}`}>Établissement</Label><Input id={`institution-${index}`} value={entry.institution || ''} onChange={(event) => updateEducation(index, { institution: event.target.value || null })} /></div>
@@ -481,7 +509,7 @@ export default function AdaptiveProfileWizard() {
                 {skillSuggestions.length > 0 && <ul aria-label="Suggestions de compétences ESCO" className="mt-2 max-h-72 overflow-auto rounded-lg border bg-white shadow-lg">{skillSuggestions.map((suggestion) => <li key={suggestion.id} className="border-b last:border-b-0"><button type="button" className="w-full p-3 text-left hover:bg-blue-50" onClick={() => addSkill(suggestion)}><span className="block font-medium">{suggestion.label}</span><span className="mt-1 line-clamp-2 block text-xs text-gray-500">{suggestion.description || suggestion.skill_kind}</span></button></li>)}</ul>}
                 {skillQuery.trim().length >= 2 && !searchingSkills && <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={addManualSkill}><Plus className="mr-2 h-4 w-4" /> Ajouter « {skillQuery.trim()} » sans lien ESCO</Button>}
               </div>
-              <div className="space-y-3"><h3 className="font-semibold">Compétences déclarées</h3>{!declaredSkills.length && <p className="rounded-lg border border-dashed p-5 text-sm text-gray-500">Ajoutez une compétence que vous utilisez déjà.</p>}{declaredSkills.map((skill, index) => <div key={skill.id || skill.esco_uri || `${skill.label}-${index}`} className="grid items-center gap-3 rounded-lg border p-3 md:grid-cols-[1fr_180px_auto]"><div><p className="font-medium">{skill.label}</p><p className="text-xs text-gray-500">{skill.esco_uri ? 'Compétence ESCO vérifiée' : 'Compétence libre'}</p></div><select aria-label={`Niveau pour ${skill.label}`} className={selectClassName} value={skill.proficiency} onChange={(event) => { const next = declaredSkills.map((item, itemIndex) => itemIndex === index ? { ...item, proficiency: event.target.value as ProfileSkill['proficiency'] } : item); setSkills([...next, ...sourcedSkills]); }}>{Object.entries(proficiencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><Button type="button" variant="ghost" size="icon" aria-label={`Retirer ${skill.label}`} onClick={() => setSkills((current) => current.filter((item) => item !== skill))}><Trash2 className="h-4 w-4" /></Button></div>)}</div>
+              <div className="space-y-3"><h3 className="font-semibold">Compétences déclarées</h3>{!declaredSkills.length && <p className="rounded-lg border border-dashed p-5 text-sm text-gray-500">Ajoutez une compétence que vous utilisez déjà.</p>}{declaredSkills.map((skill, index) => <div key={skill.id || skill.esco_uri || `${skill.label}-${index}`} className="grid items-center gap-3 rounded-lg border p-3 md:grid-cols-[1fr_180px_auto]"><div><p className="font-medium">{skill.label}</p><p className="text-xs text-gray-500">{skill.esco_uri ? 'Compétence ESCO vérifiée' : 'Compétence libre'}</p></div><select aria-label={`Niveau pour ${skill.label}`} className={selectClassName} value={skill.proficiency} onChange={(event) => { const next = declaredSkills.map((item, itemIndex) => itemIndex === index ? { ...item, proficiency: event.target.value as ProfileSkill['proficiency'] } : item); setSkills([...next, ...sourcedSkills]); }}>{Object.entries(proficiencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><Button type="button" variant="ghost" size="icon" aria-label={`Retirer ${skill.label}`} onClick={() => removeSkill(skill)}><Trash2 className="h-4 w-4" /></Button></div>)}</div>
               {sourcedSkills.length > 0 && <div className="space-y-3"><h3 className="font-semibold">Compétences issues de vos résultats</h3><div className="grid gap-2 md:grid-cols-2">{sourcedSkills.map((skill) => <div key={skill.id || skill.label} className="rounded-lg border bg-gray-50 p-3"><div className="flex justify-between gap-2"><p className="font-medium">{skill.label}</p><Badge variant="outline">{sourceLabels[skill.source || 'declared']}</Badge></div><p className="mt-1 text-xs text-gray-500">{proficiencyLabels[skill.proficiency]}</p></div>)}</div></div>}
             </section>
           )}
