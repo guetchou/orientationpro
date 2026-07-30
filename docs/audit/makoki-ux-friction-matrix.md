@@ -128,13 +128,18 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 | 24. Structure de liste | Global (composant Sonner / toasts, donc potentiellement toute page affichant un toast) | `<li role="status">` à l'intérieur du `<ol class="toaster">` casse la sémantique de liste pour axe (règle `list`, `only-listitems`) | Scan axe réel sur `/tests/riasec` avec session simulée, violation `id: "list"`, cible `.toaster` | Lecteur d'écran : la liste de notifications n'est pas annoncée comme une liste cohérente | Structure de liste valide (`<li>` sans rôle qui neutralise `listitem`, ou wrapper hors `<ol>`) | À investiguer dans le composant Sonner partagé (`src/components/ui/sonner.tsx` ou équivalent) — probablement globale, pas spécifique à une page | P1 (composant partagé, large surface) | VALIDÉ (violation axe réelle observée, non corrigée) |
 | 24. Contraste | `/profile` (`AdaptiveProfileWizard`) | Badge « Complété à X % » (`variant="secondary"`, `bg-secondary text-secondary-foreground`) ne respecte pas le ratio de contraste WCAG AA 4,5:1 | Scan axe réel, violation `id: "color-contrast"`, cible `.text-2xl` (le badge), `expectedContrastRatio: "4.5:1"` | Lisibilité réduite, notamment en malvoyance | Contraste AA minimum sur le texte informatif | Ajuster la classe de couleur du badge `secondary` dans ce contexte, ou le variant utilisé | P1 | VALIDÉ (violation axe réelle observée, non corrigée) |
 
+## I bis. Axes complétés après le lot #148
+
+| Axe | Constat | Preuve | Priorité | Statut |
+|---|---|---|---|---|
+| 25. Responsive 320px | Aucun débordement horizontal confirmé sur 6 pages réelles (`/tests`, `/conseiller`, `/tests/riasec`, `/dashboard`, `/profile`, `/careers`) | Mesure réelle `document.documentElement.{clientWidth,scrollWidth}` via Playwright, viewport 320×640, session simulée | — | **VALIDÉ** (conforme) |
+| 24. Reduced motion | **Correction d'un constat antérieur de cette même passe** : la toute première analyse de ce dossier (début de session) affirmait l'existence de règles CSS globales `@media (prefers-reduced-motion: reduce)` dans `src/index.css`. Vérification directe : **0 occurrence** de `reduced-motion` dans ce fichier. Seul `Home.tsx` (+ `PremiumAnimations.tsx`, spécifique à Home) appelle `useReducedMotion()`. `framer-motion` est importé dans 21 autres fichiers `pages/`/`features/` sans aucune protection reduced-motion | `grep -c "reduced-motion" src/index.css` → `0` ; `grep -rl "useReducedMotion" src` → 2 fichiers seulement ; `grep -rl "from 'framer-motion'" src/pages src/features` → 21 fichiers | Utilisateurs sensibles au mouvement (vestibulaire) non protégés sur la quasi-totalité du produit, uniquement sur la home | P1 (systémique, composant/pattern partagé) | VALIDÉ (gap confirmé) |
+| 23. Interruptions/newsletters | Formulaire newsletter trouvé (`Footer.tsx:181`), mais **passif** (bas de page, pas de popup/modale), rendu globalement via `AppRouter.tsx:173` — n'interrompt aucune tâche en cours | `Footer.tsx:178-193`, recherche exhaustive de popups/modales newsletter ailleurs : 0 résultat | — | — | VALIDÉ (conforme) |
+
 ## I. Hors périmètre de cette passe
 
-- Tableaux de bord internes (`admin/*`, `conseiller/dashboard`, `recruteur/dashboard`, `coach/dashboard`, `rh/dashboard`, `superadmin/dashboard`) et outils ATS admin — non audités.
-- Navigation mobile / responsive dédié (au-delà de la structure de titres) — non testé à 320px sur les pages listées ci-dessus, à l'exception de `/login` (couvert par `tests/accessibility/browser-accessibility.spec.ts`).
-- `reduced motion` — vérifié uniquement sur `Home.tsx` (`Reveal` + `useReducedMotion()`) lors de l'audit initial ; non revérifié systématiquement sur les autres pages listées ici.
-- Contraste des couleurs — non mesuré systématiquement (seul le défaut de piste `Progress` a été trouvé et corrigé, PR #146).
-- Newsletters / annonces hors moments de concentration (axe 23) — aucune newsletter ou annonce modale trouvée dans le code à ce stade ; à confirmer qu'aucun mécanisme de ce type n'existe ailleurs (ex. notifications push, bannières).
+- Tableaux de bord internes (`admin/*`, `conseiller/dashboard`, `recruteur/dashboard`, `coach/dashboard`, `rh/dashboard`, `superadmin/dashboard`) et outils ATS admin — non audités. Décision de portée assumée (utilisateurs professionnels internes, pas le parcours grand public visé prioritairement), pas un oubli.
+- Contraste des couleurs — non mesuré systématiquement au-delà de ce qui a été trouvé (piste `Progress` corrigée PR #146 ; badge `secondary` sur `/profile`, section J).
 - Axes 19-20 (prompts au bon moment, classification motivation/capacité/prompt) — nécessitent des données d'usage réelles ou une observation utilisateur, pas seulement une lecture de code ; non traités ici, correctement laissés comme hypothèses à valider plutôt que déduits du code.
 
 ---
@@ -153,6 +158,7 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 | 8 | Structure de liste invalide dans le composant Sonner (toasts) — trouvé en testant le lot 1 | Global | P1 | Non traité |
 | 9 | Contraste insuffisant du badge « Complété à X % » | `/profile` | P1 | Non traité |
 | 10 | Saut de niveau h1→h3 résiduel après le lot 1 (règle best-practice, pas un critère WCAG) | `/profile` (et probablement d'autres pages utilisant `CardTitle` juste après un `<h1>`) | P2 | Non traité |
+| 11 | Aucune protection `prefers-reduced-motion` en dehors de `Home.tsx` — 21 fichiers utilisent `framer-motion` sans vérifier ce réglage système | Quasi tout le produit sauf Home | P1 | Non traité (gap confirmé, corrige un constat erroné de la toute première analyse de cette passe qui affirmait une protection globale inexistante) |
 
 ## PR proposées (indépendantes, non mélangées)
 
@@ -166,6 +172,7 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 8. **Lot structure de liste Sonner (toasts).** Nouveau, trouvé en testant le lot 1. Composant partagé, large surface d'impact — à investiguer avant de coder (combien de pages affichent réellement un toast ? le correctif est-il local au composant ou nécessite-t-il de changer l'usage de `role="status"` sur le `<li>` ?).
 9. **Lot contraste badge `secondary`.** Nouveau, trouvé en testant le lot 1. Vérifier si `bg-secondary`/`text-secondary-foreground` est utilisé ailleurs avec le même problème avant de corriger uniquement ce cas.
 10. **Lot saut h1→h3 résiduel.** Nouveau, priorité basse (best-practice, pas un critère WCAG) — nécessite de changer le niveau sémantique de `CardTitle` dans des contextes précis, décision de composant partagé à ne pas prendre à la légère.
+11. **Lot `prefers-reduced-motion` global.** Généraliser la protection déjà présente sur `Home.tsx` (pattern `Reveal` + `useReducedMotion()`) — probablement via un wrapper ou un hook partagé réutilisable plutôt que de dupliquer la logique dans 21 fichiers. À concevoir comme un composant/hook commun avant d'être appliqué partout, pas 21 corrections ad hoc.
 
 ## Dépendances entre lots
 
