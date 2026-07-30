@@ -14,7 +14,7 @@ jobs:
   snapshot:
     runs-on: ubuntu-latest
     env:
-      TARGET_SHA: aae2c39779e6d5c27dfa66c7de8d20380431b39f
+      TARGET_SHA: 112e15b1374511476644cbcd87b4de8189db9780
       ISSUE_NUMBER: '184'
     steps:
       - name: Read current Production Deploy state
@@ -35,7 +35,7 @@ jobs:
           const payload = JSON.parse(fs.readFileSync('/tmp/runs.json', 'utf8'));
           const run = (payload.workflow_runs || []).find((entry) => entry.head_sha === process.env.TARGET_SHA);
           const lines = [
-            '## V6-H — instantané Production Deploy',
+            '## V6-H — instantané Production Deploy tentative 2',
             '',
             `- SHA : \`${process.env.TARGET_SHA}\``,
             `- Run : ${run?.html_url || 'non trouvé'}`,
