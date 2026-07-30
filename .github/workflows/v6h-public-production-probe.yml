@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      TARGET_SHA: 112e15b1374511476644cbcd87b4de8189db9780
+      TARGET_SHA: ded2983cb431491bf1ccf08a8cfa3d1d26673cc0
       ISSUE_NUMBER: '184'
     steps:
       - uses: actions/checkout@v6
@@ -104,7 +104,7 @@ jobs:
           }).join('\n');
           const success = process.env.SUCCESS === 'true';
           const lines = [
-            `## V6-H — sonde publique tentative 2 ${success ? 'GO technique' : 'NO-GO / non convergé'}`,
+            `## V6-H — sonde publique tentative 3 ${success ? 'GO technique' : 'NO-GO / non convergé'}`,
             '',
             `- SHA attendu : \`${process.env.TARGET_SHA}\``,
             `- SHA servi : \`${health.gitSha || 'null'}\``,
