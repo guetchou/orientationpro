@@ -61,11 +61,13 @@ test('Docker space preflight prunes only unused resources and failed release wor
   }
 });
 
-test('web Dockerfile patch exposes the Projet de vie flag before the Vite build', () => {
+test('web Dockerfile patch normalizes an existing Projet de vie flag before the Vite build', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'makoki-v6h-web-build-'));
   const dockerfile = path.join(directory, 'Dockerfile.web');
   fs.writeFileSync(dockerfile, [
     'FROM node:20-alpine AS build',
+    'ARG VITE_LIFE_PROJECT_ENABLED',
+    'ENV VITE_LIFE_PROJECT_ENABLED=$VITE_LIFE_PROJECT_ENABLED',
     'WORKDIR /app',
     'COPY package.json package-lock.json ./',
     'RUN npm ci --legacy-peer-deps',
@@ -81,8 +83,11 @@ test('web Dockerfile patch exposes the Projet de vie flag before the Vite build'
     execFileSync('bash', [webBuildScript, dockerfile], { encoding: 'utf8' });
     const second = fs.readFileSync(dockerfile, 'utf8');
 
-    assert.equal(second, first, 'patch must be idempotent');
+    assert.equal(second, first, 'normalization must be idempotent');
     assert.match(first, /ARG VITE_LIFE_PROJECT_ENABLED=false\nENV VITE_LIFE_PROJECT_ENABLED=\$\{VITE_LIFE_PROJECT_ENABLED\}/u);
+    assert.equal((first.match(/^ARG VITE_LIFE_PROJECT_ENABLED=false$/gmu) || []).length, 1);
+    assert.equal((first.match(/^ENV VITE_LIFE_PROJECT_ENABLED=\$\{VITE_LIFE_PROJECT_ENABLED\}$/gmu) || []).length, 1);
+    assert.equal(first.includes('ENV VITE_LIFE_PROJECT_ENABLED=$VITE_LIFE_PROJECT_ENABLED'), false);
     assert.ok(first.indexOf('ARG VITE_LIFE_PROJECT_ENABLED=false') < first.indexOf('RUN npm run build'));
     assert.equal(fs.statSync(dockerfile).mode & 0o777, 0o644);
   } finally {
