@@ -154,7 +154,7 @@ const createCapabilityRegistry = (env = {}) => {
       configurationKey: 'LIFE_PROJECT_API_ENABLED',
       dependencies: ['identity.auth-v1'],
       publicLimitations: [
-        'API technique expérimentale ; aucune interface Parcours MAKOKI n’est encore activée.',
+        'Parcours web activé pour une utilisation accompagnée ; validation terrain jeune-conseiller encore requise.',
         'Le projet de vie organise des scénarios et actions sans garantir admission, emploi ou réussite.',
         'Les déclarations utilisateur ne deviennent pas automatiquement des faits vérifiés.',
       ],
