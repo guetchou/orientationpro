@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 interface RiasecQuestionProps {
@@ -14,6 +14,7 @@ interface RiasecQuestionProps {
 }
 
 export const RiasecQuestion = ({ question, onAnswer, loading }: RiasecQuestionProps) => {
+  const shouldReduceMotion = useReducedMotion();
   const handleScore = (score: number) => {
     if (!loading) {
       onAnswer(score);
@@ -22,10 +23,10 @@ export const RiasecQuestion = ({ question, onAnswer, loading }: RiasecQuestionPr
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
+      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3 }}
       className="space-y-6"
     >
       <h2 className="text-xl font-medium text-center text-gray-800">

@@ -27,12 +27,13 @@ import {
   Filter,
   Search
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export default function TestResults() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   // Données simulées pour les résultats de tests
   const testResults = [
@@ -151,7 +152,7 @@ export default function TestResults() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
@@ -179,9 +180,9 @@ export default function TestResults() {
 
         {/* Statistiques */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
         >
           <Card className="bg-white shadow-lg border-0">
@@ -251,9 +252,9 @@ export default function TestResults() {
 
         {/* Contenu principal */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { delay: 0.2 }}
           className="grid grid-cols-1 lg:grid-cols-3 gap-8"
         >
           {/* Liste des résultats */}
@@ -296,7 +297,7 @@ export default function TestResults() {
                       {filteredResults.map((result) => (
                         <motion.div
                           key={result.id}
-                          initial={{ opacity: 0, x: -20 }}
+                          initial={shouldReduceMotion ? false : { opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
                         >

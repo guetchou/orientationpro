@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface TestHeaderProps {
   currentQuestion: number;
@@ -10,10 +10,11 @@ interface TestHeaderProps {
 const TestHeader: React.FC<TestHeaderProps> = ({ currentQuestion, totalQuestions }) => {
   // Calculate the progress percentage
   const progressPercentage = Math.round((currentQuestion / totalQuestions) * 100);
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="mb-8"
     >
