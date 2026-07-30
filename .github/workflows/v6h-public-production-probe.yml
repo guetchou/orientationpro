@@ -1,0 +1,147 @@
+name: V6-H Public Production Probe
+
+on:
+  push:
+    branches:
+      - agent/v6h-public-production-probe
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TARGET_SHA: aae2c39779e6d5c27dfa66c7de8d20380431b39f
+      ISSUE_NUMBER: '184'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Wait for production and collect public evidence
+        id: probe
+        shell: bash
+        run: |
+          set -u
+          success=false
+          root_status=000
+          parcours_status=000
+          health_status=000
+          capabilities_status=000
+          unauthenticated_status=000
+
+          for attempt in $(seq 1 40); do
+            root_status=$(curl --max-time 20 --silent --show-error --output /tmp/root.html --write-out '%{http_code}' https://makoki.org/ || true)
+            parcours_status=$(curl --max-time 20 --silent --show-error --output /tmp/parcours.html --write-out '%{http_code}' https://makoki.org/parcours || true)
+            health_status=$(curl --max-time 20 --silent --show-error --output /tmp/health.json --write-out '%{http_code}' https://makoki.org/api/test/health || true)
+            capabilities_status=$(curl --max-time 20 --silent --show-error --output /tmp/capabilities.json --write-out '%{http_code}' https://makoki.org/api/v1/capabilities || true)
+            unauthenticated_status=$(curl --max-time 20 --silent --show-error --output /tmp/life-project-unauthenticated.json --write-out '%{http_code}' https://makoki.org/api/v1/life-projects || true)
+
+            if [[ "${root_status}" == 200 && "${parcours_status}" == 200 && "${health_status}" == 200 && "${capabilities_status}" == 200 && "${unauthenticated_status}" == 401 ]]; then
+              if TARGET_SHA="${TARGET_SHA}" node <<'NODE'
+              const fs = require('node:fs');
+              const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+              const registry = JSON.parse(fs.readFileSync('/tmp/capabilities.json', 'utf8'));
+              const byId = (id) => registry.capabilities.find((entry) => entry.id === id);
+              const target = process.env.TARGET_SHA;
+              const expectedDisabled = [
+                'orientation.riasec',
+                'career.recommendations',
+                'cv.analysis-v1',
+                'privacy.data-rights-v1',
+                'identity.auth-legacy',
+              ];
+              if (health.status !== 'OK' || health.gitSha !== target) process.exit(1);
+              const auth = byId('identity.auth-v1');
+              const life = byId('life-project.core-v1');
+              if (!auth || auth.status !== 'active' || auth.configured !== true) process.exit(1);
+              if (!life || life.status !== 'experimental' || life.configured !== true) process.exit(1);
+              for (const id of expectedDisabled) {
+                const capability = byId(id);
+                if (!capability || capability.status !== 'disabled' || capability.configured !== false) process.exit(1);
+              }
+              NODE
+              then
+                success=true
+                echo "Production target observed on attempt ${attempt}."
+                break
+              fi
+            fi
+
+            echo "Attempt ${attempt}: root=${root_status} parcours=${parcours_status} health=${health_status} capabilities=${capabilities_status} unauth=${unauthenticated_status}"
+            sleep 15
+          done
+
+          SUCCESS="${success}" \
+          TARGET_SHA="${TARGET_SHA}" \
+          ROOT_STATUS="${root_status}" \
+          PARCOURS_STATUS="${parcours_status}" \
+          HEALTH_STATUS="${health_status}" \
+          CAPABILITIES_STATUS="${capabilities_status}" \
+          UNAUTHENTICATED_STATUS="${unauthenticated_status}" \
+          node <<'NODE'
+          const fs = require('node:fs');
+          const safeJson = (path) => {
+            try { return JSON.parse(fs.readFileSync(path, 'utf8')); } catch { return {}; }
+          };
+          const health = safeJson('/tmp/health.json');
+          const registry = safeJson('/tmp/capabilities.json');
+          const byId = (id) => Array.isArray(registry.capabilities)
+            ? registry.capabilities.find((entry) => entry.id === id)
+            : null;
+          const capabilitySummary = [
+            'identity.auth-v1',
+            'life-project.core-v1',
+            'orientation.riasec',
+            'career.recommendations',
+            'cv.analysis-v1',
+            'privacy.data-rights-v1',
+            'identity.auth-legacy',
+          ].map((id) => {
+            const entry = byId(id);
+            return `- \`${id}\`: ${entry ? `${entry.status}, configured=${entry.configured}` : 'absent'}`;
+          }).join('\n');
+          const success = process.env.SUCCESS === 'true';
+          const lines = [
+            `## V6-H — sonde publique ${success ? 'GO technique' : 'NO-GO / non convergé'}`,
+            '',
+            `- SHA attendu : \`${process.env.TARGET_SHA}\``,
+            `- SHA servi : \`${health.gitSha || 'null'}\``,
+            `- \`/\` : HTTP ${process.env.ROOT_STATUS}`,
+            `- \`/parcours\` : HTTP ${process.env.PARCOURS_STATUS}`,
+            `- santé : HTTP ${process.env.HEALTH_STATUS}, statut \`${health.status || 'inconnu'}\``,
+            `- registre : HTTP ${process.env.CAPABILITIES_STATUS}`,
+            `- barrière non authentifiée : HTTP ${process.env.UNAUTHENTICATED_STATUS}`,
+            '',
+            '### Capacités observées',
+            capabilitySummary,
+            '',
+            success
+              ? 'Décision automatisée : **GO technique limité**. Une séance authentifiée complète et la validation terrain restent nécessaires.'
+              : 'Décision automatisée : **NO-GO**. Le SHA, les capacités ou les endpoints publics n’ont pas convergé pendant la fenêtre de contrôle.',
+          ];
+          fs.writeFileSync('/tmp/issue-comment.md', `${lines.join('\n')}\n`);
+          NODE
+
+          echo "success=${success}" >>"${GITHUB_OUTPUT}"
+
+      - name: Publish evidence to issue 184
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          jq -n --rawfile body /tmp/issue-comment.md '{body: $body}' >/tmp/comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/comment.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" \
+            >/tmp/comment-response.json
+
+      - name: Fail when production did not converge
+        if: steps.probe.outputs.success != 'true'
+        run: exit 1
