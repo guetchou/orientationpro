@@ -128,3 +128,96 @@ test('register email and password fields are correctly associated with their lab
     .analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 });
+
+// Lot 2 (5 pages restantes du constat "absence de <h1>", voir matrice UX).
+// Même scope restreint que le lot 1 : présence du h1 uniquement, pas un audit
+// WCAG complet de ces pages (voir commentaires précédents pour la justification).
+
+test('verify-email page exposes exactly one h1 landmark for screen readers', async ({ page }) => {
+  await page.goto('/verify-email');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vérification du compte MAKOKI');
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['page-has-heading-one', 'empty-heading'])
+    .analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
+test('riasec result page exposes exactly one h1 landmark for screen readers', async ({ page }) => {
+  await mockAuthenticatedSession(page);
+  await page.goto('/orientation/results/a11y-test-result-id');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Résultat d’orientation');
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['page-has-heading-one', 'empty-heading'])
+    .analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
+const mockApiError = (page: import('@playwright/test').Page, pattern: string) =>
+  page.route(pattern, (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: { message: 'Service indisponible (harnais sans backend)' } }),
+    }),
+  );
+
+test('career matches page exposes exactly one h1 landmark for screen readers', async ({ page }) => {
+  await mockAuthenticatedSession(page);
+  // Constat hors périmètre de ce lot, découvert en écrivant ce test : sans
+  // ce mock, une coupure réseau totale (pas une erreur API propre) fait
+  // planter CareerMatches.tsx (accès à `data.result.normalizedScores` sans
+  // garde) jusqu'à l'ErrorBoundary générique — contrairement à
+  // RiasecResult.tsx/OccupationDetail.tsx qui gèrent la même situation avec
+  // une carte d'erreur propre. Signalé séparément (issue dédiée), pas corrigé
+  // ici. On mocke donc une erreur API propre (503 JSON), le chemin que le
+  // composant gère réellement, pour que ce test mesure ce qu'il est censé
+  // mesurer (le <h1>) sans dépendre de ce défaut distinct.
+  await mockApiError(page, '**/api/v1/career/recommendations/**');
+  await page.goto('/orientation/results/a11y-test-result-id/careers');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Classement des métiers');
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['page-has-heading-one', 'empty-heading'])
+    .analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
+test('career catalog page exposes exactly one h1 landmark for screen readers', async ({ page }) => {
+  await mockAuthenticatedSession(page);
+  // Même constat que ci-dessus, sur CareerCatalog.tsx (crash différent,
+  // "Cannot read properties of undefined (reading 'find')") — même cause de
+  // fond : pas de garde sur les données en cas d'échec réseau total, à la
+  // différence des pages qui gèrent proprement leur état d'erreur. Mocké ici
+  // pour la même raison, signalé dans la même issue séparée.
+  await mockApiError(page, '**/api/v1/career/catalog/summary');
+  await mockApiError(page, '**/api/v1/career/occupations**');
+  await page.goto('/careers');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Explorer les métiers en français');
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['page-has-heading-one', 'empty-heading'])
+    .analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
+test('occupation detail page exposes exactly one h1 landmark for screen readers', async ({ page }) => {
+  await mockAuthenticatedSession(page);
+  // Sans backend réel, cette page atterrit toujours sur son état d'erreur
+  // ("Fiche indisponible") — le h1 y reste statique ("Fiche métier"), pas le
+  // nom dynamique du métier (occupation.preferredLabel, uniquement rendu une
+  // fois les données chargées avec succès).
+  await page.goto('/careers/a11y-test-occupation-id');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fiche métier');
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['page-has-heading-one', 'empty-heading'])
+    .analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});

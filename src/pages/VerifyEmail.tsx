@@ -69,6 +69,7 @@ export default function VerifyEmail() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 px-4 py-16">
+      <h1 className="sr-only">Vérification du compte MAKOKI</h1>
       <Card className="mx-auto max-w-lg border-0 text-center shadow-2xl">
         <CardHeader className="space-y-4">
           <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${

@@ -92,6 +92,7 @@ export default function RiasecResult() {
   if (loading) {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-stone-50">
+        <h1 className="sr-only">Résultat d’orientation</h1>
         <div className="text-center" role="status" aria-live="polite">
           <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-emerald-700" />
           <p className="text-stone-600">Chargement du résultat d’orientation…</p>
@@ -103,6 +104,7 @@ export default function RiasecResult() {
   if (error || !result) {
     return (
       <main className="mx-auto min-h-[70vh] max-w-2xl px-4 py-16">
+        <h1 className="sr-only">Résultat d’orientation</h1>
         <Card className="border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
@@ -123,6 +125,7 @@ export default function RiasecResult() {
 
   return (
     <main className="min-h-screen bg-stone-50 px-4 py-8 sm:py-10">
+      <h1 className="sr-only">Résultat d’orientation</h1>
       <div className="mx-auto max-w-4xl space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button asChild variant="ghost" className="text-stone-600 hover:text-stone-900">

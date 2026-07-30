@@ -119,7 +119,11 @@ describe('French career experience', () => {
 
   it('renders French detail, skills and separate O*NET/ESCO sources without React errors', async () => {
     render(<MemoryRouter initialEntries={['/careers/onet%3Ajob']}><Routes><Route path="/careers/:occupationId" element={<OccupationDetail />} /></Routes></MemoryRouter>);
-    expect(await screen.findByText('infirmier/infirmière')).toBeInTheDocument();
+    // Le nom du métier apparaît deux fois : le <h1 className="sr-only"> ajouté
+    // pour l'accessibilité (repère de page pour lecteur d'écran) et le
+    // CardTitle visible (h3). On cible ici précisément le titre visible.
+    expect(await screen.findByRole('heading', { level: 3, name: 'infirmier/infirmière' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'infirmier/infirmière' })).toBeInTheDocument();
     expect(screen.getByText('prodiguer des soins')).toBeInTheDocument();
     expect(screen.getByText(/Description : ESCO 1.2.1/u)).toBeInTheDocument();
     expect(screen.getByText(/RIASEC : O\*NET 30.3/u)).toBeInTheDocument();

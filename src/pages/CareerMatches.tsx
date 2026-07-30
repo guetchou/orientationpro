@@ -61,8 +61,8 @@ export default function CareerMatches() {
     }
   };
 
-  if (loading) return <main className="flex min-h-[70vh] items-center justify-center"><Loader2 className="mr-3 h-8 w-8 animate-spin text-emerald-700" /><p className="text-slate-600">Classement contextualisé des métiers en cours…</p></main>;
-  if (error || !data || !resultId) return <main className="mx-auto min-h-[70vh] max-w-2xl px-4 py-16"><Card className="border-red-200"><CardHeader><CardTitle className="flex items-center gap-2 text-red-700"><AlertCircle className="h-5 w-5" /> Classement indisponible</CardTitle><CardDescription>{error}</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link to="/orientation/results">Retour aux résultats</Link></Button></CardContent></Card></main>;
+  if (loading) return <main className="flex min-h-[70vh] items-center justify-center"><h1 className="sr-only">Classement des métiers</h1><Loader2 className="mr-3 h-8 w-8 animate-spin text-emerald-700" /><p className="text-slate-600">Classement contextualisé des métiers en cours…</p></main>;
+  if (error || !data || !resultId) return <main className="mx-auto min-h-[70vh] max-w-2xl px-4 py-16"><h1 className="sr-only">Classement des métiers</h1><Card className="border-red-200"><CardHeader><CardTitle className="flex items-center gap-2 text-red-700"><AlertCircle className="h-5 w-5" /> Classement indisponible</CardTitle><CardDescription>{error}</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link to="/orientation/results">Retour aux résultats</Link></Button></CardContent></Card></main>;
 
   const dominant = dominantDimensions(data.result.normalizedScores);
   const sourceVersions = data.versioning.catalogSources
@@ -70,6 +70,7 @@ export default function CareerMatches() {
     .filter((value, index, values) => values.indexOf(value) === index);
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-10">
+      <h1 className="sr-only">Classement des métiers</h1>
       <div className="mx-auto min-w-0 max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3"><Button asChild variant="ghost"><Link to={`/orientation/results/${encodeURIComponent(resultId)}`}><ArrowLeft className="mr-2 h-4 w-4" />Retour au résultat</Link></Button><Button asChild variant="outline"><Link to="/careers"><Search className="mr-2 h-4 w-4" />Catalogue métiers</Link></Button></div>
         <Card className="border-0 shadow-xl">
