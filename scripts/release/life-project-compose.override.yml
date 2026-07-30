@@ -1,0 +1,18 @@
+services:
+  api:
+    environment:
+      AUTH_V1_ENABLED: "true"
+      LIFE_PROJECT_API_ENABLED: "true"
+      LEGACY_AUTH_ENABLED: "false"
+      LEGACY_API_ENABLED: "false"
+      DATA_RIGHTS_API_ENABLED: "false"
+      RIASEC_API_ENABLED: "false"
+      RIASEC_ALLOW_DRAFT: "false"
+      CAREER_API_ENABLED: "false"
+      CV_API_V1_ENABLED: "false"
+      FEATURE_CHATBOT: "false"
+      FEATURE_ANALYTICS: "false"
+  web:
+    build:
+      args:
+        VITE_LIFE_PROJECT_ENABLED: "true"
