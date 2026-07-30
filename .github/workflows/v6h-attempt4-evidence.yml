@@ -1,0 +1,206 @@
+name: V6-H Attempt 4 Evidence
+
+on:
+  push:
+    branches:
+      - agent/v6h-public-production-probe
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TARGET_SHA: ddaad08645e61b148d164af166b9e823d381fc05
+      ISSUE_NUMBER: '184'
+    steps:
+      - name: Wait for Production Deploy
+        id: deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -u
+          run_id=''
+          run_url=''
+          run_status='not_found'
+          run_conclusion=''
+
+          for attempt in $(seq 1 60); do
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header 'Accept: application/vnd.github+json' \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/production-deploy.yml/runs?branch=main&event=push&per_page=30" \
+              >/tmp/runs.json
+
+            eval "$(TARGET_SHA="${TARGET_SHA}" node <<'NODE'
+            const fs = require('node:fs');
+            const payload = JSON.parse(fs.readFileSync('/tmp/runs.json', 'utf8'));
+            const run = (payload.workflow_runs || []).find((entry) => entry.head_sha === process.env.TARGET_SHA);
+            const quote = (value) => `'${String(value ?? '').replaceAll("'", "'\\''")}'`;
+            console.log(`RUN_ID=${quote(run?.id || '')}`);
+            console.log(`RUN_URL=${quote(run?.html_url || '')}`);
+            console.log(`RUN_STATUS=${quote(run?.status || 'not_found')}`);
+            console.log(`RUN_CONCLUSION=${quote(run?.conclusion || '')}`);
+            NODE
+            )"
+
+            run_id="${RUN_ID}"
+            run_url="${RUN_URL}"
+            run_status="${RUN_STATUS}"
+            run_conclusion="${RUN_CONCLUSION}"
+
+            if [[ -n "${run_id}" && "${run_status}" == completed ]]; then
+              break
+            fi
+            echo "Attempt ${attempt}: run=${run_id:-absent} status=${run_status}"
+            sleep 15
+          done
+
+          {
+            echo "run_id=${run_id}"
+            echo "run_url=${run_url}"
+            echo "run_status=${run_status}"
+            echo "run_conclusion=${run_conclusion}"
+          } >>"${GITHUB_OUTPUT}"
+
+      - name: Collect public evidence
+        id: public
+        if: steps.deploy.outputs.run_conclusion == 'success'
+        shell: bash
+        run: |
+          set -u
+          success=false
+          root_status=000
+          parcours_status=000
+          health_status=000
+          capabilities_status=000
+          unauthenticated_status=000
+
+          for attempt in $(seq 1 20); do
+            root_status=$(curl --max-time 20 --silent --show-error --output /tmp/root.html --write-out '%{http_code}' https://makoki.org/ || true)
+            parcours_status=$(curl --max-time 20 --silent --show-error --output /tmp/parcours.html --write-out '%{http_code}' https://makoki.org/parcours || true)
+            health_status=$(curl --max-time 20 --silent --show-error --output /tmp/health.json --write-out '%{http_code}' https://makoki.org/api/test/health || true)
+            capabilities_status=$(curl --max-time 20 --silent --show-error --output /tmp/capabilities.json --write-out '%{http_code}' https://makoki.org/api/v1/capabilities || true)
+            unauthenticated_status=$(curl --max-time 20 --silent --show-error --output /tmp/life-project-unauthenticated.json --write-out '%{http_code}' https://makoki.org/api/v1/life-projects || true)
+
+            if [[ "${root_status}" == 200 && "${parcours_status}" == 200 && "${health_status}" == 200 && "${capabilities_status}" == 200 && "${unauthenticated_status}" == 401 ]]; then
+              if TARGET_SHA="${TARGET_SHA}" node <<'NODE'
+              const fs = require('node:fs');
+              const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+              const registry = JSON.parse(fs.readFileSync('/tmp/capabilities.json', 'utf8'));
+              const byId = (id) => registry.capabilities.find((entry) => entry.id === id);
+              if (health.status !== 'OK' || health.gitSha !== process.env.TARGET_SHA) process.exit(1);
+              const auth = byId('identity.auth-v1');
+              const life = byId('life-project.core-v1');
+              if (!auth || auth.status !== 'active' || auth.configured !== true) process.exit(1);
+              if (!life || life.status !== 'experimental' || life.configured !== true) process.exit(1);
+              for (const id of ['orientation.riasec', 'career.recommendations', 'cv.analysis-v1', 'privacy.data-rights-v1', 'identity.auth-legacy']) {
+                const capability = byId(id);
+                if (!capability || capability.status !== 'disabled' || capability.configured !== false) process.exit(1);
+              }
+              NODE
+              then
+                success=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+
+          {
+            echo "success=${success}"
+            echo "root_status=${root_status}"
+            echo "parcours_status=${parcours_status}"
+            echo "health_status=${health_status}"
+            echo "capabilities_status=${capabilities_status}"
+            echo "unauthenticated_status=${unauthenticated_status}"
+          } >>"${GITHUB_OUTPUT}"
+
+      - name: Build consolidated evidence
+        if: always()
+        env:
+          RUN_ID: ${{ steps.deploy.outputs.run_id }}
+          RUN_URL: ${{ steps.deploy.outputs.run_url }}
+          RUN_STATUS: ${{ steps.deploy.outputs.run_status }}
+          RUN_CONCLUSION: ${{ steps.deploy.outputs.run_conclusion }}
+          PUBLIC_SUCCESS: ${{ steps.public.outputs.success }}
+          ROOT_STATUS: ${{ steps.public.outputs.root_status }}
+          PARCOURS_STATUS: ${{ steps.public.outputs.parcours_status }}
+          HEALTH_STATUS: ${{ steps.public.outputs.health_status }}
+          CAPABILITIES_STATUS: ${{ steps.public.outputs.capabilities_status }}
+          UNAUTHENTICATED_STATUS: ${{ steps.public.outputs.unauthenticated_status }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const safeJson = (path) => {
+            try { return JSON.parse(fs.readFileSync(path, 'utf8')); } catch { return {}; }
+          };
+          const health = safeJson('/tmp/health.json');
+          const registry = safeJson('/tmp/capabilities.json');
+          const byId = (id) => Array.isArray(registry.capabilities)
+            ? registry.capabilities.find((entry) => entry.id === id)
+            : null;
+          const technicalGo = process.env.RUN_CONCLUSION === 'success' && process.env.PUBLIC_SUCCESS === 'true';
+          const capabilities = [
+            'identity.auth-v1', 'life-project.core-v1', 'orientation.riasec',
+            'career.recommendations', 'cv.analysis-v1', 'privacy.data-rights-v1',
+            'identity.auth-legacy',
+          ].map((id) => {
+            const entry = byId(id);
+            return `- \`${id}\`: ${entry ? `${entry.status}, configured=${entry.configured}` : 'non observé'}`;
+          }).join('\n');
+          const lines = [
+            `## V6-H — tentative 4 ${technicalGo ? 'GO technique limité' : 'NO-GO'}`,
+            '',
+            `- SHA attendu : \`${process.env.TARGET_SHA}\``,
+            `- Production Deploy : ${process.env.RUN_URL || 'non trouvé'}`,
+            `- Run ID : \`${process.env.RUN_ID || 'absent'}\``,
+            `- Statut / conclusion : \`${process.env.RUN_STATUS || 'absent'}\` / \`${process.env.RUN_CONCLUSION || 'absente'}\``,
+            `- SHA servi : \`${health.gitSha || 'non observé'}\``,
+            `- \`/\` : HTTP ${process.env.ROOT_STATUS || 'non observé'}`,
+            `- \`/parcours\` : HTTP ${process.env.PARCOURS_STATUS || 'non observé'}`,
+            `- santé : HTTP ${process.env.HEALTH_STATUS || 'non observé'}, statut \`${health.status || 'non observé'}\``,
+            `- registre : HTTP ${process.env.CAPABILITIES_STATUS || 'non observé'}`,
+            `- barrière non authentifiée : HTTP ${process.env.UNAUTHENTICATED_STATUS || 'non observé'}`,
+            '',
+            '### Capacités observées',
+            capabilities,
+            '',
+            technicalGo
+              ? 'Décision : **GO technique limité**. L’activation publique est prouvée ; la recette authentifiée complète et le pilote jeune-conseiller restent à réaliser.'
+              : 'Décision : **NO-GO**. Le déploiement ou les preuves publiques ne satisfont pas les critères V6-H.',
+          ];
+          fs.writeFileSync('/tmp/evidence.md', `${lines.join('\n')}\n`);
+          NODE
+
+      - name: Publish evidence to issue 184
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          jq -n --rawfile body /tmp/evidence.md '{body: $body}' >/tmp/comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/comment.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" \
+            >/tmp/comment-response.json
+
+      - name: Enforce technical GO
+        if: always()
+        env:
+          RUN_CONCLUSION: ${{ steps.deploy.outputs.run_conclusion }}
+          PUBLIC_SUCCESS: ${{ steps.public.outputs.success }}
+        run: test "${RUN_CONCLUSION}" = success -a "${PUBLIC_SUCCESS}" = true
