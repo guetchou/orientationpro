@@ -5,4 +5,6 @@ module.exports = {
   ...require('./state-machine'),
   ...require('./orchestration'),
   ...require('./action-tracking'),
+  ...require('./recommendation-contracts'),
+  ...require('./recommendation-engine'),
 };
