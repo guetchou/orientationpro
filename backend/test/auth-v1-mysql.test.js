@@ -255,6 +255,7 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
+      '013_life_project_diagnostic_recommendation',
       '012_life_project_action_tracking',
       '011_life_projects',
       '010_profile_synthesis_snapshots',
@@ -319,6 +320,13 @@ test('ordered migrations roll back completely and can be applied again', async (
        WHERE table_schema = DATABASE()
          AND (table_name = 'life_projects' OR table_name LIKE 'life_project\_%')`,
     );
+    const [[lifeProjectColumns]] = await pool.query(
+      `SELECT COUNT(*) AS column_count
+       FROM information_schema.columns
+       WHERE table_schema = DATABASE()
+         AND table_name = 'life_projects'
+         AND column_name IN ('diagnostic_json', 'recommendation_json')`,
+    );
     const [[careerPermissions]] = await pool.query(
       `SELECT COUNT(*) AS permission_count
        FROM auth_permissions
@@ -336,6 +344,7 @@ test('ordered migrations roll back completely and can be applied again', async (
     assert.equal(Number(profileSynthesisTables.table_count), 1);
     assert.equal(Number(cvTables.table_count), 1);
     assert.equal(Number(lifeProjectTables.table_count), 8);
+    assert.equal(Number(lifeProjectColumns.column_count), 2);
     assert.equal(Number(careerPermissions.permission_count), 2);
     assert.equal(Number(cvPermissions.permission_count), 4);
   } finally {
