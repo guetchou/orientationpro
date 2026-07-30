@@ -50,7 +50,7 @@ Pages : `RiasecTest.tsx` (`/tests/riasec`), `RiasecResults.tsx` (`/orientation/r
 
 | Axe | Page | Comportement observé | Preuve | Risque | Règle UX | Correction proposée | Priorité | Statut |
 |---|---|---|---|---|---|---|---|---|
-| 24. Titres | RiasecTest | Correctif écrit : `<h1 className="sr-only">Test RIASEC</h1>` ajouté dans les 4 branches de rendu — **PR #148 ouverte, CI verte, non fusionnée sur `main`** | `RiasecTest.tsx` (loading/error/intro/questions) | Friction d'accessibilité réelle, mais ne bloque pas le parcours (le contenu reste atteignable sans le h1) | Hiérarchie de titres continue | — | **P1** | **IMPLÉMENTÉ (PR non fusionnée)** — 2 tests Playwright réels (firefox + webkit, 12/12) sur la branche, pas encore sur `main` |
+| 24. Titres | RiasecTest | `<h1 className="sr-only">Test RIASEC</h1>` présent dans les 4 branches de rendu | `RiasecTest.tsx:233,245,265,347` (fusionné sur `main`, PR #148) | Résolu | Hiérarchie de titres continue | — | P1 | **CORRIGÉ / VALIDÉ** — présence confirmée directement sur `main` (`grep`), 2 tests Playwright réels (firefox + webkit, 12/12) |
 | 24. Titres | RiasecResult | **Aucun `<h1>`** — `CardTitle` (h3) uniquement | `RiasecResult.tsx:150` | Idem | Idem | Ajouter un `<h1>` | P1 | INSPECTÉ |
 | 24. Titres | CareerMatches | **Aucun `<h1>`** — `CardTitle` (h3) uniquement | `CareerMatches.tsx:78` | Idem | Idem | Ajouter un `<h1>` | P1 | INSPECTÉ |
 | 24. Titres | RiasecResults | Conforme — `<h1>` présent | `RiasecResults.tsx:57` | — | — | Aucune | — | INSPECTÉ |
@@ -66,7 +66,7 @@ Composants : `AdaptiveProfileWizard.tsx`, `ProfileHypothesisPanel.tsx`, `Profile
 
 | Axe | Comportement observé | Preuve | Risque | Règle UX | Correction proposée | Priorité | Statut |
 |---|---|---|---|---|---|---|---|
-| 24. Titres | Correctif écrit : `<h1 className="sr-only">Mon profil</h1>` ajouté une fois au niveau de `Profile.tsx` (pas dans `AdaptiveProfileWizard`, qui n'est qu'un des 3 sous-composants de la page) — **PR #148 ouverte, CI verte, non fusionnée sur `main`** | `Profile.tsx` | Friction d'accessibilité réelle, mais ne bloque pas le parcours | Hiérarchie de titres continue | — | **P1** | **IMPLÉMENTÉ (PR non fusionnée)** — 2 tests Playwright réels (firefox + webkit, 12/12) sur la branche, pas encore sur `main` |
+| 24. Titres | `<h1 className="sr-only">Mon profil</h1>` présent une fois au niveau de `Profile.tsx` (pas dans `AdaptiveProfileWizard`, qui n'est qu'un des 3 sous-composants de la page) | `Profile.tsx:15` (fusionné sur `main`, PR #148) | Résolu | Hiérarchie de titres continue | — | P1 | **CORRIGÉ / VALIDÉ** — présence confirmée directement sur `main` (`grep`), 2 tests Playwright réels (firefox + webkit, 12/12) |
 | 24. Titres (résiduel) | Saut h1→h3 : le nouveau `<h1>` est immédiatement suivi d'un `<h3>` (`CardTitle`), pas d'un `<h2>` intermédiaire | `AdaptiveProfileWizard.tsx:356`, `ProfileHypothesisPanel.tsx`, `ProfileSynthesisPanel.tsx` | Faible — règle axe `heading-order` est une *best-practice* (`cat.semantics`), non mappée à un critère WCAG (pas de tag `wcag2a`/`wcag2aa`) | Hiérarchie continue si possible sans changement disproportionné | Changer le niveau sémantique de `CardTitle` dans ces contextes précis, ou accepter le saut — décision de composant partagé, hors périmètre du lot #148 | P2 | INSPECTÉ (trouvé en écrivant le test du lot #148, non corrigé) |
 | 5. Préremplissage | E-mail du compte préaffiché en lecture seule dans l'étape identité | `AdaptiveProfileWizard.tsx:392` | — | Anticipation contextuelle | Aucune — conforme sur ce champ | — | INSPECTÉ |
 | 7. Autosauvegarde entre étapes | Chaque étape sauvegarde côté serveur au clic sur « Enregistrer et continuer » (`saveProfileDetails`) — mais **aucune persistance locale au sein d'une étape en cours de saisie** | `AdaptiveProfileWizard.tsx:265` (`saveProfileDetails`), aucune occurrence de `localStorage` dans le fichier | Fermeture d'onglet ou perte de session **pendant** la saisie d'une étape (avant le clic « Enregistrer et continuer ») perd les champs en cours | Assistant multi-étapes → sauvegarde/restauration | Ajouter un brouillon local par étape (pattern déjà éprouvé dans `RiasecTest.tsx`), **après confirmation par un test de perte de données réel** (fermer l'onglet à l'étape 3, revenir) | P1 | INSPECTÉ, comportement de perte **non confirmé en conditions réelles** — hypothèse à valider avant de coder |
@@ -149,7 +149,7 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 
 | # | Constat | Pages concernées | Priorité | Statut |
 |---|---|---|---|---|
-| 1 | **Absence systémique de `<h1>` sur les pages dont le titre visuel repose sur `CardTitle`** — 7 pages confirmées | 7 pages | **P1** | **2/7 implémentées et testées, PR #148 ouverte non fusionnée** (RiasecTest, Profile) ; 5 restantes (VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail) |
+| 1 | **Absence systémique de `<h1>` sur les pages dont le titre visuel repose sur `CardTitle`** — 7 pages confirmées | 7 pages | **P1** | **2/7 corrigées et fusionnées sur `main`** (RiasecTest, Profile — PR #148, revalidé par un run Playwright direct post-fusion, 12/12) ; 5 restantes (VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail) |
 | 2 | Aucune persistance locale dans `AdaptiveProfileWizard` pendant la saisie d'une étape (contrairement à `RiasecTest`) | `/profile` | P1 (hypothèse de perte de données à confirmer avant correction) | Non traité |
 | 3 | Aucune persistance dans le flux CV Optimizer — perte du fichier/de la description en cas de rafraîchissement | `/cv-optimizer` | P1 | Non traité |
 | 4 | Suppression immédiate sans option Annuler pour les compétences/formations du profil | `/profile` | P2 | Non traité |
@@ -163,7 +163,7 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 
 ## PR proposées (indépendantes, non mélangées)
 
-1. **Lot accessibilité — `<h1>` manquants (RiasecTest, Profile) + extension des tests a11y.** Implémenté et testé — **PR #148 ouverte, CI verte, non fusionnée sur `main`**. `<h1 className="sr-only">` ajouté sur les 2 pages les plus centrales, 2 nouveaux tests Playwright réels (firefox + webkit, 12/12) sur la branche.
+1. ~~**Lot accessibilité — `<h1>` manquants (RiasecTest, Profile) + extension des tests a11y.**~~ **Fusionné sur `main` (PR #148).** `<h1 className="sr-only">` présent sur les 2 pages les plus centrales, 2 tests Playwright réels (firefox + webkit, 12/12) revalidés directement sur `main` après fusion.
 2. **Lot accessibilité (suite) — `<h1>` sur VerifyEmail, RiasecResult, CareerMatches, CareerCatalog, OccupationDetail.** Même nature que le lot 1, non commencé.
 3. **Lot `Register.tsx` — association label/input.** Correction ciblée du bug `FormControl`/`id` déjà signalé. Indépendant.
 4. **Lot autosauvegarde `AdaptiveProfileWizard`.** Conditionné à une validation préalable de la perte de données réelle (voir Validations nécessaires). Ne pas coder avant cette validation.
@@ -177,7 +177,7 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 
 ## Dépendances entre lots
 
-- Le lot 1 est implémenté et testé, PR #148 ouverte non fusionnée. Les lots 2, 3, 6, 7, 8, 9, 10 sont indépendants entre eux et n'ont pas de dépendance sur le lot 1.
+- Le lot 1 est fusionné sur `main` (PR #148). Les lots 2, 3, 6, 7, 8, 9, 10 sont indépendants entre eux et n'ont pas de dépendance sur le lot 1.
 - Le lot 4 (autosauvegarde profil) **dépend d'une validation préalable** (test de perte de données réel) — ne pas l'implémenter avant.
 - Le lot 8 (Sonner) et le lot 9 (contraste badge) touchent des composants partagés — vérifier leur usage repo-wide avant de coder, pas seulement sur la page où ils ont été trouvés.
 - Aucun lot ne dépend des 8 axes encore non vérifiés (onboarding détaillé, préremplissage au-delà de ce qui est documenté, hiérarchie visuelle au-delà des titres, etc.) — ces axes restent à auditer avant de proposer d'autres lots.
@@ -192,10 +192,10 @@ Deux défauts d'accessibilité réels et **distincts** du sujet du lot, trouvés
 ## Validations nécessaires avant d'aller plus loin
 
 - Confirmer par un test réel (fermer l'onglet à l'étape 3 de l'assistant profil, revenir) que la perte de données décrite au lot 4 se produit effectivement, avant de la corriger.
-- Lot 1 implémenté et testé, non fusionné — la couverture a11y CI reste à étendre aux 5 pages restantes du constat n°1 (lot 2) une fois #148 fusionnée.
+- Lot 1 fusionné — la couverture a11y CI reste à étendre aux 5 pages restantes du constat n°1 (lot 2).
 - Revue humaine sur le choix `sr-only` (fait pour le lot 1) vs `<h1>` visible pour les 5 pages du lot 2 (décision de direction artistique, pas seulement technique).
 - Avant les lots 8/9 : recenser tous les usages de Sonner et du badge `secondary` dans le dépôt pour évaluer la surface réelle du correctif.
 
 ## Recommandation argumentée sur le prochain lot
 
-**Lot 1 implémenté et testé (PR #148, ouverte, CI verte, non fusionnée sur `main`).** Une fois fusionnée : poursuivre avec le lot 2 (h1 sur les 5 pages restantes — même nature, risque tout aussi faible, bénéfice immédiat). En parallèle : la validation de perte de données sur `AdaptiveProfileWizard` (lot 4), qui doit précéder tout code d'autosauvegarde. Le lot 8 (Sonner) mérite d'être recensé rapidement (surface d'impact) avant d'être priorisé, sans être nécessairement le prochain codé.
+**Lot 1 fusionné sur `main` (PR #148), revalidé après fusion.** Prochain lot recommandé : le lot 2 (h1 sur les 5 pages restantes — même nature, risque tout aussi faible, bénéfice immédiat, aucune dépendance). En parallèle : la validation de perte de données sur `AdaptiveProfileWizard` (lot 4), qui doit précéder tout code d'autosauvegarde. Le lot 8 (Sonner) mérite d'être recensé rapidement (surface d'impact) avant d'être priorisé, sans être nécessairement le prochain codé.
