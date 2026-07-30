@@ -202,9 +202,14 @@ describe('AdvisorLifeProjectPage', () => {
     fireEvent.change(screen.getByLabelText('Ville ou zone'), { target: { value: 'Brazzaville' } });
     fireEvent.change(screen.getByLabelText('Situation actuelle'), { target: { value: 'Terminale générale' } });
     fireEvent.change(screen.getByLabelText('Intérêts'), { target: { value: 'numérique, sciences' } });
+    fireEvent.change(screen.getByLabelText('Stages'), { target: { value: 'stage support informatique' } });
+    fireEvent.change(screen.getByLabelText('Emplois'), { target: { value: 'aide familiale' } });
 
     await waitFor(() => {
-      expect(localStorage.getItem('makoki.life-project.advisor-diagnostic.v1')).toContain('Brazzaville');
+      const stored = localStorage.getItem('makoki.life-project.advisor-diagnostic.v1') || '';
+      expect(stored).toContain('Brazzaville');
+      expect(stored).toContain('stage support informatique');
+      expect(stored).toContain('aide familiale');
     });
     expect(diagnosticPanel).toHaveTextContent('Diagnostic progressif');
   });
@@ -227,21 +232,24 @@ describe('AdvisorLifeProjectPage', () => {
       persistenceVersion: 5,
       project: { ...envelope.project, state: 'provisional_choice', activeScenarioId: scenario.id },
     });
-    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const print = vi.fn();
+    Object.defineProperty(window, 'print', { configurable: true, value: print });
 
     render(<AdvisorLifeProjectPage />);
 
     expect(await screen.findByText(scenario.title)).toBeInTheDocument();
     expect(screen.getByText('Les intérêts déclarés correspondent à cette option.')).toBeInTheDocument();
-    expect(screen.getByText('Frais et calendrier non publiés.')).toBeInTheDocument();
+    expect(screen.getAllByText('Frais et calendrier non publiés.')).not.toHaveLength(0);
     expect(screen.getByRole('link', { name: 'Université Marien Ngouabi — programmes FST' })).toHaveAttribute('href', 'https://example.test/source');
     expect(screen.getByRole('heading', { name: '3. Comparaison' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '4. Synthèse remise au jeune' })).toBeInTheDocument();
-    expect(screen.getByText('Contacter la FST')).toBeInTheDocument();
+    expect(screen.getByText('Aucun choix provisoire')).toBeInTheDocument();
+    expect(screen.getAllByText('Contacter la FST')).not.toHaveLength(0);
 
     fireEvent.click(screen.getByRole('button', { name: 'Retenir provisoirement cette option' }));
     await waitFor(() => expect(api.selectAdvisorScenario).toHaveBeenCalledWith(envelope, scenario.id));
     expect(await screen.findByText('Le choix est enregistré comme provisoire, pas comme décision définitive.')).toBeInTheDocument();
+    expect(screen.getByText(scenario.title)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Imprimer ou enregistrer en PDF' }));
     expect(print).toHaveBeenCalledOnce();
