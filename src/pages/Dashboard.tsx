@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, BookOpen, CheckCircle, Circle, Compass, Loader2, MapPin, RefreshCw, Settings, Sparkles, User } from 'lucide-react';
+import { BarChart3, BookOpen, CheckCircle, Compass, Loader2, MapPin, RefreshCw, Settings, Sparkles, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/lib/apiClient';
 import { listRiasecResults } from '@/services/riasecApi';
+import { getAdaptiveProfile } from '@/features/profile/profileApi';
 import type { RiasecResult } from '@/types/riasec';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  // completion_percent est calculé côté backend (voir src/features/profile/profileApi.ts,
+  // déjà affiché tel quel dans AdaptiveProfileWizard). On ne réinvente pas de définition
+  // locale du "profil complet" : null tant que non chargé, 0 si aucun profil n'existe encore.
+  const [profileCompletionPercent, setProfileCompletionPercent] = useState<number | null>(null);
 
   const loadResults = useCallback(async () => {
     setLoading(true);
@@ -40,6 +45,17 @@ export default function Dashboard() {
       setError(messageForResultsError(loadError));
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const loadProfileCompletion = useCallback(async () => {
+    try {
+      const payload = await getAdaptiveProfile();
+      setProfileCompletionPercent(payload.profile?.completion_percent ?? 0);
+    } catch (loadError) {
+      // Non bloquant : la progression de profil est secondaire par rapport aux résultats.
+      console.error('Unable to load profile completion', loadError);
+      setProfileCompletionPercent(null);
     }
   }, []);
 
@@ -56,24 +72,15 @@ export default function Dashboard() {
     }
 
     void loadResults();
-  }, [navigate, user, loadResults, reloadToken]);
+    void loadProfileCompletion();
+  }, [navigate, user, loadResults, loadProfileCompletion, reloadToken]);
 
   const latestDisplayCode = results[0]?.displayCode || results[0]?.primaryCode || null;
   const hasCompletedTest = results.length > 0;
-  const hasCompletedProfile = Boolean(
-    profile?.bio?.trim() || profile?.interests?.trim() || profile?.experience?.trim() || profile?.education?.trim(),
-  );
-
-  const milestones = useMemo(
-    () => [
-      { label: 'Compte créé', done: true },
-      { label: 'Profil complété', done: hasCompletedProfile },
-      { label: 'Premier test complété', done: hasCompletedTest },
-    ],
-    [hasCompletedProfile, hasCompletedTest],
-  );
-  const milestonesDone = milestones.filter((milestone) => milestone.done).length;
-  const progressPercent = Math.round((milestonesDone / milestones.length) * 100);
+  // 100% est la seule valeur non ambiguë sur une échelle définie par le backend : on ne
+  // choisit pas de seuil arbitraire (ex. "80% = suffisant") pour décider qu'il est "assez"
+  // complet — tant que ce n'est pas 100%, il reste une action concrète à proposer.
+  const profileFullyComplete = profileCompletionPercent === 100;
 
   const nextStep = useMemo(() => {
     if (!hasCompletedTest) {
@@ -84,9 +91,10 @@ export default function Dashboard() {
         onClick: () => navigate('/tests'),
       };
     }
-    if (!hasCompletedProfile) {
+    if (!profileFullyComplete) {
+      const percent = profileCompletionPercent ?? 0;
       return {
-        title: 'Complétez votre profil',
+        title: percent > 0 ? `Continuez votre profil (${percent} % complété)` : 'Complétez votre profil',
         description: 'Ajoutez vos centres d’intérêt et votre parcours pour des recommandations plus précises.',
         cta: 'Compléter mon profil',
         onClick: () => navigate('/profile'),
@@ -106,7 +114,7 @@ export default function Dashboard() {
       cta: 'Explorer les métiers',
       onClick: () => navigate('/careers'),
     };
-  }, [hasCompletedTest, hasCompletedProfile, navigate]);
+  }, [hasCompletedTest, profileFullyComplete, profileCompletionPercent, navigate]);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Utilisateur';
   const avatarInitials = displayName.slice(0, 2).toUpperCase();
@@ -144,25 +152,13 @@ export default function Dashboard() {
 
         <Card className="mb-8 border-emerald-200 bg-white">
           <CardContent className="p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium text-emerald-700">Votre progression</p>
-                <p className="text-2xl font-bold text-gray-900">{progressPercent}% de vos premières étapes</p>
-              </div>
-              <ul className="flex flex-wrap gap-4">
-                {milestones.map((milestone) => (
-                  <li key={milestone.label} className="flex items-center gap-2 text-sm">
-                    {milestone.done ? (
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-gray-300" />
-                    )}
-                    <span className={milestone.done ? 'text-gray-900' : 'text-gray-400'}>{milestone.label}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-emerald-700">Profil renseigné</span>
+              <span className="font-semibold text-gray-900">
+                {profileCompletionPercent === null ? '—' : `${profileCompletionPercent} %`}
+              </span>
             </div>
-            <Progress value={progressPercent} className="mt-4 h-2" />
+            <Progress value={profileCompletionPercent ?? 0} className="mt-2 h-2" />
           </CardContent>
         </Card>
 
