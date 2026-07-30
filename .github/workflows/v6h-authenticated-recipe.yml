@@ -52,12 +52,27 @@ jobs:
             "${V6H_API_ROOT}/v1/auth/register")
           test "${register_status}" = 201
 
+          {
+            echo "RUN_ID=${GITHUB_RUN_ID}"
+            echo "RECIPE_EMAIL=${recipe_email}"
+            echo "TOKEN_PATH=${token_path}"
+            echo "PUBLIC_KEY_B64=${public_key_b64}"
+          } >/tmp/v6h-handshake.txt
+          chmod 600 /tmp/v6h-handshake.txt
+
           echo "V6H_RECIPE_HANDSHAKE_BEGIN"
-          echo "RUN_ID=${GITHUB_RUN_ID}"
-          echo "RECIPE_EMAIL=${recipe_email}"
-          echo "TOKEN_PATH=${token_path}"
-          echo "PUBLIC_KEY_B64=${public_key_b64}"
+          cat /tmp/v6h-handshake.txt
           echo "V6H_RECIPE_HANDSHAKE_END"
+
+      - name: Upload public handshake
+        uses: actions/upload-artifact@v4
+        with:
+          name: v6h-authenticated-handshake-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 1
+          path: |
+            /tmp/v6h-public.pem
+            /tmp/v6h-handshake.txt
 
       - name: Wait for encrypted verification token
         shell: bash
