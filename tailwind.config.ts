@@ -43,7 +43,14 @@ export default {
         },
         secondary: {
           DEFAULT: "#F97316", // Orange / latérite
-          foreground: "#FFFFFF",
+          // #FFFFFF sur #F97316 ≈ 2.9:1 — échoue WCAG AA (4.5:1 requis pour texte
+          // normal), violation axe réelle observée sur /profile (badge "Complété
+          // à X %") mais affectant en réalité les 145 usages de ce token
+          // (140 Badge + 5 Button variant="secondary") puisque la couleur est
+          // définie une seule fois ici. #1c1917 (stone-900, déjà largement
+          // utilisé ailleurs dans l'app) donne ≈5.85:1 sans changer la couleur
+          // de marque (l'orange latérite reste inchangé).
+          foreground: "#1c1917",
           50: "#fff7ed",
           100: "#ffedd5",
           200: "#fed7aa",
