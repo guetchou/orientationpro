@@ -288,15 +288,24 @@ const diagnosticToEngineInput = (diagnosticInput) => {
   return deepFreeze({
     id: diagnostic.id,
     objective: diagnostic.objective,
-    educationLevel: typeof educationValue === 'string' ? educationValue : null,
+    educationLevel: typeof educationValue === 'string' ? educationValue : undefined,
     location: {
-      country: typeof countryValue === 'string' ? countryValue : null,
-      zone: typeof zoneValue === 'string' ? zoneValue : null,
+      country: typeof countryValue === 'string' ? countryValue : undefined,
+      zone: typeof zoneValue === 'string' ? zoneValue : undefined,
     },
     mobility: diagnostic.constraints.mobility,
-    budget: diagnostic.constraints.budget,
-    maxDurationMonths: diagnostic.constraints.maxDurationMonths,
-    needIncomeWithinMonths: diagnostic.constraints.needIncomeWithinMonths,
+    budget: {
+      amount: diagnostic.constraints.budget.amount === null
+        ? undefined
+        : diagnostic.constraints.budget.amount,
+      currency: diagnostic.constraints.budget.currency || undefined,
+    },
+    maxDurationMonths: diagnostic.constraints.maxDurationMonths === null
+      ? undefined
+      : diagnostic.constraints.maxDurationMonths,
+    needIncomeWithinMonths: diagnostic.constraints.needIncomeWithinMonths === null
+      ? undefined
+      : diagnostic.constraints.needIncomeWithinMonths,
     interests: [
       ...diagnostic.preferences.interests,
       ...diagnostic.preferences.activities,
