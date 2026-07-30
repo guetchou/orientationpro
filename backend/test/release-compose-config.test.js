@@ -10,6 +10,7 @@ const test = require('node:test');
 const repoRoot = path.resolve(__dirname, '../..');
 const assertionScript = path.join(repoRoot, 'scripts/release/assert-life-project-compose-config.cjs');
 const overridePath = path.join(repoRoot, 'scripts/release/life-project-compose.override.yml');
+const deploymentScript = path.join(repoRoot, 'scripts/deploy-production-vps.sh');
 
 const validConfig = {
   services: {
@@ -90,4 +91,12 @@ test('versioned Compose override contains every V6-H boundary', () => {
   ]) {
     assert.ok(override.includes(expected), expected);
   }
+});
+
+test('production deploy applies V6-H override only to the new release, not rollback', () => {
+  const script = fs.readFileSync(deploymentScript, 'utf8');
+  assert.match(script, /rollback_compose=\([\s\S]*-f "\$\{compose_file\}"[\s\S]*\)/u);
+  assert.match(script, /compose=\([\s\S]*"\$\{rollback_compose\[@\]\}"[\s\S]*-f "\$\{compose_override\}"[\s\S]*\)/u);
+  assert.match(script, /"\$\{rollback_compose\[@\]\}" up -d --no-deps --force-recreate api web/u);
+  assert.doesNotMatch(script, /"\$\{compose\[@\]\}" up -d --no-deps --force-recreate api web \|\| true/u);
 });
