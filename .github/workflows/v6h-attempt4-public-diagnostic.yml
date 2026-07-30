@@ -1,4 +1,4 @@
-name: V6-H Attempt 4 Public Diagnostic
+name: V6-H Attempt 5 Public Diagnostic
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     env:
-      TARGET_SHA: ddaad08645e61b148d164af166b9e823d381fc05
+      TARGET_SHA: 595692cbc979d88722e341b374268512ed995fc7
       ISSUE_NUMBER: '184'
     steps:
       - name: Collect exact public statuses
@@ -61,8 +61,21 @@ jobs:
             const entry = byId(id);
             return `- \`${id}\`: ${entry ? `${entry.status}, configured=${entry.configured}` : 'absent'}`;
           }).join('\n');
+          const technicalGo = root.status === '200'
+            && parcours.status === '200'
+            && healthResponse.status === '200'
+            && health?.status === 'OK'
+            && health?.gitSha === process.env.TARGET_SHA
+            && capabilitiesResponse.status === '200'
+            && unauth.status === '401'
+            && byId('identity.auth-v1')?.status === 'active'
+            && byId('identity.auth-v1')?.configured === true
+            && byId('life-project.core-v1')?.status === 'experimental'
+            && byId('life-project.core-v1')?.configured === true
+            && ['orientation.riasec', 'career.recommendations', 'cv.analysis-v1', 'privacy.data-rights-v1', 'identity.auth-legacy']
+              .every((id) => byId(id)?.status === 'disabled' && byId(id)?.configured === false);
           const lines = [
-            '## V6-H — diagnostic public après déploiement tentative 4',
+            `## V6-H — diagnostic public tentative 5 ${technicalGo ? 'GO technique limité' : 'NO-GO'}`,
             '',
             `- SHA attendu : \`${process.env.TARGET_SHA}\``,
             `- SHA servi : \`${health?.gitSha ?? 'non lisible'}\``,
@@ -74,11 +87,17 @@ jobs:
             '',
             '### Capacités',
             capabilities,
+            '',
+            technicalGo
+              ? 'Décision : **GO technique limité**. Le code, le SHA, les capacités et la barrière publique sont conformes. La recette authentifiée complète et le pilote jeune-conseiller restent à réaliser.'
+              : 'Décision : **NO-GO**. Une preuve publique obligatoire reste non conforme.',
           ];
           fs.writeFileSync('/tmp/diagnostic.md', `${lines.join('\n')}\n`);
+          if (!technicalGo) process.exitCode = 1;
           NODE
 
       - name: Publish diagnostic
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
