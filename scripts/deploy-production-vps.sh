@@ -13,6 +13,7 @@ release="${release_root}/${sha}"
 backup_root=/opt/backups
 compose_project=orientationpro_riasec
 compose_file="${release}/.vps/docker-compose.yml"
+compose_override="${release}/scripts/release/life-project-compose.override.yml"
 env_file="${release}/.env.vps"
 archive=/opt/cache/makoki/esco/esco-1.2.1-fr.zip
 crosswalk=/opt/cache/makoki/esco/ONET_Occupations_0_updated.csv
@@ -22,6 +23,12 @@ bootstrap_hash=3bb6629cba8dc37d026f8c9419d8dfe771e25d55bc2f6409279a5aa4d4c41c95
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 backup="${backup_root}/orientationpro-${stamp}-${sha:0:12}"
 lock_file=/run/lock/orientationpro-production-deploy.lock
+resolved_compose=''
+
+cleanup() {
+  [[ -z "${resolved_compose}" ]] || rm -f "${resolved_compose}"
+}
+trap cleanup EXIT
 
 exec 9>"${lock_file}"
 flock -n 9 || { echo "another production deployment is running" >&2; exit 3; }
@@ -53,6 +60,8 @@ if [[ ! -d "${release}/.git" ]]; then
 fi
 test "$(git -C "${release}" rev-parse HEAD)" = "${sha}"
 test -x "${release}/scripts/deploy-production-vps.sh"
+test -f "${compose_override}"
+test -f "${release}/scripts/release/assert-life-project-compose-config.cjs"
 
 install -d -m 700 "${release}/.vps"
 cp -a "${source_checkout}/.vps/." "${release}/.vps/"
@@ -98,6 +107,7 @@ docker exec "${compose_project}-db-1" bash -c \
 gzip -t "${backup}/db-before.sql.gz"
 sha256sum "${backup}/db-before.sql.gz" >"${backup}/db-before.sql.gz.sha256"
 cp -a "${compose_file}" "${backup}/docker-compose.yml"
+cp -a "${compose_override}" "${backup}/life-project-compose.override.yml"
 cp -a "${env_file}" "${backup}/env-release.vps"
 chmod 600 "${backup}/env-release.vps"
 cp -a /etc/nginx/sites-available/makoki.org "${backup}/nginx-makoki.org" 2>/dev/null || true
@@ -109,8 +119,20 @@ for service in api web; do
   fi
 done
 
-compose=(docker compose --project-name "${compose_project}" --env-file "${env_file}" -f "${compose_file}")
+compose=(
+  docker compose
+  --project-name "${compose_project}"
+  --env-file "${env_file}"
+  -f "${compose_file}"
+  -f "${compose_override}"
+)
 "${compose[@]}" config --quiet
+resolved_compose=$(mktemp)
+chmod 600 "${resolved_compose}"
+"${compose[@]}" config --format json >"${resolved_compose}"
+node "${release}/scripts/release/assert-life-project-compose-config.cjs" "${resolved_compose}"
+rm -f "${resolved_compose}"
+resolved_compose=''
 
 rollback_on_error() {
   status=$?
@@ -130,7 +152,7 @@ rollback_on_error() {
 trap rollback_on_error ERR
 
 "${compose[@]}" build api
-"${compose[@]}" build --build-arg VITE_LIFE_PROJECT_ENABLED=true web
+"${compose[@]}" build web
 
 db_id_before=$(docker inspect -f '{{.Id}}' "${compose_project}-db-1")
 "${compose[@]}" run --rm --no-deps api node scripts/migrate.js up
