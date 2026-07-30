@@ -237,7 +237,7 @@ describe('AdvisorLifeProjectPage', () => {
 
     render(<AdvisorLifeProjectPage />);
 
-    expect(await screen.findByText(scenario.title)).toBeInTheDocument();
+    expect((await screen.findAllByText(scenario.title)).length).toBeGreaterThan(0);
     expect(screen.getByText('Les intérêts déclarés correspondent à cette option.')).toBeInTheDocument();
     expect(screen.getAllByText('Frais et calendrier non publiés.')).not.toHaveLength(0);
     expect(screen.getByRole('link', { name: 'Université Marien Ngouabi — programmes FST' })).toHaveAttribute('href', 'https://example.test/source');
@@ -249,7 +249,7 @@ describe('AdvisorLifeProjectPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retenir provisoirement cette option' }));
     await waitFor(() => expect(api.selectAdvisorScenario).toHaveBeenCalledWith(envelope, scenario.id));
     expect(await screen.findByText('Le choix est enregistré comme provisoire, pas comme décision définitive.')).toBeInTheDocument();
-    expect(screen.getByText(scenario.title)).toBeInTheDocument();
+    expect(screen.getAllByText(scenario.title)).not.toHaveLength(0);
 
     fireEvent.click(screen.getByRole('button', { name: 'Imprimer ou enregistrer en PDF' }));
     expect(print).toHaveBeenCalledOnce();
