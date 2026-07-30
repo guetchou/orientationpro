@@ -12,6 +12,8 @@ import {
   Target,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { CompassMarker, TrajectoryLine } from '@/components/home/PathMotifs';
 
 const Reveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => {
   const shouldReduceMotion = useReducedMotion();
@@ -62,18 +64,24 @@ const benefits = [
     description:
       'Rassemblez votre parcours, vos centres d’intérêt, vos compétences et ce que vous recherchez aujourd’hui.',
     icon: Target,
+    photo: 'accompagnement-conseiller',
+    alt: 'Une personne échange avec un conseiller autour d’un dossier.',
   },
   {
     title: 'Découvrir plusieurs possibilités',
     description:
       'Explorez des métiers et comprenez pourquoi certaines pistes méritent votre attention.',
     icon: Compass,
+    photo: 'employabilite-cv',
+    alt: 'Une personne travaille sur son CV et ses compétences sur un ordinateur portable.',
   },
   {
     title: 'Avancer avec plus de clarté',
     description:
       'Comparez les options, complétez votre profil à votre rythme et choisissez vos prochaines étapes.',
     icon: BriefcaseBusiness,
+    photo: 'emploi-entretien',
+    alt: 'Une personne en entretien d’embauche face à un recruteur.',
   },
 ];
 
@@ -202,16 +210,31 @@ export default function Home() {
           </div>
         </Reveal>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <div className="mt-16 space-y-16 lg:space-y-24">
           {benefits.map((benefit, index) => (
-            <Reveal key={benefit.title} delay={index * 0.08}>
-              <article className="h-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
-                  <benefit.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-5 text-xl font-semibold text-stone-900">{benefit.title}</h3>
-                <p className="mt-3 leading-7 text-stone-600">{benefit.description}</p>
-              </article>
+            <Reveal key={benefit.title}>
+              <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+                <div
+                  className={cn(
+                    'overflow-hidden rounded-3xl shadow-lg',
+                    index % 2 === 1 && 'lg:order-2',
+                  )}
+                >
+                  <Photo
+                    name={benefit.photo}
+                    alt={benefit.alt}
+                    sizes="(min-width: 1024px) 40vw, 90vw"
+                    className="h-72 w-full object-cover lg:h-96"
+                  />
+                </div>
+                <div className={cn(index % 2 === 1 && 'lg:order-1')}>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                    <benefit.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-5 text-2xl font-semibold text-stone-900">{benefit.title}</h3>
+                  <p className="mt-3 text-lg leading-7 text-stone-600">{benefit.description}</p>
+                </div>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -228,22 +251,25 @@ export default function Home() {
             </div>
           </Reveal>
 
-          <ol className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step, index) => (
-              <li
-                key={step.number}
-                className="h-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
-              >
-                <Reveal delay={index * 0.06}>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">
-                    {step.number}
-                  </span>
-                  <h3 className="mt-5 text-lg font-semibold text-stone-900">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-stone-600">{step.description}</p>
-                </Reveal>
-              </li>
-            ))}
-          </ol>
+          <div className="relative mt-16 pt-6 lg:mt-20">
+            <TrajectoryLine />
+            <ol className="relative grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {steps.map((step, index) => (
+                <li
+                  key={step.number}
+                  className="relative h-full rounded-2xl border border-stone-200 bg-white p-6 pt-9 shadow-sm"
+                >
+                  <Reveal delay={index * 0.06}>
+                    <div className="absolute -top-6 left-6">
+                      <CompassMarker number={step.number} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-stone-900">{step.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-stone-600">{step.description}</p>
+                  </Reveal>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </section>
 
