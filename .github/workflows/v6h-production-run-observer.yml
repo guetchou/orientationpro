@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      TARGET_SHA: aae2c39779e6d5c27dfa66c7de8d20380431b39f
+      TARGET_SHA: 112e15b1374511476644cbcd87b4de8189db9780
       ISSUE_NUMBER: '184'
     steps:
       - name: Observe Production Deploy run
@@ -70,7 +70,7 @@ jobs:
           done
 
           {
-            echo '## V6-H — exécution Production Deploy'
+            echo '## V6-H — exécution Production Deploy tentative 2'
             echo
             echo "- SHA : \`${TARGET_SHA}\`"
             echo "- Run : ${run_url:-non trouvé}"
