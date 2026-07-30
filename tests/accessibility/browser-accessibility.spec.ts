@@ -38,12 +38,14 @@ test('disabled parcours route fails closed without exposing authenticated conten
 
 test('offline reload either serves the cached shell or exposes a browser failure', async ({ page, context }) => {
   await page.goto('/login');
-  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
   await context.setOffline(true);
   const response = await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => null);
-  const shellVisible = await page.getByRole('heading', { name: 'Connexion' }).isVisible().catch(() => false);
-  expect(
-    shellVisible || response === null,
-    'offline reload must not silently show an unrelated or stale authenticated page',
-  ).toBe(true);
+  if (response !== null) {
+    await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
+    await expect(page.getByRole('alert').getByText('Mode hors ligne')).toBeVisible();
+  }
 });
