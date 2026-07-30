@@ -157,6 +157,41 @@ const positioningLabels = {
   exploratory: 'Exploratoire',
 };
 
+const formatDuration = (scenario: AdvisorRecommendationScenario) => (
+  scenario.durationMonths === null ? 'À confirmer' : `${scenario.durationMonths} mois`
+);
+
+const formatCost = (scenario: AdvisorRecommendationScenario) => {
+  if (scenario.cost.status === 'unknown' || scenario.cost.amount === null) return 'À confirmer';
+  const amount = new Intl.NumberFormat('fr-FR').format(scenario.cost.amount);
+  const currency = scenario.cost.currency ? ` ${scenario.cost.currency}` : '';
+  return scenario.cost.status === 'range'
+    ? `À partir de ${amount}${currency}`
+    : `${amount}${currency}`;
+};
+
+const formatCalendar = (scenario: AdvisorRecommendationScenario) => {
+  if (scenario.calendar.status === 'closed') return 'Fermé pour la période connue';
+  if (scenario.calendar.status === 'unknown') return 'À confirmer';
+  const details = ['Ouvert'];
+  if (scenario.calendar.applicationDeadlineAt) {
+    details.push(`candidature avant le ${new Date(scenario.calendar.applicationDeadlineAt).toLocaleDateString('fr-FR')}`);
+  }
+  if (scenario.calendar.nextStartAt) {
+    details.push(`démarrage le ${new Date(scenario.calendar.nextStartAt).toLocaleDateString('fr-FR')}`);
+  }
+  return details.join(' · ');
+};
+
+const formatAccess = (scenario: AdvisorRecommendationScenario) => {
+  const values = [...new Set([
+    ...scenario.geographies,
+    ...scenario.modes,
+    ...scenario.localOpportunities.map((entry) => entry.zone).filter((value): value is string => Boolean(value)),
+  ])];
+  return values.join(', ') || 'À confirmer';
+};
+
 const csv = (value: string) => [...new Set(value
   .split(/[;,\n]/u)
   .map((entry) => entry.trim())
@@ -834,6 +869,7 @@ export default function AdvisorLifeProjectPage() {
                     <th className="p-3">Confiance</th>
                     <th className="p-3">Durée</th>
                     <th className="p-3">Coût</th>
+                    <th className="p-3">Calendrier</th>
                     <th className="p-3">Accès / mobilité</th>
                     <th className="p-3">Conditions</th>
                     <th className="p-3">Risques</th>
@@ -846,9 +882,10 @@ export default function AdvisorLifeProjectPage() {
                       <td className="p-3 font-medium">{scenario.title}</td>
                       <td className="p-3">{Math.round(scenario.fitScore)}/100</td>
                       <td className="p-3">{confidenceLabels[scenario.confidence]}</td>
-                      <td className="p-3">À confirmer dans la source locale</td>
-                      <td className="p-3">À confirmer dans la source locale</td>
-                      <td className="p-3">{scenario.localOpportunities.map((entry) => entry.zone).filter(Boolean).join(', ') || 'À confirmer'}</td>
+                      <td className="p-3">{formatDuration(scenario)}</td>
+                      <td className="p-3">{formatCost(scenario)}</td>
+                      <td className="p-3">{formatCalendar(scenario)}</td>
+                      <td className="p-3">{formatAccess(scenario)}</td>
                       <td className="p-3">{scenario.conditions[0] || 'À vérifier'}</td>
                       <td className="p-3">{scenario.risks[0] || 'Aucun risque documenté'}</td>
                       <td className="p-3">{scenario.firstActions[0]?.title || 'À définir'}</td>
@@ -858,7 +895,7 @@ export default function AdvisorLifeProjectPage() {
               </table>
             </div>
             <p className="text-sm text-muted-foreground">
-              La durée et le coût restent « à confirmer » tant que le moteur ne transmet pas de valeur locale vérifiée. Ils ne sont jamais déduits silencieusement.
+              La durée, le coût, le calendrier et les modalités proviennent du référentiel local. Une donnée absente reste « à confirmer » et n’est jamais déduite silencieusement.
             </p>
           </section>
         )}

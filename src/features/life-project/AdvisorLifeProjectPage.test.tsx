@@ -82,7 +82,17 @@ const scenario = {
   conditions: ['Confirmer les modalités 2026-2027.'],
   risks: ['Frais et calendrier non publiés.'],
   blockingFactors: [],
-  missingInformation: ['Coût ou fourchette de coût'],
+  missingInformation: [],
+  durationMonths: 24,
+  cost: { amount: 250000, currency: 'XAF', fundingAvailable: false, status: 'known' as const },
+  calendar: {
+    status: 'open' as const,
+    nextStartAt: '2026-10-01T00:00:00.000Z',
+    applicationDeadlineAt: '2026-09-01T00:00:00.000Z',
+  },
+  modes: ['presentiel'],
+  geographies: ['Brazzaville'],
+  entryLevel: { minimumRank: 4, label: 'Baccalauréat', status: 'to_confirm' as const },
   localOpportunities: [{
     id: 'opp-1',
     title: 'Programme Informatique et Réseaux',
@@ -242,6 +252,10 @@ describe('AdvisorLifeProjectPage', () => {
     expect(screen.getAllByText('Frais et calendrier non publiés.')).not.toHaveLength(0);
     expect(screen.getByRole('link', { name: 'Université Marien Ngouabi — programmes FST' })).toHaveAttribute('href', 'https://example.test/source');
     expect(screen.getByRole('heading', { name: '3. Comparaison' })).toBeInTheDocument();
+    expect(screen.getByText('24 mois')).toBeInTheDocument();
+    expect(screen.getByText(/250.*000 XAF/u)).toBeInTheDocument();
+    expect(screen.getByText(/Ouvert.*01\/09\/2026/u)).toBeInTheDocument();
+    expect(screen.getByText(/Brazzaville, presentiel/u)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '4. Synthèse remise au jeune' })).toBeInTheDocument();
     expect(screen.getByText('Aucun choix provisoire')).toBeInTheDocument();
     expect(screen.getAllByText('Contacter la FST')).not.toHaveLength(0);

@@ -50,6 +50,13 @@ test('produces a strict complete contract with three to five diversified scenari
     assert.ok(scenario.firstActions.length > 0);
     assert.ok(scenario.firstActions[0].expectedEvidence.length > 0);
     assert.ok(scenario.sourceReferences.length > 0);
+    const option = createLocalOption(TEST_OPTIONS.find((candidate) => candidate.id === scenario.optionId));
+    assert.equal(scenario.durationMonths, option.durationMonths);
+    assert.deepEqual(scenario.cost, option.cost);
+    assert.deepEqual(scenario.calendar, option.calendar);
+    assert.deepEqual(scenario.modes, option.modes);
+    assert.deepEqual(scenario.geographies, option.geographies);
+    assert.deepEqual(scenario.entryLevel, option.entryLevel);
     assert.equal(scenario.engineVersion, RECOMMENDATION_ENGINE_VERSION);
     assert.ok(scenario.alternatives.every((id) => id !== scenario.id));
   }

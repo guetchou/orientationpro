@@ -330,6 +330,12 @@ const createRecommendationScenario = (input = {}) => {
       value.missingInformation,
       'scenario.missingInformation',
     ),
+    durationMonths: boundedNumber(value.durationMonths, 'scenario.durationMonths', 0, 240, null),
+    cost: cost(value.cost, 'scenario.cost'),
+    calendar: calendar(value.calendar, 'scenario.calendar'),
+    modes: stringArray(value.modes, 'scenario.modes'),
+    geographies: stringArray(value.geographies, 'scenario.geographies'),
+    entryLevel: entryLevel(value.entryLevel, 'scenario.entryLevel'),
     localOpportunities: objectArray(
       value.localOpportunities,
       'scenario.localOpportunities',
