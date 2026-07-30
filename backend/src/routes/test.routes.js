@@ -14,7 +14,9 @@ router.get('/health', (req, res) => {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      version: process.version
+      version: process.version,
+
+      gitSha: process.env.GIT_SHA || null
     });
   } catch (error) {
     console.error('Erreur dans le test de santé:', error);
