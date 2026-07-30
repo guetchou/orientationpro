@@ -5,6 +5,12 @@ const path = require('node:path');
 
 const read = (directory, file) => JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8'));
 const exists = (directory, file) => fs.existsSync(path.join(directory, file));
+const populated = (value) => (
+  typeof value === 'string' ? value.trim().length > 0
+    : Array.isArray(value) ? value.length > 0
+      : value && typeof value === 'object' ? Object.keys(value).length > 0
+        : value === true
+);
 
 const decide = (directory) => {
   const manifest = read(directory, 'manifest.json');
@@ -28,15 +34,38 @@ const decide = (directory) => {
   }
   if (!exists(directory, 'risk-acceptance.json')) {
     blockers.push('formal residual dependency risk acceptance missing');
+  } else {
+    const acceptance = read(directory, 'risk-acceptance.json');
+    const required = ['gitSha', 'acceptedAt', 'acceptedBy', 'businessRole', 'acceptedRisks', 'rationale'];
+    if (acceptance.gitSha !== manifest.gitSha
+      || acceptance.explicitAcceptance !== true
+      || required.some((field) => !populated(acceptance[field]))) {
+      blockers.push('formal residual dependency risk acceptance invalid or attached to another SHA');
+    }
   }
   if (!exists(directory, 'maintainer-decision.json')) {
     blockers.push('explicit maintainer activation decision missing');
+  } else {
+    const decision = read(directory, 'maintainer-decision.json');
+    const required = [
+      'gitSha', 'decidedAt', 'maintainer', 'decision', 'flags', 'cohort',
+      'duration', 'stopThresholds', 'owner', 'rollbackProcedure',
+    ];
+    if (decision.gitSha !== manifest.gitSha
+      || decision.explicitApproval !== true
+      || !['GO', 'GO LIMITÉ'].includes(decision.decision)
+      || required.some((field) => !populated(decision[field]))) {
+      blockers.push('explicit maintainer activation decision invalid or incomplete');
+    }
   }
+  const approvedDecision = exists(directory, 'maintainer-decision.json')
+    ? read(directory, 'maintainer-decision.json').decision
+    : null;
   return {
     schemaVersion: 'makoki.v5g-final-gate.v1',
     generatedAt: new Date().toISOString(),
     gitSha: manifest.gitSha,
-    decision: blockers.length ? 'NO-GO' : 'GO-LIMITED',
+    decision: blockers.length ? 'NO-GO' : approvedDecision,
     blockers,
     invariant: 'Wave 5 feature flags remain disabled by default',
     limitation: 'A passing technical gate does not itself authorize public activation.',
