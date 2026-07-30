@@ -1,0 +1,52 @@
+name: V6-H Authenticated Run Snapshot
+
+on:
+  push:
+    branches:
+      - agent/v6h-public-production-probe
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect authenticated recipe runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sleep 5
+          curl --fail --silent --show-error \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?branch=agent%2Fv6h-authenticated-recipe&event=push&per_page=20" \
+            >/tmp/runs.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync('/tmp/runs.json', 'utf8'));
+          const runs = (payload.workflow_runs || []).map((run) => ({
+            id: run.id,
+            name: run.name,
+            path: run.path,
+            headSha: run.head_sha,
+            status: run.status,
+            conclusion: run.conclusion,
+            url: run.html_url,
+          }));
+          fs.writeFileSync('/tmp/snapshot.md', `## V6-H — état du run authentifié\n\n\`\`\`json\n${JSON.stringify(runs, null, 2)}\n\`\`\`\n`);
+          NODE
+          jq -n --rawfile body /tmp/snapshot.md '{body: $body}' >/tmp/comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/comment.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/184/comments" \
+            >/tmp/response.json
