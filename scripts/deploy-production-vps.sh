@@ -41,6 +41,12 @@ git --git-dir="${mirror}" fetch --prune origin '+refs/heads/main:refs/heads/main
 git --git-dir="${mirror}" cat-file -e "${sha}^{commit}"
 git --git-dir="${mirror}" merge-base --is-ancestor "${sha}" refs/heads/main
 
+space_helper=$(mktemp)
+git --git-dir="${mirror}" show "${sha}:scripts/release/prepare-docker-build-space.sh" >"${space_helper}"
+chmod 700 "${space_helper}"
+bash "${space_helper}" "${release_root}" "${deploy_root}/current" "${deploy_root}/deployments.tsv"
+rm -f "${space_helper}"
+
 if [[ ! -d "${release}/.git" ]]; then
   git clone --shared "${mirror}" "${release}"
   git -C "${release}" checkout --detach "${sha}"
@@ -53,6 +59,10 @@ cp -a "${source_checkout}/.vps/." "${release}/.vps/"
 install -m 644 "${source_checkout}/backend/Dockerfile.vps" "${release}/backend/Dockerfile.vps"
 install -m 644 "${source_checkout}/backend/.dockerignore" "${release}/backend/.dockerignore"
 install -m 600 "${source_checkout}/.env.vps" "${env_file}"
+
+test -f "${release}/.vps/Dockerfile.web"
+bash "${release}/scripts/release/enable-life-project-web-build.sh" \
+  "${release}/.vps/Dockerfile.web"
 
 mkdir -m 700 "${backup}"
 cp -a "${env_file}" "${backup}/env-before.vps"
