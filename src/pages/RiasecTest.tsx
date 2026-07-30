@@ -230,6 +230,7 @@ export default function RiasecTest() {
   if (phase === 'loading') {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-stone-50">
+        <h1 className="sr-only">Test RIASEC</h1>
         <div className="text-center" role="status" aria-live="polite">
           <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-emerald-700" />
           <p className="text-stone-600">Chargement de l’instrument RIASEC…</p>
@@ -241,6 +242,7 @@ export default function RiasecTest() {
   if (phase === 'error' || !instrument) {
     return (
       <main className="mx-auto min-h-[70vh] max-w-2xl px-4 py-16">
+        <h1 className="sr-only">Test RIASEC</h1>
         <Card className="border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
@@ -260,6 +262,7 @@ export default function RiasecTest() {
   if (phase === 'intro') {
     return (
       <main className="min-h-screen bg-stone-50 px-4 py-10 sm:py-14">
+        <h1 className="sr-only">Test RIASEC</h1>
         <div className="mx-auto max-w-3xl space-y-6">
           <div className="flex items-center justify-between gap-4">
             <Button asChild variant="ghost" className="text-stone-600 hover:text-stone-900">
@@ -341,6 +344,7 @@ export default function RiasecTest() {
 
   return (
     <main className="min-h-screen bg-stone-50 px-4 py-6 sm:py-10">
+      <h1 className="sr-only">Test RIASEC</h1>
       <div className="mx-auto max-w-2xl space-y-4">
         {resumed && (
           <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">

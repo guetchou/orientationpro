@@ -12,6 +12,7 @@ export default function Profile() {
           <ArrowLeft className="h-4 w-4" />
           Retour au tableau de bord
         </Link>
+        <h1 className="sr-only">Mon profil</h1>
         <ProfileHypothesisPanel />
         <ProfileSynthesisPanel />
         <AdaptiveProfileWizard />
