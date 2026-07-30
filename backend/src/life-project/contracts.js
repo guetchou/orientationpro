@@ -81,6 +81,11 @@ const plainObject = (value, field, fallback = {}) => {
   return { ...value };
 };
 
+const nullablePlainObject = (value, field) => {
+  if (value === undefined || value === null) return null;
+  return plainObject(value, field);
+};
+
 const enumValue = (value, field, allowed, fallback) => {
   if (value === undefined || value === null || value === '') return fallback;
   if (!allowed.includes(value)) {
@@ -326,6 +331,8 @@ const lifeProject = (input = {}) => {
     criteria,
     actionPlans,
     stateHistory,
+    diagnostic: nullablePlainObject(input.diagnostic, 'lifeProject.diagnostic'),
+    recommendation: nullablePlainObject(input.recommendation, 'lifeProject.recommendation'),
     missingInformation: stringArray(
       input.missingInformation,
       'lifeProject.missingInformation',
