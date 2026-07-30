@@ -142,6 +142,25 @@ export interface AdvisorRecommendationScenario {
   risks: string[];
   blockingFactors: string[];
   missingInformation: string[];
+  durationMonths: number | null;
+  cost: {
+    amount: number | null;
+    currency: string | null;
+    fundingAvailable: boolean;
+    status: 'known' | 'range' | 'unknown';
+  };
+  calendar: {
+    status: 'open' | 'closed' | 'unknown';
+    nextStartAt: string | null;
+    applicationDeadlineAt: string | null;
+  };
+  modes: string[];
+  geographies: string[];
+  entryLevel: {
+    minimumRank: number | null;
+    label: string | null;
+    status: 'verified' | 'to_confirm';
+  };
   localOpportunities: AdvisorLocalOpportunity[];
   sourceReferences: AdvisorSourceReference[];
   firstActions: AdvisorFirstAction[];
