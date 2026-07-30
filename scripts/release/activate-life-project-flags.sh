@@ -22,10 +22,6 @@ upsert_flag() {
   mv "${temporary}" "${env_file}"
 }
 
-upsert_flag AUTH_V1_ENABLED true
-upsert_flag LIFE_PROJECT_API_ENABLED true
-upsert_flag VITE_LIFE_PROJECT_ENABLED true
-
 required_true=(
   AUTH_V1_ENABLED
   LIFE_PROJECT_API_ENABLED
@@ -44,6 +40,14 @@ required_false=(
   FEATURE_ANALYTICS
 )
 
+for flag in "${required_true[@]}"; do
+  upsert_flag "${flag}" true
+done
+
+for flag in "${required_false[@]}"; do
+  upsert_flag "${flag}" false
+done
+
 read_flag() {
   local key="$1"
   awk -F= -v key="${key}" '$1 == key { value = $2 } END { print value }' "${env_file}"
@@ -58,7 +62,7 @@ done
 
 for flag in "${required_false[@]}"; do
   [[ "$(read_flag "${flag}")" == false ]] || {
-    printf '%s must remain false during the Projet de vie production release\n' "${flag}" >&2
+    printf '%s must be false during the Projet de vie production release\n' "${flag}" >&2
     exit 1
   }
 done
