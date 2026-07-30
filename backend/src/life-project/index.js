@@ -5,6 +5,8 @@ module.exports = {
   ...require('./state-machine'),
   ...require('./orchestration'),
   ...require('./action-tracking'),
+  ...require('./diagnostic-contracts'),
   ...require('./recommendation-contracts'),
   ...require('./recommendation-engine'),
+  ...require('./local-options-cg'),
 };

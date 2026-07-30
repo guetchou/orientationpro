@@ -3,9 +3,19 @@
 const crypto = require('node:crypto');
 const {
   createActionPlan,
+  createDecisionCriterion,
   createLifeProject,
   createLifeProjectScenario,
 } = require('./contracts');
+const {
+  createLifeProjectDiagnostic,
+  diagnosticMissingInformation,
+  diagnosticToEngineInput,
+} = require('./diagnostic-contracts');
+const {
+  RECOMMENDATION_ENGINE_VERSION,
+} = require('./recommendation-contracts');
+const { generateLifeRecommendations } = require('./recommendation-engine');
 const { selectActiveScenario, transitionLifeProject } = require('./state-machine');
 const {
   ActionTrackingError,
@@ -46,20 +56,71 @@ const expectedVersion = (value) => {
   return version;
 };
 
+const PRIORITY_LABELS = Object.freeze({
+  duration: 'Durée',
+  cost: 'Coût',
+  proximity: 'Proximité',
+  employability: 'Employabilité',
+  interest: 'Intérêt personnel',
+  personal_interest: 'Intérêt personnel',
+  prestige: 'Prestige',
+  alternance: 'Possibilité d’alternance',
+  future_income: 'Revenus futurs',
+  stability: 'Stabilité',
+  evolution: 'Possibilité d’évolution',
+  family_compatibility: 'Compatibilité familiale',
+});
+
+const uncertaintyFromRecommendation = (recommendation) => {
+  if (!recommendation || recommendation.scenarios.length === 0) {
+    return {
+      level: 'high',
+      reasons: recommendation?.missingInformation || ['Aucune recommandation exploitable.'],
+    };
+  }
+  const levels = recommendation.scenarios.map((scenario) => scenario.confidence);
+  if (levels.every((level) => level === 'high')) {
+    return { level: 'low', reasons: recommendation.missingInformation };
+  }
+  if (levels.some((level) => level === 'low')) {
+    return {
+      level: 'high',
+      reasons: recommendation.missingInformation.length > 0
+        ? recommendation.missingInformation
+        : ['Une ou plusieurs options reposent sur des informations insuffisantes.'],
+    };
+  }
+  return {
+    level: 'medium',
+    reasons: recommendation.missingInformation,
+  };
+};
+
 const createLifeProjectService = ({
   store,
   actionTrackingStore = null,
+  optionProvider = async () => [],
   idFactory = crypto.randomUUID,
   clock = () => new Date(),
 } = {}) => {
   if (!store || typeof store.create !== 'function' || typeof store.save !== 'function') {
     throw new TypeError('A life-project store is required.');
   }
+  if (typeof optionProvider !== 'function') {
+    throw new TypeError('optionProvider must be a function.');
+  }
 
   const timestamp = () => clock().toISOString();
   const userProvenance = (accountId, recordedAt, notes = null) => ({
     sourceType: 'user_statement',
     sourceId: null,
+    actorId: accountId,
+    recordedAt,
+    notes,
+  });
+  const systemProvenance = (accountId, recordedAt, notes = null) => ({
+    sourceType: 'system_calculation',
+    sourceId: RECOMMENDATION_ENGINE_VERSION,
     actorId: accountId,
     recordedAt,
     notes,
@@ -220,6 +281,125 @@ const createLifeProjectService = ({
     return { plan, item };
   };
 
+  const previousGeneratedScenarioIds = (project) => new Set(
+    Array.isArray(project.recommendation?.scenarios)
+      ? project.recommendation.scenarios.map((scenario) => scenario.id)
+      : [],
+  );
+
+  const withoutPreviousGeneration = (project) => {
+    const generatedIds = previousGeneratedScenarioIds(project);
+    if (generatedIds.size === 0) return project;
+    return createLifeProject({
+      ...project,
+      activeScenarioId: generatedIds.has(project.activeScenarioId) ? null : project.activeScenarioId,
+      scenarios: project.scenarios.filter((scenario) => !generatedIds.has(scenario.id)),
+      actionPlans: project.actionPlans.filter((plan) => !generatedIds.has(plan.scenarioId)),
+      recommendation: null,
+    });
+  };
+
+  const criteriaFromDiagnostic = ({ diagnostic, currentCriteria, accountId, now }) => {
+    const generatedIds = new Set(diagnostic.priorities.map((entry) => `diagnostic-priority-${entry.id}`));
+    const preserved = currentCriteria.filter((criterion) => !criterion.id.startsWith('diagnostic-priority-'));
+    const generated = diagnostic.priorities.map((entry) => createDecisionCriterion({
+      id: `diagnostic-priority-${entry.id}`,
+      label: PRIORITY_LABELS[entry.id] || entry.id,
+      description: 'Critère classé pendant le diagnostic conseiller.',
+      direction: ['duration', 'cost'].includes(entry.id) ? 'minimize' : 'maximize',
+      importance: entry.importance,
+      provenance: userProvenance(accountId, now, 'Critère issu du diagnostic conseiller.'),
+    }));
+    if (new Set(generated.map((criterion) => criterion.id)).size !== generatedIds.size) {
+      throw new LifeProjectServiceError(
+        'LIFE_PROJECT_DIAGNOSTIC_PRIORITY_INVALID',
+        'Diagnostic priority identifiers are not unique.',
+      );
+    }
+    return [...preserved, ...generated];
+  };
+
+  const recommendationScenarioToProjectScenario = ({ scenario, accountId, now }) => (
+    createLifeProjectScenario({
+      id: scenario.id,
+      title: scenario.title,
+      description: scenario.reasons.map((reason) => reason.explanation).join(' '),
+      horizon: scenario.firstActions[0]
+        ? `Première preuve attendue sous ${scenario.firstActions[0].deadlineDays} jours`
+        : null,
+      status: 'candidate',
+      optionType: scenario.category,
+      assumptions: scenario.reasons.map((reason) => reason.explanation),
+      barriers: [...scenario.conditions, ...scenario.risks, ...scenario.blockingFactors],
+      supports: scenario.strengths,
+      missingInformation: scenario.missingInformation,
+      uncertainty: {
+        level: scenario.confidence === 'high'
+          ? 'low'
+          : (scenario.confidence === 'medium' ? 'medium' : 'high'),
+        reasons: scenario.missingInformation,
+      },
+      provenance: systemProvenance(accountId, now, `Scénario généré avec un score de ${scenario.fitScore}/100.`),
+      createdAt: now,
+      updatedAt: now,
+    })
+  );
+
+  const actionPlanFromRecommendation = ({ scenario, accountId, now }) => {
+    const items = scenario.firstActions.map((action) => {
+      const dueAt = new Date(new Date(now).getTime() + action.deadlineDays * 86400000).toISOString();
+      return {
+        id: idFactory(),
+        title: action.title,
+        description: `Preuve attendue : ${action.expectedEvidence}`,
+        status: 'planned',
+        dueAt,
+        completedAt: null,
+        evidenceIds: [],
+        blockingReasons: [],
+        provenance: systemProvenance(accountId, now, 'Action produite par le moteur et modifiable par le conseiller.'),
+        createdAt: now,
+        updatedAt: now,
+      };
+    });
+    return createActionPlan({
+      id: idFactory(),
+      scenarioId: scenario.id,
+      title: `Premières actions — ${scenario.title}`,
+      status: 'draft',
+      items,
+      missingInformation: scenario.missingInformation,
+      provenance: systemProvenance(accountId, now, 'Plan initial produit par le moteur.'),
+      createdAt: now,
+      updatedAt: now,
+    });
+  };
+
+  const advanceToComparison = ({ project, accountId, now }) => {
+    let advanced = project;
+    if (advanced.state === 'exploration') {
+      advanced = transitionLifeProject(advanced, {
+        to: 'clarification',
+        eventId: idFactory(),
+        occurredAt: now,
+        actor: { kind: 'system', id: RECOMMENDATION_ENGINE_VERSION },
+        reason: 'Diagnostic conseiller enregistré.',
+        provenance: systemProvenance(accountId, now),
+      });
+    }
+    if (advanced.state === 'clarification') {
+      advanced = transitionLifeProject(advanced, {
+        to: 'comparison',
+        eventId: idFactory(),
+        occurredAt: now,
+        actor: { kind: 'system', id: RECOMMENDATION_ENGINE_VERSION },
+        reason: 'Options calculées et prêtes à comparer.',
+        provenance: systemProvenance(accountId, now),
+      });
+    }
+    return advanced;
+  };
+
   return {
     async create(accountId, input = {}) {
       const now = timestamp();
@@ -234,6 +414,8 @@ const createLifeProjectService = ({
         criteria: [],
         actionPlans: [],
         stateHistory: [],
+        diagnostic: null,
+        recommendation: null,
         missingInformation: input.missingInformation,
         uncertainty: input.uncertainty,
         provenance: userProvenance(accountId, now, input.provenanceNotes || null),
@@ -264,6 +446,98 @@ const createLifeProjectService = ({
           trackingRecords,
         }),
       };
+    },
+
+    async replaceDiagnostic(accountId, projectId, input = {}, version) {
+      const loaded = await getRequired(accountId, projectId);
+      const now = timestamp();
+      const previous = loaded.project.diagnostic;
+      const diagnostic = createLifeProjectDiagnostic({
+        ...input,
+        id: input.id || previous?.id || `diagnostic-${projectId}`,
+        recordedAt: previous?.recordedAt || input.recordedAt || now,
+        updatedAt: now,
+      });
+      const baseProject = withoutPreviousGeneration(loaded.project);
+      const missingInformation = diagnosticMissingInformation(diagnostic);
+      const project = createLifeProject({
+        ...baseProject,
+        diagnostic,
+        recommendation: null,
+        criteria: criteriaFromDiagnostic({
+          diagnostic,
+          currentCriteria: baseProject.criteria,
+          accountId,
+          now,
+        }),
+        missingInformation,
+        uncertainty: {
+          level: missingInformation.length >= 5 ? 'high' : (missingInformation.length > 0 ? 'medium' : 'low'),
+          reasons: missingInformation,
+        },
+        updatedAt: now,
+      });
+      const saved = await save(loaded, project, version);
+      await syncTrackingForProject(accountId, saved.project, now);
+      return saved;
+    },
+
+    async generateRecommendations(accountId, projectId, input = {}, version) {
+      const loaded = await getRequired(accountId, projectId);
+      if (!loaded.project.diagnostic) {
+        throw new LifeProjectServiceError(
+          'LIFE_PROJECT_DIAGNOSTIC_REQUIRED',
+          'A counselor diagnostic is required before generating recommendations.',
+          { projectId },
+        );
+      }
+      const now = timestamp();
+      const diagnostic = createLifeProjectDiagnostic(loaded.project.diagnostic);
+      const engineDiagnostic = diagnosticToEngineInput(diagnostic);
+      const options = await optionProvider({
+        accountId,
+        project: loaded.project,
+        diagnostic: engineDiagnostic,
+      });
+      const recommendation = generateLifeRecommendations({
+        diagnostic: engineDiagnostic,
+        options,
+        generatedAt: now,
+        maximumScenarios: input.maximumScenarios === undefined
+          ? 5
+          : Number(input.maximumScenarios),
+      });
+      const baseProject = withoutPreviousGeneration(loaded.project);
+      const scenarios = recommendation.scenarios.map((scenario) => (
+        recommendationScenarioToProjectScenario({ scenario, accountId, now })
+      ));
+      const actionPlans = recommendation.scenarios.map((scenario) => (
+        actionPlanFromRecommendation({ scenario, accountId, now })
+      ));
+      const manualScenarioIds = new Set(baseProject.scenarios.map((scenario) => scenario.id));
+      const collision = scenarios.find((scenario) => manualScenarioIds.has(scenario.id));
+      if (collision) {
+        throw new LifeProjectServiceError(
+          'LIFE_PROJECT_GENERATED_SCENARIO_CONFLICT',
+          'A generated scenario identifier conflicts with an existing manual scenario.',
+          { scenarioId: collision.id },
+        );
+      }
+      let project = createLifeProject({
+        ...baseProject,
+        scenarios: [...baseProject.scenarios, ...scenarios],
+        actionPlans: [...baseProject.actionPlans, ...actionPlans],
+        recommendation,
+        missingInformation: recommendation.missingInformation,
+        uncertainty: uncertaintyFromRecommendation(recommendation),
+        updatedAt: now,
+      });
+      if (recommendation.status === 'complete') {
+        project = advanceToComparison({ project, accountId, now });
+      }
+      const saved = await save(loaded, project, version);
+      await syncTrackingForProject(accountId, saved.project, now);
+      return saved;
     },
 
     async addScenario(accountId, projectId, input = {}, version) {

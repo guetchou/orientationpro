@@ -21,10 +21,12 @@ const BASE_DIMENSION_WEIGHTS = Object.freeze({
 
 const OBJECTIVE_MULTIPLIERS = Object.freeze({
   studies: Object.freeze({ interests: 1.1, schoolCompatibility: 1.3, temporalFeasibility: 1.1, financialFeasibility: 1.1, skills: 0.8 }),
+  training: Object.freeze({ interests: 1.05, skills: 1.05, schoolCompatibility: 1.05, practicalConstraints: 1.15, temporalFeasibility: 1.2 }),
   insertion: Object.freeze({ skills: 1.25, schoolCompatibility: 0.8, practicalConstraints: 1.2, localAccessibility: 1.15, temporalFeasibility: 1.3, financialFeasibility: 1.2 }),
   reconversion: Object.freeze({ interests: 1.15, skills: 1.25, schoolCompatibility: 0.65, practicalConstraints: 1.1, experimentation: 1.3 }),
   entrepreneurship: Object.freeze({ interests: 1.1, skills: 1.15, preferences: 1.2, schoolCompatibility: 0.5, practicalConstraints: 1.1, financialFeasibility: 1.1, experimentation: 1.4 }),
   reentry: Object.freeze({ schoolCompatibility: 1.1, practicalConstraints: 1.2, localAccessibility: 1.15, temporalFeasibility: 1.1, financialFeasibility: 1.15 }),
+  work_and_training: Object.freeze({ practicalConstraints: 1.3, localAccessibility: 1.15, temporalFeasibility: 1.2, financialFeasibility: 1.2 }),
   uncertain: Object.freeze({ interests: 1.15, preferences: 1.15, experimentation: 1.25, schoolCompatibility: 0.8 }),
 });
 
@@ -245,9 +247,7 @@ const localRatio = ({ diagnostic, option }) => {
 const schoolRatio = ({ diagnostic, option }) => {
   if (option.entryLevel.minimumRank === null) return 0.5;
   if (diagnostic.educationRank === null) return 0.25;
-  const margin = diagnostic.educationRank - option.entryLevel.minimumRank;
-  if (margin >= 0) return 1;
-  return 0;
+  return diagnostic.educationRank >= option.entryLevel.minimumRank ? 1 : 0;
 };
 
 const temporalRatio = ({ diagnostic, option }) => {
@@ -292,6 +292,12 @@ const missingCriticalInformation = ({ diagnostic, option }) => {
   if (option.calendar.status === 'unknown') missing.push('Calendrier de candidature ou de démarrage');
   if (option.cost.status === 'unknown') missing.push('Coût ou fourchette de coût');
   if (option.entryLevel.status === 'to_confirm') missing.push('Conditions exactes d’admission');
+  const missingDocuments = option.requiredDocuments
+    .map(normalizeToken)
+    .filter((document) => !diagnostic.documents.includes(document));
+  if (missingDocuments.length > 0) {
+    missing.push(`Documents à vérifier ou obtenir : ${missingDocuments.join(', ')}`);
+  }
   return [...new Set(missing)];
 };
 
@@ -360,9 +366,9 @@ const generatedAction = (option) => ({
   expectedEvidence: 'Source, date, conditions d’admission, coût, calendrier et contact vérifiés',
 });
 
-const deterministicScenarioId = (optionId) => `scenario-${crypto
+const deterministicScenarioId = (diagnosticId, optionId) => `scenario-${crypto
   .createHash('sha256')
-  .update(`${RECOMMENDATION_ENGINE_VERSION}:${optionId}`)
+  .update(`${RECOMMENDATION_ENGINE_VERSION}:${diagnosticId || 'anonymous'}:${optionId}`)
   .digest('hex')
   .slice(0, 24)}`;
 
@@ -477,7 +483,7 @@ const generateLifeRecommendations = ({
     || left.option.title.localeCompare(right.option.title)
     || left.option.id.localeCompare(right.option.id));
   const selected = selectDiversified(ranked, maximumScenarios);
-  const scenarioIds = selected.map((entry) => deterministicScenarioId(entry.option.id));
+  const scenarioIds = selected.map((entry) => deterministicScenarioId(diagnostic.id, entry.option.id));
   const scenarios = selected.map((entry, index) => ({
     id: scenarioIds[index],
     optionId: entry.option.id,

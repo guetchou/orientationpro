@@ -213,6 +213,8 @@ const loadProject = async (executor, accountId, projectId) => {
       criteria: criterionRows.map(rowToCriterion),
       actionPlans,
       stateHistory: eventRows.map(rowToHistory),
+      diagnostic: parseJson(projectRow.diagnostic_json, null),
+      recommendation: parseJson(projectRow.recommendation_json, null),
       missingInformation: parseJson(projectRow.missing_information_json, []),
       uncertainty: parseJson(projectRow.uncertainty_json, {}),
       provenance: parseJson(projectRow.provenance_json, {}),
@@ -227,9 +229,9 @@ const insertProjectRow = async (connection, project, lockVersion = 1) => {
   await connection.execute(
     `INSERT INTO life_projects (
        id, owner_account_id, schema_version, title, purpose, state,
-       missing_information_json, uncertainty_json, provenance_json,
-       lock_version, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       diagnostic_json, recommendation_json, missing_information_json,
+       uncertainty_json, provenance_json, lock_version, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       project.id,
       project.ownerAccountId,
@@ -237,6 +239,8 @@ const insertProjectRow = async (connection, project, lockVersion = 1) => {
       project.title,
       project.purpose,
       project.state,
+      project.diagnostic === null ? null : serialize(project.diagnostic),
+      project.recommendation === null ? null : serialize(project.recommendation),
       serialize(project.missingInformation),
       serialize(project.uncertainty),
       serialize(project.provenance),
@@ -496,6 +500,7 @@ const createLifeProjectStore = (pool) => {
         await connection.execute(
           `UPDATE life_projects
            SET schema_version = ?, title = ?, purpose = ?, state = ?,
+               diagnostic_json = ?, recommendation_json = ?,
                missing_information_json = ?, uncertainty_json = ?, provenance_json = ?,
                lock_version = lock_version + 1, updated_at = ?
            WHERE id = ? AND owner_account_id = ?`,
@@ -504,6 +509,8 @@ const createLifeProjectStore = (pool) => {
             project.title,
             project.purpose,
             project.state,
+            project.diagnostic === null ? null : serialize(project.diagnostic),
+            project.recommendation === null ? null : serialize(project.recommendation),
             serialize(project.missingInformation),
             serialize(project.uncertainty),
             serialize(project.provenance),

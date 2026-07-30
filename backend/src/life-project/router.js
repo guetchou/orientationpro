@@ -3,6 +3,8 @@
 const express = require('express');
 const { createCapabilityRegistry } = require('../capabilities/registry');
 const { LifeProjectContractError } = require('./contracts');
+const { LifeDiagnosticContractError } = require('./diagnostic-contracts');
+const { LifeRecommendationContractError } = require('./recommendation-contracts');
 const { ActionTrackingError } = require('./action-tracking');
 const { ActionTrackingPersistenceError } = require('./action-tracking-store');
 const {
@@ -33,13 +35,16 @@ const parseModuleIds = (value) => String(value || '')
 
 const errorStatus = (error) => {
   if (error instanceof LifeProjectContractError
+    || error instanceof LifeDiagnosticContractError
+    || error instanceof LifeRecommendationContractError
     || error instanceof ActionTrackingError
     || error instanceof LifeProjectOrchestrationError) return 400;
   if (error instanceof LifeProjectServiceError) {
     if (error.code === 'LIFE_PROJECT_NOT_FOUND'
       || error.code === 'LIFE_PROJECT_ACTION_PLAN_NOT_FOUND'
       || error.code === 'LIFE_PROJECT_ACTION_NOT_FOUND') return 404;
-    if (error.code === 'LIFE_PROJECT_COMMAND_CONFLICT') return 409;
+    if (error.code === 'LIFE_PROJECT_COMMAND_CONFLICT'
+      || error.code === 'LIFE_PROJECT_GENERATED_SCENARIO_CONFLICT') return 409;
     if (error.code === 'LIFE_PROJECT_API_VERSION_REQUIRED') return 428;
     if (error.code === 'ACTION_TRACKING_UNAVAILABLE') return 503;
     return 400;
@@ -110,6 +115,26 @@ const createLifeProjectRouter = ({
   router.get('/:projectId', route(async (req, res) => sendProject(
     res,
     await service.get(req.auth.account.id, req.params.projectId),
+  )));
+
+  router.put('/:projectId/diagnostic', route(async (req, res) => sendProject(
+    res,
+    await service.replaceDiagnostic(
+      req.auth.account.id,
+      req.params.projectId,
+      req.body || {},
+      parseExpectedVersion(req),
+    ),
+  )));
+
+  router.post('/:projectId/recommendations', route(async (req, res) => sendProject(
+    res,
+    await service.generateRecommendations(
+      req.auth.account.id,
+      req.params.projectId,
+      req.body || {},
+      parseExpectedVersion(req),
+    ),
   )));
 
   router.get('/:projectId/orchestration', route(async (req, res) => {
