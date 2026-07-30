@@ -7,6 +7,7 @@ import {
   Lightbulb,
   Loader2,
   Plus,
+  Save,
   Search,
   Sparkles,
   Trash2,
@@ -123,6 +124,29 @@ const emptyEducation = (): EducationRecord => ({
   end_year: null,
 });
 
+interface LocalDraft {
+  activeStep: number;
+  profile: ProfileInput;
+  education: EducationRecord[];
+  skills: ProfileSkill[];
+  savedAt: string;
+}
+
+// Une étape n'est enregistrée côté serveur qu'au clic sur « Enregistrer et
+// continuer » (issue #151) : sans brouillon local, fermer l'onglet en cours
+// de saisie perd les champs. Repris du pattern déjà éprouvé dans RiasecTest.tsx.
+const draftKey = (userId: string | number | undefined) => `makoki.profile.draft.v1.${userId ?? 'anonymous'}`;
+
+const readDraft = (userId: string | number | undefined): LocalDraft | null => {
+  try {
+    const raw = localStorage.getItem(draftKey(userId));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    localStorage.removeItem(draftKey(userId));
+    return null;
+  }
+};
+
 const displayHypothesisValue = (value: unknown) => {
   if (typeof value === 'string' || typeof value === 'number') return String(value);
   if (Array.isArray(value)) return value.map(String).join(', ');
@@ -152,6 +176,7 @@ export default function AdaptiveProfileWizard() {
   const [searchingSkills, setSearchingSkills] = useState(false);
   const [skillSearchError, setSkillSearchError] = useState<string | null>(null);
   const [decidingHypothesis, setDecidingHypothesis] = useState<string | null>(null);
+  const [resumedFromDraft, setResumedFromDraft] = useState(false);
 
   const proposedHypotheses = useMemo(
     () => hypotheses.filter((hypothesis) => hypothesis.status === 'proposed'),
@@ -199,13 +224,33 @@ export default function AdaptiveProfileWizard() {
 
   useEffect(() => {
     void getAdaptiveProfile()
-      .then(applyPayload)
+      .then((payload) => {
+        applyPayload(payload);
+        const draft = readDraft(storedUser?.id);
+        if (draft) {
+          setProfile(draft.profile);
+          setEducation(draft.education);
+          setSkills(draft.skills);
+          setActiveStep(draft.activeStep);
+          setResumedFromDraft(true);
+        }
+      })
       .catch((error) => {
         console.error('Unable to load adaptive profile', error);
         toast.error('Impossible de charger votre profil. Vérifiez votre session.');
       })
       .finally(() => setLoading(false));
+    // Le brouillon local n'est lu qu'au montage : storedUser vient de localStorage,
+    // pas d'un état réactif, et une session ne change pas sans remontage du composant.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const draft: LocalDraft = { activeStep, profile, education, skills, savedAt: new Date().toISOString() };
+    localStorage.setItem(draftKey(storedUser?.id), JSON.stringify(draft));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStep, profile, education, skills, loading]);
 
   useEffect(() => {
     if (activeStep >= steps.length) setActiveStep(Math.max(steps.length - 1, 0));
@@ -286,6 +331,8 @@ export default function AdaptiveProfileWizard() {
     try {
       const payload = await saveStep(currentStep.key);
       if (payload) applyPayload(payload);
+      localStorage.removeItem(draftKey(storedUser?.id));
+      setResumedFromDraft(false);
       toast.success('Votre profil intelligent est à jour.');
     } catch (error) {
       console.error('Unable to finish adaptive profile', error);
@@ -348,6 +395,11 @@ export default function AdaptiveProfileWizard() {
 
   return (
     <div className="space-y-6">
+      {resumedFromDraft && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <Save className="h-4 w-4 shrink-0" /> Brouillon local repris sur cet appareil.
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <Card>
           <CardHeader>
