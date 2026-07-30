@@ -100,7 +100,7 @@ const explorationTests = [
 const heroStats = [
   { value: "8", label: "tests disponibles" },
   { value: "~10 min", label: "en moyenne" },
-  { value: "RIASEC", label: "modèle de référence" },
+  { value: "Résultats", label: "personnalisés et détaillés" },
 ];
 
 export default function Tests() {
@@ -135,13 +135,13 @@ export default function Tests() {
               Mieux se connaître pour mieux choisir
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50">
-              Des outils de connaissance de soi, appuyés sur le modèle RIASEC reconnu à
-              l’international, pour découvrir les métiers qui te correspondent.
+              Des outils simples et fiables pour comprendre ce qui t’anime, et découvrir
+              les métiers qui te correspondent.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
                 <Link to="/tests/riasec">
-                  Commencer le test RIASEC <ArrowRight className="ml-2 h-5 w-5" />
+                  Commencer le test <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -178,7 +178,9 @@ export default function Tests() {
                     Le plus complet
                   </Badge>
                 </div>
-                <h2 className="mt-4 font-heading text-3xl font-bold text-stone-900">Test RIASEC</h2>
+                <h2 className="mt-4 font-heading text-3xl font-bold text-stone-900">
+                  Découvre ton profil d’intérêts
+                </h2>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
                     <Clock className="h-3.5 w-3.5" /> 10-15 min
@@ -188,21 +190,27 @@ export default function Tests() {
                   </span>
                 </div>
                 <p className="mt-4 text-lg leading-8 text-stone-600">
-                  Explore tes intérêts professionnels selon le modèle de John Holland. Le calcul est{" "}
-                  <strong>versionné et réalisé côté serveur</strong> : les clés de notation ne sont
-                  jamais exposées, et chaque résultat conserve sa méthode.
+                  Explore ce qui t’anime vraiment à travers 60 affirmations simples, puis
+                  découvre les pistes de métiers qui te correspondent le mieux.
                 </p>
                 <Button asChild size="lg" className="mt-6 bg-primary hover:bg-primary-800">
                   <Link to="/tests/riasec">
-                    Commencer le test RIASEC <ArrowRight className="ml-2 h-5 w-5" />
+                    Commencer le test <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
+                <p className="mt-4 text-xs text-stone-500">
+                  Basé sur le modèle RIASEC de John Holland.{" "}
+                  <Link to="/about" className="underline decoration-dotted underline-offset-2 hover:text-stone-700">
+                    Voir la méthode complète
+                  </Link>
+                  .
+                </p>
               </div>
 
               <div className="rounded-2xl bg-emerald-50 p-6">
                 <ul className="space-y-3 text-sm text-emerald-950">
                   {[
-                    "Résultat d’intérêts en 6 dimensions (RIASEC)",
+                    "Résultat d’intérêts en 6 dimensions",
                     "Recommandations de métiers sourcées",
                     "Reprise possible sur ce navigateur",
                     "Limites et méthode affichées clairement",
