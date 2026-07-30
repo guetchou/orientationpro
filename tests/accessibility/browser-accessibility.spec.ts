@@ -110,3 +110,21 @@ test('profile page exposes exactly one h1 landmark for screen readers', async ({
     .analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 });
+
+test('register email and password fields are correctly associated with their labels', async ({ page }) => {
+  // Régression : FormControl (Radix Slot) forwardait id/aria-describedby sur le
+  // <div className="relative"> englobant l'icône plutôt que sur l'<input> lui-même,
+  // cassant l'association label→champ pour les lecteurs d'écran. getByLabel()
+  // utilise la même résolution ARIA qu'un lecteur d'écran : s'il échoue, le bug
+  // est réel, pas seulement théorique.
+  await page.goto('/register');
+  await page.getByLabel('Adresse e-mail').fill('a11y-check@example.com');
+  await page.getByLabel('Mot de passe', { exact: true }).fill('Str0ngPassw0rd!2026');
+  await expect(page.getByLabel('Adresse e-mail')).toHaveValue('a11y-check@example.com');
+  await expect(page.getByLabel('Mot de passe', { exact: true })).toHaveValue('Str0ngPassw0rd!2026');
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['label', 'aria-input-field-name'])
+    .analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
