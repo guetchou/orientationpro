@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { ApiError } from '@/lib/apiClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import {
   createProfileSynthesis,
   listProfileSyntheses,
@@ -62,10 +62,10 @@ export default function ProfileSynthesisPanel() {
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <h2 className="flex items-center gap-2 text-2xl font-semibold leading-none tracking-tight">
               <FileCheck2 className="h-5 w-5 text-emerald-700" />
               Synthèse versionnée du profil
-            </CardTitle>
+            </h2>
             <CardDescription className="mt-2 max-w-3xl">
               Cette synthèse fige le profil confirmé, le Résultat RIASEC v2, les décisions sur les hypothèses et un classement métiers déjà figé.
             </CardDescription>

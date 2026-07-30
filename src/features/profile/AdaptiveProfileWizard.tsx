@@ -353,7 +353,7 @@ export default function AdaptiveProfileWizard() {
           <CardHeader>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <CardTitle className="flex items-center gap-2 text-2xl"><Sparkles className="h-6 w-6 text-blue-600" /> Mon profil intelligent</CardTitle>
+                <h2 className="flex items-center gap-2 text-2xl font-semibold leading-none tracking-tight"><Sparkles className="h-6 w-6 text-blue-600" /> Mon profil intelligent</h2>
                 <CardDescription className="mt-2 max-w-2xl">Répondez uniquement aux questions utiles à votre situation. Chaque section est enregistrée avant de changer d’étape.</CardDescription>
               </div>
               <Badge variant="secondary">Complété à {completionPercent} %</Badge>
@@ -388,7 +388,7 @@ export default function AdaptiveProfileWizard() {
                 <div><Label htmlFor="last_name">Nom</Label><Input id="last_name" autoComplete="family-name" value={profile.last_name || ''} onChange={(event) => updateProfile('last_name', event.target.value || null)} /></div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div><Label htmlFor="phone">Téléphone <span className="text-gray-500">(facultatif)</span></Label><Input id="phone" type="tel" autoComplete="tel" value={profile.phone || ''} onChange={(event) => updateProfile('phone', event.target.value || null)} /></div>
+                <div><Label htmlFor="phone">Téléphone <span className="text-gray-500">(facultatif)</span></Label><Input id="phone" type="tel" autoComplete="tel" value={profile.phone || ''} onChange={(event) => updateProfile('phone', event.target.value || null)} /><p className="mt-1 text-xs text-gray-500">Sert uniquement à vous recontacter si nécessaire.</p></div>
                 <div><Label htmlFor="email">E-mail du compte</Label><Input id="email" value={storedUser?.email || ''} disabled /></div>
               </div>
               <div className="grid gap-4 md:grid-cols-[1fr_120px]">

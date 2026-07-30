@@ -105,8 +105,11 @@ test('profile page exposes exactly one h1 landmark for screen readers', async ({
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mon profil');
 
   // Voir commentaire ci-dessus : scan restreint pour la même raison.
+  // heading-order est inclus ici (issue #158) : les 3 sections de /profile
+  // (ProfileHypothesisPanel, ProfileSynthesisPanel, AdaptiveProfileWizard)
+  // exposent désormais un <h2> propre juste sous le <h1>, sans saut vers h3.
   const results = await new AxeBuilder({ page })
-    .withRules(['page-has-heading-one', 'empty-heading'])
+    .withRules(['page-has-heading-one', 'empty-heading', 'heading-order'])
     .analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 });

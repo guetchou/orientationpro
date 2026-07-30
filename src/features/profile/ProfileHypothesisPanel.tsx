@@ -3,7 +3,7 @@ import { Check, Lightbulb, Loader2, RefreshCw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import {
   decideProfileHypothesis,
   generateProfileHypotheses,
@@ -70,7 +70,7 @@ export default function ProfileHypothesisPanel() {
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5 text-amber-600" /> Hypothèses à examiner</CardTitle>
+            <h2 className="flex items-center gap-2 text-2xl font-semibold leading-none tracking-tight"><Lightbulb className="h-5 w-5 text-amber-600" /> Hypothèses à examiner</h2>
             <CardDescription className="mt-2 max-w-3xl">Le système propose des questions à partir des données du profil. Rien n’est confirmé automatiquement : vous gardez la décision finale.</CardDescription>
           </div>
           <Button type="button" onClick={() => void generate()} disabled={generating}>
