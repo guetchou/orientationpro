@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      TARGET_SHA: ded2983cb431491bf1ccf08a8cfa3d1d26673cc0
+      TARGET_SHA: 595692cbc979d88722e341b374268512ed995fc7
       ISSUE_NUMBER: '184'
     steps:
       - name: Observe Production Deploy run
@@ -37,7 +37,7 @@ jobs:
               --header "Authorization: Bearer ${GH_TOKEN}" \
               --header 'Accept: application/vnd.github+json' \
               --header 'X-GitHub-Api-Version: 2022-11-28' \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/production-deploy.yml/runs?branch=main&event=push&per_page=20" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/production-deploy.yml/runs?branch=main&event=push&per_page=30" \
               >/tmp/runs.json
 
             eval "$(TARGET_SHA="${TARGET_SHA}" node <<'NODE'
@@ -70,7 +70,7 @@ jobs:
           done
 
           {
-            echo '## V6-H — exécution Production Deploy tentative 3'
+            echo '## V6-H — exécution Production Deploy tentative 5'
             echo
             echo "- SHA : \`${TARGET_SHA}\`"
             echo "- Run : ${run_url:-non trouvé}"
@@ -79,9 +79,9 @@ jobs:
             echo "- Conclusion : \`${run_conclusion:-en attente}\`"
             echo
             if [[ "${completed}" == true && "${run_conclusion}" == success ]]; then
-              echo 'Décision du workflow : **déploiement terminé avec succès**.'
+              echo 'Décision du workflow : **déploiement et vérification publique terminés avec succès**.'
             elif [[ "${completed}" == true ]]; then
-              echo 'Décision du workflow : **déploiement terminé en échec ou annulé**.'
+              echo 'Décision du workflow : **déploiement ou vérification publique terminé en échec**.'
             else
               echo 'Décision du workflow : **run absent ou non terminé dans la fenêtre de contrôle**.'
             fi
