@@ -37,6 +37,7 @@ const provenance = (accountId, minute = 0) => ({
 const buildProject = ({ accountId, suffix, projectId = `project-${suffix}` }) => {
   const scenarioA = `scenario-a-${suffix}`;
   const scenarioB = `scenario-b-${suffix}`;
+  const diagnosticId = `diagnostic-${suffix}`;
   return createLifeProject({
     id: projectId,
     ownerAccountId: accountId,
@@ -116,6 +117,32 @@ const buildProject = ({ accountId, suffix, projectId = `project-${suffix}` }) =>
       },
     ],
     stateHistory: [],
+    diagnostic: {
+      schemaVersion: 'makoki-life-diagnostic-v1',
+      id: diagnosticId,
+      objective: 'studies',
+      identity: {
+        country: { value: 'Congo', verification: 'declared' },
+        zone: { value: 'Brazzaville', verification: 'declared' },
+        educationLevel: { value: 'baccalaureate', verification: 'declared' },
+      },
+      constraints: { mobility: 'local', budget: { amount: null, currency: 'XAF' } },
+      preferences: { interests: ['numérique'] },
+      capabilities: { skills: ['logique'] },
+      priorities: [{ id: 'interest', importance: 1 }],
+      recordedAt: at(0),
+      updatedAt: at(2),
+    },
+    recommendation: {
+      schemaVersion: 'makoki-life-recommendation-output-v1',
+      engineVersion: 'makoki-life-recommendation-v1',
+      status: 'insufficient_options',
+      generatedAt: at(2),
+      diagnosticSummary: { diagnosticId },
+      scenarios: [],
+      nonPrioritized: [],
+      missingInformation: ['Référentiel local à compléter.'],
+    },
     missingInformation: ['Situation financière', 'Préférences de mobilité'],
     uncertainty: { level: 'high', reasons: ['Le projet commence.'] },
     provenance: provenance(accountId),
@@ -144,6 +171,8 @@ test('life project persists transactionally with scoped reads and append-only hi
     const created = await store.create(initial);
     assert.equal(created.persistenceVersion, 1);
     assert.deepEqual(created.project, initial);
+    assert.equal(created.project.diagnostic.id, `diagnostic-${suffix}`);
+    assert.equal(created.project.recommendation.engineVersion, 'makoki-life-recommendation-v1');
     assert.equal((await store.list(accountA)).length, 1);
     assert.equal((await store.list(accountB)).length, 0);
     assert.equal(await store.get(accountB, initial.id), null);
@@ -167,6 +196,12 @@ test('life project persists transactionally with scoped reads and append-only hi
     const updated = createLifeProject({
       ...transitioned,
       title: 'Projet de vie en clarification',
+      diagnostic: {
+        ...transitioned.diagnostic,
+        notes: 'Diagnostic enrichi après entretien.',
+        updatedAt: at(20),
+      },
+      recommendation: null,
       actionPlans: transitioned.actionPlans.map((plan) => ({
         ...plan,
         status: 'active',
@@ -185,6 +220,8 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(saved.project.activeScenarioId, initial.scenarios[0].id);
     assert.equal(saved.project.stateHistory.length, 2);
     assert.equal(saved.project.actionPlans[0].items[0].status, 'in_progress');
+    assert.equal(saved.project.diagnostic.notes, 'Diagnostic enrichi après entretien.');
+    assert.equal(saved.project.recommendation, null);
 
     await assert.rejects(
       pool.query(
@@ -238,6 +275,17 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(rolledBack, undefined);
 
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?)', [accountA, accountB]);
+    const diagnosticVersion = await migrateDown(pool, directory);
+    assert.equal(diagnosticVersion, '013_life_project_diagnostic_recommendation');
+    const [diagnosticColumnsAfterDown] = await pool.query(
+      `SELECT column_name
+       FROM information_schema.columns
+       WHERE table_schema = DATABASE()
+         AND table_name = 'life_projects'
+         AND column_name IN ('diagnostic_json', 'recommendation_json')`,
+    );
+    assert.equal(diagnosticColumnsAfterDown.length, 0);
+
     const trackingVersion = await migrateDown(pool, directory);
     assert.equal(trackingVersion, '012_life_project_action_tracking');
     const [trackingAfterDown] = await pool.query("SHOW TABLES LIKE 'life_project_action_tracking'");
@@ -254,6 +302,14 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(tablesAfterUp.length, 1);
     const [trackingAfterUp] = await pool.query("SHOW TABLES LIKE 'life_project_action_tracking'");
     assert.equal(trackingAfterUp.length, 1);
+    const [diagnosticColumnsAfterUp] = await pool.query(
+      `SELECT column_name
+       FROM information_schema.columns
+       WHERE table_schema = DATABASE()
+         AND table_name = 'life_projects'
+         AND column_name IN ('diagnostic_json', 'recommendation_json')`,
+    );
+    assert.equal(diagnosticColumnsAfterUp.length, 2);
   } finally {
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?)', [accountA, accountB]);
     await migrateUp(pool, directory);
