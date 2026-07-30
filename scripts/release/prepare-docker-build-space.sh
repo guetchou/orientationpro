@@ -66,7 +66,7 @@ print_report 'Before Docker space preparation'
 if (( $(available_kb) < minimum_free_kb )); then
   docker builder prune --all --force
   docker container prune --force
-  docker image prune --all --force --filter 'until=168h'
+  docker image prune --force
   prune_failed_releases
 fi
 
