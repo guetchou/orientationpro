@@ -1,12 +1,11 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
   ClipboardList,
-  Compass,
   FileText,
   Loader2,
-  MapPin,
   Printer,
   RefreshCw,
   Search,
@@ -50,6 +49,7 @@ interface AdvisorForm {
   maxDurationMonths: string;
   needIncomeWithinMonths: string;
   internetAccess: AdvisorDiagnosticInput['constraints']['internetAccess'];
+  availableModes: string;
   subjects: string;
   results: string;
   interruptions: string;
@@ -62,11 +62,16 @@ interface AdvisorForm {
   digitalSkills: string;
   personalProjects: string;
   internships: string;
+  volunteering: string;
   jobs: string;
+  responsibilities: string;
   languages: string;
+  evidence: string;
+  regulatoryQualifications: string;
   equipment: string;
   documents: string;
   familyResponsibilities: string;
+  healthOrDisability: string;
   availability: string;
   notes: string;
   priorityIds: string[];
@@ -86,6 +91,7 @@ const emptyForm: AdvisorForm = {
   maxDurationMonths: '',
   needIncomeWithinMonths: '',
   internetAccess: 'unknown',
+  availableModes: 'presentiel',
   subjects: '',
   results: '',
   interruptions: '',
@@ -98,11 +104,16 @@ const emptyForm: AdvisorForm = {
   digitalSkills: '',
   personalProjects: '',
   internships: '',
+  volunteering: '',
   jobs: '',
+  responsibilities: '',
   languages: 'français',
+  evidence: '',
+  regulatoryQualifications: '',
   equipment: '',
   documents: '',
   familyResponsibilities: '',
+  healthOrDisability: '',
   availability: '',
   notes: '',
   priorityIds: ['interest', 'proximity', 'duration', 'cost', 'employability'],
@@ -162,9 +173,11 @@ const optionalNumber = (value: string) => {
 const readDraft = (): AdvisorForm => {
   try {
     const stored = localStorage.getItem(DRAFT_KEY);
-    return stored ? { ...emptyForm, ...JSON.parse(stored) as Partial<AdvisorForm> } : emptyForm;
+    return stored
+      ? { ...emptyForm, ...JSON.parse(stored) as Partial<AdvisorForm> }
+      : { ...emptyForm };
   } catch {
-    return emptyForm;
+    return { ...emptyForm };
   }
 };
 
@@ -185,6 +198,7 @@ const formFromEnvelope = (envelope: AdvisorEnvelope): AdvisorForm => {
     maxDurationMonths: diagnostic.constraints.maxDurationMonths === null ? '' : String(diagnostic.constraints.maxDurationMonths),
     needIncomeWithinMonths: diagnostic.constraints.needIncomeWithinMonths === null ? '' : String(diagnostic.constraints.needIncomeWithinMonths),
     internetAccess: diagnostic.constraints.internetAccess,
+    availableModes: join(diagnostic.constraints.availableModes),
     subjects: join(diagnostic.identity.subjects),
     results: join(diagnostic.identity.significantResults),
     interruptions: join(diagnostic.identity.interruptions),
@@ -197,11 +211,16 @@ const formFromEnvelope = (envelope: AdvisorEnvelope): AdvisorForm => {
     digitalSkills: join(diagnostic.capabilities.digitalSkills),
     personalProjects: join(diagnostic.capabilities.personalProjects),
     internships: join(diagnostic.capabilities.internships),
+    volunteering: join(diagnostic.capabilities.volunteering),
     jobs: join(diagnostic.capabilities.jobs),
+    responsibilities: join(diagnostic.capabilities.responsibilities),
     languages: join(diagnostic.capabilities.languages),
+    evidence: join(diagnostic.capabilities.evidence),
+    regulatoryQualifications: join(diagnostic.capabilities.regulatoryQualifications),
     equipment: join(diagnostic.constraints.equipment),
     documents: join(diagnostic.constraints.documents),
     familyResponsibilities: join(diagnostic.constraints.familyResponsibilities),
+    healthOrDisability: join(diagnostic.constraints.healthOrDisability),
     availability: join(diagnostic.constraints.availability),
     notes: diagnostic.notes || '',
     priorityIds: diagnostic.priorities.map((entry) => entry.id),
@@ -238,11 +257,9 @@ const buildDiagnostic = (form: AdvisorForm): AdvisorDiagnosticInput => {
       equipment: csv(form.equipment),
       familyResponsibilities: csv(form.familyResponsibilities),
       availability: csv(form.availability),
-      healthOrDisability: [],
+      healthOrDisability: csv(form.healthOrDisability),
       documents: csv(form.documents),
-      availableModes: form.internetAccess === 'regular'
-        ? ['presentiel', 'online']
-        : ['presentiel'],
+      availableModes: csv(form.availableModes),
     },
     preferences: {
       interests: csv(form.interests),
@@ -255,14 +272,14 @@ const buildDiagnostic = (form: AdvisorForm): AdvisorDiagnosticInput => {
     capabilities: {
       skills: csv(form.skills),
       internships: csv(form.internships),
-      volunteering: [],
+      volunteering: csv(form.volunteering),
       jobs: csv(form.jobs),
       personalProjects: csv(form.personalProjects),
-      responsibilities: [],
+      responsibilities: csv(form.responsibilities),
       languages: csv(form.languages),
       digitalSkills: csv(form.digitalSkills),
-      evidence: [],
-      regulatoryQualifications: [],
+      evidence: csv(form.evidence),
+      regulatoryQualifications: csv(form.regulatoryQualifications),
     },
     priorities: form.priorityIds.map((id, index) => ({
       id,
@@ -272,14 +289,67 @@ const buildDiagnostic = (form: AdvisorForm): AdvisorDiagnosticInput => {
   };
 };
 
-const listBlock = (title: string, values: string[], className = '') => values.length > 0 && (
-  <div className={className}>
-    <h4 className="text-sm font-semibold">{title}</h4>
-    <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-      {values.map((value) => <li key={value}>• {value}</li>)}
-    </ul>
-  </div>
+interface FieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  placeholder?: string;
+  inputMode?: 'text' | 'numeric';
+}
+
+const TextField = ({ label, value, onChange, required = false, placeholder, inputMode = 'text' }: FieldProps) => (
+  <label className="text-sm font-medium">
+    {label}
+    <input
+      required={required}
+      inputMode={inputMode}
+      className={fieldClass}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+    />
+  </label>
 );
+
+const TextAreaField = ({ label, value, onChange, required = false, placeholder }: FieldProps) => (
+  <label className="text-sm font-medium">
+    {label}
+    <textarea
+      required={required}
+      className={`${fieldClass} min-h-20`}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+    />
+  </label>
+);
+
+const ListBlock = ({ title, values, className = '' }: { title: string; values: string[]; className?: string }) => {
+  if (values.length === 0) return null;
+  return (
+    <div className={className}>
+      <h4 className="text-sm font-semibold">{title}</h4>
+      <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+        {values.map((value) => <li key={value}>• {value}</li>)}
+      </ul>
+    </div>
+  );
+};
+
+const StatusMessage = ({ kind, children }: { kind: 'error' | 'success' | 'warning'; children: ReactNode }) => {
+  const classes = {
+    error: 'border-red-200 bg-red-50 text-red-900',
+    success: 'border-green-200 bg-green-50 text-green-950',
+    warning: 'border-amber-300 bg-amber-50 text-amber-950',
+  };
+  const Icon = kind === 'success' ? CheckCircle2 : AlertTriangle;
+  return (
+    <div role={kind === 'error' ? 'alert' : 'status'} className={`rounded-md border p-4 text-sm ${classes[kind]}`}>
+      <Icon className="mr-2 inline h-4 w-4" />{children}
+    </div>
+  );
+};
 
 const ScenarioCard = ({
   scenario,
@@ -317,9 +387,9 @@ const ScenarioCard = ({
         </ul>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        {listBlock('Conditions à vérifier', scenario.conditions)}
-        {listBlock('Risques et limites', scenario.risks, 'rounded-md border border-amber-200 bg-amber-50 p-3')}
-        {listBlock('Informations manquantes', scenario.missingInformation)}
+        <ListBlock title="Conditions à vérifier" values={scenario.conditions} />
+        <ListBlock title="Risques et limites" values={scenario.risks} className="rounded-md border border-amber-200 bg-amber-50 p-3" />
+        <ListBlock title="Informations manquantes" values={scenario.missingInformation} />
         <div>
           <h4 className="text-sm font-semibold">Accès local identifié</h4>
           {scenario.localOpportunities.length === 0 ? (
@@ -329,7 +399,9 @@ const ScenarioCard = ({
               {scenario.localOpportunities.map((opportunity) => (
                 <li key={opportunity.id} className="rounded-md border p-2">
                   <span className="font-medium">{opportunity.title}</span>
-                  <span className="block text-muted-foreground">{opportunity.organization || 'Organisme à confirmer'} · {opportunity.zone || 'Zone à confirmer'} · {opportunity.status}</span>
+                  <span className="block text-muted-foreground">
+                    {opportunity.organization || 'Organisme à confirmer'} · {opportunity.zone || 'Zone à confirmer'} · {opportunity.status}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -353,7 +425,9 @@ const ScenarioCard = ({
               {source.url ? (
                 <a className="font-medium text-primary underline underline-offset-4" href={source.url} target="_blank" rel="noreferrer">{source.title}</a>
               ) : source.title}
-              <span className="ml-2 text-muted-foreground">{source.verificationStatus}{source.verifiedAt ? ` · vérifiée le ${new Date(source.verifiedAt).toLocaleDateString('fr-FR')}` : ''}</span>
+              <span className="ml-2 text-muted-foreground">
+                {source.verificationStatus}{source.verifiedAt ? ` · vérifiée le ${new Date(source.verifiedAt).toLocaleDateString('fr-FR')}` : ''}
+              </span>
               {source.scope && <p className="text-muted-foreground">{source.scope}</p>}
             </li>
           ))}
@@ -399,6 +473,7 @@ export default function AdvisorLifeProjectPage() {
       const entry = registry.capabilities.find((item) => item.id === 'life-project.core-v1');
       if (!entry || !entry.configured || !['active', 'experimental'].includes(entry.status)) {
         setCapability('disabled');
+        setLoading(false);
         return;
       }
       setCapability('enabled');
@@ -484,18 +559,40 @@ export default function AdvisorLifeProjectPage() {
   };
 
   const recommendation = current?.project.recommendation;
-  const selectedScenario = recommendation?.scenarios.find((scenario) => scenario.id === current?.project.activeScenarioId)
-    || recommendation?.scenarios[0]
-    || null;
+  const selectedScenario = recommendation?.scenarios.find(
+    (scenario) => scenario.id === current?.project.activeScenarioId,
+  ) || null;
+  const actionScenario = selectedScenario || recommendation?.scenarios[0] || null;
   const diagnostic = current?.project.diagnostic;
-  const summaryMissing = useMemo(() => recommendation?.missingInformation || current?.project.missingInformation || [], [current, recommendation]);
+  const summaryMissing = recommendation?.missingInformation || current?.project.missingInformation || [];
 
   if (capability === 'loading' || loading) {
-    return <div className="flex min-h-[60vh] items-center justify-center" role="status"><Loader2 className="mr-2 h-6 w-6 animate-spin" />Chargement de l’espace conseiller…</div>;
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center" role="status">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin" />Chargement de l’espace conseiller…
+      </div>
+    );
   }
 
   if (capability === 'disabled') {
-    return <div className="container py-16"><Card><CardHeader><CardTitle>Projet de vie indisponible</CardTitle><CardDescription>La capacité serveur n’est pas activée dans cet environnement. Aucune simulation locale ne remplace le moteur métier.</CardDescription></CardHeader></Card></div>;
+    return (
+      <div className="container py-16">
+        <Card>
+          <CardHeader>
+            <CardTitle>Projet de vie indisponible</CardTitle>
+            <CardDescription>La capacité serveur n’est pas activée dans cet environnement. Aucune simulation locale ne remplace le moteur métier.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (capability === 'error') {
+    return (
+      <div className="container py-16">
+        <StatusMessage kind="error">{error || 'L’espace conseiller est indisponible.'}</StatusMessage>
+      </div>
+    );
   }
 
   return (
@@ -504,59 +601,110 @@ export default function AdvisorLifeProjectPage() {
         <header className="space-y-3">
           <Badge variant="outline">Programme P0 · Projet de vie opérationnel</Badge>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Espace de séance conseiller</h1>
-          <p className="max-w-4xl text-muted-foreground">Conduisez le diagnostic, obtenez trois à cinq options explicables, comparez-les, retenez un choix provisoire et imprimez une synthèse. Une source inconnue reste inconnue.</p>
+          <p className="max-w-4xl text-muted-foreground">
+            Conduisez le diagnostic, obtenez trois à cinq options explicables, comparez-les, retenez un choix provisoire et imprimez une synthèse. Une source inconnue reste inconnue.
+          </p>
           <div className="grid gap-2 text-sm sm:grid-cols-4">
-            {['1. Diagnostic', '2. Options', '3. Comparaison', '4. Synthèse'].map((label) => <div key={label} className="rounded-md border bg-background p-3 font-medium">{label}</div>)}
+            {['1. Diagnostic', '2. Options', '3. Comparaison', '4. Synthèse'].map((label) => (
+              <div key={label} className="rounded-md border bg-background p-3 font-medium">{label}</div>
+            ))}
           </div>
         </header>
 
-        {error && <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"><AlertTriangle className="mr-2 inline h-4 w-4" />{error}</div>}
-        {notice && <div role="status" className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-950"><CheckCircle2 className="mr-2 inline h-4 w-4" />{notice}</div>}
+        {error && <StatusMessage kind="error">{error}</StatusMessage>}
+        {notice && <StatusMessage kind="success">{notice}</StatusMessage>}
 
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18rem]">
           <form className="space-y-6" onSubmit={(event) => void persistAndGenerate(event)} aria-busy={saving}>
             <Card data-testid="advisor-diagnostic">
-              <CardHeader><CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5" />1. Diagnostic progressif</CardTitle><CardDescription>Le conseiller peut remplir ce dossier au fil de l’entretien. Les valeurs sont déclarées tant qu’aucune preuve n’a été vérifiée.</CardDescription></CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5" />1. Diagnostic progressif</CardTitle>
+                <CardDescription>Le conseiller peut remplir ce dossier au fil de l’entretien. Les valeurs sont déclarées tant qu’aucune preuve n’a été vérifiée.</CardDescription>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="text-sm font-medium">Titre du dossier<input className={fieldClass} value={form.title} onChange={(event) => update('title', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Tranche d’âge<input className={fieldClass} value={form.ageRange} onChange={(event) => update('ageRange', event.target.value)} placeholder="16-20" /></label>
-                  <label className="text-sm font-medium">Pays<input required className={fieldClass} value={form.country} onChange={(event) => update('country', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Ville ou zone<input required className={fieldClass} value={form.zone} onChange={(event) => update('zone', event.target.value)} placeholder="Brazzaville" /></label>
-                  <label className="text-sm font-medium">Situation actuelle<input required className={fieldClass} value={form.situation} onChange={(event) => update('situation', event.target.value)} placeholder="Terminale, étudiant, sans emploi…" /></label>
-                  <label className="text-sm font-medium">Dernier niveau atteint<select required className={fieldClass} value={form.educationLevel} onChange={(event) => update('educationLevel', event.target.value)}><option value="">Choisir</option><option value="middle_school">Collège</option><option value="high_school">Lycée sans baccalauréat</option><option value="baccalaureate">Baccalauréat obtenu ou préparé</option><option value="vocational">Diplôme professionnel</option><option value="bac_plus_2">Bac+2</option><option value="licence">Licence</option><option value="master">Master</option></select></label>
-                  <label className="text-sm font-medium">Diplôme obtenu ou préparé<input className={fieldClass} value={form.diploma} onChange={(event) => update('diploma', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Objectif immédiat<select className={fieldClass} value={form.objective} onChange={(event) => update('objective', event.target.value as AdvisorObjective)}>{Object.entries(objectiveLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                  <TextField label="Titre du dossier" value={form.title} onChange={(value) => update('title', value)} />
+                  <TextField label="Tranche d’âge" value={form.ageRange} onChange={(value) => update('ageRange', value)} placeholder="16-20" />
+                  <TextField label="Pays" required value={form.country} onChange={(value) => update('country', value)} />
+                  <TextField label="Ville ou zone" required value={form.zone} onChange={(value) => update('zone', value)} placeholder="Brazzaville" />
+                  <TextField label="Situation actuelle" required value={form.situation} onChange={(value) => update('situation', value)} placeholder="Terminale, étudiant, sans emploi…" />
+                  <label className="text-sm font-medium">
+                    Dernier niveau atteint
+                    <select required className={fieldClass} value={form.educationLevel} onChange={(event) => update('educationLevel', event.target.value)}>
+                      <option value="">Choisir</option>
+                      <option value="middle_school">Collège</option>
+                      <option value="high_school">Lycée sans baccalauréat</option>
+                      <option value="baccalaureate">Baccalauréat obtenu ou préparé</option>
+                      <option value="vocational">Diplôme professionnel</option>
+                      <option value="bac_plus_2">Bac+2</option>
+                      <option value="licence">Licence</option>
+                      <option value="master">Master</option>
+                    </select>
+                  </label>
+                  <TextField label="Diplôme obtenu ou préparé" value={form.diploma} onChange={(value) => update('diploma', value)} />
+                  <label className="text-sm font-medium">
+                    Objectif immédiat
+                    <select className={fieldClass} value={form.objective} onChange={(event) => update('objective', event.target.value as AdvisorObjective)}>
+                      {Object.entries(objectiveLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </label>
                 </div>
 
                 <div>
                   <h3 className="font-semibold">Contraintes réelles</h3>
                   <div className="mt-3 grid gap-4 md:grid-cols-3">
-                    <label className="text-sm font-medium">Mobilité<select className={fieldClass} value={form.mobility} onChange={(event) => update('mobility', event.target.value as AdvisorForm['mobility'])}><option value="unknown">À clarifier</option><option value="none">Aucune</option><option value="local">Locale</option><option value="national">Nationale</option><option value="international">Internationale</option><option value="flexible">Flexible</option></select></label>
-                    <label className="text-sm font-medium">Budget maximal (XAF)<input inputMode="numeric" className={fieldClass} value={form.budget} onChange={(event) => update('budget', event.target.value)} placeholder="Inconnu si vide" /></label>
-                    <label className="text-sm font-medium">Durée maximale (mois)<input inputMode="numeric" className={fieldClass} value={form.maxDurationMonths} onChange={(event) => update('maxDurationMonths', event.target.value)} placeholder="Inconnue si vide" /></label>
-                    <label className="text-sm font-medium">Revenu nécessaire sous (mois)<input inputMode="numeric" className={fieldClass} value={form.needIncomeWithinMonths} onChange={(event) => update('needIncomeWithinMonths', event.target.value)} /></label>
-                    <label className="text-sm font-medium">Accès Internet<select className={fieldClass} value={form.internetAccess} onChange={(event) => update('internetAccess', event.target.value as AdvisorForm['internetAccess'])}><option value="unknown">À clarifier</option><option value="none">Aucun</option><option value="limited">Limité</option><option value="regular">Régulier</option></select></label>
-                    <label className="text-sm font-medium">Disponibilité<input className={fieldClass} value={form.availability} onChange={(event) => update('availability', event.target.value)} placeholder="Temps plein, soir, week-end" /></label>
-                    <label className="text-sm font-medium">Équipement<input className={fieldClass} value={form.equipment} onChange={(event) => update('equipment', event.target.value)} placeholder="Smartphone, ordinateur…" /></label>
-                    <label className="text-sm font-medium">Documents disponibles<input className={fieldClass} value={form.documents} onChange={(event) => update('documents', event.target.value)} placeholder="Baccalauréat, pièce d’identité, CV…" /></label>
-                    <label className="text-sm font-medium">Responsabilités familiales<input className={fieldClass} value={form.familyResponsibilities} onChange={(event) => update('familyResponsibilities', event.target.value)} /></label>
+                    <label className="text-sm font-medium">
+                      Mobilité
+                      <select className={fieldClass} value={form.mobility} onChange={(event) => update('mobility', event.target.value as AdvisorForm['mobility'])}>
+                        <option value="unknown">À clarifier</option>
+                        <option value="none">Aucune</option>
+                        <option value="local">Locale</option>
+                        <option value="national">Nationale</option>
+                        <option value="international">Internationale</option>
+                        <option value="flexible">Flexible</option>
+                      </select>
+                    </label>
+                    <TextField label="Budget maximal (XAF)" inputMode="numeric" value={form.budget} onChange={(value) => update('budget', value)} placeholder="Inconnu si vide" />
+                    <TextField label="Durée maximale (mois)" inputMode="numeric" value={form.maxDurationMonths} onChange={(value) => update('maxDurationMonths', value)} placeholder="Inconnue si vide" />
+                    <TextField label="Revenu nécessaire sous (mois)" inputMode="numeric" value={form.needIncomeWithinMonths} onChange={(value) => update('needIncomeWithinMonths', value)} />
+                    <label className="text-sm font-medium">
+                      Accès Internet
+                      <select className={fieldClass} value={form.internetAccess} onChange={(event) => update('internetAccess', event.target.value as AdvisorForm['internetAccess'])}>
+                        <option value="unknown">À clarifier</option>
+                        <option value="none">Aucun</option>
+                        <option value="limited">Limité</option>
+                        <option value="regular">Régulier</option>
+                      </select>
+                    </label>
+                    <TextField label="Modalités acceptables" value={form.availableModes} onChange={(value) => update('availableModes', value)} placeholder="Présentiel, distance, alternance" />
+                    <TextField label="Disponibilité" value={form.availability} onChange={(value) => update('availability', value)} placeholder="Temps plein, soir, week-end" />
+                    <TextField label="Équipement" value={form.equipment} onChange={(value) => update('equipment', value)} placeholder="Smartphone, ordinateur…" />
+                    <TextField label="Documents disponibles" value={form.documents} onChange={(value) => update('documents', value)} placeholder="Baccalauréat, pièce d’identité, CV…" />
+                    <TextField label="Responsabilités familiales" value={form.familyResponsibilities} onChange={(value) => update('familyResponsibilities', value)} />
+                    <TextField label="Santé ou handicap volontairement déclaré" value={form.healthOrDisability} onChange={(value) => update('healthOrDisability', value)} />
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="text-sm font-medium">Matières suivies ou préférées<textarea className={`${fieldClass} min-h-20`} value={form.subjects} onChange={(event) => update('subjects', event.target.value)} placeholder="Séparer par des virgules" /></label>
-                  <label className="text-sm font-medium">Résultats significatifs<textarea className={`${fieldClass} min-h-20`} value={form.results} onChange={(event) => update('results', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Intérêts<textarea required className={`${fieldClass} min-h-20`} value={form.interests} onChange={(event) => update('interests', event.target.value)} placeholder="Numérique, sciences, service client…" /></label>
-                  <label className="text-sm font-medium">Activités appréciées<textarea className={`${fieldClass} min-h-20`} value={form.activities} onChange={(event) => update('activities', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Compétences déclarées<textarea required className={`${fieldClass} min-h-20`} value={form.skills} onChange={(event) => update('skills', event.target.value)} placeholder="Logique, communication, organisation…" /></label>
-                  <label className="text-sm font-medium">Compétences numériques<textarea className={`${fieldClass} min-h-20`} value={form.digitalSkills} onChange={(event) => update('digitalSkills', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Projets personnels ou preuves<textarea className={`${fieldClass} min-h-20`} value={form.personalProjects} onChange={(event) => update('personalProjects', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Stages et emplois<textarea className={`${fieldClass} min-h-20`} value={[form.internships, form.jobs].filter(Boolean).join(', ')} onChange={(event) => update('internships', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Environnements de travail<textarea className={`${fieldClass} min-h-20`} value={form.workEnvironments} onChange={(event) => update('workEnvironments', event.target.value)} placeholder="Bureau, atelier, terrain, public…" /></label>
-                  <label className="text-sm font-medium">Styles et valeurs<textarea className={`${fieldClass} min-h-20`} value={[form.workStyles, form.values].filter(Boolean).join(', ')} onChange={(event) => update('workStyles', event.target.value)} placeholder="Autonomie, équipe, stabilité, variété…" /></label>
-                  <label className="text-sm font-medium">Interruptions éventuelles<textarea className={`${fieldClass} min-h-20`} value={form.interruptions} onChange={(event) => update('interruptions', event.target.value)} /></label>
-                  <label className="text-sm font-medium">Notes de séance<textarea className={`${fieldClass} min-h-20`} value={form.notes} onChange={(event) => update('notes', event.target.value)} /></label>
+                  <TextAreaField label="Matières suivies ou préférées" value={form.subjects} onChange={(value) => update('subjects', value)} placeholder="Séparer par des virgules" />
+                  <TextAreaField label="Résultats significatifs" value={form.results} onChange={(value) => update('results', value)} />
+                  <TextAreaField label="Intérêts" required value={form.interests} onChange={(value) => update('interests', value)} placeholder="Numérique, sciences, service client…" />
+                  <TextAreaField label="Activités appréciées" value={form.activities} onChange={(value) => update('activities', value)} />
+                  <TextAreaField label="Compétences déclarées" required value={form.skills} onChange={(value) => update('skills', value)} placeholder="Logique, communication, organisation…" />
+                  <TextAreaField label="Compétences numériques" value={form.digitalSkills} onChange={(value) => update('digitalSkills', value)} />
+                  <TextAreaField label="Projets personnels" value={form.personalProjects} onChange={(value) => update('personalProjects', value)} />
+                  <TextAreaField label="Preuves disponibles" value={form.evidence} onChange={(value) => update('evidence', value)} placeholder="Attestation, portfolio, lien, réalisation…" />
+                  <TextAreaField label="Stages" value={form.internships} onChange={(value) => update('internships', value)} />
+                  <TextAreaField label="Emplois" value={form.jobs} onChange={(value) => update('jobs', value)} />
+                  <TextAreaField label="Bénévolat" value={form.volunteering} onChange={(value) => update('volunteering', value)} />
+                  <TextAreaField label="Responsabilités exercées" value={form.responsibilities} onChange={(value) => update('responsibilities', value)} />
+                  <TextAreaField label="Environnements de travail" value={form.workEnvironments} onChange={(value) => update('workEnvironments', value)} placeholder="Bureau, atelier, terrain, public…" />
+                  <TextAreaField label="Styles de travail" value={form.workStyles} onChange={(value) => update('workStyles', value)} placeholder="Autonomie, équipe, stabilité, variété…" />
+                  <TextAreaField label="Valeurs" value={form.values} onChange={(value) => update('values', value)} placeholder="Utilité, revenu, évolution, sécurité…" />
+                  <TextAreaField label="Langues" value={form.languages} onChange={(value) => update('languages', value)} />
+                  <TextAreaField label="Qualifications réglementaires" value={form.regulatoryQualifications} onChange={(value) => update('regulatoryQualifications', value)} />
+                  <TextAreaField label="Interruptions éventuelles" value={form.interruptions} onChange={(value) => update('interruptions', value)} />
+                  <TextAreaField label="Notes de séance" value={form.notes} onChange={(value) => update('notes', value)} />
                 </div>
 
                 <fieldset>
@@ -564,7 +712,12 @@ export default function AdvisorLifeProjectPage() {
                   <p className="mt-1 text-sm text-muted-foreground">L’ordre de sélection détermine la priorité relative.</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {Object.entries(priorityLabels).map(([id, label]) => (
-                      <button key={id} type="button" onClick={() => togglePriority(id)} className={`rounded-full border px-3 py-2 text-sm ${form.priorityIds.includes(id) ? 'border-primary bg-primary text-primary-foreground' : 'bg-background'}`}>
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => togglePriority(id)}
+                        className={`rounded-full border px-3 py-2 text-sm ${form.priorityIds.includes(id) ? 'border-primary bg-primary text-primary-foreground' : 'bg-background'}`}
+                      >
                         {form.priorityIds.includes(id) ? `${form.priorityIds.indexOf(id) + 1}. ` : ''}{label}
                       </button>
                     ))}
@@ -572,8 +725,12 @@ export default function AdvisorLifeProjectPage() {
                 </fieldset>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button type="submit" disabled={saving}><Search className="mr-2 h-4 w-4" />{saving ? 'Calcul en cours…' : 'Enregistrer et générer les options'}</Button>
-                  <Button type="button" variant="outline" disabled={saving} onClick={() => void initialise()}><RefreshCw className="mr-2 h-4 w-4" />Actualiser</Button>
+                  <Button type="submit" disabled={saving}>
+                    <Search className="mr-2 h-4 w-4" />{saving ? 'Calcul en cours…' : 'Enregistrer et générer les options'}
+                  </Button>
+                  <Button type="button" variant="outline" disabled={saving} onClick={() => void initialise()}>
+                    <RefreshCw className="mr-2 h-4 w-4" />Actualiser
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -581,11 +738,30 @@ export default function AdvisorLifeProjectPage() {
 
           <aside className="space-y-4 xl:order-last">
             <Card>
-              <CardHeader><CardTitle className="text-base">Dossiers</CardTitle><CardDescription>Choisissez un dossier existant ou démarrez une nouvelle séance.</CardDescription></CardHeader>
+              <CardHeader>
+                <CardTitle className="text-base">Dossiers</CardTitle>
+                <CardDescription>Choisissez un dossier existant ou démarrez une nouvelle séance.</CardDescription>
+              </CardHeader>
               <CardContent className="space-y-3">
-                <Button type="button" variant="outline" className="w-full" onClick={() => { setCurrent(null); setForm(emptyForm); setNotice('Nouveau dossier prêt à être renseigné.'); }}>Nouveau dossier</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setCurrent(null);
+                    setForm({ ...emptyForm });
+                    setNotice('Nouveau dossier prêt à être renseigné.');
+                  }}
+                >
+                  Nouveau dossier
+                </Button>
                 {projects.map((project) => (
-                  <button type="button" key={project.id} onClick={() => void loadProject(project.id)} className={`w-full rounded-md border p-3 text-left text-sm ${current?.project.id === project.id ? 'border-primary bg-primary/5' : ''}`}>
+                  <button
+                    type="button"
+                    key={project.id}
+                    onClick={() => void loadProject(project.id)}
+                    className={`w-full rounded-md border p-3 text-left text-sm ${current?.project.id === project.id ? 'border-primary bg-primary/5' : ''}`}
+                  >
                     <span className="block font-medium">{project.title}</span>
                     <span className="text-muted-foreground">{project.state} · {project.scenarioCount || 0} option(s)</span>
                   </button>
@@ -594,7 +770,9 @@ export default function AdvisorLifeProjectPage() {
             </Card>
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4" />Règle de confiance</CardTitle></CardHeader>
-              <CardContent className="text-sm text-muted-foreground">Le score mesure l’adéquation. La confiance mesure la qualité des informations. Un score élevé avec des sources locales non confirmées reste une hypothèse.</CardContent>
+              <CardContent className="text-sm text-muted-foreground">
+                Le score mesure l’adéquation. La confiance mesure la qualité des informations. Un score élevé avec des sources locales non confirmées reste une hypothèse.
+              </CardContent>
             </Card>
           </aside>
         </div>
@@ -603,18 +781,42 @@ export default function AdvisorLifeProjectPage() {
           <section className="space-y-6" aria-labelledby="options-title">
             <div>
               <h2 id="options-title" className="text-2xl font-bold">2. Options recommandées</h2>
-              <p className="text-muted-foreground">{recommendation.status === 'complete' ? `${recommendation.scenarios.length} options diversifiées ont été produites.` : 'Moins de trois options valides : le système refuse de compléter artificiellement la liste.'}</p>
+              <p className="text-muted-foreground">
+                {recommendation.status === 'complete'
+                  ? `${recommendation.scenarios.length} options diversifiées ont été produites.`
+                  : 'Moins de trois options valides : le système refuse de compléter artificiellement la liste.'}
+              </p>
             </div>
-            {recommendation.status === 'insufficient_options' && <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><AlertTriangle className="mr-2 inline h-4 w-4" />Référentiel insuffisant ou contraintes trop fortes. Complétez les informations manquantes ou vérifiez de nouvelles options locales.</div>}
+            {recommendation.status === 'insufficient_options' && (
+              <StatusMessage kind="warning">Référentiel insuffisant ou contraintes trop fortes. Complétez les informations manquantes ou vérifiez de nouvelles options locales.</StatusMessage>
+            )}
             <div className="grid gap-6 lg:grid-cols-2">
               {recommendation.scenarios.map((scenario) => (
-                <ScenarioCard key={scenario.id} scenario={scenario} selected={current?.project.activeScenarioId === scenario.id} saving={saving} onSelect={() => void selectScenario(scenario.id)} />
+                <ScenarioCard
+                  key={scenario.id}
+                  scenario={scenario}
+                  selected={current?.project.activeScenarioId === scenario.id}
+                  saving={saving}
+                  onSelect={() => void selectScenario(scenario.id)}
+                />
               ))}
             </div>
             {recommendation.nonPrioritized.length > 0 && (
               <Card>
-                <CardHeader><CardTitle className="text-lg">Options non priorisées</CardTitle><CardDescription>Une incompatibilité n’est pas masquée.</CardDescription></CardHeader>
-                <CardContent><ul className="space-y-3 text-sm">{recommendation.nonPrioritized.map((option) => <li key={option.optionId}><span className="font-medium">{option.title}</span><span className="block text-muted-foreground">{option.reasons.join(' · ')}</span></li>)}</ul></CardContent>
+                <CardHeader>
+                  <CardTitle className="text-lg">Options non priorisées</CardTitle>
+                  <CardDescription>Une incompatibilité n’est pas masquée.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 text-sm">
+                    {recommendation.nonPrioritized.map((option) => (
+                      <li key={option.optionId}>
+                        <span className="font-medium">{option.title}</span>
+                        <span className="block text-muted-foreground">{option.reasons.join(' · ')}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
               </Card>
             )}
           </section>
@@ -624,30 +826,90 @@ export default function AdvisorLifeProjectPage() {
           <section className="space-y-4" aria-labelledby="comparison-title">
             <h2 id="comparison-title" className="text-2xl font-bold">3. Comparaison</h2>
             <div className="overflow-x-auto rounded-lg border bg-background">
-              <table className="w-full min-w-[900px] text-left text-sm">
-                <thead className="bg-muted"><tr><th className="p-3">Option</th><th className="p-3">Adéquation</th><th className="p-3">Confiance</th><th className="p-3">Accès / mobilité</th><th className="p-3">Conditions</th><th className="p-3">Risques</th><th className="p-3">Action immédiate</th></tr></thead>
-                <tbody>{recommendation.scenarios.map((scenario) => <tr key={scenario.id} className="border-t align-top"><td className="p-3 font-medium">{scenario.title}</td><td className="p-3">{Math.round(scenario.fitScore)}/100</td><td className="p-3">{confidenceLabels[scenario.confidence]}</td><td className="p-3">{scenario.localOpportunities.map((entry) => entry.zone).filter(Boolean).join(', ') || 'À confirmer'}</td><td className="p-3">{scenario.conditions[0] || 'À vérifier'}</td><td className="p-3">{scenario.risks[0] || 'Aucun risque documenté'}</td><td className="p-3">{scenario.firstActions[0]?.title || 'À définir'}</td></tr>)}</tbody>
+              <table className="w-full min-w-[1050px] text-left text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="p-3">Option</th>
+                    <th className="p-3">Adéquation</th>
+                    <th className="p-3">Confiance</th>
+                    <th className="p-3">Durée</th>
+                    <th className="p-3">Coût</th>
+                    <th className="p-3">Accès / mobilité</th>
+                    <th className="p-3">Conditions</th>
+                    <th className="p-3">Risques</th>
+                    <th className="p-3">Action immédiate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recommendation.scenarios.map((scenario) => (
+                    <tr key={scenario.id} className="border-t align-top">
+                      <td className="p-3 font-medium">{scenario.title}</td>
+                      <td className="p-3">{Math.round(scenario.fitScore)}/100</td>
+                      <td className="p-3">{confidenceLabels[scenario.confidence]}</td>
+                      <td className="p-3">À confirmer dans la source locale</td>
+                      <td className="p-3">À confirmer dans la source locale</td>
+                      <td className="p-3">{scenario.localOpportunities.map((entry) => entry.zone).filter(Boolean).join(', ') || 'À confirmer'}</td>
+                      <td className="p-3">{scenario.conditions[0] || 'À vérifier'}</td>
+                      <td className="p-3">{scenario.risks[0] || 'Aucun risque documenté'}</td>
+                      <td className="p-3">{scenario.firstActions[0]?.title || 'À définir'}</td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
-            <p className="text-sm text-muted-foreground">La durée et le coût ne sont affichés que lorsqu’ils sont documentés dans le référentiel. Dans cette version, ils apparaissent parmi les informations à vérifier lorsqu’ils sont inconnus.</p>
+            <p className="text-sm text-muted-foreground">
+              La durée et le coût restent « à confirmer » tant que le moteur ne transmet pas de valeur locale vérifiée. Ils ne sont jamais déduits silencieusement.
+            </p>
           </section>
         )}
 
         {recommendation && (
           <section id="life-project-summary" className="space-y-4 rounded-lg border bg-background p-6 print:border-0 print:p-0" aria-labelledby="summary-title">
             <div className="flex flex-wrap items-center justify-between gap-3 print:block">
-              <div><h2 id="summary-title" className="text-2xl font-bold">4. Synthèse remise au jeune</h2><p className="text-sm text-muted-foreground">Générée le {new Date(recommendation.generatedAt).toLocaleString('fr-FR')} · moteur {recommendation.engineVersion}</p></div>
-              <Button type="button" variant="outline" className="print:hidden" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" />Imprimer ou enregistrer en PDF</Button>
+              <div>
+                <h2 id="summary-title" className="text-2xl font-bold">4. Synthèse remise au jeune</h2>
+                <p className="text-sm text-muted-foreground">Générée le {new Date(recommendation.generatedAt).toLocaleString('fr-FR')} · moteur {recommendation.engineVersion}</p>
+              </div>
+              <Button type="button" variant="outline" className="print:hidden" onClick={() => window.print()}>
+                <Printer className="mr-2 h-4 w-4" />Imprimer ou enregistrer en PDF
+              </Button>
             </div>
             <div className="grid gap-5 md:grid-cols-2">
-              <div><h3 className="font-semibold">Votre situation</h3><p className="mt-2 text-sm">{String(diagnostic?.identity.situation.value || 'Situation à préciser')} · niveau {String(diagnostic?.identity.educationLevel.value || 'à préciser')} · {String(diagnostic?.identity.zone.value || 'zone à préciser')}</p><p className="mt-1 text-sm text-muted-foreground">Objectif : {diagnostic ? objectiveLabels[diagnostic.objective] : 'à clarifier'}. Intérêts : {diagnostic?.preferences.interests.join(', ') || 'à préciser'}.</p></div>
-              <div><h3 className="font-semibold">Choix provisoire</h3><p className="mt-2 text-sm font-medium">{selectedScenario?.title || 'Aucun choix provisoire'}</p><p className="text-sm text-muted-foreground">Ce choix n’est pas une admission, un recrutement ou un financement garanti.</p></div>
-              <div>{listBlock('Options retenues', recommendation.scenarios.map((scenario) => `${scenario.rank}. ${scenario.title} — ${Math.round(scenario.fitScore)}/100, confiance ${confidenceLabels[scenario.confidence].toLowerCase()}`))}</div>
-              <div>{listBlock('Points restant à vérifier', summaryMissing)}</div>
-              <div><h3 className="font-semibold">Action sous sept jours</h3><p className="mt-2 text-sm">{selectedScenario?.firstActions[0]?.title || 'Définir une première action avec le conseiller.'}</p><p className="text-sm text-muted-foreground">Preuve attendue : {selectedScenario?.firstActions[0]?.expectedEvidence || 'Une preuve observable à convenir.'}</p></div>
-              <div><h3 className="font-semibold">Décision suivante</h3><p className="mt-2 text-sm">Vérifier les conditions locales, réaliser la première action, puis revoir le choix avec le conseiller avant toute inscription ou dépense.</p></div>
+              <div>
+                <h3 className="font-semibold">Votre situation</h3>
+                <p className="mt-2 text-sm">
+                  {String(diagnostic?.identity.situation.value || 'Situation à préciser')} · niveau {String(diagnostic?.identity.educationLevel.value || 'à préciser')} · {String(diagnostic?.identity.zone.value || 'zone à préciser')}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Objectif : {diagnostic ? objectiveLabels[diagnostic.objective] : 'à clarifier'}. Intérêts : {diagnostic?.preferences.interests.join(', ') || 'à préciser'}.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold">Choix provisoire</h3>
+                <p className="mt-2 text-sm font-medium">{selectedScenario?.title || 'Aucun choix provisoire'}</p>
+                <p className="text-sm text-muted-foreground">Ce choix n’est pas une admission, un recrutement ou un financement garanti.</p>
+              </div>
+              <ListBlock
+                title="Options proposées"
+                values={recommendation.scenarios.map((scenario) => `${scenario.rank}. ${scenario.title} — ${Math.round(scenario.fitScore)}/100, confiance ${confidenceLabels[scenario.confidence].toLowerCase()}`)}
+              />
+              <ListBlock title="Points restant à vérifier" values={summaryMissing} />
+              <div>
+                <h3 className="font-semibold">Action sous sept jours</h3>
+                <p className="mt-2 text-sm">{actionScenario?.firstActions[0]?.title || 'Définir une première action avec le conseiller.'}</p>
+                <p className="text-sm text-muted-foreground">Preuve attendue : {actionScenario?.firstActions[0]?.expectedEvidence || 'Une preuve observable à convenir.'}</p>
+                {!selectedScenario && actionScenario && (
+                  <p className="mt-1 text-xs text-muted-foreground">Action proposée depuis l’option prioritaire tant qu’aucun choix provisoire n’est enregistré.</p>
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold">Décision suivante</h3>
+                <p className="mt-2 text-sm">Vérifier les conditions locales, réaliser la première action, puis revoir le choix avec le conseiller avant toute inscription ou dépense.</p>
+              </div>
             </div>
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"><FileText className="mr-2 inline h-4 w-4" />Limite : cette synthèse soutient une décision accompagnée. Elle ne remplace ni l’avis officiel de l’établissement, ni le règlement d’admission, ni une validation financière.</div>
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+              <FileText className="mr-2 inline h-4 w-4" />Limite : cette synthèse soutient une décision accompagnée. Elle ne remplace ni l’avis officiel de l’établissement, ni le règlement d’admission, ni une validation financière.
+            </div>
           </section>
         )}
       </div>
