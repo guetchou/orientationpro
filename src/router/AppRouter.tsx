@@ -73,7 +73,7 @@ const RecruitmentPage = lazy(() => import('@/pages/RecruitmentPage'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const TestResults = lazy(() => import('@/pages/TestResults'));
 const Profile = lazy(() => import('@/pages/Profile'));
-const LifeProjectPage = lazy(() => import('@/features/life-project/LifeProjectPage'));
+const LifeProjectPage = lazy(() => import('@/features/life-project/AdvisorLifeProjectPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const SuperAdmin = lazy(() => import('@/pages/admin/SuperAdmin'));
