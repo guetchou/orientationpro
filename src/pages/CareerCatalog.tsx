@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Languages, Loader2, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/lib/apiClient';
 import { localRelevanceLabel, profileStatusLabel } from '@/lib/careerPresentation';
 import { getCareerCatalogSummary, searchCareerOccupations } from '@/services/careerApi';
@@ -16,8 +16,10 @@ const errorMessage = (error: unknown) => error instanceof ApiError
   : 'Le catalogue métiers n’a pas pu être chargé.';
 
 export default function CareerCatalog() {
-  const [queryInput, setQueryInput] = useState('');
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = String(searchParams.get('q') || '').trim().slice(0, 120);
+  const [queryInput, setQueryInput] = useState(initialQuery);
+  const [query, setQuery] = useState(initialQuery);
   const [riasecOnly, setRiasecOnly] = useState(false);
   const [offset, setOffset] = useState(0);
   const [occupations, setOccupations] = useState<CareerOccupation[]>([]);
@@ -35,9 +37,6 @@ export default function CareerCatalog() {
           getCareerCatalogSummary(),
           searchCareerOccupations({ query, locale: 'fr', riasecOnly, limit: PAGE_SIZE, offset }),
         ]);
-        // Défense contre une réponse "réussie" mais de forme inattendue (voir #165) :
-        // sans ce contrôle, un payload non-tableau plante plus loin sur
-        // `sources.find(...)` au lieu d'afficher la carte d'erreur.
         if (!Array.isArray(catalogSources) || !Array.isArray(results)) {
           throw new Error('Réponse du catalogue incomplète.');
         }
@@ -56,8 +55,13 @@ export default function CareerCatalog() {
   }, [query, riasecOnly, offset]);
 
   const submitSearch = () => {
+    const normalized = queryInput.trim().slice(0, 120);
     setOffset(0);
-    setQuery(queryInput.trim());
+    setQuery(normalized);
+    const next = new URLSearchParams(searchParams);
+    if (normalized) next.set('q', normalized);
+    else next.delete('q');
+    setSearchParams(next, { replace: true });
   };
   const onet = sources.find((source) => source.kind === 'onet');
   const esco = sources.find((source) => source.kind === 'esco' && source.locale === 'fr');
@@ -66,17 +70,21 @@ export default function CareerCatalog() {
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-10">
       <h1 className="sr-only">Explorer les métiers en français</h1>
       <div className="mx-auto min-w-0 max-w-6xl space-y-6">
-        <Button asChild variant="ghost"><Link to="/orientation/results"><ArrowLeft className="mr-2 h-4 w-4" />Mes résultats</Link></Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button asChild variant="ghost"><Link to="/parcours"><ArrowLeft className="mr-2 h-4 w-4" />Revenir à mon profil</Link></Button>
+          <Button asChild><Link to="/parcours">Commencer mon Projet de vie</Link></Button>
+        </div>
         <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Badge>Catalogue métiers</Badge>
+              <Badge>Exploration publique</Badge>
+              <Badge variant="outline">Sans compte</Badge>
               {onet ? <Badge variant="outline">{onet.occupationCount} métiers O*NET</Badge> : null}
               {esco ? <Badge variant="outline">ESCO français {esco.version}</Badge> : null}
             </div>
             <CardTitle className="text-3xl">Explorer les métiers en français</CardTitle>
             <CardDescription className="max-w-4xl text-base leading-relaxed">
-              MAKOKI recherche les libellés, descriptions et synonymes français ESCO reliés aux métiers O*NET. Les profils RIASEC restent ceux d’O*NET ; une fiche sans rapprochement fiable reste en anglais et le signale.
+              Découvre librement les activités, descriptions et profils d’intérêts des métiers. La création de compte n’est demandée que pour sauvegarder, comparer et personnaliser ton Projet de vie.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -89,7 +97,7 @@ export default function CareerCatalog() {
             </div>
             <label className="flex items-center gap-3 rounded-xl border p-4 text-sm text-slate-700"><input type="checkbox" checked={riasecOnly} onChange={(event) => { setOffset(0); setRiasecOnly(event.target.checked); }} className="h-4 w-4" />Afficher uniquement les métiers disposant d’un profil RIASEC classable</label>
             <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-950">
-              Données descriptives : <strong>{esco?.title || 'ESCO français non importé'}</strong>. Profil d’intérêts : <strong>{onet?.title || 'O*NET'}</strong>. L’adaptation au contexte congolais reste une revue séparée.
+              Données descriptives : <strong>{esco?.title || 'ESCO français non importé'}</strong>. Profil d’intérêts : <strong>{onet?.title || 'O*NET'}</strong>. L’adaptation au contexte congolais reste une revue séparée et les métiers exclus localement ne sont pas publiés.
             </div>
           </CardContent>
         </Card>
