@@ -282,11 +282,27 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
     assert.equal(res.body.error.code, 'ATS_TRANSITION_REASON_REQUIRED');
   }
 
-  // Candidate history never surfaces client-injected metadata (no internal-notes leak channel exists).
+  // Candidate history never surfaces the internal actor, reason or metadata of an
+  // event — the server redacts them for the owning candidate, not just the UI.
   {
     const history = await call(baseUrl, tokens.candidateA, 'GET', `/api/v1/ats/applications/${applicationId.value}/history`);
     assert.equal(history.status, 200);
-    assert.ok(history.body.events.every((event) => !('internalNote' in (event.metadata || {}))));
+    assert.ok(history.body.events.length > 0);
+    for (const event of history.body.events) {
+      assert.equal('actorAccountId' in event, false);
+      assert.equal('actorRole' in event, false);
+      assert.equal('reason' in event, false);
+      assert.equal('metadata' in event, false);
+      assert.ok('to' in event && 'occurredAt' in event);
+    }
+  }
+
+  // The assigned recruiter, by contrast, still sees the full event detail
+  // (actor identity, role) needed for their own workflow.
+  {
+    const history = await call(baseUrl, tokens.assignedRecruiter, 'GET', `/api/v1/ats/applications/${applicationId.value}/history`);
+    assert.equal(history.status, 200);
+    assert.ok(history.body.events.some((event) => 'actorAccountId' in event));
   }
 
   // Two concurrent HTTP transitions on the same version: exactly one succeeds.

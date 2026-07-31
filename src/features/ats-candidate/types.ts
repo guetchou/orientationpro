@@ -48,16 +48,18 @@ export interface AtsApplication {
   updatedAt: string;
 }
 
+// actorAccountId/actorRole/reason/metadata sont absents pour la vue candidat :
+// le serveur les retire avant l'envoi (jamais un filtrage côté client).
 export interface AtsApplicationEvent {
   id: number;
   applicationId: string;
   eventType: string;
   from: AtsApplicationState;
   to: AtsApplicationState;
-  actorAccountId: string;
-  actorRole: string;
-  reason: string | null;
-  metadata: Record<string, unknown>;
+  actorAccountId?: string;
+  actorRole?: string;
+  reason?: string | null;
+  metadata?: Record<string, unknown>;
   occurredAt: string;
 }
 
