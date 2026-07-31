@@ -45,6 +45,7 @@ test('capability registry is deterministic and never exposes environment values'
   assert.equal(JSON.stringify(first).includes('must-never-leak'), false);
   assert.equal(byId(first, 'identity.auth-v1').status, 'active');
   assert.equal(byId(first, 'orientation.riasec').status, 'experimental');
+  assert.equal(byId(first, 'career.catalog-public-v1').status, 'experimental');
   assert.equal(byId(first, 'career.recommendations').status, 'active');
   assert.equal(byId(first, 'cv.analysis-v1').status, 'active');
   assert.equal(byId(first, 'privacy.data-rights-v1').status, 'experimental');
@@ -54,18 +55,19 @@ test('capability registry is deterministic and never exposes environment values'
   assert.equal(byId(first, 'life-project.core-v1').configured, true);
   assert.equal(byId(first, 'life-project.core-v1').version, 'makoki-life-project-api-v1');
   assert.ok(byId(first, 'life-project.core-v1').publicLimitations
-    .some((entry) => entry.includes('Parcours autonome unique')));
+    .some((entry) => entry.includes('commence sans compte')));
   assert.deepEqual(byId(first, 'life-project.core-v1').dependencies, [
     'identity.auth-v1',
     'orientation.riasec',
   ]);
 });
 
-test('life-project activation embeds RIASEC even when the standalone flag is disabled', () => {
+test('life-project activation embeds guest RIASEC and a public career catalog', () => {
   const registry = createCapabilityRegistry({
     AUTH_V1_ENABLED: 'true',
     LIFE_PROJECT_API_ENABLED: 'true',
     RIASEC_API_ENABLED: 'false',
+    CAREER_API_ENABLED: 'false',
   });
 
   assert.equal(byId(registry, 'life-project.core-v1').configured, true);
@@ -73,7 +75,11 @@ test('life-project activation embeds RIASEC even when the standalone flag is dis
   assert.equal(byId(registry, 'orientation.riasec').status, 'experimental');
   assert.equal(byId(registry, 'orientation.riasec').configuration.key, 'LIFE_PROJECT_API_ENABLED');
   assert.ok(byId(registry, 'orientation.riasec').publicLimitations
-    .some((entry) => entry.includes('Étape intégrée')));
+    .some((entry) => entry.includes('sans compte')));
+  assert.equal(byId(registry, 'career.catalog-public-v1').configured, true);
+  assert.equal(byId(registry, 'career.catalog-public-v1').status, 'experimental');
+  assert.equal(byId(registry, 'career.catalog-public-v1').configuration.key, 'LIFE_PROJECT_API_ENABLED');
+  assert.equal(byId(registry, 'career.recommendations').status, 'disabled');
 });
 
 test('disabled configuration produces explicit disabled capabilities', () => {
@@ -82,6 +88,7 @@ test('disabled configuration produces explicit disabled capabilities', () => {
   assert.equal(byId(registry, 'identity.auth-v1').configured, false);
   assert.equal(byId(registry, 'profile.core-v1').status, 'disabled');
   assert.equal(byId(registry, 'orientation.riasec').status, 'disabled');
+  assert.equal(byId(registry, 'career.catalog-public-v1').status, 'disabled');
   assert.equal(byId(registry, 'career.recommendations').status, 'disabled');
   assert.equal(byId(registry, 'cv.analysis-v1').status, 'disabled');
   assert.equal(byId(registry, 'privacy.data-rights-v1').status, 'disabled');
@@ -129,6 +136,7 @@ test('public endpoint exposes the versioned registry without caching', async () 
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal(body.schemaVersion, SCHEMA_VERSION);
   assert.equal(byId(body, 'orientation.riasec').status, 'experimental');
+  assert.equal(byId(body, 'career.catalog-public-v1').status, 'disabled');
   assert.equal(byId(body, 'career.recommendations').status, 'disabled');
   assert.equal(byId(body, 'privacy.data-rights-v1').status, 'disabled');
   assert.equal(byId(body, 'life-project.core-v1').status, 'disabled');
