@@ -27,7 +27,7 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          recipe_email="makemba02+v6h-${GITHUB_RUN_ID}@gmail.com"
+          recipe_email="makemba02+v6h-${GITHUB_RUN_ID}@googlemail.com"
           recipe_password="$(openssl rand -base64 36 | tr -d '\n')"
           token_path="ops/recipe/token-${GITHUB_RUN_ID}.b64"
 
