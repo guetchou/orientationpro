@@ -39,7 +39,7 @@ jobs:
             conclusion: run.conclusion,
             url: run.html_url,
           }));
-          fs.writeFileSync('/tmp/snapshot.md', `## V6-H — état du run authentifié après fusion\n\n\`\`\`json\n${JSON.stringify(runs, null, 2)}\n\`\`\`\n`);
+          fs.writeFileSync('/tmp/snapshot.md', `## V6-H — état du run authentifié post-correctif critères\n\n\`\`\`json\n${JSON.stringify(runs, null, 2)}\n\`\`\`\n`);
           NODE
           jq -n --rawfile body /tmp/snapshot.md '{body: $body}' >/tmp/comment.json
           curl --fail --silent --show-error \
