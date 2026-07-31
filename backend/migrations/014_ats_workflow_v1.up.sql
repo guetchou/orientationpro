@@ -9,7 +9,7 @@ CREATE TABLE ats_jobs_v1 (
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   INDEX idx_ats_jobs_owner_status (owner_account_id, status),
-  CONSTRAINT fk_ats_jobs_owner FOREIGN KEY (owner_account_id) REFERENCES accounts(id) ON DELETE RESTRICT
+  CONSTRAINT fk_ats_jobs_owner FOREIGN KEY (owner_account_id) REFERENCES auth_accounts(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE ats_job_recruiters_v1 (
@@ -19,8 +19,8 @@ CREATE TABLE ats_job_recruiters_v1 (
   assigned_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (job_id, recruiter_account_id),
   CONSTRAINT fk_ats_job_recruiters_job FOREIGN KEY (job_id) REFERENCES ats_jobs_v1(id) ON DELETE CASCADE,
-  CONSTRAINT fk_ats_job_recruiters_recruiter FOREIGN KEY (recruiter_account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
-  CONSTRAINT fk_ats_job_recruiters_assigner FOREIGN KEY (assigned_by_account_id) REFERENCES accounts(id) ON DELETE RESTRICT
+  CONSTRAINT fk_ats_job_recruiters_recruiter FOREIGN KEY (recruiter_account_id) REFERENCES auth_accounts(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_ats_job_recruiters_assigner FOREIGN KEY (assigned_by_account_id) REFERENCES auth_accounts(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE ats_applications_v1 (
@@ -35,7 +35,7 @@ CREATE TABLE ats_applications_v1 (
   INDEX idx_ats_applications_candidate (candidate_account_id, submitted_at),
   INDEX idx_ats_applications_job_state (job_id, state, updated_at),
   CONSTRAINT fk_ats_applications_job FOREIGN KEY (job_id) REFERENCES ats_jobs_v1(id) ON DELETE RESTRICT,
-  CONSTRAINT fk_ats_applications_candidate FOREIGN KEY (candidate_account_id) REFERENCES accounts(id) ON DELETE RESTRICT
+  CONSTRAINT fk_ats_applications_candidate FOREIGN KEY (candidate_account_id) REFERENCES auth_accounts(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE ats_application_events_v1 (
@@ -52,5 +52,5 @@ CREATE TABLE ats_application_events_v1 (
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   INDEX idx_ats_events_application_time (application_id, occurred_at, id),
   CONSTRAINT fk_ats_events_application FOREIGN KEY (application_id) REFERENCES ats_applications_v1(id) ON DELETE RESTRICT,
-  CONSTRAINT fk_ats_events_actor FOREIGN KEY (actor_account_id) REFERENCES accounts(id) ON DELETE RESTRICT
+  CONSTRAINT fk_ats_events_actor FOREIGN KEY (actor_account_id) REFERENCES auth_accounts(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;

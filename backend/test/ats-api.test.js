@@ -23,7 +23,9 @@ const makeService = ({ read = true, transition = { allowed: true, actorRole: 're
     async canReadApplication() { return read; },
     async canTransition() { return transition; },
   };
-  return { service: createAtsService({ store, authorizer }), calls };
+  const jobStore = {};
+  const pool = { async query() { return [[]]; } };
+  return { service: createAtsService({ store, jobStore, authorizer, pool }), calls };
 };
 
 test('candidate cannot read another candidate application', async () => {

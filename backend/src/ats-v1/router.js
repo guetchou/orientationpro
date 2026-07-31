@@ -2,24 +2,36 @@
 
 const express = require('express');
 const { AtsWorkflowError } = require('./workflow');
+const { AtsJobWorkflowError } = require('./job-workflow');
 const { AtsPersistenceError } = require('./store');
+const { AtsJobPersistenceError } = require('./job-store');
 const { AtsServiceError } = require('./service');
 
 const statusFor = (error) => {
-  if (error instanceof AtsWorkflowError) {
-    if (['ATS_TRANSITION_NOT_ALLOWED','ATS_TERMINAL_STATE','ATS_TRANSITION_NOOP'].includes(error.code)) return 409;
+  if (error instanceof AtsWorkflowError || error instanceof AtsJobWorkflowError) {
+    if (['ATS_TRANSITION_NOT_ALLOWED', 'ATS_TERMINAL_STATE', 'ATS_TRANSITION_NOOP',
+      'ATS_JOB_TRANSITION_NOT_ALLOWED'].includes(error.code)) return 409;
     return 400;
   }
   if (error instanceof AtsPersistenceError) {
-    if (error.code === 'ATS_APPLICATION_NOT_FOUND') return 404;
+    if (['ATS_APPLICATION_NOT_FOUND', 'ATS_JOB_NOT_FOUND'].includes(error.code)) return 404;
     if (error.code === 'ATS_RESOURCE_FORBIDDEN') return 403;
-    if (error.code === 'ATS_VERSION_CONFLICT') return 409;
+    if (['ATS_VERSION_CONFLICT', 'ATS_APPLICATION_ALREADY_EXISTS'].includes(error.code)) return 409;
     if (error.code === 'ATS_VERSION_REQUIRED') return 428;
+    if (error.code === 'ATS_JOB_NOT_PUBLISHED') return 409;
+    return 400;
+  }
+  if (error instanceof AtsJobPersistenceError) {
+    if (error.code === 'ATS_JOB_NOT_FOUND') return 404;
+    if (['ATS_JOB_RESOURCE_FORBIDDEN', 'ATS_JOB_AUTHORIZATION_REQUIRED'].includes(error.code)) return 403;
+    if (['ATS_JOB_VERSION_CONFLICT', 'ATS_JOB_ALREADY_EXISTS', 'ATS_RECRUITER_ALREADY_ASSIGNED',
+      'ATS_RECRUITER_NOT_ASSIGNED'].includes(error.code)) return 409;
+    if (error.code === 'ATS_JOB_VERSION_REQUIRED') return 428;
     return 400;
   }
   if (error instanceof AtsServiceError) {
-    if (error.code === 'ATS_APPLICATION_NOT_FOUND') return 404;
-    if (error.code === 'ATS_RESOURCE_FORBIDDEN') return 403;
+    if (['ATS_APPLICATION_NOT_FOUND', 'ATS_JOB_NOT_FOUND'].includes(error.code)) return 404;
+    if (['ATS_RESOURCE_FORBIDDEN', 'ATS_JOB_RESOURCE_FORBIDDEN'].includes(error.code)) return 403;
     return 400;
   }
   return null;
@@ -53,6 +65,46 @@ const createAtsRouter = ({ service, authenticate }) => {
     schemaVersion: 'makoki-ats-api-v1',
     ...(await service.transition(req.auth.account, req.params.applicationId, req.body || {})),
   })));
+
+  router.post('/jobs', route(async (req, res) => res.status(201).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    job: await service.createJob(req.auth.account, req.body || {}),
+  })));
+
+  router.get('/jobs', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    jobs: await service.listJobs(req.auth.account),
+  })));
+
+  router.get('/jobs/:jobId', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    job: await service.getJob(req.auth.account, req.params.jobId),
+  })));
+
+  router.post('/jobs/:jobId/publish', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    job: await service.publishJob(req.auth.account, req.params.jobId, req.body || {}),
+  })));
+
+  router.post('/jobs/:jobId/close', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    job: await service.closeJob(req.auth.account, req.params.jobId, req.body || {}),
+  })));
+
+  router.post('/jobs/:jobId/applications', route(async (req, res) => res.status(201).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    ...(await service.depositApplication(req.auth.account, req.params.jobId, req.body || {})),
+  })));
+
+  router.post('/jobs/:jobId/recruiters', route(async (req, res) => {
+    await service.assignRecruiter(req.auth.account, req.params.jobId, String(req.body?.recruiterAccountId || ''));
+    return res.status(201).json({ schemaVersion: 'makoki-ats-api-v1', assigned: true });
+  }));
+
+  router.delete('/jobs/:jobId/recruiters/:accountId', route(async (req, res) => {
+    await service.removeRecruiter(req.auth.account, req.params.jobId, req.params.accountId);
+    return res.status(200).json({ schemaVersion: 'makoki-ats-api-v1', removed: true });
+  }));
 
   return router;
 };

@@ -38,7 +38,45 @@ const createAtsAuthorizer = (pool) => {
     };
   };
 
-  return Object.freeze({ canReadApplication, canTransition, transitionRole });
+  const jobActorRole = ({ account }) => {
+    if (hasRole(account, 'admin')) return 'admin';
+    if (hasRole(account, 'recruitment_manager')) return 'recruitment_manager';
+    if (hasRole(account, 'recruiter')) return 'recruiter';
+    return null;
+  };
+
+  const canCreateJob = ({ account }) => jobActorRole({ account }) !== null;
+
+  const canManageJob = ({ account, job }) => {
+    if (hasRole(account, 'admin') || hasRole(account, 'recruitment_manager')) return true;
+    return hasRole(account, 'recruiter') && job.ownerAccountId === account.id;
+  };
+
+  const canManageRecruiters = ({ account }) => hasRole(account, 'admin') || hasRole(account, 'recruitment_manager');
+
+  const canReadJob = async ({ account, job, connection = pool }) => {
+    if (!account || !job) return false;
+    if (job.status === 'published') return true;
+    if (hasRole(account, 'admin') || hasRole(account, 'recruitment_manager')) return true;
+    if (job.ownerAccountId === account.id) return true;
+    if (!hasRole(account, 'recruiter')) return false;
+    const [rows] = await connection.query(
+      'SELECT 1 FROM ats_job_recruiters_v1 WHERE job_id = ? AND recruiter_account_id = ? LIMIT 1',
+      [job.id, account.id],
+    );
+    return rows.length > 0;
+  };
+
+  return Object.freeze({
+    canReadApplication,
+    canTransition,
+    transitionRole,
+    jobActorRole,
+    canCreateJob,
+    canManageJob,
+    canManageRecruiters,
+    canReadJob,
+  });
 };
 
 module.exports = { createAtsAuthorizer, normalizeRoles, hasRole };

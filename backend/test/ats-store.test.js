@@ -107,4 +107,4 @@ test('authorization refusal rolls back before state mutation', async () => {
     (error) => error instanceof AtsPersistenceError && error.code === 'ATS_RESOURCE_FORBIDDEN',
   );
   assert.equal(queries.filter(([sql]) => String(sql).startsWith('UPDATE ats_applications_v1')).length, 0);
-}
+});
