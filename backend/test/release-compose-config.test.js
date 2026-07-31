@@ -94,16 +94,27 @@ test('versioned Compose override contains every V6-H boundary', () => {
   }
 });
 
-test('production workflow expects RIASEC embedded by Projet de vie, not a standalone flag', () => {
+test('production workflow proves guest RIASEC, public careers and protected full project', () => {
   const workflow = fs.readFileSync(productionWorkflowPath, 'utf8');
   assert.match(workflow, /const riasec = byId\('orientation\.riasec'\)/u);
   assert.match(workflow, /riasec\.status !== 'experimental'/u);
   assert.match(workflow, /riasec\.configured !== true/u);
-  assert.match(workflow, /riasec\.configurationKey !== 'LIFE_PROJECT_API_ENABLED'/u);
+  assert.match(workflow, /riasec\.configuration\?\.key !== 'LIFE_PROJECT_API_ENABLED'/u);
+  assert.match(workflow, /const publicCareerCatalog = byId\('career\.catalog-public-v1'\)/u);
+  assert.match(workflow, /publicCareerCatalog\.status !== 'experimental'/u);
+  assert.match(workflow, /api\/v1\/orientation\/riasec\/instrument/u);
+  assert.match(workflow, /api\/v1\/orientation\/results\?limit=1/u);
+  assert.match(workflow, /makoki_guest_orientation/u);
+  assert.match(workflow, /api\/v1\/career\/catalog\/summary/u);
+  assert.match(workflow, /api\/v1\/career\/occupations/u);
+  assert.match(workflow, /unauthenticated_status[\s\S]*api\/v1\/life-projects/u);
+  assert.match(workflow, /test "\$\{unauthenticated_status\}" = 401/u);
 
   const disabledCapabilities = workflow.match(/for \(const id of \[([\s\S]*?)\]\) \{/u);
   assert.ok(disabledCapabilities, 'production workflow must verify disabled capabilities');
   assert.doesNotMatch(disabledCapabilities[1], /orientation\.riasec/u);
+  assert.doesNotMatch(disabledCapabilities[1], /career\.catalog-public-v1/u);
+  assert.match(disabledCapabilities[1], /career\.recommendations/u);
 });
 
 test('production deploy applies V6-H override only to the new release, not rollback', () => {
