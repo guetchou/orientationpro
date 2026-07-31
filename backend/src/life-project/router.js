@@ -14,6 +14,8 @@ const {
 const { LifeProjectPersistenceError } = require('./store');
 const { LifeProjectServiceError } = require('./service');
 
+const RIASEC_DIMENSIONS = Object.freeze(['R', 'I', 'A', 'S', 'E', 'C']);
+
 const parseExpectedVersion = (req) => {
   const header = req.get('if-match');
   const candidate = header
@@ -33,6 +35,33 @@ const parseModuleIds = (value) => String(value || '')
   .map((entry) => entry.trim())
   .filter(Boolean);
 
+const normalizedRiasecScore = (result, dimension) => {
+  const value = Number(result?.scores?.[dimension]?.normalized);
+  return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+};
+
+const verifiedRiasecProfile = (result) => ({
+  resultId: result.id,
+  attemptId: result.attemptId,
+  instrumentId: result.instrumentId,
+  algorithmVersion: result.algorithmVersion,
+  primaryCode: result.primaryCode || null,
+  displayCode: result.displayCode,
+  scores: Object.fromEntries(RIASEC_DIMENSIONS.map((dimension) => [
+    dimension,
+    normalizedRiasecScore(result, dimension),
+  ])),
+  ranking: Array.isArray(result?.ranking?.ordered)
+    ? result.ranking.ordered
+      .filter((entry) => RIASEC_DIMENSIONS.includes(entry.dimension))
+      .map((entry) => ({
+        dimension: entry.dimension,
+        score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : 0,
+      }))
+    : [],
+  completedAt: new Date(result.createdAt).toISOString(),
+});
+
 const errorStatus = (error) => {
   if (error instanceof LifeProjectContractError
     || error instanceof LifeDiagnosticContractError
@@ -42,11 +71,13 @@ const errorStatus = (error) => {
   if (error instanceof LifeProjectServiceError) {
     if (error.code === 'LIFE_PROJECT_NOT_FOUND'
       || error.code === 'LIFE_PROJECT_ACTION_PLAN_NOT_FOUND'
-      || error.code === 'LIFE_PROJECT_ACTION_NOT_FOUND') return 404;
+      || error.code === 'LIFE_PROJECT_ACTION_NOT_FOUND'
+      || error.code === 'LIFE_PROJECT_RIASEC_RESULT_NOT_FOUND') return 404;
     if (error.code === 'LIFE_PROJECT_COMMAND_CONFLICT'
       || error.code === 'LIFE_PROJECT_GENERATED_SCENARIO_CONFLICT') return 409;
     if (error.code === 'LIFE_PROJECT_API_VERSION_REQUIRED') return 428;
-    if (error.code === 'ACTION_TRACKING_UNAVAILABLE') return 503;
+    if (error.code === 'ACTION_TRACKING_UNAVAILABLE'
+      || error.code === 'LIFE_PROJECT_RIASEC_VERIFICATION_UNAVAILABLE') return 503;
     return 400;
   }
   if (error instanceof LifeProjectPersistenceError) {
@@ -91,12 +122,47 @@ const sendProject = (res, result, status = 200) => {
 const createLifeProjectRouter = ({
   service,
   authenticate,
+  riasecStore = null,
   capabilityRegistry = createCapabilityRegistry(process.env),
   clock = () => new Date(),
 } = {}) => {
   if (!service || typeof authenticate !== 'function') {
     throw new Error('Life-project service and authentication are required.');
   }
+
+  const resolveDiagnosticInput = async (accountId, projectId, input = {}) => {
+    const sanitized = { ...input };
+    delete sanitized.riasecResultId;
+    delete sanitized.riasecProfile;
+
+    const resultId = input.riasecResultId || input.riasecProfile?.resultId || null;
+    if (resultId) {
+      if (!riasecStore || typeof riasecStore.getResult !== 'function') {
+        throw new LifeProjectServiceError(
+          'LIFE_PROJECT_RIASEC_VERIFICATION_UNAVAILABLE',
+          'The RIASEC result cannot be verified in this environment.',
+        );
+      }
+      const result = await riasecStore.getResult({ accountId, resultId });
+      if (!result || result.resultType !== 'riasec') {
+        throw new LifeProjectServiceError(
+          'LIFE_PROJECT_RIASEC_RESULT_NOT_FOUND',
+          'The RIASEC result does not exist for this account.',
+          { resultId },
+        );
+      }
+      return {
+        ...sanitized,
+        riasecProfile: verifiedRiasecProfile(result),
+      };
+    }
+
+    const loaded = await service.get(accountId, projectId);
+    const existingProfile = loaded.project.diagnostic?.riasecProfile || null;
+    return existingProfile
+      ? { ...sanitized, riasecProfile: existingProfile }
+      : sanitized;
+  };
 
   const router = express.Router();
   router.use(authenticate);
@@ -122,7 +188,11 @@ const createLifeProjectRouter = ({
     await service.replaceDiagnostic(
       req.auth.account.id,
       req.params.projectId,
-      req.body || {},
+      await resolveDiagnosticInput(
+        req.auth.account.id,
+        req.params.projectId,
+        req.body || {},
+      ),
       parseExpectedVersion(req),
     ),
   )));
@@ -232,4 +302,5 @@ const createLifeProjectRouter = ({
 module.exports = {
   createLifeProjectRouter,
   parseExpectedVersion,
+  verifiedRiasecProfile,
 };
