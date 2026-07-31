@@ -11,7 +11,7 @@ on:
     branches:
       - main
     paths:
-      - ops/production/deploy-life-project-priority-fix-attempt-2
+      - ops/production/deploy-life-project-priority-fix-attempt-3
 
 permissions:
   contents: read
@@ -48,8 +48,8 @@ jobs:
           bash -n scripts/release/activate-life-project-flags.sh
 
           if [[ "${GITHUB_EVENT_NAME}" == push ]]; then
-            test -f ops/production/deploy-life-project-priority-fix-attempt-2
-            grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-life-project-priority-fix-attempt-2
+            test -f ops/production/deploy-life-project-priority-fix-attempt-3
+            grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-life-project-priority-fix-attempt-3
           else
             test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
           fi

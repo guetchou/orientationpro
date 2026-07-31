@@ -24,6 +24,8 @@ stamp=$(date -u +%Y%m%dT%H%M%SZ)
 backup="${backup_root}/orientationpro-${stamp}-${sha:0:12}"
 lock_file=/run/lock/orientationpro-production-deploy.lock
 resolved_compose=''
+current_release=''
+protected_vps_source="${source_checkout}/.vps"
 
 stage() {
   printf 'deploy-stage: %s\n' "$1"
@@ -52,9 +54,27 @@ flock -n 9 || { echo "another production deployment is running" >&2; exit 3; }
   exit 1
 }
 
+current_release=$(readlink -f "${deploy_root}/current" 2>/dev/null || true)
+if [[ -n "${current_release}" && "${current_release}" != "${release_root}/"* ]]; then
+  printf 'current release is outside the protected release root: %s\n' "${current_release}" >&2
+  exit 1
+fi
+
 stage protected-assets
 require_nonempty_file "${source_checkout}/.env.vps"
-require_file "${source_checkout}/.vps/docker-compose.yml"
+require_nonempty_file "${source_checkout}/backend/Dockerfile.vps"
+require_nonempty_file "${source_checkout}/backend/.dockerignore"
+if [[ ! -f "${protected_vps_source}/docker-compose.yml" ]]; then
+  stage protected-vps-fallback
+  [[ -n "${current_release}" ]] || {
+    echo "protected VPS configuration is missing and no current release is available" >&2
+    exit 1
+  }
+  protected_vps_source="${current_release}/.vps"
+  printf 'using protected VPS configuration from current release: %s\n' "${current_release}"
+fi
+require_file "${protected_vps_source}/docker-compose.yml"
+require_file "${protected_vps_source}/Dockerfile.web"
 require_nonempty_file "${archive}"
 require_nonempty_file "${crosswalk}"
 echo "${archive_sha}  ${archive}" | sha256sum --check --status || {
@@ -83,7 +103,6 @@ bash "${space_helper}" "${release_root}" "${deploy_root}/current" "${deploy_root
 rm -f "${space_helper}"
 
 stage release-checkout
-current_release=$(readlink -f "${deploy_root}/current" 2>/dev/null || true)
 if [[ -d "${release}/.git" && "${current_release}" != "${release}" ]]; then
   printf 'reinitializing incomplete release: %s\n' "${release}"
   git -C "${release}" reset --hard "${sha}"
@@ -106,7 +125,7 @@ require_nonempty_file "${release}/scripts/release/activate-life-project-flags.sh
 
 stage protected-release-copy
 install -d -m 700 "${release}/.vps"
-cp -a "${source_checkout}/.vps/." "${release}/.vps/"
+cp -a "${protected_vps_source}/." "${release}/.vps/"
 install -m 644 "${source_checkout}/backend/Dockerfile.vps" "${release}/backend/Dockerfile.vps"
 install -m 644 "${source_checkout}/backend/.dockerignore" "${release}/backend/.dockerignore"
 install -m 600 "${source_checkout}/.env.vps" "${env_file}"
