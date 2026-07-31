@@ -1,10 +1,17 @@
 const { createDatabasePool } = require('../db/pool');
 const { createAuthRouter } = require('./index');
-const { createSessionAuthenticator } = require('./authenticate');
+const {
+  createOptionalSessionAuthenticator,
+  createSessionAuthenticator,
+} = require('./authenticate');
 const { createMySqlAuthStore } = require('./mysql-store');
 const { createPermissionChecker } = require('./permissions');
 const { createConfiguredOAuthProviders } = require('./oauth-providers');
 const { createSmtpEmailAdapter } = require('./smtp-email');
+const {
+  createGuestSessionManager,
+  createGuestSessionStore,
+} = require('../orientation/guest-sessions');
 
 const createConfiguredAuthV1 = (env = process.env) => {
   if (!env.JWT_SECRET || env.JWT_SECRET.length < 32) {
@@ -12,6 +19,11 @@ const createConfiguredAuthV1 = (env = process.env) => {
   }
   const pool = createDatabasePool(env);
   const store = createMySqlAuthStore(pool);
+  const guestSessions = createGuestSessionManager({
+    store: createGuestSessionStore(pool),
+    cookieSecure: env.NODE_ENV === 'production',
+    ttlMs: env.GUEST_ORIENTATION_TTL_MS,
+  });
   const router = createAuthRouter({
     store,
     email: createSmtpEmailAdapter(env),
@@ -20,14 +32,21 @@ const createConfiguredAuthV1 = (env = process.env) => {
     oauthProviders: createConfiguredOAuthProviders(env),
     frontendUrl: env.APP_WEB_URL || 'http://localhost:5173',
     oauthCallbackBaseUrl: env.OAUTH_CALLBACK_BASE_URL || env.APP_WEB_URL || 'http://localhost:5173',
+    guestSessions,
   });
   const authenticate = createSessionAuthenticator({
+    store,
+    jwtSecret: env.JWT_SECRET,
+  });
+  const authenticateOptional = createOptionalSessionAuthenticator({
     store,
     jwtSecret: env.JWT_SECRET,
   });
   return {
     router,
     authenticate,
+    authenticateOptional,
+    guestSessions,
     hasPermission: createPermissionChecker(pool),
     pool,
     store,
