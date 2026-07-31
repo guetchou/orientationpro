@@ -1,7 +1,5 @@
 'use strict';
 
-const { AtsPersistenceError } = require('./store');
-
 class AtsServiceError extends Error {
   constructor(code, message, details = {}) {
     super(message);
@@ -31,23 +29,27 @@ const createAtsService = ({ store, authorizer }) => {
   const transition = async (account, applicationId, command = {}) => {
     const application = await store.getApplication(applicationId);
     if (!application) throw new AtsServiceError('ATS_APPLICATION_NOT_FOUND', 'ATS application not found.');
-    const decision = await authorizer.canTransition({ account, application, to: command.to });
-    if (!decision.allowed) throw new AtsServiceError('ATS_RESOURCE_FORBIDDEN', 'ATS transition access denied.');
-    try {
-      return await store.transition({
-        applicationId,
-        expectedVersion: Number(command.expectedVersion),
-        to: command.to,
-        actorAccountId: account.id,
-        actorRole: decision.actorRole,
-        reason: command.reason,
-        metadata: {},
-        authorize: async () => true,
-      });
-    } catch (error) {
-      if (error instanceof AtsPersistenceError) throw error;
-      throw error;
-    }
+    const initialDecision = await authorizer.canTransition({ account, application, to: command.to });
+    if (!initialDecision.allowed) throw new AtsServiceError('ATS_RESOURCE_FORBIDDEN', 'ATS transition access denied.');
+
+    return store.transition({
+      applicationId,
+      expectedVersion: Number(command.expectedVersion),
+      to: command.to,
+      actorAccountId: account.id,
+      actorRole: initialDecision.actorRole,
+      reason: command.reason,
+      metadata: {},
+      authorize: async ({ application: lockedApplication, connection }) => {
+        const lockedDecision = await authorizer.canTransition({
+          account,
+          application: lockedApplication,
+          to: command.to,
+          connection,
+        });
+        return lockedDecision.allowed && lockedDecision.actorRole === initialDecision.actorRole;
+      },
+    });
   };
 
   return Object.freeze({ getApplication, listHistory, transition });
