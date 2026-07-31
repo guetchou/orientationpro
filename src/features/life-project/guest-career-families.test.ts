@@ -17,7 +17,14 @@ const profile: AdvisorRiasecProfile = {
     E: 40,
     C: 35,
   },
-  ranking: ['S', 'I', 'A', 'E', 'C', 'R'],
+  ranking: [
+    { dimension: 'S', score: 95 },
+    { dimension: 'I', score: 80 },
+    { dimension: 'A', score: 70 },
+    { dimension: 'E', score: 40 },
+    { dimension: 'C', score: 35 },
+    { dimension: 'R', score: 20 },
+  ],
   completedAt: '2026-07-31T20:00:00.000Z',
 };
 
