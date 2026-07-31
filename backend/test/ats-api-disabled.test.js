@@ -20,6 +20,7 @@ const ROUTES = [
   { method: 'POST', path: `/api/v1/ats/jobs/${JOB_ID}/applications` },
   { method: 'POST', path: `/api/v1/ats/jobs/${JOB_ID}/recruiters` },
   { method: 'DELETE', path: `/api/v1/ats/jobs/${JOB_ID}/recruiters/${ACCOUNT_ID}` },
+  { method: 'GET', path: '/api/v1/ats/my/applications' },
   { method: 'GET', path: `/api/v1/ats/applications/${APPLICATION_ID}` },
   { method: 'GET', path: `/api/v1/ats/applications/${APPLICATION_ID}/history` },
   { method: 'POST', path: `/api/v1/ats/applications/${APPLICATION_ID}/transitions` },
@@ -153,6 +154,9 @@ test('ATS_WORKFLOW_V1_ENABLED=true without AUTH_V1_ENABLED fails fast at startup
 
   const exited = await once(child, 'exit');
   assert.notEqual(exited[0], 0, `expected a non-zero exit code, got ${exited[0]}\n${logs}`);
-  assert.match(logs, /ATS_WORKFLOW_V1_ENABLED requires AUTH_V1_ENABLED=true/u);
+  // Fails fast at the capabilities registry's dependency check (mounted before the ATS
+  // router block), consistent with every other AUTH_V1_ENABLED-dependent flag — the
+  // explicit guard in server.js is defense-in-depth for the same invariant.
+  assert.match(logs, /ATS_WORKFLOW_V1_ENABLED requires AUTH_V1_ENABLED/u);
   assert.doesNotMatch(logs, /"event":"server\.started"/u);
 });

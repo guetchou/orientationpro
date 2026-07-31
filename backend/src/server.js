@@ -275,6 +275,7 @@ app.get('/', (req, res) => {
       atsJobClose: 'POST /api/v1/ats/jobs/:jobId/close',
       atsJobApplications: 'POST /api/v1/ats/jobs/:jobId/applications',
       atsJobRecruiters: 'POST|DELETE /api/v1/ats/jobs/:jobId/recruiters',
+      atsMyApplications: 'GET /api/v1/ats/my/applications',
       atsApplication: 'GET /api/v1/ats/applications/:applicationId',
       atsApplicationHistory: 'GET /api/v1/ats/applications/:applicationId/history',
       atsApplicationTransitions: 'POST /api/v1/ats/applications/:applicationId/transitions',

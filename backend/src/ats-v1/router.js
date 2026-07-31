@@ -51,6 +51,11 @@ const createAtsRouter = ({ service, authenticate }) => {
   const router = express.Router();
   router.use(authenticate);
 
+  router.get('/my/applications', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    applications: await service.listMyApplications(req.auth.account),
+  })));
+
   router.get('/applications/:applicationId', route(async (req, res) => res.status(200).json({
     schemaVersion: 'makoki-ats-api-v1',
     application: await service.getApplication(req.auth.account, req.params.applicationId),

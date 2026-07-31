@@ -36,6 +36,17 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
     return mapApplication(rows[0]);
   };
 
+  const listApplicationsForCandidate = async (candidateAccountId) => {
+    const [rows] = await pool.query(
+      `SELECT id, job_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
+       FROM ats_applications_v1
+       WHERE candidate_account_id = ?
+       ORDER BY submitted_at DESC, id DESC`,
+      [candidateAccountId],
+    );
+    return rows.map(mapApplication);
+  };
+
   const createApplication = async ({ id, jobId, candidateAccountId, cvAnalysisId = null, occurredAt }) => {
     const connection = await pool.getConnection();
     try {
@@ -240,7 +251,13 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
     }
   };
 
-  return Object.freeze({ getApplication, listHistory, transition, createApplication });
+  return Object.freeze({
+    getApplication,
+    listApplicationsForCandidate,
+    listHistory,
+    transition,
+    createApplication,
+  });
 };
 
 module.exports = { AtsPersistenceError, createAtsStore, mapApplication };

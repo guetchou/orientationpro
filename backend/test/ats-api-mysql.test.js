@@ -196,6 +196,35 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
     applicationId.value = deposited.body.application.id;
   }
 
+  // Duplicate application on the same job by the same candidate is a controlled 409, not a second row.
+  {
+    const dup = await call(baseUrl, tokens.candidateA, 'POST', `/api/v1/ats/jobs/${jobIds.job1}/applications`, {});
+    assert.equal(dup.status, 409);
+    assert.equal(dup.body.error.code, 'ATS_APPLICATION_ALREADY_EXISTS');
+  }
+
+  // Candidate A lists only their own applications, scoped server-side.
+  {
+    const res = await call(baseUrl, tokens.candidateA, 'GET', '/api/v1/ats/my/applications');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.applications.length, 1);
+    assert.equal(res.body.applications[0].id, applicationId.value);
+    assert.equal(res.body.applications[0].candidateAccountId, accounts.candidateA);
+  }
+
+  // Candidate B, who never applied, gets an empty list — not candidate A's data.
+  {
+    const res = await call(baseUrl, tokens.candidateB, 'GET', '/api/v1/ats/my/applications');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.applications, []);
+  }
+
+  // Unauthenticated request is rejected.
+  {
+    const res = await call(baseUrl, null, 'GET', '/api/v1/ats/my/applications');
+    assert.equal(res.status, 401);
+  }
+
   // Candidate B cannot read candidate A's application.
   {
     const res = await call(baseUrl, tokens.candidateB, 'GET', `/api/v1/ats/applications/${applicationId.value}`);

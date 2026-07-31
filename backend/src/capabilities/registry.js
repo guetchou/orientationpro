@@ -10,6 +10,7 @@ const dependencyRules = Object.freeze([
   Object.freeze({ capabilityId: 'cv.analysis-v1', key: 'CV_API_V1_ENABLED', requires: 'AUTH_V1_ENABLED' }),
   Object.freeze({ capabilityId: 'life-project.core-v1', key: 'LIFE_PROJECT_API_ENABLED', requires: 'AUTH_V1_ENABLED' }),
   Object.freeze({ capabilityId: 'privacy.data-rights-v1', key: 'DATA_RIGHTS_API_ENABLED', requires: 'AUTH_V1_ENABLED' }),
+  Object.freeze({ capabilityId: 'ats.workflow-v1', key: 'ATS_WORKFLOW_V1_ENABLED', requires: 'AUTH_V1_ENABLED' }),
 ]);
 
 const configurationErrors = (env = {}) => dependencyRules
@@ -65,6 +66,7 @@ const createCapabilityRegistry = (env = {}) => {
   const cv = enabled(env, 'CV_API_V1_ENABLED');
   const lifeProject = enabled(env, 'LIFE_PROJECT_API_ENABLED');
   const dataRights = enabled(env, 'DATA_RIGHTS_API_ENABLED');
+  const ats = enabled(env, 'ATS_WORKFLOW_V1_ENABLED');
 
   const capabilities = [
     capability({
@@ -134,6 +136,20 @@ const createCapabilityRegistry = (env = {}) => {
         'Capacité expérimentale désactivée par défaut ; revue juridique et tests MySQL finaux requis.',
         'La suppression avec réauthentification par mot de passe ne couvre pas encore les comptes OAuth-only.',
         'Les sauvegardes suivent leur propre calendrier de rétention et de restauration contrôlée.',
+      ],
+    }),
+    capability({
+      id: 'ats.workflow-v1',
+      domain: 'employment',
+      version: 'makoki-ats-workflow-v1',
+      status: ats ? 'experimental' : 'disabled',
+      configured: ats,
+      configurationKey: 'ATS_WORKFLOW_V1_ENABLED',
+      dependencies: ['identity.auth-v1'],
+      publicLimitations: [
+        'Aucun score, probabilité de recrutement ou classement des candidatures n’est calculé ni affiché.',
+        'Les notes et décisions internes des recruteurs ne sont jamais visibles côté candidat.',
+        'Capacité expérimentale réservée aux environnements de test/préproduction pour ce lot.',
       ],
     }),
     capability({

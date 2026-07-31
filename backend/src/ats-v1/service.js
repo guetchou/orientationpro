@@ -30,6 +30,8 @@ const createAtsService = ({ store, jobStore, authorizer, pool }) => {
     return store.listHistory(applicationId);
   };
 
+  const listMyApplications = (account) => store.listApplicationsForCandidate(account.id);
+
   const transition = async (account, applicationId, command = {}) => {
     const application = await store.getApplication(applicationId);
     if (!application) throw new AtsServiceError('ATS_APPLICATION_NOT_FOUND', 'ATS application not found.');
@@ -174,6 +176,7 @@ const createAtsService = ({ store, jobStore, authorizer, pool }) => {
 
   return Object.freeze({
     getApplication,
+    listMyApplications,
     listHistory,
     transition,
     depositApplication,
