@@ -2,8 +2,8 @@ import { useCallback, useState } from 'react';
 import { Brain, CheckCircle2, FileText, Route, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import AdvisorLifeProjectPage from './AdvisorLifeProjectPage';
 import EmbeddedRiasecStep from './EmbeddedRiasecStep';
+import LifeProjectWorkspace from './LifeProjectWorkspace';
 import type { AdvisorRiasecProfile } from './advisor-types';
 import {
   readPersistedRiasecProfile,
@@ -22,7 +22,7 @@ const journeySteps = [
 const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) => {
   const leading = topRiasecDimensions(profile);
   return (
-    <Card className="border-primary/20 print:break-inside-avoid" data-testid="unified-riasec-summary">
+    <Card className="border-primary/20 print:hidden" data-testid="unified-riasec-summary">
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Profil RIASEC intégré</Badge>
@@ -30,7 +30,7 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
         </div>
         <CardTitle className="flex items-center gap-2 text-xl"><Brain className="h-5 w-5" />Tes intérêts dominants</CardTitle>
         <CardDescription>
-          Ce profil alimente directement le calcul des options du Projet de vie et sera inclus dans la même synthèse imprimée.
+          Ce profil alimente directement le calcul des options du Projet de vie et sera inclus dans le rapport final unique.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -100,8 +100,8 @@ export default function UnifiedLifeProjectPage() {
               <CheckCircle2 className="mr-2 inline h-4 w-4" />
               Étape RIASEC terminée. Complète maintenant ta situation : ton profil sera enregistré avec ce dossier et utilisé dans les recommandations.
             </div>
-            <section aria-label="Suite du parcours Projet de vie" className="-mx-4 sm:mx-0">
-              <AdvisorLifeProjectPage />
+            <section aria-label="Suite du parcours Projet de vie">
+              <LifeProjectWorkspace riasecProfile={riasecProfile} />
             </section>
           </>
         ) : (
