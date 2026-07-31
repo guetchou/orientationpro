@@ -127,6 +127,9 @@ async function main() {
       '/terms',
       '/cookies',
     ];
+    const canonicalPathByRoute = new Map([
+      ['/tests', '/parcours'],
+    ]);
 
     const forbiddenPublicClaims = [
       'OrientationPro',
@@ -171,7 +174,8 @@ async function main() {
         throw new Error(`${route} has an unexpected title: ${title}`);
       }
       const canonical = await page.$eval('link[rel="canonical"]', (link) => link.href);
-      const expectedCanonical = `https://makoki.org${route === '/' ? '/' : route}`;
+      const canonicalPath = canonicalPathByRoute.get(route) || route;
+      const expectedCanonical = `https://makoki.org${canonicalPath === '/' ? '/' : canonicalPath}`;
       if (canonical !== expectedCanonical) {
         throw new Error(`${route} canonical mismatch: ${canonical} != ${expectedCanonical}`);
       }
