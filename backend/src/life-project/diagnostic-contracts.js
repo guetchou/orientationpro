@@ -164,19 +164,12 @@ const createRiasecProfile = (input) => {
   ]));
   const ranking = Array.isArray(value.ranking)
     ? value.ranking.map((entry, index) => {
-      const rankingEntry = object(entry, `diagnostic.riasecProfile.ranking[${index}]`);
+      const field = `diagnostic.riasecProfile.ranking[${index}]`;
+      const rankingEntry = object(entry, field);
+      const dimension = requiredString(rankingEntry.dimension, `${field}.dimension`);
       return deepFreeze({
-        dimension: enumValue(
-          rankingEntry.dimension,
-          `diagnostic.riasecProfile.ranking[${index}].dimension`,
-          RIASEC_DIMENSIONS,
-        ),
-        score: numberOrNull(
-          rankingEntry.score,
-          `diagnostic.riasecProfile.ranking[${index}].score`,
-          0,
-          100,
-        ) ?? 0,
+        dimension: enumValue(dimension, `${field}.dimension`, RIASEC_DIMENSIONS),
+        score: numberOrNull(rankingEntry.score, `${field}.score`, 0, 100) ?? 0,
       });
     })
     : [];
