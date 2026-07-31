@@ -94,24 +94,24 @@ test('missing information and high uncertainty select clarification with explici
   assert.equal(result.signals.uncertaintyLevel, 'high');
 });
 
-test('disabled modules remain visible but are never selected as the next step', () => {
+test('RIASEC remains available as an embedded step when the standalone flag is disabled', () => {
   const result = createAdaptiveOrchestration({
     project: project({
       missingInformation: [],
       uncertainty: { level: 'low', reasons: [] },
     }),
-    capabilityRegistry: registry({ riasec: false }),
+    capabilityRegistry: registry({ riasec: false, lifeProject: true }),
     generatedAt: at(2),
     completedModuleIds: ['profile.review'],
   });
 
   const interests = result.recommendations.find((entry) => entry.moduleId === 'orientation.interests');
-  assert.equal(interests.availability, 'disabled');
-  assert.notEqual(result.nextModuleId, 'orientation.interests');
-  assert.equal(result.nextModuleId, 'profile.skills-review');
+  assert.equal(interests.availability, 'available');
+  assert.equal(interests.capabilityStatus, 'experimental');
+  assert.equal(result.nextModuleId, 'orientation.interests');
 });
 
-test('capability dependencies fail closed when a prerequisite is disabled', () => {
+test('capability dependencies fail closed when both standalone and embedded RIASEC are disabled', () => {
   const result = createAdaptiveOrchestration({
     project: project({
       state: 'comparison',
@@ -119,7 +119,7 @@ test('capability dependencies fail closed when a prerequisite is disabled', () =
       missingInformation: [],
       uncertainty: { level: 'low', reasons: [] },
     }),
-    capabilityRegistry: registry({ riasec: false, career: true }),
+    capabilityRegistry: registry({ riasec: false, career: true, lifeProject: false }),
     generatedAt: at(2),
   });
 

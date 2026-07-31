@@ -5,6 +5,7 @@ import type {
   AdvisorEnvelope,
   AdvisorProjectSummary,
 } from './advisor-types';
+import { readPersistedRiasecProfile } from './riasec-profile';
 
 const commandId = () => globalThis.crypto?.randomUUID?.()
   || `command-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -36,14 +37,20 @@ export const saveAdvisorDiagnostic = (
   projectId: string,
   persistenceVersion: number,
   diagnostic: AdvisorDiagnosticInput,
-) => apiFetch<AdvisorEnvelope>(
-  `/v1/life-projects/${encodeURIComponent(projectId)}/diagnostic`,
-  {
-    method: 'PUT',
-    headers: { 'If-Match': `"${persistenceVersion}"` },
-    body: JSON.stringify(diagnostic),
-  },
-);
+) => {
+  const riasecProfile = readPersistedRiasecProfile();
+  return apiFetch<AdvisorEnvelope>(
+    `/v1/life-projects/${encodeURIComponent(projectId)}/diagnostic`,
+    {
+      method: 'PUT',
+      headers: { 'If-Match': `"${persistenceVersion}"` },
+      body: JSON.stringify({
+        ...diagnostic,
+        ...(riasecProfile ? { riasecResultId: riasecProfile.resultId } : {}),
+      }),
+    },
+  );
+};
 
 export const generateAdvisorRecommendations = (
   projectId: string,
@@ -69,7 +76,7 @@ export const selectAdvisorScenario = async (
       headers: { 'If-Match': `"${envelope.persistenceVersion}"` },
       body: JSON.stringify({
         commandId: commandId(),
-        reason: 'Option retenue provisoirement par le conseiller avec le jeune.',
+        reason: 'Option retenue provisoirement dans le parcours Projet de vie.',
       }),
     },
   );

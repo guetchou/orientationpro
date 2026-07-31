@@ -54,8 +54,26 @@ test('capability registry is deterministic and never exposes environment values'
   assert.equal(byId(first, 'life-project.core-v1').configured, true);
   assert.equal(byId(first, 'life-project.core-v1').version, 'makoki-life-project-api-v1');
   assert.ok(byId(first, 'life-project.core-v1').publicLimitations
-    .some((entry) => entry.includes('Parcours web activé')));
-  assert.equal(JSON.stringify(byId(first, 'life-project.core-v1')).includes('aucune interface Parcours'), false);
+    .some((entry) => entry.includes('Parcours autonome unique')));
+  assert.deepEqual(byId(first, 'life-project.core-v1').dependencies, [
+    'identity.auth-v1',
+    'orientation.riasec',
+  ]);
+});
+
+test('life-project activation embeds RIASEC even when the standalone flag is disabled', () => {
+  const registry = createCapabilityRegistry({
+    AUTH_V1_ENABLED: 'true',
+    LIFE_PROJECT_API_ENABLED: 'true',
+    RIASEC_API_ENABLED: 'false',
+  });
+
+  assert.equal(byId(registry, 'life-project.core-v1').configured, true);
+  assert.equal(byId(registry, 'orientation.riasec').configured, true);
+  assert.equal(byId(registry, 'orientation.riasec').status, 'experimental');
+  assert.equal(byId(registry, 'orientation.riasec').configuration.key, 'LIFE_PROJECT_API_ENABLED');
+  assert.ok(byId(registry, 'orientation.riasec').publicLimitations
+    .some((entry) => entry.includes('Étape intégrée')));
 });
 
 test('disabled configuration produces explicit disabled capabilities', () => {
