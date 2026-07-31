@@ -2,49 +2,38 @@
 
 ## Statut
 
-Implémentation en branche, non fusionnée, capacité désactivée par défaut.
+Implémentation en branche, non activée en production.
 
-## Livré dans cette PR
+## Livré dans la PR #185
 
-- machine d’états fermée des candidatures ;
-- matrice de transitions et rôles autorisés ;
+- machine d’états fermée ;
+- transitions autorisées par rôle ;
 - motif obligatoire pour un rejet ;
-- événements immuables de transition ;
-- schéma MySQL versionné `014_ats_workflow_v1` avec rollback ;
-- unicité d’une candidature par offre et candidat ;
-- affectations recruteurs séparées ;
-- store transactionnel avec `SELECT ... FOR UPDATE` ;
-- contrôle de version pour empêcher les mises à jour perdues ;
-- autorisation par ressource obligatoire et refus par défaut ;
-- insertion de l’événement dans la même transaction que le changement d’état ;
-- tests unitaires des contrats et du store transactionnel ;
-- flag `ATS_WORKFLOW_V1_ENABLED=false` documenté.
+- événements de transition immuables ;
+- migration MySQL `014_ats_workflow_v1` ;
+- store transactionnel avec verrou `SELECT ... FOR UPDATE` ;
+- contrôle de version et rejet des écritures concurrentes ;
+- contrôle d’accès par ressource : candidat propriétaire, recruteur affecté, responsable recrutement ou administrateur ;
+- service ATS qui dérive l’identité et le rôle depuis la session serveur ;
+- réautorisation à l’intérieur de la transaction verrouillée pour éviter une fenêtre TOCTOU ;
+- routeur HTTP préparé pour détail, historique et transitions ;
+- erreurs contrôlées 400/403/404/409/428 ;
+- tests des contrats, du store et de l’autorisation HTTP.
 
-## Non livré
+## Non livré dans ce lot
 
-- routes HTTP `/api/v1/ats` ;
-- service d’autorisation concret branché aux affectations recruteurs ;
-- tests MySQL réels et test de concurrence avec deux connexions ;
-- création et publication des offres via API ;
-- dépôt de candidature avec CV ;
-- interface candidat ou recruteur ;
-- entretiens, notifications et évaluations ;
-- activation préproduction ou production.
+- montage du routeur dans `server.js` ;
+- création et publication d’offres ;
+- dépôt de candidature ;
+- affectation recruteur via API ;
+- interfaces candidat et recruteur ;
+- entretiens, notifications, statistiques et droits de données ;
+- activation de `ATS_WORKFLOW_V1_ENABLED`.
 
-## Règles de sécurité
+## Règles
 
-- le legacy reste désactivé ;
-- le flag ATS V1 reste faux par défaut ;
-- une analyse CV ne devient jamais automatiquement une candidature ;
-- aucune transition n’accepte un statut libre ;
-- une mutation sans fonction d’autorisation est refusée ;
-- le contenu d’un CV et les données sensibles ne sont pas placés dans les événements.
-
-## Validation requise avant revue finale
-
-- `npm run test:ats --prefix backend` ;
-- suite backend complète ;
-- migration MySQL `up → down → up` ;
-- test de concurrence réel ;
-- vérification des contraintes de propriété et d’affectation ;
-- confirmation que les routes restent absentes tant que le lot HTTP n’est pas livré.
+- `ATS_WORKFLOW_V1_ENABLED=false` reste la valeur par défaut ;
+- `LEGACY_API_ENABLED` reste inchangé ;
+- une analyse CV ne crée pas une candidature et ne décide jamais d’un recrutement ;
+- aucune donnée fournie par le client ne peut choisir l’identité ou le rôle de l’acteur ;
+- les permissions sont refusées par défaut et vérifiées par ressource.
