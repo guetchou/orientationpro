@@ -17,7 +17,7 @@ const navigation = [
   ...(String(import.meta.env.VITE_POSTBAC_AUTO_V1_ENABLED ?? '').trim() === 'true'
     ? [{ name: 'Après le bac', path: '/post-bac' }]
     : []),
-  { name: 'Découvrir mon profil', path: '/tests' },
+  { name: 'Mon Projet de vie', path: '/parcours' },
   { name: 'Explorer les métiers', path: '/careers' },
   { name: 'Emploi', path: '/jobs' },
   { name: 'Ressources', path: '/blog' },
