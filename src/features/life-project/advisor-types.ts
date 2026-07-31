@@ -25,6 +25,8 @@ export type AdvisorMobility =
   | 'flexible'
   | 'unknown';
 
+export type AdvisorRiasecDimension = 'R' | 'I' | 'A' | 'S' | 'E' | 'C';
+
 export interface EvidenceField<T = string> {
   value: T | null;
   verification: 'declared' | 'verified' | 'unknown';
@@ -37,10 +39,26 @@ export interface AdvisorPriority {
   importance: number;
 }
 
+export interface AdvisorRiasecProfile {
+  resultId: string;
+  attemptId: string;
+  instrumentId: string;
+  algorithmVersion: string;
+  primaryCode: string | null;
+  displayCode: string;
+  scores: Record<AdvisorRiasecDimension, number>;
+  ranking: Array<{
+    dimension: AdvisorRiasecDimension;
+    score: number;
+  }>;
+  completedAt: string;
+}
+
 export interface LifeProjectDiagnostic {
   schemaVersion: 'makoki-life-diagnostic-v1';
   id: string;
   objective: AdvisorObjective;
+  riasecProfile: AdvisorRiasecProfile | null;
   identity: {
     ageRange: string | null;
     country: EvidenceField;
@@ -198,6 +216,7 @@ export type AdvisorProjectSummary = LifeProjectSummary;
 
 export interface AdvisorDiagnosticInput {
   objective: AdvisorObjective;
+  riasecProfile?: AdvisorRiasecProfile;
   identity: {
     ageRange?: string;
     country: { value: string; verification: 'declared' | 'verified' };
