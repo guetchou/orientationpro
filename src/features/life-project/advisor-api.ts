@@ -46,7 +46,7 @@ export const saveAdvisorDiagnostic = (
       headers: { 'If-Match': `"${persistenceVersion}"` },
       body: JSON.stringify({
         ...diagnostic,
-        ...(riasecProfile ? { riasecProfile } : {}),
+        ...(riasecProfile ? { riasecResultId: riasecProfile.resultId } : {}),
       }),
     },
   );
