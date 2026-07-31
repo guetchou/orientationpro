@@ -160,7 +160,8 @@ if (riasecRuntimeEnabled) {
     store: createRiasecStore(authV1.pool),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
-    allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true',
+    allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true'
+      || process.env.LIFE_PROJECT_API_ENABLED === 'true',
   }));
 }
 if (process.env.CAREER_API_ENABLED === 'true') {
