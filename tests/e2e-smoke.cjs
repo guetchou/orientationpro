@@ -196,8 +196,11 @@ async function main() {
 
     await page.goto(`${baseUrl}/register`, { waitUntil: 'networkidle0' });
     const registerText = await page.$eval('body', (body) => body.innerText);
-    if (!registerText.includes('au moins 16 ans') || !registerText.includes('14–15 ans')) {
-      throw new Error('/register does not expose the current minor-consent rule');
+    if (!registerText.includes('Je confirme avoir au moins 16 ans.')) {
+      throw new Error('/register no longer exposes the required age confirmation');
+    }
+    if (registerText.includes('14–15 ans')) {
+      throw new Error('/register still exposes the removed minor-consent banner');
     }
 
     await page.goto(baseUrl, { waitUntil: 'networkidle0' });
