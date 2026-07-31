@@ -100,3 +100,40 @@ test('production deploy applies V6-H override only to the new release, not rollb
   assert.match(script, /"\$\{rollback_compose\[@\]\}" up -d --no-deps --force-recreate api web/u);
   assert.doesNotMatch(script, /"\$\{compose\[@\]\}" up -d --no-deps --force-recreate api web \|\| true/u);
 });
+
+test('production deploy validates the release script through Bash instead of executable mode', () => {
+  const script = fs.readFileSync(deploymentScript, 'utf8');
+  assert.match(script, /require_nonempty_file "\$\{release\}\/scripts\/deploy-production-vps\.sh"/u);
+  assert.match(script, /bash -n "\$\{release\}\/scripts\/deploy-production-vps\.sh"/u);
+  assert.doesNotMatch(script, /test -x "\$\{release\}\/scripts\/deploy-production-vps\.sh"/u);
+});
+
+test('production deploy reinitializes only an incomplete non-current release', () => {
+  const script = fs.readFileSync(deploymentScript, 'utf8');
+  assert.match(script, /current_release=\$\(readlink -f "\$\{deploy_root\}\/current"/u);
+  assert.match(script, /-d "\$\{release\}\/\.git" && "\$\{current_release\}" != "\$\{release\}"/u);
+  assert.match(script, /git -C "\$\{release\}" reset --hard "\$\{sha\}"/u);
+  assert.match(script, /git -C "\$\{release\}" clean -ffd/u);
+});
+
+test('production deploy reports named stages before mutating production', () => {
+  const script = fs.readFileSync(deploymentScript, 'utf8');
+  for (const stage of [
+    'lock-and-host',
+    'protected-assets',
+    'repository-mirror',
+    'docker-space',
+    'release-checkout',
+    'protected-release-copy',
+    'web-dockerfile-normalization',
+    'release-environment',
+    'database-backup',
+    'image-build',
+    'migrations',
+    'api-restart',
+    'web-restart',
+    'completed',
+  ]) {
+    assert.match(script, new RegExp(`stage ${stage}`, 'u'));
+  }
+});

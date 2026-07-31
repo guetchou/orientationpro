@@ -25,21 +25,48 @@ backup="${backup_root}/orientationpro-${stamp}-${sha:0:12}"
 lock_file=/run/lock/orientationpro-production-deploy.lock
 resolved_compose=''
 
+stage() {
+  printf 'deploy-stage: %s\n' "$1"
+}
+
+require_file() {
+  local path="$1"
+  [[ -f "${path}" ]] || { printf 'required file missing: %s\n' "${path}" >&2; exit 1; }
+}
+
+require_nonempty_file() {
+  local path="$1"
+  [[ -s "${path}" ]] || { printf 'required file empty or missing: %s\n' "${path}" >&2; exit 1; }
+}
+
 cleanup() {
   [[ -z "${resolved_compose}" ]] || rm -f "${resolved_compose}"
 }
 trap cleanup EXIT
 
+stage lock-and-host
 exec 9>"${lock_file}"
 flock -n 9 || { echo "another production deployment is running" >&2; exit 3; }
-test "$(hostname)" = "${expected_hostname}"
-test -s "${source_checkout}/.env.vps"
-test -f "${source_checkout}/.vps/docker-compose.yml"
-test -s "${archive}"
-test -s "${crosswalk}"
-echo "${archive_sha}  ${archive}" | sha256sum --check --status
-echo "${crosswalk_sha}  ${crosswalk}" | sha256sum --check --status
+[[ "$(hostname)" == "${expected_hostname}" ]] || {
+  printf 'unexpected deployment host: %s\n' "$(hostname)" >&2
+  exit 1
+}
 
+stage protected-assets
+require_nonempty_file "${source_checkout}/.env.vps"
+require_file "${source_checkout}/.vps/docker-compose.yml"
+require_nonempty_file "${archive}"
+require_nonempty_file "${crosswalk}"
+echo "${archive_sha}  ${archive}" | sha256sum --check --status || {
+  echo "ESCO archive checksum mismatch" >&2
+  exit 1
+}
+echo "${crosswalk_sha}  ${crosswalk}" | sha256sum --check --status || {
+  echo "ESCO crosswalk checksum mismatch" >&2
+  exit 1
+}
+
+stage repository-mirror
 install -d -m 700 "${deploy_root}" "${release_root}" "${backup_root}"
 if [[ ! -d "${mirror}" ]]; then
   git clone --mirror git@github.com:guetchou/orientationpro.git "${mirror}"
@@ -48,31 +75,48 @@ git --git-dir="${mirror}" fetch --prune origin '+refs/heads/main:refs/heads/main
 git --git-dir="${mirror}" cat-file -e "${sha}^{commit}"
 git --git-dir="${mirror}" merge-base --is-ancestor "${sha}" refs/heads/main
 
+stage docker-space
 space_helper=$(mktemp)
 git --git-dir="${mirror}" show "${sha}:scripts/release/prepare-docker-build-space.sh" >"${space_helper}"
 chmod 700 "${space_helper}"
 bash "${space_helper}" "${release_root}" "${deploy_root}/current" "${deploy_root}/deployments.tsv"
 rm -f "${space_helper}"
 
+stage release-checkout
+current_release=$(readlink -f "${deploy_root}/current" 2>/dev/null || true)
+if [[ -d "${release}/.git" && "${current_release}" != "${release}" ]]; then
+  printf 'reinitializing incomplete release: %s\n' "${release}"
+  git -C "${release}" reset --hard "${sha}"
+  git -C "${release}" clean -ffd
+fi
 if [[ ! -d "${release}/.git" ]]; then
   git clone --shared "${mirror}" "${release}"
   git -C "${release}" checkout --detach "${sha}"
 fi
-test "$(git -C "${release}" rev-parse HEAD)" = "${sha}"
-test -x "${release}/scripts/deploy-production-vps.sh"
-test -f "${compose_override}"
-test -f "${release}/scripts/release/assert-life-project-compose-config.cjs"
+[[ "$(git -C "${release}" rev-parse HEAD)" == "${sha}" ]] || {
+  echo "release checkout SHA mismatch" >&2
+  exit 1
+}
+require_nonempty_file "${release}/scripts/deploy-production-vps.sh"
+bash -n "${release}/scripts/deploy-production-vps.sh"
+require_file "${compose_override}"
+require_file "${release}/scripts/release/assert-life-project-compose-config.cjs"
+require_nonempty_file "${release}/scripts/release/enable-life-project-web-build.sh"
+require_nonempty_file "${release}/scripts/release/activate-life-project-flags.sh"
 
+stage protected-release-copy
 install -d -m 700 "${release}/.vps"
 cp -a "${source_checkout}/.vps/." "${release}/.vps/"
 install -m 644 "${source_checkout}/backend/Dockerfile.vps" "${release}/backend/Dockerfile.vps"
 install -m 644 "${source_checkout}/backend/.dockerignore" "${release}/backend/.dockerignore"
 install -m 600 "${source_checkout}/.env.vps" "${env_file}"
 
-test -f "${release}/.vps/Dockerfile.web"
+require_file "${release}/.vps/Dockerfile.web"
+stage web-dockerfile-normalization
 bash "${release}/scripts/release/enable-life-project-web-build.sh" \
   "${release}/.vps/Dockerfile.web"
 
+stage release-environment
 mkdir -m 700 "${backup}"
 cp -a "${env_file}" "${backup}/env-before.vps"
 chmod 600 "${backup}/env-before.vps"
@@ -101,6 +145,7 @@ for expected in \
   grep -qx "${expected}" "${env_file}"
 done
 
+stage database-backup
 docker exec "${compose_project}-db-1" bash -c \
   'mysqldump --single-transaction --quick --triggers --routines --events --hex-blob -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' \
   | gzip -c >"${backup}/db-before.sql.gz"
@@ -154,12 +199,15 @@ rollback_on_error() {
 }
 trap rollback_on_error ERR
 
+stage image-build
 "${compose[@]}" build api
 "${compose[@]}" build web
 
 db_id_before=$(docker inspect -f '{{.Id}}' "${compose_project}-db-1")
+stage migrations
 "${compose[@]}" run --rm --no-deps api node scripts/migrate.js up
 
+stage riasec-seed-check
 riasec_seed_report="${backup}/riasec-seed-report.json"
 "${compose[@]}" run --rm --no-deps \
   api node scripts/seed-riasec.js | tee "${riasec_seed_report}"
@@ -167,7 +215,7 @@ grep -Eq '"status":"(created|unchanged|updated-draft)"' "${riasec_seed_report}"
 grep -q '"instrumentId":"riasec-makoki-fr-draft-v2"' "${riasec_seed_report}"
 grep -q '"itemCount":60' "${riasec_seed_report}"
 
-# Remove only the temporary ESCO bootstrap created before the canonical importer existed.
+stage esco-reconciliation
 "${compose[@]}" run --rm --no-deps \
   -e EXPECTED_BOOTSTRAP_HASH="${bootstrap_hash}" \
   api node scripts/reconcile-esco-bootstrap.js
@@ -184,6 +232,7 @@ grep -q '"itemCount":60' "${riasec_seed_report}"
   -e ALLOW_SOURCE_REPLACE=true \
   api node scripts/import-esco-catalog.js | tee "${backup}/esco-import-report.json"
 
+stage api-restart
 "${compose[@]}" up -d --no-deps --force-recreate api
 for _ in $(seq 1 30); do
   [[ "$(docker inspect -f '{{.State.Health.Status}}' "${compose_project}-api-1")" = healthy ]] && break
@@ -191,6 +240,7 @@ for _ in $(seq 1 30); do
 done
 test "$(docker inspect -f '{{.State.Health.Status}}' "${compose_project}-api-1")" = healthy
 
+stage web-restart
 "${compose[@]}" up -d --no-deps --force-recreate web
 for _ in $(seq 1 30); do
   curl --fail --silent http://127.0.0.1:8088/ >/dev/null && break
@@ -206,4 +256,5 @@ test "$(docker inspect -f '{{.RestartCount}}' "${compose_project}-web-1")" = 0
 ln -sfn "${release}" "${deploy_root}/current"
 printf '%s\t%s\t%s\n' "${stamp}" "${sha}" "${backup}" >>"${deploy_root}/deployments.tsv"
 trap - ERR
+stage completed
 echo "production deployment succeeded: ${sha}"
