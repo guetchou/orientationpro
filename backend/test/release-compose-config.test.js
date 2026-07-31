@@ -137,3 +137,23 @@ test('production deploy reports named stages before mutating production', () => 
     assert.match(script, new RegExp(`stage ${stage}`, 'u'));
   }
 });
+
+test('production deploy falls back only to the currently served protected VPS files', () => {
+  const script = fs.readFileSync(deploymentScript, 'utf8');
+  assert.match(script, /protected_vps_source="\$\{source_checkout\}\/\.vps"/u);
+  assert.match(script, /if \[\[ ! -f "\$\{protected_vps_source\}\/docker-compose\.yml" \]\]; then[\s\S]*stage protected-vps-fallback/u);
+  assert.match(script, /protected_vps_source="\$\{current_release\}\/\.vps"/u);
+  assert.match(script, /current release is outside the protected release root/u);
+  assert.match(script, /require_file "\$\{protected_vps_source\}\/docker-compose\.yml"/u);
+  assert.match(script, /require_file "\$\{protected_vps_source\}\/Dockerfile\.web"/u);
+  assert.match(script, /cp -a "\$\{protected_vps_source\}\/\." "\$\{release\}\/\.vps\/"/u);
+  assert.doesNotMatch(script, /cp -a "\$\{source_checkout\}\/\.vps\/\."/u);
+});
+
+test('production deploy keeps secrets and backend Docker assets in the protected source checkout', () => {
+  const script = fs.readFileSync(deploymentScript, 'utf8');
+  assert.match(script, /require_nonempty_file "\$\{source_checkout\}\/\.env\.vps"/u);
+  assert.match(script, /install -m 600 "\$\{source_checkout\}\/\.env\.vps" "\$\{env_file\}"/u);
+  assert.match(script, /install -m 644 "\$\{source_checkout\}\/backend\/Dockerfile\.vps"/u);
+  assert.match(script, /install -m 644 "\$\{source_checkout\}\/backend\/\.dockerignore"/u);
+});
