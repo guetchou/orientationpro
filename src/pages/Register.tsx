@@ -126,10 +126,6 @@ export default function Register() {
         </div>
       ) : (
         <>
-          <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-            L’inscription est actuellement réservée aux personnes âgées d’au moins 16 ans. L’ouverture aux 14–15 ans sera
-            activée après mise en place d’un consentement parental conjoint et vérifiable.
-          </div>
           {serverError && (
             <div className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
