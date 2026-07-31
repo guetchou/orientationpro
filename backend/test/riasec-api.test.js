@@ -43,17 +43,28 @@ const authenticated = (req, res, next) => {
   next();
 };
 
+const anonymous = (req, res, next) => next();
+
 const createApp = (
   store,
-  authenticate = authenticated,
-  hasPermission = async () => true,
+  {
+    authenticateOptional = authenticated,
+    hasPermission = async () => true,
+    guestOwner = { guestSessionId: 'guest-1', accountId: null, kind: 'guest' },
+  } = {},
 ) => {
+  const guestSessions = {
+    resolveOwner: async (req) => req.auth?.account?.id
+      ? { accountId: req.auth.account.id, guestSessionId: null, kind: 'account' }
+      : guestOwner,
+  };
   const app = express();
   app.use(express.json());
   app.use('/api/v1/orientation', createRiasecRouter({
     store,
-    authenticate,
+    authenticateOptional,
     hasPermission,
+    guestSessions,
     allowDraft: true,
   }));
   app.use((error, req, res, next) => {
@@ -62,11 +73,14 @@ const createApp = (
   return app;
 };
 
-test('instrument endpoint never exposes scoring dimensions or reverse-scoring keys', async () => {
+test('instrument endpoint is public and never exposes scoring dimensions or reverse-scoring keys', async () => {
   const store = {
     getInstrument: async () => databaseInstrument(),
   };
-  const response = await request(createApp(store), '/api/v1/orientation/riasec/instrument');
+  const response = await request(
+    createApp(store, { authenticateOptional: anonymous }),
+    '/api/v1/orientation/riasec/instrument',
+  );
   const body = await response.json();
 
   assert.equal(response.status, 200);
@@ -77,7 +91,7 @@ test('instrument endpoint never exposes scoring dimensions or reverse-scoring ke
   assert.match(body.instrument.disclaimer, /ne constitue ni un diagnostic/i);
 });
 
-test('starting an attempt stores ownership and a complete randomized item order', async () => {
+test('starting an authenticated attempt stores account ownership and a complete randomized item order', async () => {
   let creation;
   const instrument = databaseInstrument();
   const store = {
@@ -94,6 +108,7 @@ test('starting an attempt stores ownership and a complete randomized item order'
 
   assert.equal(response.status, 201);
   assert.equal(creation.accountId, 'account-1');
+  assert.equal(creation.guestSessionId, null);
   assert.equal(creation.instrumentId, instrument.id);
   assert.equal(new Set(creation.itemOrder).size, instrument.items.length);
   assert.deepEqual(
@@ -106,7 +121,28 @@ test('starting an attempt stores ownership and a complete randomized item order'
   );
 });
 
-test('submitting complete answers calculates the server result and persists one snapshot', async () => {
+test('starting without an account stores only the opaque guest owner', async () => {
+  let creation;
+  const instrument = databaseInstrument();
+  const store = {
+    getInstrument: async () => instrument,
+    createAttempt: async (input) => {
+      creation = input;
+      return { id: 'attempt-guest', status: 'in_progress', ...input };
+    },
+  };
+  const response = await request(
+    createApp(store, { authenticateOptional: anonymous }),
+    '/api/v1/orientation/riasec/attempts',
+    { method: 'POST' },
+  );
+
+  assert.equal(response.status, 201);
+  assert.equal(creation.accountId, null);
+  assert.equal(creation.guestSessionId, 'guest-1');
+});
+
+test('submitting complete answers calculates the server result and persists one account snapshot', async () => {
   const instrument = databaseInstrument();
   const responses = instrument.items.map((item, index) => ({
     itemId: item.id,
@@ -150,6 +186,7 @@ test('submitting complete answers calculates the server result and persists one 
 
   assert.equal(response.status, 201);
   assert.equal(completion.accountId, 'account-1');
+  assert.equal(completion.guestSessionId, null);
   assert.equal(completion.responses.length, 60);
   assert.equal(completion.result.algorithmVersion, 'riasec-opc-scoring-v1');
   assert.equal(completion.snapshot.instrument.id, instrument.id);
@@ -214,7 +251,7 @@ test('an unsupported instrument algorithm is rejected before creating an attempt
   assert.equal(created, false);
 });
 
-test('result history always uses the authenticated account as owner filter', async () => {
+test('result history always uses the resolved account owner filter', async () => {
   let listing;
   const store = {
     listResults: async (input) => {
@@ -226,39 +263,35 @@ test('result history always uses the authenticated account as owner filter', asy
 
   assert.equal(response.status, 200);
   assert.equal(listing.accountId, 'account-1');
+  assert.equal(listing.guestSessionId, null);
   assert.equal(listing.limit, '5');
   assert.equal(listing.offset, '2');
 });
 
-test('all RIASEC routes reject a missing session before reading the store', async () => {
-  let storeRead = false;
+test('guest result history is isolated by the guest session owner', async () => {
+  let listing;
   const store = {
-    getInstrument: async () => {
-      storeRead = true;
-      return databaseInstrument();
+    listResults: async (input) => {
+      listing = input;
+      return [];
     },
   };
-  const rejectAuthentication = (req, res) => res.status(401).json({
-    error: { code: 'SESSION_REQUIRED', message: 'An access token is required.' },
-  });
   const response = await request(
-    createApp(store, rejectAuthentication),
-    '/api/v1/orientation/riasec/instrument',
+    createApp(store, { authenticateOptional: anonymous }),
+    '/api/v1/orientation/results',
   );
-  const body = await response.json();
 
-  assert.equal(response.status, 401);
-  assert.equal(body.error.code, 'SESSION_REQUIRED');
-  assert.equal(storeRead, false);
+  assert.equal(response.status, 200);
+  assert.equal(listing.accountId, null);
+  assert.equal(listing.guestSessionId, 'guest-1');
 });
 
-test('all RIASEC routes reject an account without the required server permission', async () => {
-  let storeRead = false;
+test('authenticated routes reject an account without the required server permission', async () => {
+  let storeWrite = false;
   let checkedPermission;
   const store = {
-    getInstrument: async () => {
-      storeRead = true;
-      return databaseInstrument();
+    createAttempt: async () => {
+      storeWrite = true;
     },
   };
   const hasPermission = async (input) => {
@@ -266,8 +299,9 @@ test('all RIASEC routes reject an account without the required server permission
     return false;
   };
   const response = await request(
-    createApp(store, authenticated, hasPermission),
-    '/api/v1/orientation/riasec/instrument',
+    createApp(store, { hasPermission }),
+    '/api/v1/orientation/riasec/attempts',
+    { method: 'POST' },
   );
   const body = await response.json();
 
@@ -275,7 +309,7 @@ test('all RIASEC routes reject an account without the required server permission
   assert.equal(body.error.code, 'PERMISSION_DENIED');
   assert.deepEqual(checkedPermission, {
     accountId: 'account-1',
-    permissionId: 'orientation.result.read_own',
+    permissionId: 'orientation.result.create',
   });
-  assert.equal(storeRead, false);
+  assert.equal(storeWrite, false);
 });
