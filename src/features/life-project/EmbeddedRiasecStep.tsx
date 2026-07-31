@@ -21,10 +21,7 @@ import {
 } from '@/services/riasecApi';
 import type { RiasecAttempt, RiasecInstrument } from '@/types/riasec';
 import type { AdvisorRiasecProfile } from './advisor-types';
-import {
-  persistRiasecResult,
-  readPersistedRiasecProfile,
-} from './riasec-profile';
+import { persistRiasecResult } from './riasec-profile';
 
 const DRAFT_KEY = 'makoki.riasec.draft.v1';
 
@@ -110,12 +107,6 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       }
       setPhase('intro');
     } catch (caught) {
-      const persisted = readPersistedRiasecProfile();
-      if (persisted) {
-        onComplete(persisted);
-        setPhase('completed');
-        return;
-      }
       setError(errorMessage(caught));
       setPhase('error');
     }
