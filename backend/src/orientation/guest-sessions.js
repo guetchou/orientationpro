@@ -148,11 +148,25 @@ const createGuestSessionManager = ({
 
   const clearCookie = (res) => res.clearCookie(cookieName, { path: '/api/v1' });
 
+  const claimFromRequest = async (req, res, accountId) => {
+    const token = readCookie(req, cookieName);
+    if (!token) return { status: 'not_found', attempts: 0, results: 0 };
+    const outcome = await store.claim({
+      tokenHash: hashToken(token),
+      accountId,
+      now: new Date(),
+    });
+    clearCookie(res);
+    return outcome;
+  };
+
   return {
     cookieName,
 
     async resolveOwner(req, res) {
       if (req.auth?.account?.id) {
+        const claim = await claimFromRequest(req, res, req.auth.account.id);
+        req.guestClaim = claim;
         return { accountId: req.auth.account.id, guestSessionId: null, kind: 'account' };
       }
 
@@ -175,18 +189,7 @@ const createGuestSessionManager = ({
       return { accountId: null, guestSessionId: session.id, kind: 'guest' };
     },
 
-    async claimFromRequest(req, res, accountId) {
-      const token = readCookie(req, cookieName);
-      if (!token) return { status: 'not_found', attempts: 0, results: 0 };
-      const outcome = await store.claim({
-        tokenHash: hashToken(token),
-        accountId,
-        now: new Date(),
-      });
-      clearCookie(res);
-      return outcome;
-    },
-
+    claimFromRequest,
     clearCookie,
   };
 };
