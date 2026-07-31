@@ -58,7 +58,7 @@ export interface LifeProjectDiagnostic {
   schemaVersion: 'makoki-life-diagnostic-v1';
   id: string;
   objective: AdvisorObjective;
-  riasecProfile: AdvisorRiasecProfile | null;
+  riasecProfile?: AdvisorRiasecProfile | null;
   identity: {
     ageRange: string | null;
     country: EvidenceField;
