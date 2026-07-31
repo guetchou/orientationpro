@@ -59,6 +59,7 @@ const allowedOrigins = new Set(
 );
 let closeApplicationResources = async () => undefined;
 let authV1 = null;
+let riasecStore = null;
 
 const logger = createJsonLogger({ routeTemplates: V1_ROUTE_TEMPLATES });
 const metrics = createMetricsRegistry({ routeTemplates: V1_ROUTE_TEMPLATES });
@@ -117,6 +118,7 @@ if (process.env.LEGACY_AUTH_ENABLED === 'true') {
 }
 if (process.env.AUTH_V1_ENABLED === 'true') {
   authV1 = createConfiguredAuthV1(process.env);
+  riasecStore = createRiasecStore(authV1.pool);
   closeApplicationResources = authV1.close;
   app.use('/api/v1/auth', authLimiter, authV1.router);
   app.use('/api/v1/profile', createProfileRouter({
@@ -138,7 +140,7 @@ if (process.env.DATA_RIGHTS_API_ENABLED === 'true') {
   }));
 }
 if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
-  if (!authV1) {
+  if (!authV1 || !riasecStore) {
     throw new Error('LIFE_PROJECT_API_ENABLED requires AUTH_V1_ENABLED=true');
   }
   app.use('/api/v1/life-projects', expensiveLimiter, createLifeProjectRouter({
@@ -148,16 +150,17 @@ if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
       optionProvider: createCongoLocalOptionProvider(),
     }),
     authenticate: authV1.authenticate,
+    riasecStore,
   }));
 }
 const riasecRuntimeEnabled = process.env.RIASEC_API_ENABLED === 'true'
   || process.env.LIFE_PROJECT_API_ENABLED === 'true';
 if (riasecRuntimeEnabled) {
-  if (!authV1) {
+  if (!authV1 || !riasecStore) {
     throw new Error('RIASEC or LIFE_PROJECT runtime requires AUTH_V1_ENABLED=true');
   }
   app.use('/api/v1/orientation', expensiveLimiter, createRiasecRouter({
-    store: createRiasecStore(authV1.pool),
+    store: riasecStore,
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
     allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true'
