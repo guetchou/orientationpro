@@ -29,7 +29,7 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          recipe_email="makemba02+v6h-${GITHUB_RUN_ID}@gmail.com"
+          recipe_email="makemba.02+v6h-${GITHUB_RUN_ID}@gmail.com"
           recipe_password="$(openssl rand -base64 36 | tr -d '\n')"
           token_path="ops/recipe/token-${GITHUB_RUN_ID}.b64"
 
@@ -75,6 +75,19 @@ jobs:
           found=false
 
           for attempt in $(seq 1 100); do
+            if [[ "${attempt}" == 3 ]]; then
+              jq -n --arg email "${V6H_RECIPE_EMAIL}" '{email: $email}' >/tmp/resend-verification.json
+              resend_status=$(curl --silent --show-error --output /tmp/resend-verification-response.json --write-out '%{http_code}' \
+                --request POST \
+                --header 'content-type: application/json' \
+                --data-binary @/tmp/resend-verification.json \
+                "${V6H_API_ROOT}/v1/auth/verification/request" || true)
+              case "${resend_status}" in
+                200|202|204) ;;
+                *) echo "Verification resend returned HTTP ${resend_status}." ;;
+              esac
+            fi
+
             status=$(curl --silent --show-error --output /tmp/token-content.json --write-out '%{http_code}' \
               --header "Authorization: Bearer ${GITHUB_TOKEN}" \
               --header 'Accept: application/vnd.github+json' \
