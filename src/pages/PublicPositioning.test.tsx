@@ -38,11 +38,11 @@ describe('public positioning', () => {
   it('speaks to visitor needs without exposing technical vocabulary or unsupported promises', () => {
     const view = renderWithRouter(<Home />);
 
-    expect(screen.getByRole('heading', { name: /Trouvez une direction qui vous ressemble/u })).toBeInTheDocument();
-    expect(screen.getByText(/Vous n’avez pas besoin d’avoir déjà toutes les réponses/u)).toBeInTheDocument();
-    expect(screen.getByText(/La décision vous appartient/u)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Ton métier idéal, en 15 minutes/u })).toBeInTheDocument();
+    expect(screen.getByText(/Tu n’as pas besoin d’avoir déjà toutes les réponses/u)).toBeInTheDocument();
+    expect(screen.getByText(/La décision t’appartient/u)).toBeInTheDocument();
 
-    const primaryLinks = screen.getAllByRole('link', { name: /Commencer mon parcours/u });
+    const primaryLinks = screen.getAllByRole('link', { name: /Commencer mon projet/u });
     expect(primaryLinks[0]).toHaveAttribute('href', '/register');
 
     const publicCopy = view.container.textContent || '';

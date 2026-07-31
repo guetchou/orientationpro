@@ -32,6 +32,7 @@ const { createProfileSynthesisStore } = require('./profile/synthesis-store');
 const { createLifeProjectRouter } = require('./life-project/router');
 const { createLifeProjectService } = require('./life-project/service');
 const { createLifeProjectStore } = require('./life-project/store');
+const { createScopedCriteriaStore } = require('./life-project/scoped-criteria-store');
 const { createActionTrackingStore } = require('./life-project/action-tracking-store');
 const { createCongoLocalOptionProvider } = require('./life-project/local-options-cg');
 const { mountLegacyApi } = require('./security/legacy-api');
@@ -142,7 +143,7 @@ if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
   }
   app.use('/api/v1/life-projects', expensiveLimiter, createLifeProjectRouter({
     service: createLifeProjectService({
-      store: createLifeProjectStore(authV1.pool),
+      store: createScopedCriteriaStore(createLifeProjectStore(authV1.pool)),
       actionTrackingStore: createActionTrackingStore(authV1.pool),
       optionProvider: createCongoLocalOptionProvider(),
     }),

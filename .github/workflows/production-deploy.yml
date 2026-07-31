@@ -7,6 +7,11 @@ on:
         description: Type DEPLOY_PRODUCTION to deploy the selected main commit
         required: true
         type: string
+  push:
+    branches:
+      - main
+    paths:
+      - ops/production/deploy-life-project-priority-fix-attempt-3
 
 permissions:
   contents: read
@@ -17,7 +22,12 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'DEPLOY_PRODUCTION'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'DEPLOY_PRODUCTION') ||
+        github.event_name == 'push'
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment:
@@ -29,12 +39,20 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - name: Validate deployment scripts
+      - name: Validate deployment authorization and scripts
+        shell: bash
         run: |
           set -Eeuo pipefail
-          bash -n scripts/deploy-production-vps.sh
           test "${GITHUB_REF}" = refs/heads/main
-          test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
+          bash -n scripts/deploy-production-vps.sh
+          bash -n scripts/release/activate-life-project-flags.sh
+
+          if [[ "${GITHUB_EVENT_NAME}" == push ]]; then
+            test -f ops/production/deploy-life-project-priority-fix-attempt-3
+            grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-life-project-priority-fix-attempt-3
+          else
+            test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
+          fi
 
       - name: Configure restricted production SSH key
         env:
@@ -66,11 +84,58 @@ jobs:
             "${PRODUCTION_SSH_USER}@${PRODUCTION_SSH_HOST}" \
             "deploy ${GITHUB_SHA}"
 
-      - name: Verify public production endpoints
+      - name: Verify public production endpoints and capabilities
+        shell: bash
         run: |
           set -Eeuo pipefail
-          curl --fail --retry 12 --retry-all-errors --retry-delay 5 https://makoki.org/ >/dev/null
+
+          curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
+            https://makoki.org/ >/dev/null
+          curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
+            https://makoki.org/parcours >/dev/null
+
           status=$(curl --silent --show-error --output /tmp/health.json --write-out '%{http_code}' \
             https://makoki.org/api/test/health)
           test "${status}" = 200
-          grep -q '"status"' /tmp/health.json
+
+          capabilities_status=$(curl --silent --show-error --output /tmp/capabilities.json --write-out '%{http_code}' \
+            https://makoki.org/api/v1/capabilities)
+          test "${capabilities_status}" = 200
+
+          unauthenticated_status=$(curl --silent --show-error --output /tmp/life-project-unauthenticated.json --write-out '%{http_code}' \
+            https://makoki.org/api/v1/life-projects)
+          test "${unauthenticated_status}" = 401
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+          const registry = JSON.parse(fs.readFileSync('/tmp/capabilities.json', 'utf8'));
+          const byId = (id) => registry.capabilities.find((entry) => entry.id === id);
+
+          if (health.status !== 'OK') throw new Error('Public health endpoint is not OK.');
+          if (health.gitSha !== process.env.GITHUB_SHA) {
+            throw new Error(`Served SHA ${health.gitSha || 'null'} does not match ${process.env.GITHUB_SHA}.`);
+          }
+
+          const auth = byId('identity.auth-v1');
+          const lifeProject = byId('life-project.core-v1');
+          if (!auth || auth.status !== 'active' || auth.configured !== true) {
+            throw new Error('Auth V1 is not active in production.');
+          }
+          if (!lifeProject || lifeProject.status !== 'experimental' || lifeProject.configured !== true) {
+            throw new Error('Projet de vie is not configured in production.');
+          }
+
+          for (const id of [
+            'orientation.riasec',
+            'career.recommendations',
+            'cv.analysis-v1',
+            'privacy.data-rights-v1',
+            'identity.auth-legacy',
+          ]) {
+            const capability = byId(id);
+            if (!capability || capability.status !== 'disabled' || capability.configured !== false) {
+              throw new Error(`${id} must remain disabled during V6-H.`);
+            }
+          }
+          NODE

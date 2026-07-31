@@ -53,6 +53,9 @@ test('capability registry is deterministic and never exposes environment values'
   assert.equal(byId(first, 'life-project.core-v1').status, 'experimental');
   assert.equal(byId(first, 'life-project.core-v1').configured, true);
   assert.equal(byId(first, 'life-project.core-v1').version, 'makoki-life-project-api-v1');
+  assert.ok(byId(first, 'life-project.core-v1').publicLimitations
+    .some((entry) => entry.includes('Parcours web activé')));
+  assert.equal(JSON.stringify(byId(first, 'life-project.core-v1')).includes('aucune interface Parcours'), false);
 });
 
 test('disabled configuration produces explicit disabled capabilities', () => {
