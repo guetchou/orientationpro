@@ -6,9 +6,9 @@ const sections = [
   {
     title: 'Orientation',
     links: [
-      { label: 'Tests d’orientation', path: '/tests' },
-      { label: 'Mes résultats', path: '/orientation/results' },
+      { label: 'Mon Projet de vie', path: '/parcours' },
       { label: 'Catalogue métiers', path: '/careers' },
+      { label: 'Accompagnement facultatif', path: '/conseiller' },
     ],
   },
   {
@@ -59,7 +59,7 @@ export const Footer = () => {
               />
             </Link>
             <p className="mt-5 text-sm leading-7 text-slate-300">
-              MAKOKI aide chacun à mieux comprendre ses intérêts, explorer des métiers et préparer son parcours. Les résultats d’orientation organisent des pistes à approfondir ; ils ne garantissent ni emploi, ni salaire, ni aptitude à exercer un métier réglementé.
+              MAKOKI réunit le profil RIASEC, la situation réelle, les scénarios et le plan d’action dans un seul Projet de vie. Le rapport organise des pistes à vérifier ; il ne garantit ni admission, ni emploi, ni salaire, ni aptitude à exercer un métier réglementé.
             </p>
             <div className="mt-4 space-y-1 text-sm text-slate-300">
               <p><a className="font-medium text-emerald-300 hover:text-white" href="mailto:contact@makoki.org">contact@makoki.org</a></p>
