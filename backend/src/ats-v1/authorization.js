@@ -6,12 +6,12 @@ const hasRole = (account, role) => normalizeRoles(account).includes(role);
 const createAtsAuthorizer = (pool) => {
   if (!pool || typeof pool.query !== 'function') throw new Error('A MySQL pool is required.');
 
-  const canReadApplication = async ({ account, application }) => {
+  const canReadApplication = async ({ account, application, connection = pool }) => {
     if (!account || !application) return false;
     if (application.candidateAccountId === account.id) return true;
     if (hasRole(account, 'admin') || hasRole(account, 'recruitment_manager')) return true;
     if (!hasRole(account, 'recruiter')) return false;
-    const [rows] = await pool.query(
+    const [rows] = await connection.query(
       'SELECT 1 FROM ats_job_recruiters_v1 WHERE job_id = ? AND recruiter_account_id = ? LIMIT 1',
       [application.jobId, account.id],
     );
@@ -26,13 +26,16 @@ const createAtsAuthorizer = (pool) => {
     return null;
   };
 
-  const canTransition = async ({ account, application, to }) => {
+  const canTransition = async ({ account, application, to, connection = pool }) => {
     const actorRole = transitionRole({ account, to });
     if (!actorRole) return { allowed: false, actorRole: null };
     if (actorRole === 'candidate') {
       return { allowed: application.candidateAccountId === account.id, actorRole };
     }
-    return { allowed: await canReadApplication({ account, application }), actorRole };
+    return {
+      allowed: await canReadApplication({ account, application, connection }),
+      actorRole,
+    };
   };
 
   return Object.freeze({ canReadApplication, canTransition, transitionRole });
