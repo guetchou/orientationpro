@@ -60,10 +60,11 @@ const createCapabilityRegistry = (env = {}) => {
 
   const authV1 = enabled(env, 'AUTH_V1_ENABLED');
   const legacyAuth = enabled(env, 'LEGACY_AUTH_ENABLED');
-  const riasec = enabled(env, 'RIASEC_API_ENABLED');
+  const lifeProject = enabled(env, 'LIFE_PROJECT_API_ENABLED');
+  const riasecStandalone = enabled(env, 'RIASEC_API_ENABLED');
+  const riasec = riasecStandalone || lifeProject;
   const career = enabled(env, 'CAREER_API_ENABLED');
   const cv = enabled(env, 'CV_API_V1_ENABLED');
-  const lifeProject = enabled(env, 'LIFE_PROJECT_API_ENABLED');
   const dataRights = enabled(env, 'DATA_RIGHTS_API_ENABLED');
 
   const capabilities = [
@@ -92,11 +93,11 @@ const createCapabilityRegistry = (env = {}) => {
       version: 'riasec-result-v2',
       status: riasec ? 'experimental' : 'disabled',
       configured: riasec,
-      configurationKey: 'RIASEC_API_ENABLED',
+      configurationKey: riasecStandalone ? 'RIASEC_API_ENABLED' : 'LIFE_PROJECT_API_ENABLED',
       dependencies: ['identity.auth-v1'],
       publicLimitations: [
-        'Instrument MAKOKI au statut draft tant que le protocole psychométrique n’est pas achevé.',
-        'Résultat descriptif d’intérêts, sans diagnostic ni aptitude garantie.',
+        'Étape intégrée au parcours Projet de vie ; les anciennes routes publiques convergent vers ce parcours unique.',
+        'Résultat descriptif d’intérêts, sans diagnostic, aptitude ou décision garantie.',
       ],
     }),
     capability({
@@ -152,9 +153,9 @@ const createCapabilityRegistry = (env = {}) => {
       status: lifeProject ? 'experimental' : 'disabled',
       configured: lifeProject,
       configurationKey: 'LIFE_PROJECT_API_ENABLED',
-      dependencies: ['identity.auth-v1'],
+      dependencies: ['identity.auth-v1', 'orientation.riasec'],
       publicLimitations: [
-        'Parcours web activé pour une utilisation accompagnée ; validation terrain jeune-conseiller encore requise.',
+        'Parcours autonome unique incluant RIASEC, diagnostic, scénarios, choix provisoire et synthèse.',
         'Le projet de vie organise des scénarios et actions sans garantir admission, emploi ou réussite.',
         'Les déclarations utilisateur ne deviennent pas automatiquement des faits vérifiés.',
       ],
