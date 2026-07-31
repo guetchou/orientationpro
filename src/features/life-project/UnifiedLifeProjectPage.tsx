@@ -6,7 +6,6 @@ import EmbeddedRiasecStep from './EmbeddedRiasecStep';
 import LifeProjectWorkspace from './LifeProjectWorkspace';
 import type { AdvisorRiasecProfile } from './advisor-types';
 import {
-  readPersistedRiasecProfile,
   riasecDimensionLabels,
   topRiasecDimensions,
 } from './riasec-profile';
@@ -56,9 +55,7 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
 };
 
 export default function UnifiedLifeProjectPage() {
-  const [riasecProfile, setRiasecProfile] = useState<AdvisorRiasecProfile | null>(() => (
-    readPersistedRiasecProfile()
-  ));
+  const [riasecProfile, setRiasecProfile] = useState<AdvisorRiasecProfile | null>(null);
   const handleRiasecComplete = useCallback((profile: AdvisorRiasecProfile) => {
     setRiasecProfile(profile);
     requestAnimationFrame(() => {
