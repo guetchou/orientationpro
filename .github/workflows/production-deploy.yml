@@ -93,6 +93,8 @@ jobs:
             https://makoki.org/ >/dev/null
           curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
             https://makoki.org/parcours >/dev/null
+          curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
+            https://makoki.org/careers >/dev/null
 
           status=$(curl --silent --show-error --output /tmp/health.json --write-out '%{http_code}' \
             https://makoki.org/api/test/health)
@@ -102,6 +104,25 @@ jobs:
             https://makoki.org/api/v1/capabilities)
           test "${capabilities_status}" = 200
 
+          instrument_status=$(curl --silent --show-error --output /tmp/riasec-instrument.json --write-out '%{http_code}' \
+            https://makoki.org/api/v1/orientation/riasec/instrument)
+          test "${instrument_status}" = 200
+
+          guest_results_status=$(curl --silent --show-error \
+            --cookie-jar /tmp/guest-cookie.jar \
+            --output /tmp/guest-results.json --write-out '%{http_code}' \
+            'https://makoki.org/api/v1/orientation/results?limit=1')
+          test "${guest_results_status}" = 200
+          grep -q 'makoki_guest_orientation' /tmp/guest-cookie.jar
+
+          career_summary_status=$(curl --silent --show-error --output /tmp/career-summary.json --write-out '%{http_code}' \
+            https://makoki.org/api/v1/career/catalog/summary)
+          test "${career_summary_status}" = 200
+
+          career_list_status=$(curl --silent --show-error --output /tmp/career-list.json --write-out '%{http_code}' \
+            'https://makoki.org/api/v1/career/occupations?locale=fr&limit=1')
+          test "${career_list_status}" = 200
+
           unauthenticated_status=$(curl --silent --show-error --output /tmp/life-project-unauthenticated.json --write-out '%{http_code}' \
             https://makoki.org/api/v1/life-projects)
           test "${unauthenticated_status}" = 401
@@ -110,15 +131,29 @@ jobs:
           const fs = require('node:fs');
           const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
           const registry = JSON.parse(fs.readFileSync('/tmp/capabilities.json', 'utf8'));
+          const instrument = JSON.parse(fs.readFileSync('/tmp/riasec-instrument.json', 'utf8'));
+          const guestResults = JSON.parse(fs.readFileSync('/tmp/guest-results.json', 'utf8'));
+          const careerSummary = JSON.parse(fs.readFileSync('/tmp/career-summary.json', 'utf8'));
+          const careerList = JSON.parse(fs.readFileSync('/tmp/career-list.json', 'utf8'));
           const byId = (id) => registry.capabilities.find((entry) => entry.id === id);
 
           if (health.status !== 'OK') throw new Error('Public health endpoint is not OK.');
           if (health.gitSha !== process.env.GITHUB_SHA) {
             throw new Error(`Served SHA ${health.gitSha || 'null'} does not match ${process.env.GITHUB_SHA}.`);
           }
+          if (!instrument.instrument || instrument.instrument.itemCount !== 60) {
+            throw new Error('Public RIASEC instrument is unavailable or incomplete.');
+          }
+          if (!Array.isArray(guestResults.results)) {
+            throw new Error('Guest result history did not return an isolated result list.');
+          }
+          if (!Array.isArray(careerSummary.sources) || !Array.isArray(careerList.occupations)) {
+            throw new Error('Public career catalog endpoints returned an invalid shape.');
+          }
 
           const auth = byId('identity.auth-v1');
           const riasec = byId('orientation.riasec');
+          const publicCareerCatalog = byId('career.catalog-public-v1');
           const lifeProject = byId('life-project.core-v1');
           if (!auth || auth.status !== 'active' || auth.configured !== true) {
             throw new Error('Auth V1 is not active in production.');
@@ -127,9 +162,17 @@ jobs:
             !riasec ||
             riasec.status !== 'experimental' ||
             riasec.configured !== true ||
-            riasec.configurationKey !== 'LIFE_PROJECT_API_ENABLED'
+            riasec.configuration?.key !== 'LIFE_PROJECT_API_ENABLED'
           ) {
-            throw new Error('Embedded RIASEC is not configured through Projet de vie in production.');
+            throw new Error('Guest-capable RIASEC is not configured through Projet de vie in production.');
+          }
+          if (
+            !publicCareerCatalog ||
+            publicCareerCatalog.status !== 'experimental' ||
+            publicCareerCatalog.configured !== true ||
+            publicCareerCatalog.configuration?.key !== 'LIFE_PROJECT_API_ENABLED'
+          ) {
+            throw new Error('The public career catalog is not configured through Projet de vie.');
           }
           if (!lifeProject || lifeProject.status !== 'experimental' || lifeProject.configured !== true) {
             throw new Error('Projet de vie is not configured in production.');
