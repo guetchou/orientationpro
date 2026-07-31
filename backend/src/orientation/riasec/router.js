@@ -95,34 +95,25 @@ const statusForStoreError = (error) => {
 const createRiasecRouter = ({
   store,
   authenticate,
+  authenticateOptional,
   hasPermission,
+  guestSessions,
   instrumentId = INSTRUMENT_ID,
   allowDraft = false,
 }) => {
-  if (!store || typeof authenticate !== 'function' || typeof hasPermission !== 'function') {
-    throw new Error('RIASEC store, authentication and permission checks are required.');
+  const optionalAuthentication = authenticateOptional || authenticate;
+  if (
+    !store
+    || typeof optionalAuthentication !== 'function'
+    || typeof hasPermission !== 'function'
+    || !guestSessions
+    || typeof guestSessions.resolveOwner !== 'function'
+  ) {
+    throw new Error('RIASEC store, optional authentication, guest sessions and permission checks are required.');
   }
 
   const router = express.Router();
-  router.use(authenticate);
-  router.use(route(async (req, res, next) => {
-    const permissionId = req.method === 'GET'
-      ? 'orientation.result.read_own'
-      : 'orientation.result.create';
-    const allowed = await hasPermission({
-      accountId: req.auth.account.id,
-      permissionId,
-    });
-    if (!allowed) {
-      return res.status(403).json({
-        error: {
-          code: 'PERMISSION_DENIED',
-          message: 'The authenticated account is not allowed to perform this orientation action.',
-        },
-      });
-    }
-    return next();
-  }));
+  router.use(optionalAuthentication);
 
   const loadAvailableInstrument = async () => {
     const instrument = await store.getInstrument(instrumentId);
@@ -131,6 +122,25 @@ const createRiasecRouter = ({
     if (!['draft', 'pilot', 'active'].includes(instrument.status)) return null;
     return ensureSupportedScoringVersion(instrument);
   };
+
+  const resolveOwner = (permissionId) => route(async (req, res, next) => {
+    if (req.auth?.account?.id) {
+      const allowed = await hasPermission({
+        accountId: req.auth.account.id,
+        permissionId,
+      });
+      if (!allowed) {
+        return res.status(403).json({
+          error: {
+            code: 'PERMISSION_DENIED',
+            message: 'The authenticated account is not allowed to perform this orientation action.',
+          },
+        });
+      }
+    }
+    req.orientationOwner = await guestSessions.resolveOwner(req, res);
+    return next();
+  });
 
   router.get('/riasec/instrument', route(async (req, res) => {
     const instrument = await loadAvailableInstrument();
@@ -145,7 +155,7 @@ const createRiasecRouter = ({
     return res.status(200).json({ instrument: publicInstrument(instrument) });
   }));
 
-  router.post('/riasec/attempts', route(async (req, res) => {
+  router.post('/riasec/attempts', resolveOwner('orientation.result.create'), route(async (req, res) => {
     const instrument = await loadAvailableInstrument();
     if (!instrument) {
       return res.status(404).json({
@@ -158,7 +168,7 @@ const createRiasecRouter = ({
 
     const itemOrder = shuffle(instrument.items.map((item) => item.id));
     const attempt = await store.createAttempt({
-      accountId: req.auth.account.id,
+      ...req.orientationOwner,
       instrumentId: instrument.id,
       itemOrder,
     });
@@ -168,9 +178,9 @@ const createRiasecRouter = ({
     });
   }));
 
-  router.get('/riasec/attempts/:attemptId', route(async (req, res) => {
+  router.get('/riasec/attempts/:attemptId', resolveOwner('orientation.result.read_own'), route(async (req, res) => {
     const attempt = await store.getAttempt({
-      accountId: req.auth.account.id,
+      ...req.orientationOwner,
       attemptId: req.params.attemptId,
     });
     if (!attempt) {
@@ -195,9 +205,9 @@ const createRiasecRouter = ({
     });
   }));
 
-  router.post('/riasec/attempts/:attemptId/submit', route(async (req, res) => {
+  router.post('/riasec/attempts/:attemptId/submit', resolveOwner('orientation.result.create'), route(async (req, res) => {
     const attempt = await store.getAttempt({
-      accountId: req.auth.account.id,
+      ...req.orientationOwner,
       attemptId: req.params.attemptId,
     });
     if (!attempt) {
@@ -224,7 +234,7 @@ const createRiasecRouter = ({
       algorithmVersion: instrument.scoringVersion,
     });
     const completion = await store.completeAttempt({
-      accountId: req.auth.account.id,
+      ...req.orientationOwner,
       attemptId: attempt.id,
       instrumentId: instrument.id,
       responses,
@@ -235,18 +245,18 @@ const createRiasecRouter = ({
     return res.status(completion.status === 'completed' ? 201 : 200).json(completion);
   }));
 
-  router.get('/results', route(async (req, res) => {
+  router.get('/results', resolveOwner('orientation.result.read_own'), route(async (req, res) => {
     const results = await store.listResults({
-      accountId: req.auth.account.id,
+      ...req.orientationOwner,
       limit: req.query.limit,
       offset: req.query.offset,
     });
     return res.status(200).json({ results });
   }));
 
-  router.get('/results/:resultId', route(async (req, res) => {
+  router.get('/results/:resultId', resolveOwner('orientation.result.read_own'), route(async (req, res) => {
     const result = await store.getResult({
-      accountId: req.auth.account.id,
+      ...req.orientationOwner,
       resultId: req.params.resultId,
     });
     if (!result) {
