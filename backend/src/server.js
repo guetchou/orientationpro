@@ -22,6 +22,7 @@ const { createRiasecStore } = require('./orientation/riasec/store');
 const { createCareerRouter } = require('./career/router');
 const { createCareerStore } = require('./career/store');
 const { createCvRouter } = require('./cv/router');
+const { createConfiguredAtsRouter } = require('./ats-v1/bootstrap');
 const { createCvService } = require('./cv/service');
 const { createCvStore } = require('./cv/store');
 const { createProfileRouter } = require('./profile/router');
@@ -182,6 +183,15 @@ if (process.env.CV_API_V1_ENABLED === 'true') {
     uploadDirectory: process.env.CV_UPLOAD_DIR,
   }));
 }
+if (process.env.ATS_WORKFLOW_V1_ENABLED === 'true') {
+  if (!authV1) {
+    throw new Error('ATS_WORKFLOW_V1_ENABLED requires AUTH_V1_ENABLED=true');
+  }
+  app.use('/api/v1/ats', expensiveLimiter, createConfiguredAtsRouter({
+    pool: authV1.pool,
+    authenticate: authV1.authenticate,
+  }));
+}
 
 mountLegacyApi({
   app,
@@ -255,6 +265,19 @@ app.get('/', (req, res) => {
       cvAnalysisDetail: 'GET /api/v1/cv/analyses/:analysisId',
       cvAnalysisReport: 'GET /api/v1/cv/analyses/:analysisId/report.pdf',
       cvAnalysisDelete: 'DELETE /api/v1/cv/analyses/:analysisId',
+    });
+  }
+  if (process.env.ATS_WORKFLOW_V1_ENABLED === 'true') {
+    Object.assign(endpoints, {
+      atsJobs: 'GET|POST /api/v1/ats/jobs',
+      atsJob: 'GET /api/v1/ats/jobs/:jobId',
+      atsJobPublish: 'POST /api/v1/ats/jobs/:jobId/publish',
+      atsJobClose: 'POST /api/v1/ats/jobs/:jobId/close',
+      atsJobApplications: 'POST /api/v1/ats/jobs/:jobId/applications',
+      atsJobRecruiters: 'POST|DELETE /api/v1/ats/jobs/:jobId/recruiters',
+      atsApplication: 'GET /api/v1/ats/applications/:applicationId',
+      atsApplicationHistory: 'GET /api/v1/ats/applications/:applicationId/history',
+      atsApplicationTransitions: 'POST /api/v1/ats/applications/:applicationId/transitions',
     });
   }
 
