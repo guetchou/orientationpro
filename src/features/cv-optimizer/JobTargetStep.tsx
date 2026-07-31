@@ -1,9 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+
+// Issue #152 : un rafraîchissement à cette étape faisait perdre le fichier
+// importé ET la description d'offre saisie. Le fichier binaire lui-même reste
+// hors périmètre (nécessiterait un stockage IndexedDB dédié) ; l'utilisateur
+// devra de toute façon le réimporter. On persiste au minimum le texte saisi,
+// pour qu'il n'ait pas à le retaper une fois revenu à cette étape.
+const DRAFT_KEY = 'makoki.cv-optimizer.job-target-draft.v1';
+
+interface JobTargetDraft {
+  jobTitle: string;
+  jobDescription: string;
+}
+
+// localStorage peut lever (navigation privée, quota dépassé, politique de
+// sécurité) : ces accès ne doivent jamais faire échouer la saisie utilisateur.
+const clearDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // Stockage local indisponible : rien à nettoyer.
+  }
+};
+
+const readDraft = (): JobTargetDraft | null => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    clearDraft();
+    return null;
+  }
+};
 
 // Etape 2 (facultative) : cibler une offre. Sans description d'offre, aucune
 // pertinence ciblee n'est calculee (le serveur renvoie targetRelevance = null).
@@ -16,8 +48,20 @@ export const JobTargetStep = ({
   onBack: () => void;
   submitting: boolean;
 }) => {
-  const [jobTitle, setJobTitle] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
+  const [jobTitle, setJobTitle] = useState(() => readDraft()?.jobTitle ?? '');
+  const [jobDescription, setJobDescription] = useState(() => readDraft()?.jobDescription ?? '');
+
+  useEffect(() => {
+    if (!jobTitle && !jobDescription) {
+      clearDraft();
+      return;
+    }
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ jobTitle, jobDescription }));
+    } catch {
+      // Stockage local indisponible : la saisie reste fonctionnelle en mémoire.
+    }
+  }, [jobTitle, jobDescription]);
 
   const trimmedTitle = jobTitle.trim();
   const trimmedDescription = jobDescription.trim();
@@ -67,19 +111,20 @@ export const JobTargetStep = ({
         <Button
           variant="outline"
           disabled={submitting}
-          onClick={() => onSubmit({})}
+          onClick={() => { clearDraft(); onSubmit({}); }}
           className="flex-1"
         >
           Analyser sans offre
         </Button>
         <Button
           disabled={submitting || trimmedDescription.length === 0}
-          onClick={() =>
+          onClick={() => {
+            clearDraft();
             onSubmit({
               jobTitle: trimmedTitle || undefined,
               jobDescription: trimmedDescription || undefined,
-            })
-          }
+            });
+          }}
           className="flex-1 bg-emerald-700 hover:bg-emerald-800"
         >
           Comparer à cette offre
