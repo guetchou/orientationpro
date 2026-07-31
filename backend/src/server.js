@@ -150,9 +150,11 @@ if (process.env.LIFE_PROJECT_API_ENABLED === 'true') {
     authenticate: authV1.authenticate,
   }));
 }
-if (process.env.RIASEC_API_ENABLED === 'true') {
+const riasecRuntimeEnabled = process.env.RIASEC_API_ENABLED === 'true'
+  || process.env.LIFE_PROJECT_API_ENABLED === 'true';
+if (riasecRuntimeEnabled) {
   if (!authV1) {
-    throw new Error('RIASEC_API_ENABLED requires AUTH_V1_ENABLED=true');
+    throw new Error('RIASEC or LIFE_PROJECT runtime requires AUTH_V1_ENABLED=true');
   }
   app.use('/api/v1/orientation', expensiveLimiter, createRiasecRouter({
     store: createRiasecStore(authV1.pool),
@@ -244,7 +246,7 @@ app.get('/', (req, res) => {
       lifeProjectAction: 'PATCH /api/v1/life-projects/:projectId/action-plans/:planId/actions/:actionId',
     });
   }
-  if (process.env.RIASEC_API_ENABLED === 'true') {
+  if (riasecRuntimeEnabled) {
     Object.assign(endpoints, {
       riasecInstrument: 'GET /api/v1/orientation/riasec/instrument',
       riasecAttempts: 'POST /api/v1/orientation/riasec/attempts',
