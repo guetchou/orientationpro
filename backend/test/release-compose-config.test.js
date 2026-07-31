@@ -11,6 +11,7 @@ const repoRoot = path.resolve(__dirname, '../..');
 const assertionScript = path.join(repoRoot, 'scripts/release/assert-life-project-compose-config.cjs');
 const overridePath = path.join(repoRoot, 'scripts/release/life-project-compose.override.yml');
 const deploymentScript = path.join(repoRoot, 'scripts/deploy-production-vps.sh');
+const productionWorkflowPath = path.join(repoRoot, '.github/workflows/production-deploy.yml');
 
 const validConfig = {
   services: {
@@ -91,6 +92,18 @@ test('versioned Compose override contains every V6-H boundary', () => {
   ]) {
     assert.ok(override.includes(expected), expected);
   }
+});
+
+test('production workflow expects RIASEC embedded by Projet de vie, not a standalone flag', () => {
+  const workflow = fs.readFileSync(productionWorkflowPath, 'utf8');
+  assert.match(workflow, /const riasec = byId\('orientation\.riasec'\)/u);
+  assert.match(workflow, /riasec\.status !== 'experimental'/u);
+  assert.match(workflow, /riasec\.configured !== true/u);
+  assert.match(workflow, /riasec\.configurationKey !== 'LIFE_PROJECT_API_ENABLED'/u);
+
+  const disabledCapabilities = workflow.match(/for \(const id of \[([\s\S]*?)\]\) \{/u);
+  assert.ok(disabledCapabilities, 'production workflow must verify disabled capabilities');
+  assert.doesNotMatch(disabledCapabilities[1], /orientation\.riasec/u);
 });
 
 test('production deploy applies V6-H override only to the new release, not rollback', () => {
