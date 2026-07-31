@@ -7,6 +7,7 @@ import {
   Loader2,
   RotateCcw,
   Save,
+  ShieldCheck,
 } from 'lucide-react';
 import { ApiError } from '@/lib/apiClient';
 import { Badge } from '@/components/ui/badge';
@@ -210,24 +211,28 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
         <CardHeader>
           <div className="flex flex-wrap gap-2">
             <Badge>Étape 1 sur 5</Badge>
-            <Badge variant="outline">RIASEC intégré</Badge>
+            <Badge variant="outline">Sans compte</Badge>
           </div>
           <CardTitle className="text-2xl">Commence par ton profil d’intérêts</CardTitle>
           <CardDescription className="text-base">
-            Réponds aux {instrument.itemCount} affirmations. Ton résultat alimentera directement les scénarios de ton Projet de vie et figurera dans le rapport final unique.
+            Réponds aux {instrument.itemCount} affirmations et vois immédiatement tes intérêts dominants ainsi que des familles de métiers à explorer. Aucune adresse e-mail n’est demandée pour commencer.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border bg-muted/30 p-4"><strong>{instrument.itemCount}</strong><span className="block text-sm text-muted-foreground">affirmations</span></div>
             <div className="rounded-lg border bg-muted/30 p-4"><strong>10–15 min</strong><span className="block text-sm text-muted-foreground">en moyenne</span></div>
-            <div className="rounded-lg border bg-muted/30 p-4"><strong>1 rapport</strong><span className="block text-sm text-muted-foreground">RIASEC + Projet de vie</span></div>
+            <div className="rounded-lg border bg-muted/30 p-4"><strong>0 inscription</strong><span className="block text-sm text-muted-foreground">avant le résultat</span></div>
           </div>
           <p className="text-sm text-muted-foreground">
             Le RIASEC décrit tes intérêts actuels. Il ne mesure pas ton intelligence, ton aptitude ou ta valeur et ne décide pas à ta place.
           </p>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+            <ShieldCheck className="mr-2 inline h-4 w-4" />
+            Une session temporaire protégée conserve cette passation. Tu pourras ensuite créer un compte pour la sauvegarder durablement et poursuivre le Projet de vie complet.
+          </div>
           <Button type="button" size="lg" onClick={() => void startNewAttempt()}>
-            Commencer mon parcours <ArrowRight className="ml-2 h-5 w-5" />
+            Commencer sans compte <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </CardContent>
       </Card>
@@ -291,11 +296,11 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
                 else setCurrentIndex((index) => Math.min(instrument.itemCount - 1, index + 1));
               }}
             >
-              {isLast ? <><CheckCircle2 className="mr-2 h-4 w-4" />Calculer mon profil</> : <>Suivant<ArrowRight className="ml-2 h-4 w-4" /></>}
+              {isLast ? <><CheckCircle2 className="mr-2 h-4 w-4" />Voir mon profil</> : <>Suivant<ArrowRight className="ml-2 h-4 w-4" /></>}
             </Button>
           </div>
         </div>
-        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Ta progression est conservée sur cet appareil.</p>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Ta progression reste disponible sur cet appareil pendant le parcours.</p>
       </CardContent>
     </Card>
   );
