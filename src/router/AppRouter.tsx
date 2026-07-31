@@ -124,8 +124,8 @@ export const AppRouter = () => (
             <Route path="/orientation-services" element={unifiedJourney} />
             <Route path="/test-results" element={unifiedJourney} />
 
-            <Route path="/careers" element={<UserRoute><CareerCatalog /></UserRoute>} />
-            <Route path="/careers/:occupationId" element={<UserRoute><OccupationDetail /></UserRoute>} />
+            <Route path="/careers" element={<CareerCatalog />} />
+            <Route path="/careers/:occupationId" element={<OccupationDetail />} />
             <Route path="/ats" element={<Recrutement />} />
             <Route path="/conseiller" element={<Conseillers />} />
             <Route path="/recrutement" element={<Recrutement />} />
@@ -141,7 +141,7 @@ export const AppRouter = () => (
 
             <Route path="/dashboard" element={<UserRoute><Dashboard /></UserRoute>} />
             {lifeProjectFrontendEnabled && (
-              <Route path="/parcours" element={<UserRoute><LifeProjectPage /></UserRoute>} />
+              <Route path="/parcours" element={<LifeProjectPage />} />
             )}
             <Route path="/profile" element={<UserRoute><Profile /></UserRoute>} />
 
