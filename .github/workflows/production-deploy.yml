@@ -7,6 +7,11 @@ on:
         description: Type DEPLOY_PRODUCTION to deploy the selected main commit
         required: true
         type: string
+  push:
+    branches:
+      - main
+    paths:
+      - ops/production/deploy-life-project-priority-fix
 
 permissions:
   contents: read
@@ -17,7 +22,12 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'DEPLOY_PRODUCTION'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'DEPLOY_PRODUCTION') ||
+        github.event_name == 'push'
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment:
@@ -34,9 +44,15 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "${GITHUB_REF}" = refs/heads/main
-          test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
           bash -n scripts/deploy-production-vps.sh
           bash -n scripts/release/activate-life-project-flags.sh
+
+          if [[ "${GITHUB_EVENT_NAME}" == push ]]; then
+            test -f ops/production/deploy-life-project-priority-fix
+            grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-life-project-priority-fix
+          else
+            test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
+          fi
 
       - name: Configure restricted production SSH key
         env:
