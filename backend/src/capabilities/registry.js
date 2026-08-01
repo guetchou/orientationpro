@@ -65,6 +65,7 @@ const createCapabilityRegistry = (env = {}) => {
   const riasecStandalone = enabled(env, 'RIASEC_API_ENABLED');
   const riasec = riasecStandalone || lifeProject;
   const career = enabled(env, 'CAREER_API_ENABLED');
+  const publicCareerCatalog = career || lifeProject;
   const cv = enabled(env, 'CV_API_V1_ENABLED');
   const dataRights = enabled(env, 'DATA_RIGHTS_API_ENABLED');
   const ats = enabled(env, 'ATS_WORKFLOW_V1_ENABLED');
@@ -98,8 +99,22 @@ const createCapabilityRegistry = (env = {}) => {
       configurationKey: riasecStandalone ? 'RIASEC_API_ENABLED' : 'LIFE_PROJECT_API_ENABLED',
       dependencies: ['identity.auth-v1'],
       publicLimitations: [
-        'Étape intégrée au parcours Projet de vie ; les anciennes routes publiques convergent vers ce parcours unique.',
+        'La passation et la restitution essentielle sont accessibles sans compte via une session invitée temporaire.',
+        'Le travail invité est rattaché au compte lors de la reprise authentifiée et expire automatiquement.',
         'Résultat descriptif d’intérêts, sans diagnostic, aptitude ou décision garantie.',
+      ],
+    }),
+    capability({
+      id: 'career.catalog-public-v1',
+      domain: 'career',
+      version: 'career-catalog-public-v1',
+      status: publicCareerCatalog ? 'experimental' : 'disabled',
+      configured: publicCareerCatalog,
+      configurationKey: career ? 'CAREER_API_ENABLED' : 'LIFE_PROJECT_API_ENABLED',
+      dependencies: ['identity.auth-v1'],
+      publicLimitations: [
+        'Catalogue descriptif consultable sans compte ; les métiers localement exclus ne sont jamais exposés.',
+        'Les données ESCO/O*NET ne constituent ni une recommandation personnalisée ni une garantie locale.',
       ],
     }),
     capability({
@@ -171,7 +186,8 @@ const createCapabilityRegistry = (env = {}) => {
       configurationKey: 'LIFE_PROJECT_API_ENABLED',
       dependencies: ['identity.auth-v1', 'orientation.riasec'],
       publicLimitations: [
-        'Parcours autonome unique incluant RIASEC, diagnostic, scénarios, choix provisoire et synthèse.',
+        'Le jeune commence sans compte et voit son profil d’intérêts avant toute inscription.',
+        'La personnalisation, la sauvegarde permanente, le choix, l’action et le rapport complet exigent un compte.',
         'Le projet de vie organise des scénarios et actions sans garantir admission, emploi ou réussite.',
         'Les déclarations utilisateur ne deviennent pas automatiquement des faits vérifiés.',
       ],
