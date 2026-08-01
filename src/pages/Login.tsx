@@ -13,11 +13,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
+const AUTH_RETURN_KEY = 'makoki.auth.returnTo';
 const destinationForRole = (role?: string) => {
   if (role === 'super_admin') return '/admin/super-admin';
   if (role === 'admin') return '/admin/dashboard';
   if (role === 'conseiller') return '/conseiller/dashboard';
   return '/dashboard';
+};
+
+const safeReturnPath = (value?: string | null) => {
+  const candidate = String(value || '').trim();
+  return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : undefined;
 };
 
 const messageForError = (error: unknown) => {
@@ -44,7 +50,14 @@ export default function Login() {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const requestedPath = (location.state as any)?.from?.pathname as string | undefined;
+  const requestedFrom = (location.state as {
+    from?: { pathname?: string; search?: string; hash?: string };
+  } | null)?.from;
+  const statePath = requestedFrom?.pathname
+    ? `${requestedFrom.pathname}${requestedFrom.search || ''}${requestedFrom.hash || ''}`
+    : undefined;
+  const requestedPath = safeReturnPath(statePath)
+    || safeReturnPath(sessionStorage.getItem(AUTH_RETURN_KEY));
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -52,9 +65,17 @@ export default function Login() {
     defaultValues: { email: '', password: '' },
   });
 
+  const finishAuthentication = (fallback: string) => {
+    const destination = requestedPath || fallback;
+    sessionStorage.removeItem(AUTH_RETURN_KEY);
+    navigate(destination, { replace: true });
+  };
+
   useEffect(() => {
-    if (user) navigate(requestedPath || destinationForRole(user.role), { replace: true });
-  }, [navigate, requestedPath, user]);
+    if (user) finishAuthentication(destinationForRole(user.role));
+    // finishAuthentication intentionally follows the current location state/session hint.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -79,7 +100,7 @@ export default function Login() {
       .then((payload) => {
         if (!active) return;
         if (!payload) throw new Error('Session sociale indisponible');
-        navigate(requestedPath || destinationForRole(payload.account.roles[0]), { replace: true });
+        finishAuthentication(destinationForRole(payload.account.roles[0]));
       })
       .catch(() => {
         if (active) setServerError('La session sociale n’a pas pu être finalisée. Recommence la connexion.');
@@ -88,29 +109,34 @@ export default function Login() {
         if (active) setOauthCompleting(false);
       });
     return () => { active = false; };
-  }, [location.search, navigate, requestedPath]);
+    // finishAuthentication intentionally uses the return destination captured for this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const onSubmit = async (values: LoginValues) => {
     setServerError(null);
     try {
       const result = await signIn(values.email, values.password);
-      navigate(requestedPath || destinationForRole(result.user?.role), { replace: true });
+      finishAuthentication(destinationForRole(result.user?.role));
     } catch (caught) {
       setServerError(messageForError(caught));
     }
   };
 
+  const rememberReturnPath = () => {
+    if (requestedPath) sessionStorage.setItem(AUTH_RETURN_KEY, requestedPath);
+  };
   const submitting = form.formState.isSubmitting;
 
   return (
     <AuthLayout
       headline="Content de te revoir"
-      tagline="Connecte-toi pour retrouver tes passations, tes résultats d’orientation et ton accompagnement."
+      tagline="Connecte-toi pour rattacher ton profil invité, sauvegarder ton Projet de vie et le poursuivre sans perdre ton travail."
       imageName="accompagnement-conseiller"
     >
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-slate-900">Connexion</h1>
-        <p className="mt-2 text-slate-600">Accède à tes passations et à tes résultats d’orientation.</p>
+        <p className="mt-2 text-slate-600">Après connexion, tu reviens automatiquement à ton parcours en cours.</p>
       </div>
 
       {serverError && (
@@ -122,13 +148,13 @@ export default function Login() {
 
       <div className="mb-5 grid gap-3">
         <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
-          <a href={oauthStartUrl('google')}>
+          <a href={oauthStartUrl('google')} onClick={rememberReturnPath}>
             <SocialProviderIcon provider="google" />
             Continuer avec Google
           </a>
         </Button>
         <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
-          <a href={oauthStartUrl('meta')}>
+          <a href={oauthStartUrl('meta')} onClick={rememberReturnPath}>
             <SocialProviderIcon provider="meta" />
             Continuer avec Facebook
           </a>
@@ -202,7 +228,7 @@ export default function Login() {
 
       <p className="mt-8 text-center text-sm text-gray-600">
         Pas encore de compte ?{' '}
-        <Link to="/register" className="font-semibold text-emerald-700 hover:underline">
+        <Link to="/register" state={location.state} className="font-semibold text-emerald-700 hover:underline">
           Créer un compte
         </Link>
       </p>
