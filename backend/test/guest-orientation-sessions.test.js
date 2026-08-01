@@ -78,7 +78,26 @@ test('an active guest cookie resolves the same owner and renews its expiry', asy
   assert.equal(res.cookies[0].value, token);
 });
 
-test('the first authenticated orientation request claims guest work and clears the cookie', async () => {
+test('authenticated owner resolution never creates a second guest identity', async () => {
+  let storeCalled = false;
+  const store = new Proxy({}, {
+    get() {
+      storeCalled = true;
+      return async () => null;
+    },
+  });
+  const manager = createGuestSessionManager({ store, cookieSecure: true });
+  const res = responseRecorder();
+  const owner = await manager.resolveOwner(requestWithCookie('existing-token', {
+    account: { id: 'account-1' },
+  }), res);
+
+  assert.deepEqual(owner, { accountId: 'account-1', guestSessionId: null, kind: 'account' });
+  assert.equal(storeCalled, false);
+  assert.equal(res.cookies.length, 0);
+});
+
+test('explicit claim transfers guest work and clears the cookie', async () => {
   let claim;
   const token = 'claim-token';
   const store = {
@@ -93,11 +112,29 @@ test('the first authenticated orientation request claims guest work and clears t
     account: { id: 'account-1' },
   });
 
-  const owner = await manager.resolveOwner(req, res);
+  const outcome = await manager.claimFromRequest(req, res, 'account-1');
 
-  assert.deepEqual(owner, { accountId: 'account-1', guestSessionId: null, kind: 'account' });
   assert.equal(claim.tokenHash, hashToken(token));
   assert.equal(claim.accountId, 'account-1');
-  assert.deepEqual(req.guestClaim, { status: 'claimed', attempts: 1, results: 1 });
+  assert.deepEqual(outcome, { status: 'claimed', attempts: 1, results: 1 });
   assert.deepEqual(res.cleared, [{ name: DEFAULT_COOKIE_NAME, options: { path: '/api/v1' } }]);
+});
+
+test('claim without a guest cookie is idempotent and does not touch storage', async () => {
+  let storeCalled = false;
+  const manager = createGuestSessionManager({
+    store: {
+      claim: async () => {
+        storeCalled = true;
+      },
+    },
+    cookieSecure: true,
+  });
+  const res = responseRecorder();
+
+  const outcome = await manager.claimFromRequest(requestWithCookie(null), res, 'account-1');
+
+  assert.deepEqual(outcome, { status: 'not_found', attempts: 0, results: 0 });
+  assert.equal(storeCalled, false);
+  assert.equal(res.cleared.length, 0);
 });
