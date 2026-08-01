@@ -9,7 +9,10 @@ const exists = (relativePath) => fs.existsSync(path.join(root, relativePath));
 const scoring = read('backend/src/orientation/riasec/scoring.js');
 const instrument = read('backend/src/orientation/riasec/instrument.js');
 const orientationRouter = read('backend/src/orientation/riasec/router.js');
+const orientationStore = read('backend/src/orientation/riasec/store.js');
+const guestSessions = read('backend/src/orientation/guest-sessions.js');
 const lifeProjectRouter = read('backend/src/life-project/router.js');
+const careerRouter = read('backend/src/career/router.js');
 const atsRoutes = read('backend/src/routes/ats.routes.js');
 const server = read('backend/src/server.js');
 const appRouter = read('src/router/AppRouter.tsx');
@@ -45,23 +48,46 @@ assert.equal(
 );
 assert.match(server, /riasecStore,\s*\n\s*\}\)\);/u);
 
-// Projet de vie never trusts browser-provided scores: it reloads the owned result.
+// Guest mode changes ownership, never scoring. The raw token stays in an HttpOnly cookie.
+assert.match(orientationRouter, /guestSessions\.resolveOwner/u);
+assert.match(orientationRouter, /guestSessions\.claimFromRequest/u);
+assert.match(orientationStore, /Exactly one orientation owner is required/u);
+assert.match(guestSessions, /httpOnly: true/u);
+assert.match(guestSessions, /hashToken\(token\)/u);
+assert.match(guestSessions, /UPDATE orientation_riasec_attempts[\s\S]*guest_session_id = NULL/u);
+assert.match(guestSessions, /UPDATE orientation_results[\s\S]*guest_session_id = NULL/u);
+assert.doesNotMatch(guestSessions, /scoreRiasec/u);
+
+// Projet de vie never trusts browser-provided scores: it reloads the owned account result.
 assert.match(lifeProjectRouter, /riasecStore\.getResult\(\{ accountId, resultId \}\)/u);
 assert.match(lifeProjectRouter, /delete sanitized\.riasecProfile/u);
 assert.match(lifeProjectRouter, /verifiedRiasecProfile\(result\)/u);
 assert.doesNotMatch(lifeProjectRouter, /scoreRiasec/u);
 
-// One public journey: legacy test/result URLs converge on /parcours.
+// One public journey: legacy URLs converge, and /parcours is no longer behind UserRoute.
 assert.match(appRouter, /const unifiedJourney = <Navigate to="\/parcours" replace \/>/u);
 assert.match(appRouter, /path="\/tests\/riasec" element=\{unifiedJourney\}/u);
 assert.match(appRouter, /path="\/orientation\/results\/:resultId" element=\{unifiedJourney\}/u);
-assert.match(appRouter, /path="\/parcours" element=\{<UserRoute><LifeProjectPage \/><\/UserRoute>\}/u);
+assert.match(appRouter, /path="\/parcours" element=\{<LifeProjectPage \/>\}/u);
+assert.doesNotMatch(appRouter, /path="\/parcours" element=\{<UserRoute>/u);
+assert.match(appRouter, /path="\/careers" element=\{<CareerCatalog \/>\}/u);
 assert.doesNotMatch(appRouter, /<RiasecTest\s*\/>/u);
 
-// The same page contains RIASEC, diagnostic/scenarios and one printable report.
+// The public catalog is descriptive; personalized matching remains protected.
+assert.match(careerRouter, /publicCatalog/u);
+assert.match(careerRouter, /recommendationsEnabled/u);
+assert.match(careerRouter, /includeLocallyExcluded: publicCatalog \? false/u);
+assert.match(careerRouter, /protectedRoute\('career\.match\.read_own'\)/u);
+
+// The same page contains visible value, the contextual auth gate and one account report.
 assert.match(unifiedPage, /<EmbeddedRiasecStep onComplete=\{handleRiasecComplete\} \/>/u);
+assert.match(unifiedPage, /guest-life-project-soft-gate/u);
+assert.match(unifiedPage, /Créer mon espace/u);
+assert.match(unifiedPage, /Continuer à explorer sans compte/u);
 assert.match(unifiedPage, /<LifeProjectWorkspace riasecProfile=\{riasecProfile\} \/>/u);
+assert.match(embeddedRiasec, /claimGuestOrientation/u);
 assert.match(embeddedRiasec, /submitRiasecAttempt/u);
+assert.match(embeddedRiasec, /Commencer sans compte/u);
 assert.doesNotMatch(embeddedRiasec, /scoreRiasec/u);
 assert.match(workspace, /Mon rapport Projet de vie/u);
 assert.match(workspace, /window\.print\(\)/u);
@@ -94,10 +120,12 @@ console.log(JSON.stringify({
   algorithmVersion: 'riasec-makoki-scoring-v2',
   canonicalRoute: '/api/v1/orientation',
   canonicalJourney: '/parcours',
+  guestSoftGate: true,
+  publicCareerCatalog: true,
   unifiedReport: 'src/features/life-project/LifeProjectWorkspace.tsx',
   ownedResultVerification: true,
   retiredFrontendAnalyzers: 1,
   retiredLegacyAtsRoutes: 2,
   productionSeed: 'migration -> seed-riasec -> api restart',
 }, null, 2));
-console.log('RIASEC SINGLE ENGINE AND UNIFIED JOURNEY VERIFICATION PASSED');
+console.log('RIASEC SINGLE ENGINE, GUEST SOFT GATE AND UNIFIED REPORT VERIFICATION PASSED');
