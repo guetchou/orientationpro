@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  claimGuestOrientation,
   createRiasecAttempt,
   getRiasecAttempt,
   getRiasecInstrument,
@@ -77,6 +78,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     setPhase('loading');
     setError(null);
     try {
+      await claimGuestOrientation();
       const existing = await listRiasecResults(1, 0);
       if (existing[0]) {
         const profile = persistRiasecResult(existing[0]);
