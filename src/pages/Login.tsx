@@ -7,23 +7,23 @@ import { z } from 'zod';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError, oauthStartUrl, refreshAuthSession } from '@/lib/apiClient';
+import {
+  clearAuthReturnPath,
+  normalizeAuthReturnPath,
+  readAuthReturnPath,
+  saveAuthReturnPath,
+} from '@/lib/authReturn';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
-const AUTH_RETURN_KEY = 'makoki.auth.returnTo';
 const destinationForRole = (role?: string) => {
   if (role === 'super_admin') return '/admin/super-admin';
   if (role === 'admin') return '/admin/dashboard';
   if (role === 'conseiller') return '/conseiller/dashboard';
   return '/dashboard';
-};
-
-const safeReturnPath = (value?: string | null) => {
-  const candidate = String(value || '').trim();
-  return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : undefined;
 };
 
 const messageForError = (error: unknown) => {
@@ -56,8 +56,7 @@ export default function Login() {
   const statePath = requestedFrom?.pathname
     ? `${requestedFrom.pathname}${requestedFrom.search || ''}${requestedFrom.hash || ''}`
     : undefined;
-  const requestedPath = safeReturnPath(statePath)
-    || safeReturnPath(sessionStorage.getItem(AUTH_RETURN_KEY));
+  const requestedPath = normalizeAuthReturnPath(statePath) || readAuthReturnPath();
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -67,13 +66,13 @@ export default function Login() {
 
   const finishAuthentication = (fallback: string) => {
     const destination = requestedPath || fallback;
-    sessionStorage.removeItem(AUTH_RETURN_KEY);
+    clearAuthReturnPath();
     navigate(destination, { replace: true });
   };
 
   useEffect(() => {
     if (user) finishAuthentication(destinationForRole(user.role));
-    // finishAuthentication intentionally follows the current location state/session hint.
+    // finishAuthentication intentionally follows the current location state/local return hint.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -124,7 +123,7 @@ export default function Login() {
   };
 
   const rememberReturnPath = () => {
-    if (requestedPath) sessionStorage.setItem(AUTH_RETURN_KEY, requestedPath);
+    saveAuthReturnPath(requestedPath);
   };
   const submitting = form.formState.isSubmitting;
 
