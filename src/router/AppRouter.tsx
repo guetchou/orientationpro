@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
 import { RouteTracker } from '@/components/analytics/RouteTracker';
 import { isLifeProjectFrontendEnabled } from '@/features/life-project/config';
+import { isAtsCandidateFrontendEnabled } from '@/features/ats-candidate/config';
 import {
   AdminRoute,
   CoachRoute,
@@ -61,6 +62,10 @@ const RecruitmentPage = lazy(() => import('@/pages/RecruitmentPage'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const LifeProjectPage = lazy(() => import('@/features/life-project/UnifiedLifeProjectPage'));
+const AtsJobListPage = lazy(() => import('@/features/ats-candidate/JobListPage'));
+const AtsJobDetailPage = lazy(() => import('@/features/ats-candidate/JobDetailPage'));
+const AtsMyApplicationsPage = lazy(() => import('@/features/ats-candidate/MyApplicationsPage'));
+const AtsApplicationDetailPage = lazy(() => import('@/features/ats-candidate/ApplicationDetailPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const SuperAdmin = lazy(() => import('@/pages/admin/SuperAdmin'));
@@ -73,6 +78,7 @@ const CoachDashboard = lazy(() => import('@/pages/coach/Dashboard'));
 const RhDashboard = lazy(() => import('@/pages/rh/Dashboard'));
 const SuperAdminDashboard = lazy(() => import('@/pages/superadmin/Dashboard'));
 const lifeProjectFrontendEnabled = isLifeProjectFrontendEnabled();
+const atsCandidateFrontendEnabled = isAtsCandidateFrontendEnabled();
 
 const unifiedJourney = <Navigate to="/parcours" replace />;
 
@@ -142,6 +148,14 @@ export const AppRouter = () => (
             <Route path="/dashboard" element={<UserRoute><Dashboard /></UserRoute>} />
             {lifeProjectFrontendEnabled && (
               <Route path="/parcours" element={<LifeProjectPage />} />
+            )}
+            {atsCandidateFrontendEnabled && (
+              <>
+                <Route path="/offres" element={<UserRoute><AtsJobListPage /></UserRoute>} />
+                <Route path="/offres/:jobId" element={<UserRoute><AtsJobDetailPage /></UserRoute>} />
+                <Route path="/mes-candidatures" element={<UserRoute><AtsMyApplicationsPage /></UserRoute>} />
+                <Route path="/mes-candidatures/:applicationId" element={<UserRoute><AtsApplicationDetailPage /></UserRoute>} />
+              </>
             )}
             <Route path="/profile" element={<UserRoute><Profile /></UserRoute>} />
 
