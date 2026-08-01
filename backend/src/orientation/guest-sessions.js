@@ -36,26 +36,24 @@ const createGuestSessionStore = (pool) => ({
   async create({ tokenHash, expiresAt }) {
     const id = crypto.randomUUID();
     await pool.query(
-      `INSERT INTO orientation_guest_sessions (id, token_hash, status, expires_at)
-       VALUES (?, ?, 'active', ?)`,
+      `INSERT INTO orientation_guest_sessions (id, token_hash, expires_at)
+       VALUES (?, ?, ?)`,
       [id, tokenHash, expiresAt],
     );
-    return { id, status: 'active', expiresAt };
+    return { id, expiresAt };
   },
 
   async findActive({ tokenHash, now }) {
     const [[row]] = await pool.query(
-      `SELECT id, status, expires_at, last_seen_at
+      `SELECT id, expires_at, last_seen_at
        FROM orientation_guest_sessions
        WHERE token_hash = ?
-         AND status = 'active'
          AND expires_at > ?
        LIMIT 1`,
       [tokenHash, now],
     );
     return row ? {
       id: row.id,
-      status: row.status,
       expiresAt: row.expires_at,
       lastSeenAt: row.last_seen_at,
     } : null;
@@ -65,7 +63,7 @@ const createGuestSessionStore = (pool) => ({
     await pool.query(
       `UPDATE orientation_guest_sessions
        SET last_seen_at = CURRENT_TIMESTAMP(3), expires_at = ?
-       WHERE id = ? AND status = 'active'`,
+       WHERE id = ?`,
       [expiresAt, id],
     );
   },
@@ -74,7 +72,7 @@ const createGuestSessionStore = (pool) => ({
     const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 1000);
     const [result] = await pool.query(
       `DELETE FROM orientation_guest_sessions
-       WHERE status = 'active' AND expires_at <= ?
+       WHERE expires_at <= ?
        LIMIT ?`,
       [now, safeLimit],
     );
@@ -84,13 +82,13 @@ const createGuestSessionStore = (pool) => ({
   async claim({ tokenHash, accountId, now }) {
     return transaction(pool, async (connection) => {
       const [[session]] = await connection.query(
-        `SELECT id, status, expires_at
+        `SELECT id, expires_at
          FROM orientation_guest_sessions
          WHERE token_hash = ?
          FOR UPDATE`,
         [tokenHash],
       );
-      if (!session || session.status !== 'active') {
+      if (!session) {
         return { status: 'not_found', attempts: 0, results: 0 };
       }
       if (new Date(session.expires_at).getTime() <= now.getTime()) {
@@ -115,10 +113,9 @@ const createGuestSessionStore = (pool) => ({
         [accountId, session.id],
       );
       await connection.query(
-        `UPDATE orientation_guest_sessions
-         SET status = 'claimed', claimed_account_id = ?, claimed_at = ?, updated_at = CURRENT_TIMESTAMP(3)
+        `DELETE FROM orientation_guest_sessions
          WHERE id = ?`,
-        [accountId, now, session.id],
+        [session.id],
       );
       return {
         status: 'claimed',
