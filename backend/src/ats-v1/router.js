@@ -111,6 +111,34 @@ const createAtsRouter = ({ service, authenticate }) => {
     return res.status(200).json({ schemaVersion: 'makoki-ats-api-v1', removed: true });
   }));
 
+  router.get('/jobs/:jobId/applications', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    applications: await service.listApplicationsForJob(req.auth.account, req.params.jobId, {
+      state: req.query.state,
+      candidateEmail: req.query.candidateEmail,
+    }),
+  })));
+
+  router.get('/jobs/:jobId/events', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    events: await service.listJobEvents(req.auth.account, req.params.jobId),
+  })));
+
+  router.get('/jobs/:jobId/recruiters', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    recruiters: await service.listJobRecruiters(req.auth.account, req.params.jobId),
+  })));
+
+  router.post('/applications/:applicationId/evaluations', route(async (req, res) => res.status(201).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    evaluation: await service.createEvaluation(req.auth.account, req.params.applicationId, req.body || {}),
+  })));
+
+  router.get('/applications/:applicationId/evaluations', route(async (req, res) => res.status(200).json({
+    schemaVersion: 'makoki-ats-api-v1',
+    evaluations: await service.listEvaluations(req.auth.account, req.params.applicationId),
+  })));
+
   return router;
 };
 

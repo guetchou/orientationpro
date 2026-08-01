@@ -8,8 +8,10 @@ import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
 import { RouteTracker } from '@/components/analytics/RouteTracker';
 import { isLifeProjectFrontendEnabled } from '@/features/life-project/config';
 import { isAtsCandidateFrontendEnabled } from '@/features/ats-candidate/config';
+import { isAtsRecruiterFrontendEnabled } from '@/features/ats-recruiter/config';
 import {
   AdminRoute,
+  AuthGuard,
   CoachRoute,
   ConseillerRoute,
   RecruteurRoute,
@@ -66,6 +68,10 @@ const AtsJobListPage = lazy(() => import('@/features/ats-candidate/JobListPage')
 const AtsJobDetailPage = lazy(() => import('@/features/ats-candidate/JobDetailPage'));
 const AtsMyApplicationsPage = lazy(() => import('@/features/ats-candidate/MyApplicationsPage'));
 const AtsApplicationDetailPage = lazy(() => import('@/features/ats-candidate/ApplicationDetailPage'));
+const AtsRecruiterJobsDashboardPage = lazy(() => import('@/features/ats-recruiter/JobsDashboardPage'));
+const AtsRecruiterJobPipelinePage = lazy(() => import('@/features/ats-recruiter/JobPipelinePage'));
+const AtsRecruiterApplicationReviewPage = lazy(() => import('@/features/ats-recruiter/ApplicationReviewPage'));
+const AtsRecruiterAssignmentPage = lazy(() => import('@/features/ats-recruiter/RecruiterAssignmentPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const SuperAdmin = lazy(() => import('@/pages/admin/SuperAdmin'));
@@ -79,6 +85,8 @@ const RhDashboard = lazy(() => import('@/pages/rh/Dashboard'));
 const SuperAdminDashboard = lazy(() => import('@/pages/superadmin/Dashboard'));
 const lifeProjectFrontendEnabled = isLifeProjectFrontendEnabled();
 const atsCandidateFrontendEnabled = isAtsCandidateFrontendEnabled();
+const atsRecruiterFrontendEnabled = isAtsRecruiterFrontendEnabled();
+const ATS_RECRUITER_ROLES = ['recruiter', 'recruitment_manager', 'admin', 'super_admin'];
 
 const unifiedJourney = <Navigate to="/parcours" replace />;
 
@@ -155,6 +163,22 @@ export const AppRouter = () => (
                 <Route path="/offres/:jobId" element={<UserRoute><AtsJobDetailPage /></UserRoute>} />
                 <Route path="/mes-candidatures" element={<UserRoute><AtsMyApplicationsPage /></UserRoute>} />
                 <Route path="/mes-candidatures/:applicationId" element={<UserRoute><AtsApplicationDetailPage /></UserRoute>} />
+              </>
+            )}
+            {atsRecruiterFrontendEnabled && (
+              <>
+                <Route path="/recruteur/ats/offres" element={
+                  <AuthGuard requireAuth roles={ATS_RECRUITER_ROLES}><AtsRecruiterJobsDashboardPage /></AuthGuard>
+                } />
+                <Route path="/recruteur/ats/offres/:jobId/pipeline" element={
+                  <AuthGuard requireAuth roles={ATS_RECRUITER_ROLES}><AtsRecruiterJobPipelinePage /></AuthGuard>
+                } />
+                <Route path="/recruteur/ats/offres/:jobId/equipe" element={
+                  <AuthGuard requireAuth roles={ATS_RECRUITER_ROLES}><AtsRecruiterAssignmentPage /></AuthGuard>
+                } />
+                <Route path="/recruteur/ats/candidatures/:applicationId" element={
+                  <AuthGuard requireAuth roles={ATS_RECRUITER_ROLES}><AtsRecruiterApplicationReviewPage /></AuthGuard>
+                } />
               </>
             )}
             <Route path="/profile" element={<UserRoute><Profile /></UserRoute>} />

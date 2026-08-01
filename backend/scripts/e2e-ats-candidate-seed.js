@@ -13,6 +13,7 @@ const FIXTURES = {
   candidateB: { id: '11111111-1111-4111-8111-111111111102', email: 'e2e-candidate-b@example.test' },
   recruiter: { id: '11111111-1111-4111-8111-111111111103', email: 'e2e-recruiter@example.test' },
   password: 'E2eStrongPassw0rd!2026',
+  organizationId: '33333333-3333-4333-8333-333333333301',
   jobId: '22222222-2222-4222-8222-222222222201',
   jobTitle: 'Comptable (E2E)',
   jobDescription: "Offre publiée pour le parcours candidat automatisé.",
@@ -48,12 +49,23 @@ const up = async (pool) => {
     [FIXTURES.candidateA.id, FIXTURES.candidateB.id, FIXTURES.recruiter.id],
   );
 
+  await pool.query(
+    `INSERT INTO ats_organizations_v1 (id, name) VALUES (?, 'Organisation E2E candidat')
+     ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+    [FIXTURES.organizationId],
+  );
+  await pool.query(
+    `INSERT IGNORE INTO ats_organization_members_v1 (account_id, organization_id, added_by_account_id)
+     VALUES (?, ?, ?)`,
+    [FIXTURES.recruiter.id, FIXTURES.organizationId, FIXTURES.recruiter.id],
+  );
+
   const now = new Date().toISOString().slice(0, 23).replace('T', ' ');
   await pool.query(
-    `INSERT INTO ats_jobs_v1 (id, owner_account_id, title, description, status, version, published_at)
-     VALUES (?, ?, ?, ?, 'published', 2, ?)
+    `INSERT INTO ats_jobs_v1 (id, owner_account_id, organization_id, title, description, status, version, published_at)
+     VALUES (?, ?, ?, ?, ?, 'published', 2, ?)
      ON DUPLICATE KEY UPDATE status = 'published', version = 2, published_at = VALUES(published_at)`,
-    [FIXTURES.jobId, FIXTURES.recruiter.id, FIXTURES.jobTitle, FIXTURES.jobDescription, now],
+    [FIXTURES.jobId, FIXTURES.recruiter.id, FIXTURES.organizationId, FIXTURES.jobTitle, FIXTURES.jobDescription, now],
   );
 
   process.stdout.write(`${JSON.stringify(FIXTURES)}\n`);

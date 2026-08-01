@@ -18,18 +18,18 @@ describe('careerApi French presentation defaults', () => {
   it('searches French by default', async () => {
     mockedApiFetch.mockResolvedValue({ occupations: [] });
     await searchCareerOccupations({ query: 'infirmier' });
-    expect(mockedApiFetch).toHaveBeenCalledWith(expect.stringContaining('locale=fr'));
-    expect(mockedApiFetch).toHaveBeenCalledWith(expect.stringContaining('q=infirmier'));
+    expect(mockedApiFetch.mock.calls[0]?.[0]).toEqual(expect.stringContaining('locale=fr'));
+    expect(mockedApiFetch.mock.calls[0]?.[0]).toEqual(expect.stringContaining('q=infirmier'));
   });
 
   it('requests French occupation details and legacy RIASEC matches', async () => {
     mockedApiFetch.mockResolvedValueOnce({ occupation: { id: 'onet:job' } });
     await getCareerOccupation('onet:job');
-    expect(mockedApiFetch).toHaveBeenLastCalledWith(expect.stringContaining('locale=fr'));
+    expect(mockedApiFetch.mock.calls.at(-1)?.[0]).toEqual(expect.stringContaining('locale=fr'));
 
     mockedApiFetch.mockResolvedValueOnce({ matching: { matches: [] } });
     await getCareerMatches('result-1');
-    expect(mockedApiFetch).toHaveBeenLastCalledWith(expect.stringContaining('locale=fr'));
+    expect(mockedApiFetch.mock.calls.at(-1)?.[0]).toEqual(expect.stringContaining('locale=fr'));
   });
 
   it('uses the profile recommendation endpoint and bounds the result limit', async () => {

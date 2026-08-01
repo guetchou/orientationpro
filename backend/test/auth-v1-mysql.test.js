@@ -255,6 +255,11 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
+      '022_ats_rejection_reason_codes',
+      '021_ats_application_evaluations_v1',
+      '020_ats_applications_organization_scope',
+      '019_ats_jobs_organization_scope',
+      '018_ats_organizations_v1',
       '017_ats_application_cv_reference',
       '016_ats_job_events_v1',
       '015_ats_roles_v1',

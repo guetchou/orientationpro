@@ -14,6 +14,7 @@ class AtsPersistenceError extends Error {
 const mapApplication = (row) => row ? Object.freeze({
   id: row.id,
   jobId: row.job_id,
+  organizationId: row.organization_id,
   candidateAccountId: row.candidate_account_id,
   cvAnalysisId: row.cv_analysis_id || null,
   state: row.state,
@@ -29,7 +30,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
 
   const getApplication = async (applicationId) => {
     const [rows] = await pool.query(
-      `SELECT id, job_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
+      `SELECT id, job_id, organization_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
        FROM ats_applications_v1 WHERE id = ? LIMIT 1`,
       [applicationId],
     );
@@ -38,11 +39,35 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
 
   const listApplicationsForCandidate = async (candidateAccountId) => {
     const [rows] = await pool.query(
-      `SELECT id, job_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
+      `SELECT id, job_id, organization_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
        FROM ats_applications_v1
        WHERE candidate_account_id = ?
        ORDER BY submitted_at DESC, id DESC`,
       [candidateAccountId],
+    );
+    return rows.map(mapApplication);
+  };
+
+  // Toujours borné par organization_id en plus de job_id (défense en profondeur,
+  // cf. organization_id dénormalisé sur ats_applications_v1) : un filtre ne peut
+  // jamais élargir la portée, seulement la restreindre davantage.
+  const listApplicationsForJob = async ({ jobId, organizationId, filters = {} }) => {
+    const conditions = ['job_id = ?', 'organization_id = ?'];
+    const params = [jobId, organizationId];
+    if (filters.state) {
+      conditions.push('state = ?');
+      params.push(filters.state);
+    }
+    if (filters.candidateAccountId) {
+      conditions.push('candidate_account_id = ?');
+      params.push(filters.candidateAccountId);
+    }
+    const [rows] = await pool.query(
+      `SELECT id, job_id, organization_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
+       FROM ats_applications_v1
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY submitted_at DESC, id DESC`,
+      params,
     );
     return rows.map(mapApplication);
   };
@@ -52,7 +77,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
     try {
       await connection.beginTransaction();
       const [jobRows] = await connection.query(
-        'SELECT id, status FROM ats_jobs_v1 WHERE id = ? FOR UPDATE',
+        'SELECT id, organization_id, status FROM ats_jobs_v1 WHERE id = ? FOR UPDATE',
         [jobId],
       );
       const job = jobRows[0];
@@ -62,6 +87,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
       if (job.status !== 'published') {
         throw new AtsPersistenceError('ATS_JOB_NOT_PUBLISHED', 'The job is not open for applications.');
       }
+      const organizationId = job.organization_id;
 
       const timestamp = occurredAt instanceof Date ? occurredAt : new Date(occurredAt || clock());
       const timestampSql = timestamp.toISOString().slice(0, 23).replace('T', ' ');
@@ -69,9 +95,9 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
       try {
         await connection.query(
           `INSERT INTO ats_applications_v1
-            (id, job_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at)
-           VALUES (?, ?, ?, ?, 'submitted', 1, ?, ?)`,
-          [id, jobId, candidateAccountId, cvAnalysisId, timestampSql, timestampSql],
+            (id, job_id, organization_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, 'submitted', 1, ?, ?)`,
+          [id, jobId, organizationId, candidateAccountId, cvAnalysisId, timestampSql, timestampSql],
         );
       } catch (error) {
         if (error?.code === 'ER_DUP_ENTRY') {
@@ -95,11 +121,12 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
 
       await connection.query(
         `INSERT INTO ats_application_events_v1
-          (application_id, event_type, from_state, to_state, actor_account_id,
+          (application_id, organization_id, event_type, from_state, to_state, actor_account_id,
            actor_role, reason, metadata_json, occurred_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)`,
         [
           event.applicationId,
+          organizationId,
           event.eventType,
           event.from,
           event.to,
@@ -116,6 +143,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
         application: Object.freeze({
           id,
           jobId,
+          organizationId,
           candidateAccountId,
           cvAnalysisId: cvAnalysisId || null,
           state: 'submitted',
@@ -137,7 +165,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
   const listHistory = async (applicationId) => {
     const [rows] = await pool.query(
       `SELECT id, application_id, event_type, from_state, to_state,
-              actor_account_id, actor_role, reason, metadata_json, occurred_at
+              actor_account_id, actor_role, reason, reason_code, metadata_json, occurred_at
        FROM ats_application_events_v1
        WHERE application_id = ?
        ORDER BY occurred_at ASC, id ASC`,
@@ -152,6 +180,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
       actorAccountId: row.actor_account_id,
       actorRole: row.actor_role,
       reason: row.reason,
+      reasonCode: row.reason_code,
       metadata: typeof row.metadata_json === 'string' ? JSON.parse(row.metadata_json) : row.metadata_json,
       occurredAt: row.occurred_at,
     }));
@@ -164,6 +193,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
     actorAccountId,
     actorRole,
     reason,
+    reasonCode,
     metadata = {},
     authorize,
   }) => {
@@ -178,7 +208,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
     try {
       await connection.beginTransaction();
       const [rows] = await connection.query(
-        `SELECT id, job_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
+        `SELECT id, job_id, organization_id, candidate_account_id, cv_analysis_id, state, version, submitted_at, updated_at
          FROM ats_applications_v1 WHERE id = ? FOR UPDATE`,
         [applicationId],
       );
@@ -205,6 +235,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
         actorAccountId,
         actorRole,
         reason,
+        reasonCode,
         occurredAt: clock(),
         metadata,
       });
@@ -221,17 +252,19 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
 
       await connection.query(
         `INSERT INTO ats_application_events_v1
-          (application_id, event_type, from_state, to_state, actor_account_id,
-           actor_role, reason, metadata_json, occurred_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)`,
+          (application_id, organization_id, event_type, from_state, to_state, actor_account_id,
+           actor_role, reason, reason_code, metadata_json, occurred_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)`,
         [
           event.applicationId,
+          application.organizationId,
           event.eventType,
           event.from,
           event.to,
           event.actorAccountId,
           event.actorRole,
           event.reason,
+          event.reasonCode,
           JSON.stringify(event.metadata),
           event.occurredAt.slice(0, 23).replace('T', ' '),
         ],
@@ -254,6 +287,7 @@ const createAtsStore = (pool, { clock = () => new Date() } = {}) => {
   return Object.freeze({
     getApplication,
     listApplicationsForCandidate,
+    listApplicationsForJob,
     listHistory,
     transition,
     createApplication,
