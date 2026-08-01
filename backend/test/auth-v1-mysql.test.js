@@ -349,7 +349,7 @@ test('ordered migrations roll back completely and can be applied again', async (
     );
 
     assert.equal(Number(authTables.table_count), 11);
-    assert.equal(Number(orientationTables.table_count), 5);
+    assert.equal(Number(orientationTables.table_count), 6);
     assert.equal(Number(careerTables.table_count), 8);
     assert.equal(Number(profileSynthesisTables.table_count), 1);
     assert.equal(Number(cvTables.table_count), 1);
