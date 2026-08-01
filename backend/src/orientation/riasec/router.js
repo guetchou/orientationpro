@@ -108,6 +108,7 @@ const createRiasecRouter = ({
     || typeof hasPermission !== 'function'
     || !guestSessions
     || typeof guestSessions.resolveOwner !== 'function'
+    || typeof guestSessions.claimFromRequest !== 'function'
   ) {
     throw new Error('RIASEC store, optional authentication, guest sessions and permission checks are required.');
   }
@@ -153,6 +154,19 @@ const createRiasecRouter = ({
       });
     }
     return res.status(200).json({ instrument: publicInstrument(instrument) });
+  }));
+
+  router.post('/guest/claim', route(async (req, res) => {
+    if (!req.auth?.account?.id) {
+      return res.status(401).json({
+        error: {
+          code: 'SESSION_REQUIRED',
+          message: 'An authenticated account is required to claim guest orientation work.',
+        },
+      });
+    }
+    const claim = await guestSessions.claimFromRequest(req, res, req.auth.account.id);
+    return res.status(200).json({ claim });
   }));
 
   router.post('/riasec/attempts', resolveOwner('orientation.result.create'), route(async (req, res) => {
