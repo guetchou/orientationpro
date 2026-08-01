@@ -69,7 +69,7 @@ async function main() {
     const page = await browser.newPage();
     await page.setCacheEnabled(false);
 
-    await assertPublicRoute(page, baseUrl, '/parcours', 'Commence sans compte');
+    await assertPublicRoute(page, baseUrl, '/parcours', 'Construire mon projet de vie');
     await assertPublicRoute(page, baseUrl, '/careers', 'Exploration publique');
 
     await page.goto(`${baseUrl}/tests/riasec`, { waitUntil: 'networkidle0' });
