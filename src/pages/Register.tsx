@@ -1,6 +1,6 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
+const AUTH_RETURN_KEY = 'makoki.auth.returnTo';
 const messageForError = (error: unknown) => {
   if (error instanceof ApiError) {
     if (error.code === 'ACCOUNT_EXISTS') return 'Un compte existe déjà pour cette adresse e-mail.';
@@ -69,6 +70,14 @@ export default function Register() {
   const [created, setCreated] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const { signUp } = useAuth();
+  const location = useLocation();
+  const requestedFrom = (location.state as {
+    from?: { pathname?: string; search?: string; hash?: string };
+  } | null)?.from;
+  const requestedPath = requestedFrom?.pathname?.startsWith('/')
+    ? `${requestedFrom.pathname}${requestedFrom.search || ''}${requestedFrom.hash || ''}`
+    : undefined;
+  const loginState = requestedFrom ? { from: requestedFrom } : undefined;
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -83,6 +92,7 @@ export default function Register() {
     setServerError(null);
     try {
       await signUp(values.email, values.password);
+      if (requestedPath) sessionStorage.setItem(AUTH_RETURN_KEY, requestedPath);
       setCreated(true);
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === 'ACCOUNT_EXISTS') {
@@ -95,6 +105,7 @@ export default function Register() {
   const startSocialRegistration = async (provider: 'google' | 'meta') => {
     const consentValid = await form.trigger(['confirmedAge', 'acceptedTerms'], { shouldFocus: true });
     if (!consentValid) return;
+    if (requestedPath) sessionStorage.setItem(AUTH_RETURN_KEY, requestedPath);
     window.location.assign(oauthStartUrl(provider));
   };
 
@@ -103,13 +114,13 @@ export default function Register() {
   return (
     <AuthLayout
       headline="Rejoins MAKOKI"
-      tagline="Crée ton compte pour passer les tests, enregistrer tes résultats et découvrir les métiers qui te correspondent."
+      tagline="Crée ton espace pour conserver ton profil, personnaliser tes scénarios et reprendre ton Projet de vie sans perdre ton travail."
       imageName="orientation-etudiants"
       imageSide="right"
     >
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-slate-900">Créer un compte</h1>
-        <p className="mt-2 text-slate-600">Quelques secondes suffisent pour commencer.</p>
+        <p className="mt-2 text-slate-600">Ton profil déjà obtenu sera rattaché à ton espace après connexion.</p>
       </div>
 
       {created ? (
@@ -118,10 +129,10 @@ export default function Register() {
             <CheckCircle2 className="h-7 w-7" />
           </div>
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            Le compte a été créé. Consulte ta messagerie et ouvre le lien de vérification avant de te connecter.
+            Le compte a été créé. Consulte ta messagerie et ouvre le lien de vérification, puis connecte-toi pour retrouver automatiquement ton parcours.
           </div>
           <Button asChild size="lg" className="w-full">
-            <Link to="/login">Aller à la connexion</Link>
+            <Link to="/login" state={loginState}>Aller à la connexion</Link>
           </Button>
         </div>
       ) : (
@@ -271,7 +282,7 @@ export default function Register() {
 
           <p className="mt-8 text-center text-sm text-gray-600">
             Déjà inscrit ?{' '}
-            <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
+            <Link to="/login" state={loginState} className="font-semibold text-emerald-700 hover:underline">
               Se connecter
             </Link>
           </p>
