@@ -95,8 +95,7 @@ const createGuestSessionStore = (pool) => ({
       }
       if (new Date(session.expires_at).getTime() <= now.getTime()) {
         await connection.query(
-          `UPDATE orientation_guest_sessions
-           SET status = 'expired', updated_at = CURRENT_TIMESTAMP(3)
+          `DELETE FROM orientation_guest_sessions
            WHERE id = ?`,
           [session.id],
         );
