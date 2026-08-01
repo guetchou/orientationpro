@@ -5,7 +5,10 @@ const path = require('node:path');
 const express = require('express');
 
 const { createAuthRouter } = require('../backend/src/auth-v1');
-const { createSessionAuthenticator } = require('../backend/src/auth-v1/authenticate');
+const {
+  createOptionalSessionAuthenticator,
+  createSessionAuthenticator,
+} = require('../backend/src/auth-v1/authenticate');
 const { createMySqlAuthStore } = require('../backend/src/auth-v1/mysql-store');
 const { createPermissionChecker } = require('../backend/src/auth-v1/permissions');
 const { createCareerRouter } = require('../backend/src/career/router');
@@ -13,6 +16,10 @@ const { createCareerStore } = require('../backend/src/career/store');
 const { createDatabasePool } = require('../backend/src/db/pool');
 const { migrateUp } = require('../backend/src/db/migrate');
 const { createRiasecRouter } = require('../backend/src/orientation/riasec/router');
+const {
+  createGuestSessionManager,
+  createGuestSessionStore,
+} = require('../backend/src/orientation/guest-sessions');
 const { createRiasecStore } = require('../backend/src/orientation/riasec/store');
 const { instrument } = require('../backend/src/orientation/riasec/instrument');
 const { createProfileRouter } = require('../backend/src/profile/router');
@@ -61,7 +68,18 @@ const apiRequest = async (baseUrl, pathname, options = {}) => {
 
 const createApplication = ({ pool, verificationTokens }) => {
   const authStore = createMySqlAuthStore(pool);
-  const authenticate = createSessionAuthenticator({ store: authStore, jwtSecret: JWT_SECRET });
+  const authenticate = createSessionAuthenticator({
+    store: authStore,
+    jwtSecret: JWT_SECRET,
+  });
+  const authenticateOptional = createOptionalSessionAuthenticator({
+    store: authStore,
+    jwtSecret: JWT_SECRET,
+  });
+  const guestSessions = createGuestSessionManager({
+    store: createGuestSessionStore(pool),
+    cookieSecure: false,
+  });
   const hasPermission = createPermissionChecker(pool);
   const app = express();
   app.use(express.json({ limit: '1mb' }));
@@ -77,8 +95,9 @@ const createApplication = ({ pool, verificationTokens }) => {
   app.use('/api/v1/profile', createProfileRouter({ store: createProfileStore(pool), authenticate }));
   app.use('/api/v1/orientation', createRiasecRouter({
     store: createRiasecStore(pool),
-    authenticate,
+    authenticateOptional,
     hasPermission,
+    guestSessions,
     allowDraft: true,
   }));
   app.use('/api/v1/career', createCareerRouter({ store: createCareerStore(pool), authenticate, hasPermission }));
