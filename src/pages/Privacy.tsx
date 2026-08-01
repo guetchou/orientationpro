@@ -1,8 +1,9 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
 const retentionRows = [
+  ['Parcours invité sans compte', '7 jours maximum après la dernière utilisation. La session pseudonyme, les réponses RIASEC et le résultat temporaire sont ensuite supprimés automatiquement s’ils n’ont pas été rattachés à un compte.'],
   ['Compte utilisateur', 'Pendant l’utilisation du service, puis suppression ou anonymisation après 24 mois d’inactivité. Un avertissement doit être envoyé avant suppression lorsque les coordonnées restent valides.'],
-  ['Résultats des tests d’orientation', '24 mois après la dernière activité liée au résultat, sauf suppression anticipée demandée par l’utilisateur ou nécessité de conservation plus courte.'],
-  ['Réponses détaillées aux questionnaires', '12 mois après la production du résultat, puis suppression ou anonymisation. Le score agrégé peut être conservé selon la durée applicable au résultat.'],
+  ['Résultats des tests d’orientation rattachés à un compte', '24 mois après la dernière activité liée au résultat, sauf suppression anticipée demandée par l’utilisateur ou nécessité de conservation plus courte.'],
+  ['Réponses détaillées aux questionnaires rattachées à un compte', '12 mois après la production du résultat, puis suppression ou anonymisation. Le score agrégé peut être conservé selon la durée applicable au résultat.'],
   ['CV et documents téléversés', '24 mois après la dernière utilisation du document ou la dernière démarche associée, puis suppression.'],
   ['Candidatures', '24 mois après la clôture de la candidature ou le dernier échange, sauf obligation légale ou transfert licite vers l’employeur concerné.'],
   ['Rendez-vous', '24 mois après la date du rendez-vous ou son annulation. Les notes sensibles ne doivent pas être conservées au-delà de ce qui est strictement nécessaire.'],
@@ -30,7 +31,7 @@ export default function Privacy() {
       <article className="mx-auto max-w-5xl">
         <p className="font-semibold text-emerald-700">Informations légales</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">Politique de confidentialité</h1>
-        <p className="mt-5 text-sm text-slate-500">Version du 24 juillet 2026</p>
+        <p className="mt-5 text-sm text-slate-500">Version du 1er août 2026</p>
 
         <section className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-950">
           <h2 className="text-xl font-semibold">Responsable du traitement</h2>
@@ -53,6 +54,9 @@ export default function Privacy() {
               Selon les fonctions utilisées, MAKOKI peut traiter l’adresse e-mail, les informations du compte et du profil, la date de naissance lorsque le contrôle d’âge sera activé, les réponses aux questionnaires, les résultats d’orientation, les CV, les candidatures, les demandes de rendez-vous, les échanges de support, les références de paiement et les journaux techniques nécessaires à la sécurité.
             </p>
             <p className="mt-3">
+              Le parcours peut commencer sans compte. Dans ce cas, MAKOKI utilise un identifiant invité aléatoire conservé dans un cookie protégé ; aucune adresse e-mail, aucun nom et aucun numéro de téléphone ne sont demandés pour calculer la première restitution RIASEC. Le serveur conserve temporairement la passation et peut la rattacher au compte uniquement lorsque l’utilisateur se connecte volontairement.
+            </p>
+            <p className="mt-3">
               Les résultats RIASEC et les réponses associées décrivent des intérêts déclarés. Ils ne doivent pas être utilisés seuls pour prendre une décision d’embauche, d’admission, d’assurance, de crédit ou d’accès à un métier.
             </p>
           </section>
@@ -60,7 +64,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-950">Finalités et bases du traitement</h2>
             <p className="mt-3">
-              Les données sont utilisées pour créer et sécuriser le compte, exécuter le service demandé, restituer les résultats, permettre l’accès aux outils d’employabilité, assurer le support, prévenir la fraude, respecter les obligations légales et améliorer la fiabilité technique. Selon le cas, le traitement repose sur le consentement, l’exécution du service demandé, une obligation légale ou la sauvegarde des droits et intérêts légitimes des personnes.
+              Les données sont utilisées pour fournir la restitution demandée, créer et sécuriser le compte lorsque l’utilisateur le choisit, permettre la reprise du parcours, restituer les résultats, permettre l’accès aux outils d’employabilité, assurer le support, prévenir la fraude, respecter les obligations légales et améliorer la fiabilité technique. Selon le cas, le traitement repose sur l’exécution du service demandé, le consentement, une obligation légale ou la sauvegarde des droits et intérêts légitimes des personnes.
             </p>
           </section>
 
@@ -109,7 +113,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-950">Sécurité et violations</h2>
             <p className="mt-3">
-              Nexora met en œuvre des mesures d’accès limité, de journalisation, de sauvegarde, de chiffrement lorsque cela est adapté et de séparation des environnements. Toute violation de données doit être analysée, documentée et notifiée à l’autorité ou aux personnes concernées lorsque la réglementation l’exige.
+              Nexora met en œuvre des mesures d’accès limité, de journalisation, de sauvegarde, de chiffrement lorsque cela est adapté et de séparation des environnements. Le cookie du parcours invité est configuré pour ne pas être lisible par le code JavaScript de la page, n’être transmis qu’en HTTPS en production et réduire les envois intersites. Toute violation de données doit être analysée, documentée et notifiée à l’autorité ou aux personnes concernées lorsque la réglementation l’exige.
             </p>
           </section>
 
