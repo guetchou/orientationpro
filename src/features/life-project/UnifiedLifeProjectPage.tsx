@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, Brain, CheckCircle2, FileText, Route, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Brain, CheckCircle2, FileText, Loader2, Route, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,7 +91,7 @@ const GuestValue = ({ profile }: { profile: AdvisorRiasecProfile }) => {
 
 export default function UnifiedLifeProjectPage() {
   const [riasecProfile, setRiasecProfile] = useState<AdvisorRiasecProfile | null>(null);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const handleRiasecComplete = useCallback((profile: AdvisorRiasecProfile) => {
     setRiasecProfile(profile);
@@ -122,9 +122,18 @@ export default function UnifiedLifeProjectPage() {
       </section>
 
       <main className="container max-w-7xl space-y-6 py-8">
-        <EmbeddedRiasecStep onComplete={handleRiasecComplete} />
+        {authLoading ? (
+          <Card className="print:hidden">
+            <CardContent className="flex min-h-44 items-center justify-center p-8" role="status">
+              <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" />
+              Vérification de ta session avant de reprendre ou créer ton parcours…
+            </CardContent>
+          </Card>
+        ) : (
+          <EmbeddedRiasecStep onComplete={handleRiasecComplete} />
+        )}
 
-        {riasecProfile ? (
+        {!authLoading && riasecProfile ? (
           <>
             <section aria-labelledby="unified-profile-title">
               <h2 id="unified-profile-title" className="sr-only">Profil RIASEC intégré</h2>
@@ -167,7 +176,7 @@ export default function UnifiedLifeProjectPage() {
               </Card>
             )}
           </>
-        ) : (
+        ) : !authLoading ? (
           <Card className="print:hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />Commence sans inscription</CardTitle>
@@ -176,7 +185,7 @@ export default function UnifiedLifeProjectPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-        )}
+        ) : null}
       </main>
     </div>
   );
