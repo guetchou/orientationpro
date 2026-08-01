@@ -95,6 +95,12 @@ test('guest RIASEC result is transactionally claimed by the authenticated accoun
     });
     assert.deepEqual(claim, { status: 'claimed', attempts: 1, results: 1 });
 
+    const [[claimedSessionRow]] = await pool.query(
+      'SELECT id FROM orientation_guest_sessions WHERE id = ?',
+      [guestSession.id],
+    );
+    assert.equal(claimedSessionRow, undefined);
+
     const guestResultAfterClaim = await riasecStore.getResult({
       accountId: null,
       guestSessionId: guestSession.id,
