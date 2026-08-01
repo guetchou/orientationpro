@@ -33,6 +33,8 @@ jobs:
       - run: npm run build
       - name: Run browser smoke against existing build
         run: node tests/e2e-smoke.cjs
+      - name: Prove guest-first public entry
+        run: node tests/e2e-guest-entry.cjs
 
   backend:
     name: Backend, MySQL and authenticated flows
