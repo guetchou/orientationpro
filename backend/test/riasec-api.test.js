@@ -51,12 +51,14 @@ const createApp = (
     authenticateOptional = authenticated,
     hasPermission = async () => true,
     guestOwner = { guestSessionId: 'guest-1', accountId: null, kind: 'guest' },
+    claimFromRequest = async () => ({ status: 'not_found', attempts: 0, results: 0 }),
   } = {},
 ) => {
   const guestSessions = {
     resolveOwner: async (req) => req.auth?.account?.id
       ? { accountId: req.auth.account.id, guestSessionId: null, kind: 'account' }
       : guestOwner,
+    claimFromRequest,
   };
   const app = express();
   app.use(express.json());
@@ -89,6 +91,45 @@ test('instrument endpoint is public and never exposes scoring dimensions or reve
   assert.equal(body.instrument.items[0].reverseScored, undefined);
   assert.equal(typeof body.instrument.items[0].prompt, 'string');
   assert.match(body.instrument.disclaimer, /ne constitue ni un diagnostic/i);
+});
+
+test('guest claim requires an authenticated account', async () => {
+  let claimed = false;
+  const response = await request(
+    createApp({}, {
+      authenticateOptional: anonymous,
+      claimFromRequest: async () => {
+        claimed = true;
+      },
+    }),
+    '/api/v1/orientation/guest/claim',
+    { method: 'POST' },
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 401);
+  assert.equal(body.error.code, 'SESSION_REQUIRED');
+  assert.equal(claimed, false);
+});
+
+test('authenticated guest claim transfers the opaque session to the account', async () => {
+  let claimInput;
+  const expected = { status: 'claimed', attempts: 1, results: 1 };
+  const response = await request(
+    createApp({}, {
+      claimFromRequest: async (req, res, accountId) => {
+        claimInput = { req, res, accountId };
+        return expected;
+      },
+    }),
+    '/api/v1/orientation/guest/claim',
+    { method: 'POST' },
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(claimInput.accountId, 'account-1');
+  assert.deepEqual(body.claim, expected);
 });
 
 test('starting an authenticated attempt stores account ownership and a complete randomized item order', async () => {
