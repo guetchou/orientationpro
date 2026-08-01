@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/apiClient';
+import { apiFetch, getStoredAccessToken } from '@/lib/apiClient';
 import type { RiasecAttempt, RiasecInstrument, RiasecResult } from '@/types/riasec';
 
 export interface RiasecAnswer {
@@ -6,11 +6,26 @@ export interface RiasecAnswer {
   value: number;
 }
 
+export interface GuestOrientationClaim {
+  status: 'claimed' | 'not_found' | 'expired';
+  attempts: number;
+  results: number;
+}
+
 export const getRiasecInstrument = async () => {
   const payload = await apiFetch<{ instrument: RiasecInstrument }>(
     '/v1/orientation/riasec/instrument',
   );
   return payload.instrument;
+};
+
+export const claimGuestOrientation = async (): Promise<GuestOrientationClaim | null> => {
+  if (!getStoredAccessToken()) return null;
+  const payload = await apiFetch<{ claim: GuestOrientationClaim }>(
+    '/v1/orientation/guest/claim',
+    { method: 'POST' },
+  );
+  return payload.claim;
 };
 
 export const createRiasecAttempt = async () => {
