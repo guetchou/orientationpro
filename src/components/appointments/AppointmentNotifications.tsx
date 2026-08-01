@@ -2,12 +2,12 @@
 import { useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
-import { useUser } from "@supabase/auth-helpers-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Appointment } from "@/types/appointments";
 
 export const AppointmentNotifications = () => {
   const { toast } = useToast();
-  const user = useUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user?.id) return;

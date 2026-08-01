@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useUser } from "@supabase/auth-helpers-react";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabaseClient";
 import { Appointment } from "@/types/appointments";
 import { format } from "date-fns";
@@ -13,7 +13,7 @@ interface AppointmentTimeslotsProps {
 export const AppointmentTimeslots = ({ date }: AppointmentTimeslotsProps) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
-  const user = useUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchAppointmentsForDate();

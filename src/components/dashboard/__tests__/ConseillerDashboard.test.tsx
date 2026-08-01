@@ -2,9 +2,12 @@
 import { render } from '@testing-library/react';
 import { ConseillerDashboard } from '../ConseillerDashboard';
 
-vi.mock('@supabase/auth-helpers-react', () => ({
-  useUser: () => ({ id: 'test-conseiller' }),
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: { id: 'test-conseiller' },
+  }),
 }));
+
 
 vi.mock('@/hooks/useConseillerStats', () => ({
   useConseillerStats: () => ({

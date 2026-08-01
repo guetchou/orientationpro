@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useUser } from "@supabase/auth-helpers-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X, Trash2 } from "lucide-react";
@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 export const AppointmentHistory = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const { appointments, loading, fetchAppointments, updateAppointmentStatus, deleteAppointment } = useAppointments(user?.id);
 
   useEffect(() => {

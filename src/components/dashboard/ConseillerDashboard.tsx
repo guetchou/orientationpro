@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConseillerStats } from "@/hooks/useConseillerStats";
 import { handleError } from "@/utils/errorHandler";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useUser } from "@supabase/auth-helpers-react";
+import { useAuth } from "@/hooks/useAuth";
 import { ConseillersAppointments } from "./ConseillersAppointments";
 import { ConseillerAvailability } from "./ConseillerAvailability";
 import { StudentsTab } from "./tabs/StudentsTab";
@@ -23,7 +23,7 @@ const queryClient = new QueryClient({
 });
 
 export const ConseillerDashboard = () => {
-  const currentUser = useUser();
+  const { user: currentUser } = useAuth();
   const userId = currentUser?.id;
   
   const { data: stats, isLoading, error } = useConseillerStats(userId);
