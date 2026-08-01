@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError, oauthStartUrl } from '@/lib/apiClient';
+import { saveAuthReturnPath } from '@/lib/authReturn';
 import { cn } from '@/lib/utils';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
@@ -15,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
-const AUTH_RETURN_KEY = 'makoki.auth.returnTo';
 const messageForError = (error: unknown) => {
   if (error instanceof ApiError) {
     if (error.code === 'ACCOUNT_EXISTS') return 'Un compte existe déjà pour cette adresse e-mail.';
@@ -92,7 +92,7 @@ export default function Register() {
     setServerError(null);
     try {
       await signUp(values.email, values.password);
-      if (requestedPath) sessionStorage.setItem(AUTH_RETURN_KEY, requestedPath);
+      saveAuthReturnPath(requestedPath);
       setCreated(true);
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === 'ACCOUNT_EXISTS') {
@@ -105,7 +105,7 @@ export default function Register() {
   const startSocialRegistration = async (provider: 'google' | 'meta') => {
     const consentValid = await form.trigger(['confirmedAge', 'acceptedTerms'], { shouldFocus: true });
     if (!consentValid) return;
-    if (requestedPath) sessionStorage.setItem(AUTH_RETURN_KEY, requestedPath);
+    saveAuthReturnPath(requestedPath);
     window.location.assign(oauthStartUrl(provider));
   };
 
