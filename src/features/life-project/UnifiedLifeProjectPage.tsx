@@ -1,10 +1,14 @@
-import { useCallback, useState } from 'react';
-import { Brain, CheckCircle2, FileText, Route, ShieldCheck } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { ArrowRight, Brain, CheckCircle2, FileText, Loader2, Route, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import EmbeddedRiasecStep from './EmbeddedRiasecStep';
 import LifeProjectWorkspace from './LifeProjectWorkspace';
 import type { AdvisorRiasecProfile } from './advisor-types';
+import { guestCareerFamilies } from './guest-career-families';
 import {
   riasecDimensionLabels,
   topRiasecDimensions,
@@ -29,7 +33,7 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
         </div>
         <CardTitle className="flex items-center gap-2 text-xl"><Brain className="h-5 w-5" />Tes intérêts dominants</CardTitle>
         <CardDescription>
-          Ce profil alimente directement le calcul des options du Projet de vie et sera inclus dans le rapport final unique.
+          Cette première restitution est visible sans compte. Elle décrit tes préférences actuelles et sert de point de départ à l’exploration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -54,8 +58,41 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
   );
 };
 
+const GuestValue = ({ profile }: { profile: AdvisorRiasecProfile }) => {
+  const families = useMemo(() => guestCareerFamilies(profile), [profile]);
+  return (
+    <section className="space-y-5 print:hidden" data-testid="guest-life-project-soft-gate">
+      <Card className="border-emerald-200 bg-emerald-50/60">
+        <CardHeader>
+          <Badge className="w-fit">Première valeur obtenue</Badge>
+          <CardTitle>Des familles de métiers à explorer maintenant</CardTitle>
+          <CardDescription>
+            Ces pistes découlent uniquement de tes intérêts dominants. Elles ne tiennent pas encore compte de ton niveau, de tes compétences, de ta ville, de ton budget ou de tes contraintes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          {families.map((family) => (
+            <div key={family.dimension} className="rounded-lg border bg-background p-4">
+              <Badge variant="outline">{family.dimension}</Badge>
+              <h3 className="mt-3 font-semibold">{family.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Exemples : {family.examples.join(', ')}.</p>
+              <Button asChild variant="outline" className="mt-4 w-full">
+                <Link to={`/careers?q=${encodeURIComponent(family.searchQuery)}`}>
+                  Explorer ces métiers <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </section>
+  );
+};
+
 export default function UnifiedLifeProjectPage() {
   const [riasecProfile, setRiasecProfile] = useState<AdvisorRiasecProfile | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const handleRiasecComplete = useCallback((profile: AdvisorRiasecProfile) => {
     setRiasecProfile(profile);
     requestAnimationFrame(() => {
@@ -72,7 +109,7 @@ export default function UnifiedLifeProjectPage() {
             <Route className="h-8 w-8 text-primary" />Construis ton Projet de vie
           </h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            Un seul parcours, un seul calcul et un seul rapport : ton profil RIASEC est croisé avec ta situation réelle, tes compétences, tes contraintes et tes priorités.
+            Commence sans compte. Découvre d’abord ton profil d’intérêts et des familles de métiers, puis crée ton espace uniquement pour sauvegarder, personnaliser et obtenir le rapport complet.
           </p>
           <div className="mt-6 grid gap-2 md:grid-cols-5">
             {journeySteps.map((step, index) => (
@@ -85,32 +122,70 @@ export default function UnifiedLifeProjectPage() {
       </section>
 
       <main className="container max-w-7xl space-y-6 py-8">
-        <EmbeddedRiasecStep onComplete={handleRiasecComplete} />
+        {authLoading ? (
+          <Card className="print:hidden">
+            <CardContent className="flex min-h-44 items-center justify-center p-8" role="status">
+              <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" />
+              Vérification de ta session avant de reprendre ou créer ton parcours…
+            </CardContent>
+          </Card>
+        ) : (
+          <EmbeddedRiasecStep onComplete={handleRiasecComplete} />
+        )}
 
-        {riasecProfile ? (
+        {!authLoading && riasecProfile ? (
           <>
             <section aria-labelledby="unified-profile-title">
               <h2 id="unified-profile-title" className="sr-only">Profil RIASEC intégré</h2>
               <RiasecProfileSummary profile={riasecProfile} />
             </section>
-            <div id="life-project-continuation" className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-950 print:hidden">
-              <CheckCircle2 className="mr-2 inline h-4 w-4" />
-              Étape RIASEC terminée. Complète maintenant ta situation : ton profil sera enregistré avec ce dossier et utilisé dans les recommandations.
-            </div>
-            <section aria-label="Suite du parcours Projet de vie">
-              <LifeProjectWorkspace riasecProfile={riasecProfile} />
-            </section>
+            <GuestValue profile={riasecProfile} />
+            <div id="life-project-continuation" />
+            {user ? (
+              <>
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-950 print:hidden">
+                  <CheckCircle2 className="mr-2 inline h-4 w-4" />
+                  Ton profil est rattaché à ton espace. Complète maintenant ta situation : il sera enregistré avec ce dossier et utilisé dans les recommandations.
+                </div>
+                <section aria-label="Suite du parcours Projet de vie">
+                  <LifeProjectWorkspace riasecProfile={riasecProfile} />
+                </section>
+              </>
+            ) : (
+              <Card className="border-primary/30 print:hidden">
+                <CardHeader>
+                  <Badge className="w-fit" variant="outline">Ton résultat reste visible</Badge>
+                  <CardTitle>Crée ton espace pour aller plus loin</CardTitle>
+                  <CardDescription>
+                    Le compte permet de ne pas perdre ce travail, d’ajouter ta situation réelle, de comparer des scénarios, de retenir une piste, de construire une première action et d’obtenir le rapport Projet de vie complet.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-3">
+                  <Button asChild size="lg">
+                    <Link to="/register" state={{ from: location }}>
+                      Créer mon espace <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/login" state={{ from: location }}>J’ai déjà un compte</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="ghost">
+                    <Link to="/careers">Continuer à explorer sans compte</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </>
-        ) : (
+        ) : !authLoading ? (
           <Card className="print:hidden">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />La suite se débloque après le RIASEC</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />Commence sans inscription</CardTitle>
               <CardDescription>
-                Le formulaire de situation, les options et le rapport final appartiennent au même parcours. Aucun second test séparé n’est nécessaire.
+                Termine le RIASEC pour voir ton profil et tes premières familles de métiers. Le formulaire détaillé et le rapport complet seront proposés ensuite, lorsque leur valeur sera claire.
               </CardDescription>
             </CardHeader>
           </Card>
-        )}
+        ) : null}
       </main>
     </div>
   );
