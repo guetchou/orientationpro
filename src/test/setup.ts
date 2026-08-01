@@ -72,6 +72,21 @@ Object.defineProperty(navigator, 'connection', {
   },
 });
 
+// Polyfills requis par Radix UI (ex. Select) dans jsdom, qui n'implémente pas
+// l'API Pointer Events ni scrollIntoView.
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 // Variables d'environnement pour les tests
 process.env.VITE_SUPABASE_URL = 'http://localhost:54321'
 process.env.VITE_SUPABASE_ANON_KEY = 'test-key'

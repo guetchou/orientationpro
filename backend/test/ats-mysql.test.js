@@ -20,7 +20,16 @@ const createPool = () => mysql.createPool({
   connectionLimit: 6,
 });
 
-test('ATS migrations 014-017 cycle up -> down -> up and create the expected ATS tables', async () => {
+const columnExists = async (pool, table, column) => {
+  const [rows] = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?`,
+    [table, column],
+  );
+  return rows.length === 1;
+};
+
+test('ATS migrations 014-022 cycle up -> down -> up and create the expected ATS tables', async () => {
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');
   await migrateUp(pool, directory);
@@ -29,11 +38,14 @@ test('ATS migrations 014-017 cycle up -> down -> up and create the expected ATS 
     assert.deepEqual(
       tables.map((row) => Object.values(row)[0]).sort(),
       [
+        'ats_application_evaluations_v1',
         'ats_application_events_v1',
         'ats_applications_v1',
         'ats_job_events_v1',
         'ats_job_recruiters_v1',
         'ats_jobs_v1',
+        'ats_organization_members_v1',
+        'ats_organizations_v1',
       ],
     );
 
@@ -42,19 +54,40 @@ test('ATS migrations 014-017 cycle up -> down -> up and create the expected ATS 
     );
     assert.deepEqual(roles.map((row) => row.id), ['recruiter', 'recruitment_manager']);
 
-    const [cvColumn] = await pool.query(
-      `SELECT column_name FROM information_schema.columns
-       WHERE table_schema = DATABASE() AND table_name = 'ats_applications_v1' AND column_name = 'cv_analysis_id'`,
-    );
-    assert.equal(cvColumn.length, 1);
+    assert.equal(await columnExists(pool, 'ats_applications_v1', 'cv_analysis_id'), true);
+    assert.equal(await columnExists(pool, 'ats_jobs_v1', 'organization_id'), true);
+    assert.equal(await columnExists(pool, 'ats_job_events_v1', 'organization_id'), true);
+    assert.equal(await columnExists(pool, 'ats_applications_v1', 'organization_id'), true);
+    assert.equal(await columnExists(pool, 'ats_application_events_v1', 'organization_id'), true);
+    assert.equal(await columnExists(pool, 'ats_application_events_v1', 'reason_code'), true);
+
+    const reasonCodeVersion = await migrateDown(pool, directory);
+    assert.equal(reasonCodeVersion, '022_ats_rejection_reason_codes');
+    assert.equal(await columnExists(pool, 'ats_application_events_v1', 'reason_code'), false);
+
+    const evaluationsVersion = await migrateDown(pool, directory);
+    assert.equal(evaluationsVersion, '021_ats_application_evaluations_v1');
+    const [afterEvaluationsDown] = await pool.query("SHOW TABLES LIKE 'ats_application_evaluations_v1'");
+    assert.equal(afterEvaluationsDown.length, 0);
+
+    const applicationsOrgScopeVersion = await migrateDown(pool, directory);
+    assert.equal(applicationsOrgScopeVersion, '020_ats_applications_organization_scope');
+    assert.equal(await columnExists(pool, 'ats_applications_v1', 'organization_id'), false);
+    assert.equal(await columnExists(pool, 'ats_application_events_v1', 'organization_id'), false);
+
+    const jobsOrgScopeVersion = await migrateDown(pool, directory);
+    assert.equal(jobsOrgScopeVersion, '019_ats_jobs_organization_scope');
+    assert.equal(await columnExists(pool, 'ats_jobs_v1', 'organization_id'), false);
+    assert.equal(await columnExists(pool, 'ats_job_events_v1', 'organization_id'), false);
+
+    const organizationsVersion = await migrateDown(pool, directory);
+    assert.equal(organizationsVersion, '018_ats_organizations_v1');
+    const [afterOrganizationsDown] = await pool.query("SHOW TABLES LIKE 'ats\\_organization%'");
+    assert.equal(afterOrganizationsDown.length, 0);
 
     const cvReferenceVersion = await migrateDown(pool, directory);
     assert.equal(cvReferenceVersion, '017_ats_application_cv_reference');
-    const [cvColumnAfterDown] = await pool.query(
-      `SELECT column_name FROM information_schema.columns
-       WHERE table_schema = DATABASE() AND table_name = 'ats_applications_v1' AND column_name = 'cv_analysis_id'`,
-    );
-    assert.equal(cvColumnAfterDown.length, 0);
+    assert.equal(await columnExists(pool, 'ats_applications_v1', 'cv_analysis_id'), false);
 
     const jobEventsVersion = await migrateDown(pool, directory);
     assert.equal(jobEventsVersion, '016_ats_job_events_v1');
@@ -75,7 +108,7 @@ test('ATS migrations 014-017 cycle up -> down -> up and create the expected ATS 
 
     await migrateUp(pool, directory);
     const [tablesAfterUp] = await pool.query("SHOW TABLES LIKE 'ats\\_%'");
-    assert.equal(tablesAfterUp.length, 5);
+    assert.equal(tablesAfterUp.length, 8);
   } finally {
     await migrateUp(pool, directory);
     await pool.end();
@@ -86,6 +119,7 @@ test('ATS workflow persists on real MySQL: constraints, atomic append-only histo
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');
   const suffix = crypto.randomUUID();
+  const organizationId = crypto.randomUUID();
   const ownerId = crypto.randomUUID();
   const candidateA = crypto.randomUUID();
   const candidateB = crypto.randomUUID();
@@ -110,6 +144,8 @@ test('ATS workflow persists on real MySQL: constraints, atomic append-only histo
     await pool.query('DELETE FROM auth_account_roles WHERE account_id IN (?, ?, ?, ?)', [
       ownerId, candidateA, candidateB, recruiterId,
     ]);
+    await pool.query('DELETE FROM ats_organization_members_v1 WHERE organization_id = ?', [organizationId]);
+    await pool.query('DELETE FROM ats_organizations_v1 WHERE id = ?', [organizationId]);
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?, ?, ?)', [
       ownerId, candidateA, candidateB, recruiterId,
     ]);
@@ -131,10 +167,19 @@ test('ATS workflow persists on real MySQL: constraints, atomic append-only histo
        (?, 'recruiter'), (?, 'user'), (?, 'user'), (?, 'recruiter')`,
     [ownerId, candidateA, candidateB, recruiterId],
   );
+  await pool.query(
+    'INSERT INTO ats_organizations_v1 (id, name) VALUES (?, ?)',
+    [organizationId, `Organisation ${suffix}`],
+  );
+  await pool.query(
+    'INSERT INTO ats_organization_members_v1 (account_id, organization_id, added_by_account_id) VALUES (?, ?, ?)',
+    [ownerId, organizationId, ownerId],
+  );
 
   const job = await jobStore.createJob({
     id: crypto.randomUUID(),
     ownerAccountId: ownerId,
+    organizationId,
     title: 'Développeur backend',
     description: 'Construire des services Node.js sur MySQL.',
     actorAccountId: ownerId,
@@ -178,6 +223,7 @@ test('ATS workflow persists on real MySQL: constraints, atomic append-only histo
   const job2 = await jobStore.createJob({
     id: crypto.randomUUID(),
     ownerAccountId: ownerId,
+    organizationId,
     title: 'Chargé de recrutement',
     description: 'Autre offre publiée par le même recruteur.',
     actorAccountId: ownerId,
@@ -276,6 +322,7 @@ test('ATS workflow persists on real MySQL: constraints, atomic append-only histo
       actorAccountId: recruiterId,
       actorRole: 'recruiter',
       reason: 'Profil non retenu après double lecture.',
+      reasonCode: 'not_qualified',
       authorize: async () => true,
     }),
   ]);

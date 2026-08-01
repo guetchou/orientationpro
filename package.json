@@ -17,6 +17,7 @@
     "test:e2e": "npm run build && node tests/e2e-smoke.cjs",
     "test:e2e:accessibility": "playwright test --config=playwright.accessibility.config.ts",
     "test:e2e:ats-candidate": "playwright test --config=playwright.ats-candidate.config.ts",
+    "test:e2e:ats-recruiter": "playwright test --config=playwright.ats-recruiter.config.ts",
     "test:e2e:career": "node tests/e2e-career-functional.cjs",
     "check:sensitive": "node scripts/check-sensitive-files.cjs",
     "security:test": "node --test scripts/security/audit-repository.test.cjs",

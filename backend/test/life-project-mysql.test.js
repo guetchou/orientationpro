@@ -275,6 +275,16 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(rolledBack, undefined);
 
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?)', [accountA, accountB]);
+    const reasonCodeVersion = await migrateDown(pool, directory);
+    assert.equal(reasonCodeVersion, '022_ats_rejection_reason_codes');
+    const evaluationsVersion = await migrateDown(pool, directory);
+    assert.equal(evaluationsVersion, '021_ats_application_evaluations_v1');
+    const applicationsOrgScopeVersion = await migrateDown(pool, directory);
+    assert.equal(applicationsOrgScopeVersion, '020_ats_applications_organization_scope');
+    const jobsOrgScopeVersion = await migrateDown(pool, directory);
+    assert.equal(jobsOrgScopeVersion, '019_ats_jobs_organization_scope');
+    const organizationsVersion = await migrateDown(pool, directory);
+    assert.equal(organizationsVersion, '018_ats_organizations_v1');
     const cvReferenceVersion = await migrateDown(pool, directory);
     assert.equal(cvReferenceVersion, '017_ats_application_cv_reference');
     const jobEventsVersion = await migrateDown(pool, directory);

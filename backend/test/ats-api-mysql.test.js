@@ -66,6 +66,7 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
   await migrateUp(pool, directory);
 
   const suffix = crypto.randomUUID();
+  const organizationId = crypto.randomUUID();
   const accounts = {
     owner: crypto.randomUUID(),
     manager: crypto.randomUUID(),
@@ -101,6 +102,8 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
     }
     await pool.query('DELETE FROM auth_sessions WHERE account_id IN (?, ?, ?, ?, ?, ?)', Object.values(accounts));
     await pool.query('DELETE FROM auth_account_roles WHERE account_id IN (?, ?, ?, ?, ?, ?)', Object.values(accounts));
+    await pool.query('DELETE FROM ats_organization_members_v1 WHERE organization_id = ?', [organizationId]);
+    await pool.query('DELETE FROM ats_organizations_v1 WHERE id = ?', [organizationId]);
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?, ?, ?, ?, ?)', Object.values(accounts));
     await pool.end();
   });
@@ -113,6 +116,17 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
     await pool.query(
       'INSERT INTO auth_account_roles (account_id, role_id) VALUES (?, ?)',
       [id, roleByAccount[key]],
+    );
+  }
+
+  // All staff accounts share one organization in this lot-1/2 test: it exercises
+  // job- and recruiter-assignment-level isolation, not cross-organization
+  // isolation (covered separately by ats-organization-mysql.test.js).
+  await pool.query('INSERT INTO ats_organizations_v1 (id, name) VALUES (?, ?)', [organizationId, `Organisation ${suffix}`]);
+  for (const key of ['owner', 'manager', 'assignedRecruiter', 'otherJobRecruiter']) {
+    await pool.query(
+      'INSERT INTO ats_organization_members_v1 (account_id, organization_id, added_by_account_id) VALUES (?, ?, ?)',
+      [accounts[key], organizationId, accounts[key]],
     );
   }
 
@@ -282,6 +296,31 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
     assert.equal(res.body.error.code, 'ATS_TRANSITION_REASON_REQUIRED');
   }
 
+  // A reason without a controlled reason code is also a controlled error, and an
+  // unknown code is rejected too — the free-text reason alone is never sufficient.
+  {
+    const missingCode = await call(baseUrl, tokens.assignedRecruiter, 'POST', `/api/v1/ats/applications/${applicationId.value}/transitions`, {
+      to: 'rejected',
+      expectedVersion: 2,
+      reason: 'Profil non retenu.',
+    });
+    assert.equal(missingCode.status, 400);
+    assert.equal(missingCode.body.error.code, 'ATS_TRANSITION_REASON_CODE_REQUIRED');
+
+    const invalidCode = await call(baseUrl, tokens.assignedRecruiter, 'POST', `/api/v1/ats/applications/${applicationId.value}/transitions`, {
+      to: 'rejected',
+      expectedVersion: 2,
+      reason: 'Profil non retenu.',
+      reasonCode: 'not-a-real-code',
+    });
+    assert.equal(invalidCode.status, 400);
+    assert.equal(invalidCode.body.error.code, 'ATS_TRANSITION_REASON_CODE_INVALID');
+
+    const after = await call(baseUrl, tokens.assignedRecruiter, 'GET', `/api/v1/ats/applications/${applicationId.value}`);
+    assert.equal(after.body.application.version, 2);
+    assert.equal(after.body.application.state, 'under_review');
+  }
+
   // Candidate history never surfaces the internal actor, reason or metadata of an
   // event — the server redacts them for the owning candidate, not just the UI.
   {
@@ -292,6 +331,7 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
       assert.equal('actorAccountId' in event, false);
       assert.equal('actorRole' in event, false);
       assert.equal('reason' in event, false);
+      assert.equal('reasonCode' in event, false);
       assert.equal('metadata' in event, false);
       assert.ok('to' in event && 'occurredAt' in event);
     }
@@ -316,6 +356,7 @@ test('ATS V1 HTTP API enforces multi-account authorization, transactional transi
         to: 'rejected',
         expectedVersion: 2,
         reason: 'Profil non retenu après double lecture.',
+        reasonCode: 'not_qualified',
       }),
     ]);
     const statuses = [first.status, second.status].sort();

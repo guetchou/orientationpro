@@ -14,6 +14,20 @@ const APPLICATION_STATES = Object.freeze([
 
 const TERMINAL_STATES = Object.freeze(new Set(['hired', 'rejected', 'withdrawn']));
 
+// Motif de rejet contrôlé : encadre le texte libre `reason` existant sans le
+// remplacer (élaboration facultative), fermé côté validation et côté schéma
+// (colonne ENUM, défense en profondeur).
+const REJECTION_REASON_CODES = Object.freeze([
+  'not_qualified',
+  'position_filled',
+  'duplicate_application',
+  'failed_assessment',
+  'salary_expectation_mismatch',
+  'candidate_unresponsive',
+  'role_cancelled',
+  'other',
+]);
+
 const TRANSITIONS = Object.freeze({
   submitted: Object.freeze(['under_review', 'withdrawn']),
   under_review: Object.freeze(['shortlisted', 'rejected', 'withdrawn']),
@@ -97,7 +111,7 @@ const assertActorRole = (role) => {
 
 const requiresReason = ({ to }) => to === 'rejected';
 
-const validateTransition = ({ from, to, actorRole, reason }) => {
+const validateTransition = ({ from, to, actorRole, reason, reasonCode }) => {
   assertState(from, 'from');
   assertState(to, 'to');
   assertActorRole(actorRole);
@@ -142,12 +156,28 @@ const validateTransition = ({ from, to, actorRole, reason }) => {
     );
   }
 
-  if (requiresReason({ to }) && !String(reason || '').trim()) {
-    throw new AtsWorkflowError(
-      'ATS_TRANSITION_REASON_REQUIRED',
-      'A rejection reason is required.',
-      { from, to },
-    );
+  if (requiresReason({ to })) {
+    if (!String(reason || '').trim()) {
+      throw new AtsWorkflowError(
+        'ATS_TRANSITION_REASON_REQUIRED',
+        'A rejection reason is required.',
+        { from, to },
+      );
+    }
+    if (!String(reasonCode || '').trim()) {
+      throw new AtsWorkflowError(
+        'ATS_TRANSITION_REASON_CODE_REQUIRED',
+        'A rejection reason code is required.',
+        { from, to },
+      );
+    }
+    if (!REJECTION_REASON_CODES.includes(reasonCode)) {
+      throw new AtsWorkflowError(
+        'ATS_TRANSITION_REASON_CODE_INVALID',
+        'Unknown rejection reason code.',
+        { reasonCode, allowed: REJECTION_REASON_CODES },
+      );
+    }
   }
 
   return Object.freeze({
@@ -155,6 +185,7 @@ const validateTransition = ({ from, to, actorRole, reason }) => {
     to,
     actorRole,
     reason: String(reason || '').trim() || null,
+    reasonCode: requiresReason({ to }) ? reasonCode : null,
   });
 };
 
@@ -165,6 +196,7 @@ const createTransitionEvent = ({
   actorAccountId,
   actorRole,
   reason,
+  reasonCode,
   occurredAt = new Date(),
   metadata = {},
 }) => {
@@ -175,7 +207,7 @@ const createTransitionEvent = ({
     throw new AtsWorkflowError('ATS_ACTOR_ID_REQUIRED', 'Actor account id is required.');
   }
 
-  const transition = validateTransition({ from, to, actorRole, reason });
+  const transition = validateTransition({ from, to, actorRole, reason, reasonCode });
   const timestamp = occurredAt instanceof Date ? occurredAt : new Date(occurredAt);
   if (Number.isNaN(timestamp.getTime())) {
     throw new AtsWorkflowError('ATS_EVENT_TIME_INVALID', 'Transition event time is invalid.');
@@ -194,6 +226,7 @@ const createTransitionEvent = ({
     actorAccountId: String(actorAccountId),
     actorRole: transition.actorRole,
     reason: transition.reason,
+    reasonCode: transition.reasonCode,
     occurredAt: timestamp.toISOString(),
     metadata: Object.freeze(safeMetadata),
   });
@@ -204,6 +237,7 @@ module.exports = {
   TERMINAL_STATES,
   TRANSITIONS,
   ACTOR_RULES,
+  REJECTION_REASON_CODES,
   AtsWorkflowError,
   assertState,
   requiresReason,

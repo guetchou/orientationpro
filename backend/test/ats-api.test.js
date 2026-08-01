@@ -24,8 +24,10 @@ const makeService = ({ read = true, transition = { allowed: true, actorRole: 're
     async canTransition() { return transition; },
   };
   const jobStore = {};
+  const organizationStore = { async getMemberOrganizationId() { return 'org-1'; } };
+  const evaluationStore = {};
   const pool = { async query() { return [[]]; } };
-  return { service: createAtsService({ store, jobStore, authorizer, pool }), calls };
+  return { service: createAtsService({ store, jobStore, authorizer, organizationStore, evaluationStore, pool }), calls };
 };
 
 test('candidate cannot read another candidate application', async () => {

@@ -47,16 +47,25 @@ const migrateUp = async (pool, directory) => {
 
 const migrateDown = async (pool, directory) => {
   await ensureMigrationTable(pool);
-  const [[latest]] = await pool.query(
-    'SELECT version FROM schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1',
-  );
-  if (!latest) return null;
-  const file = `${latest.version}.down.sql`;
   const connection = await pool.getConnection();
   try {
+    await connection.beginTransaction();
+    const [[latest]] = await connection.query(
+      'SELECT version FROM schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1 FOR UPDATE',
+    );
+    if (!latest) {
+      await connection.commit();
+      return null;
+    }
+
+    const file = `${latest.version}.down.sql`;
     await executeFile(connection, path.join(directory, file));
     await connection.query('DELETE FROM schema_migrations WHERE version = ?', [latest.version]);
+    await connection.commit();
     return latest.version;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
   } finally {
     connection.release();
   }

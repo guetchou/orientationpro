@@ -19,6 +19,7 @@ class AtsJobPersistenceError extends Error {
 const mapJob = (row) => row ? Object.freeze({
   id: row.id,
   ownerAccountId: row.owner_account_id,
+  organizationId: row.organization_id,
   title: row.title,
   description: row.description,
   status: row.status,
@@ -28,7 +29,7 @@ const mapJob = (row) => row ? Object.freeze({
   updatedAt: row.updated_at,
 }) : null;
 
-const JOB_COLUMNS = 'id, owner_account_id, title, description, status, version, published_at, created_at, updated_at';
+const JOB_COLUMNS = 'id, owner_account_id, organization_id, title, description, status, version, published_at, created_at, updated_at';
 
 const toSqlDatetime = (date) => date.toISOString().slice(0, 23).replace('T', ' ');
 
@@ -37,13 +38,14 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
     throw new Error('A MySQL pool is required for ATS job persistence.');
   }
 
-  const insertJobEvent = async (connection, event) => {
+  const insertJobEvent = async (connection, event, organizationId) => {
     await connection.query(
       `INSERT INTO ats_job_events_v1
-        (job_id, event_type, actor_account_id, actor_role, metadata_json, occurred_at)
-       VALUES (?, ?, ?, ?, CAST(? AS JSON), ?)`,
+        (job_id, organization_id, event_type, actor_account_id, actor_role, metadata_json, occurred_at)
+       VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), ?)`,
       [
         event.jobId,
+        organizationId,
         event.eventType,
         event.actorAccountId,
         event.actorRole,
@@ -61,9 +63,36 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
     return mapJob(rows[0]);
   };
 
-  const listJobs = async () => {
+  const listAllJobs = async () => {
     const [rows] = await pool.query(
       `SELECT ${JOB_COLUMNS} FROM ats_jobs_v1 ORDER BY created_at DESC, id DESC`,
+    );
+    return rows.map(mapJob);
+  };
+
+  const listPublishedJobs = async () => {
+    const [rows] = await pool.query(
+      `SELECT ${JOB_COLUMNS} FROM ats_jobs_v1 WHERE status = 'published' ORDER BY created_at DESC, id DESC`,
+    );
+    return rows.map(mapJob);
+  };
+
+  const listJobsForOrganization = async (organizationId) => {
+    const [rows] = await pool.query(
+      `SELECT ${JOB_COLUMNS} FROM ats_jobs_v1 WHERE organization_id = ? ORDER BY created_at DESC, id DESC`,
+      [organizationId],
+    );
+    return rows.map(mapJob);
+  };
+
+  const listJobsForRecruiter = async ({ organizationId, recruiterAccountId }) => {
+    const [rows] = await pool.query(
+      `SELECT ${JOB_COLUMNS.split(', ').map((column) => `j.${column}`).join(', ')}
+       FROM ats_jobs_v1 j
+       JOIN ats_job_recruiters_v1 r ON r.job_id = j.id
+       WHERE j.organization_id = ? AND r.recruiter_account_id = ?
+       ORDER BY j.created_at DESC, j.id DESC`,
+      [organizationId, recruiterAccountId],
     );
     return rows.map(mapJob);
   };
@@ -82,15 +111,32 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
     }));
   };
 
-  const createJob = async ({ id, ownerAccountId, title, description, actorAccountId, actorRole }) => {
+  const listJobEvents = async (jobId) => {
+    const [rows] = await pool.query(
+      `SELECT id, job_id, event_type, actor_account_id, actor_role, metadata_json, occurred_at
+       FROM ats_job_events_v1 WHERE job_id = ? ORDER BY occurred_at ASC, id ASC`,
+      [jobId],
+    );
+    return rows.map((row) => Object.freeze({
+      id: Number(row.id),
+      jobId: row.job_id,
+      eventType: row.event_type,
+      actorAccountId: row.actor_account_id,
+      actorRole: row.actor_role,
+      metadata: typeof row.metadata_json === 'string' ? JSON.parse(row.metadata_json) : row.metadata_json,
+      occurredAt: row.occurred_at,
+    }));
+  };
+
+  const createJob = async ({ id, ownerAccountId, organizationId, title, description, actorAccountId, actorRole }) => {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
       try {
         await connection.query(
-          `INSERT INTO ats_jobs_v1 (id, owner_account_id, title, description, status, version)
-           VALUES (?, ?, ?, ?, 'draft', 1)`,
-          [id, ownerAccountId, title, description],
+          `INSERT INTO ats_jobs_v1 (id, owner_account_id, organization_id, title, description, status, version)
+           VALUES (?, ?, ?, ?, ?, 'draft', 1)`,
+          [id, ownerAccountId, organizationId, title, description],
         );
       } catch (error) {
         if (error?.code === 'ER_DUP_ENTRY') {
@@ -106,7 +152,7 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
         actorRole,
         occurredAt: clock(),
       });
-      await insertJobEvent(connection, event);
+      await insertJobEvent(connection, event, organizationId);
       await connection.commit();
       return getJob(id);
     } catch (error) {
@@ -181,7 +227,7 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
         throw new AtsJobPersistenceError('ATS_JOB_VERSION_CONFLICT', 'Concurrent ATS job update detected.');
       }
 
-      await insertJobEvent(connection, event);
+      await insertJobEvent(connection, event, job.organizationId);
       await connection.commit();
       return Object.freeze({ ...job, status: to, version: job.version + 1, ...resultOverrides });
     } catch (error) {
@@ -265,7 +311,7 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
         occurredAt: clock(),
         metadata: { recruiterAccountId },
       });
-      await insertJobEvent(connection, event);
+      await insertJobEvent(connection, event, job.organizationId);
       await connection.commit();
       return true;
     } catch (error) {
@@ -314,7 +360,7 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
         occurredAt: clock(),
         metadata: { recruiterAccountId },
       });
-      await insertJobEvent(connection, event);
+      await insertJobEvent(connection, event, job.organizationId);
       await connection.commit();
       return true;
     } catch (error) {
@@ -328,8 +374,12 @@ const createJobStore = (pool, { clock = () => new Date() } = {}) => {
 
   return Object.freeze({
     getJob,
-    listJobs,
+    listAllJobs,
+    listPublishedJobs,
+    listJobsForOrganization,
+    listJobsForRecruiter,
     listRecruiters,
+    listJobEvents,
     createJob,
     publishJob,
     closeJob,
