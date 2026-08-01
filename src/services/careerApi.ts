@@ -26,6 +26,8 @@ const boundedInteger = (value: number | undefined, fallback: number, minimum: nu
 export const getCareerCatalogSummary = async () => {
   const payload = await apiFetch<{ sources: CareerCatalogSourceSummary[] }>(
     '/v1/career/catalog/summary',
+    {},
+    { auth: false },
   );
   return payload.sources;
 };
@@ -42,6 +44,8 @@ export const searchCareerOccupations = async (options: CareerSearchOptions = {})
 
   const payload = await apiFetch<{ occupations: CareerOccupation[] }>(
     `/v1/career/occupations?${parameters.toString()}`,
+    {},
+    { auth: false },
   );
   return payload.occupations;
 };
@@ -53,6 +57,8 @@ export const getCareerOccupation = async (
   const parameters = new URLSearchParams({ locale });
   const payload = await apiFetch<{ occupation: CareerOccupation }>(
     `/v1/career/occupations/${encodeURIComponent(occupationId)}?${parameters.toString()}`,
+    {},
+    { auth: false },
   );
   return payload.occupation;
 };
