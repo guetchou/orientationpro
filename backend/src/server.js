@@ -161,20 +161,25 @@ if (riasecRuntimeEnabled) {
   }
   app.use('/api/v1/orientation', expensiveLimiter, createRiasecRouter({
     store: riasecStore,
-    authenticate: authV1.authenticate,
+    authenticateOptional: authV1.authenticateOptional,
     hasPermission: authV1.hasPermission,
+    guestSessions: authV1.guestSessions,
     allowDraft: process.env.RIASEC_ALLOW_DRAFT === 'true'
       || process.env.LIFE_PROJECT_API_ENABLED === 'true',
   }));
 }
-if (process.env.CAREER_API_ENABLED === 'true') {
+const careerRuntimeEnabled = process.env.CAREER_API_ENABLED === 'true'
+  || process.env.LIFE_PROJECT_API_ENABLED === 'true';
+if (careerRuntimeEnabled) {
   if (!authV1) {
-    throw new Error('CAREER_API_ENABLED requires AUTH_V1_ENABLED=true');
+    throw new Error('Career runtime requires AUTH_V1_ENABLED=true');
   }
   app.use('/api/v1/career', expensiveLimiter, createCareerRouter({
     store: createCareerStore(authV1.pool),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
+    publicCatalog: process.env.LIFE_PROJECT_API_ENABLED === 'true',
+    recommendationsEnabled: process.env.CAREER_API_ENABLED === 'true',
   }));
 }
 if (process.env.CV_API_V1_ENABLED === 'true') {
@@ -257,10 +262,14 @@ app.get('/', (req, res) => {
       orientationResults: 'GET /api/v1/orientation/results',
     });
   }
-  if (process.env.CAREER_API_ENABLED === 'true') {
+  if (careerRuntimeEnabled) {
     Object.assign(endpoints, {
       careerCatalogSummary: 'GET /api/v1/career/catalog/summary',
       occupations: 'GET /api/v1/career/occupations',
+    });
+  }
+  if (process.env.CAREER_API_ENABLED === 'true') {
+    Object.assign(endpoints, {
       occupationMatches: 'GET /api/v1/career/matches/:resultId',
     });
   }
@@ -280,8 +289,8 @@ app.get('/', (req, res) => {
       atsJobPublish: 'POST /api/v1/ats/jobs/:jobId/publish',
       atsJobClose: 'POST /api/v1/ats/jobs/:jobId/close',
       atsJobApplications: 'POST /api/v1/ats/jobs/:jobId/applications',
-      atsJobRecruiters: 'POST|DELETE /api/v1/ats/jobs/:jobId/recruiters',
       atsMyApplications: 'GET /api/v1/ats/my/applications',
+      atsJobRecruiters: 'POST|DELETE /api/v1/ats/jobs/:jobId/recruiters',
       atsApplication: 'GET /api/v1/ats/applications/:applicationId',
       atsApplicationHistory: 'GET /api/v1/ats/applications/:applicationId/history',
       atsApplicationTransitions: 'POST /api/v1/ats/applications/:applicationId/transitions',
