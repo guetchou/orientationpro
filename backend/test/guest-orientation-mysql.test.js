@@ -25,6 +25,13 @@ const createPool = () => mysql.createPool({
   connectionLimit: 4,
 });
 
+const createActiveAccount = async (authStore, prefix) => authStore.createAccount({
+  email: `${prefix}-${Date.now()}-${Math.random()}@example.test`,
+  passwordHash: await bcrypt.hash('correct horse battery staple', 4),
+  role: 'user',
+  status: 'active',
+});
+
 test('guest RIASEC result is transactionally claimed by the authenticated account', async () => {
   const pool = createPool();
   const directory = path.join(__dirname, '..', 'migrations');
@@ -34,12 +41,7 @@ test('guest RIASEC result is transactionally claimed by the authenticated accoun
   const authStore = createMySqlAuthStore(pool);
   const riasecStore = createRiasecStore(pool);
   const guestStore = createGuestSessionStore(pool);
-  const account = await authStore.createAccount({
-    email: `guest-claim-${Date.now()}@example.test`,
-    passwordHash: await bcrypt.hash('correct horse battery staple', 4),
-    role: 'user',
-    status: 'active',
-  });
+  const account = await createActiveAccount(authStore, 'guest-claim');
   const rawGuestToken = `guest-${Date.now()}-${Math.random()}`;
   const guestSession = await guestStore.create({
     tokenHash: hashToken(rawGuestToken),
@@ -123,6 +125,55 @@ test('guest RIASEC result is transactionally claimed by the authenticated accoun
       now: new Date(),
     });
     assert.deepEqual(repeatedClaim, { status: 'not_found', attempts: 0, results: 0 });
+  } finally {
+    await pool.query('DELETE FROM auth_accounts WHERE id = ?', [account.id]);
+    await pool.query('DELETE FROM orientation_guest_sessions WHERE id = ?', [guestSession.id]);
+    await pool.end();
+  }
+});
+
+test('claiming an expired guest session deletes its temporary work instead of retaining it', async () => {
+  const pool = createPool();
+  const directory = path.join(__dirname, '..', 'migrations');
+  await migrateUp(pool, directory);
+  await seedRiasecInstrument(pool);
+
+  const authStore = createMySqlAuthStore(pool);
+  const riasecStore = createRiasecStore(pool);
+  const guestStore = createGuestSessionStore(pool);
+  const account = await createActiveAccount(authStore, 'guest-expired');
+  const rawGuestToken = `expired-${Date.now()}-${Math.random()}`;
+  const guestSession = await guestStore.create({
+    tokenHash: hashToken(rawGuestToken),
+    expiresAt: new Date(Date.now() - 60 * 1000),
+  });
+
+  try {
+    const instrument = await riasecStore.getInstrument(definition.id);
+    const attempt = await riasecStore.createAttempt({
+      accountId: null,
+      guestSessionId: guestSession.id,
+      instrumentId: instrument.id,
+      itemOrder: instrument.items.map((item) => item.id),
+    });
+
+    const claim = await guestStore.claim({
+      tokenHash: hashToken(rawGuestToken),
+      accountId: account.id,
+      now: new Date(),
+    });
+    assert.deepEqual(claim, { status: 'expired', attempts: 0, results: 0 });
+
+    const [[sessionRow]] = await pool.query(
+      'SELECT id FROM orientation_guest_sessions WHERE id = ?',
+      [guestSession.id],
+    );
+    const [[attemptRow]] = await pool.query(
+      'SELECT id FROM orientation_riasec_attempts WHERE id = ?',
+      [attempt.id],
+    );
+    assert.equal(sessionRow, undefined);
+    assert.equal(attemptRow, undefined);
   } finally {
     await pool.query('DELETE FROM auth_accounts WHERE id = ?', [account.id]);
     await pool.query('DELETE FROM orientation_guest_sessions WHERE id = ?', [guestSession.id]);
