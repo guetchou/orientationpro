@@ -15,6 +15,15 @@ const OBJECTIVES = Object.freeze([
 ]);
 const MOBILITY_LEVELS = Object.freeze(['none', 'local', 'national', 'international', 'flexible', 'unknown']);
 const VERIFICATION_LEVELS = Object.freeze(['declared', 'verified', 'unknown']);
+const RIASEC_DIMENSIONS = Object.freeze(['R', 'I', 'A', 'S', 'E', 'C']);
+const RIASEC_KEYWORDS = Object.freeze({
+  R: Object.freeze(['realiste', 'technique', 'terrain', 'pratique', 'machines', 'construction', 'technologie']),
+  I: Object.freeze(['investigation', 'sciences', 'analyse', 'recherche', 'mathematiques', 'resolution de problemes']),
+  A: Object.freeze(['artistique', 'creation', 'design', 'expression', 'communication visuelle']),
+  S: Object.freeze(['social', 'aide', 'enseignement', 'accompagnement', 'service', 'sante']),
+  E: Object.freeze(['entreprenant', 'entrepreneuriat', 'vente', 'leadership', 'negociation', 'initiative']),
+  C: Object.freeze(['conventionnel', 'organisation', 'gestion', 'administration', 'donnees', 'precision']),
+});
 
 class LifeDiagnosticContractError extends TypeError {
   constructor(code, message, details = {}) {
@@ -140,6 +149,53 @@ const priority = (input, field) => {
   });
 };
 
+const createRiasecProfile = (input) => {
+  if (input === undefined || input === null) return null;
+  const value = object(input, 'diagnostic.riasecProfile');
+  const scoreInput = object(value.scores, 'diagnostic.riasecProfile.scores');
+  const scores = Object.fromEntries(RIASEC_DIMENSIONS.map((dimension) => [
+    dimension,
+    numberOrNull(
+      scoreInput[dimension],
+      `diagnostic.riasecProfile.scores.${dimension}`,
+      0,
+      100,
+    ) ?? 0,
+  ]));
+  const ranking = Array.isArray(value.ranking)
+    ? value.ranking.map((entry, index) => {
+      const field = `diagnostic.riasecProfile.ranking[${index}]`;
+      const rankingEntry = object(entry, field);
+      const dimension = requiredString(rankingEntry.dimension, `${field}.dimension`);
+      return deepFreeze({
+        dimension: enumValue(dimension, `${field}.dimension`, RIASEC_DIMENSIONS),
+        score: numberOrNull(rankingEntry.score, `${field}.score`, 0, 100) ?? 0,
+      });
+    })
+    : [];
+  if (new Set(ranking.map((entry) => entry.dimension)).size !== ranking.length) {
+    throw new LifeDiagnosticContractError(
+      'LIFE_DIAGNOSTIC_RIASEC_RANKING_INVALID',
+      'diagnostic.riasecProfile.ranking contains duplicate dimensions.',
+    );
+  }
+
+  return deepFreeze({
+    resultId: requiredString(value.resultId, 'diagnostic.riasecProfile.resultId'),
+    attemptId: requiredString(value.attemptId, 'diagnostic.riasecProfile.attemptId'),
+    instrumentId: requiredString(value.instrumentId, 'diagnostic.riasecProfile.instrumentId'),
+    algorithmVersion: requiredString(
+      value.algorithmVersion,
+      'diagnostic.riasecProfile.algorithmVersion',
+    ),
+    primaryCode: optionalString(value.primaryCode, 'diagnostic.riasecProfile.primaryCode'),
+    displayCode: requiredString(value.displayCode, 'diagnostic.riasecProfile.displayCode'),
+    scores,
+    ranking,
+    completedAt: timestamp(value.completedAt, 'diagnostic.riasecProfile.completedAt'),
+  });
+};
+
 const createLifeProjectDiagnostic = (input = {}) => {
   const identity = object(input.identity, 'diagnostic.identity');
   const constraints = object(input.constraints, 'diagnostic.constraints');
@@ -160,6 +216,7 @@ const createLifeProjectDiagnostic = (input = {}) => {
     schemaVersion: DIAGNOSTIC_SCHEMA_VERSION,
     id: requiredString(input.id, 'diagnostic.id'),
     objective: enumValue(input.objective, 'diagnostic.objective', OBJECTIVES, 'uncertain'),
+    riasecProfile: createRiasecProfile(input.riasecProfile),
     identity: {
       ageRange: optionalString(identity.ageRange, 'diagnostic.identity.ageRange'),
       country: evidenceField(identity.country, 'diagnostic.identity.country'),
@@ -270,7 +327,9 @@ const diagnosticMissingInformation = (diagnosticInput) => {
   if (diagnostic.constraints.mobility === 'unknown') missing.push('Mobilité acceptable');
   if (diagnostic.constraints.budget.amount === null) missing.push('Budget maximal ou financement disponible');
   if (diagnostic.constraints.maxDurationMonths === null) missing.push('Durée maximale acceptable');
-  if (diagnostic.preferences.interests.length === 0) missing.push('Intérêts et activités appréciées');
+  if (diagnostic.preferences.interests.length === 0 && !diagnostic.riasecProfile) {
+    missing.push('Intérêts et activités appréciées');
+  }
   if (diagnostic.capabilities.skills.length === 0
     && diagnostic.capabilities.digitalSkills.length === 0
     && diagnostic.capabilities.personalProjects.length === 0) {
@@ -280,11 +339,19 @@ const diagnosticMissingInformation = (diagnosticInput) => {
   return Object.freeze([...new Set(missing)]);
 };
 
+const riasecTokens = (profile) => {
+  if (!profile) return [];
+  return profile.ranking
+    .slice(0, 3)
+    .flatMap((entry) => RIASEC_KEYWORDS[entry.dimension] || []);
+};
+
 const diagnosticToEngineInput = (diagnosticInput) => {
   const diagnostic = createLifeProjectDiagnostic(diagnosticInput);
   const educationValue = diagnostic.identity.educationLevel.value;
   const countryValue = diagnostic.identity.country.value;
   const zoneValue = diagnostic.identity.zone.value;
+  const profileTokens = riasecTokens(diagnostic.riasecProfile);
   return deepFreeze({
     id: diagnostic.id,
     objective: diagnostic.objective,
@@ -310,6 +377,7 @@ const diagnosticToEngineInput = (diagnosticInput) => {
       ...diagnostic.preferences.interests,
       ...diagnostic.preferences.activities,
       ...diagnostic.preferences.favouriteSubjects,
+      ...profileTokens,
     ],
     skills: [
       ...diagnostic.capabilities.skills,
@@ -320,6 +388,7 @@ const diagnosticToEngineInput = (diagnosticInput) => {
       ...diagnostic.preferences.workEnvironments,
       ...diagnostic.preferences.workStyles,
       ...diagnostic.preferences.values,
+      ...profileTokens,
     ],
     availableModes: diagnostic.constraints.availableModes,
     equipment: [
@@ -329,6 +398,7 @@ const diagnosticToEngineInput = (diagnosticInput) => {
     documents: diagnostic.constraints.documents,
     regulatoryQualifications: diagnostic.capabilities.regulatoryQualifications,
     priorities: diagnostic.priorities,
+    riasecProfile: diagnostic.riasecProfile || undefined,
   });
 };
 
@@ -337,6 +407,8 @@ module.exports = {
   LifeDiagnosticContractError,
   MOBILITY_LEVELS,
   OBJECTIVES,
+  RIASEC_DIMENSIONS,
+  RIASEC_KEYWORDS,
   VERIFICATION_LEVELS,
   createLifeProjectDiagnostic,
   diagnosticMissingInformation,

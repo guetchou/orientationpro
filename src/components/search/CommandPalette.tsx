@@ -5,7 +5,6 @@ import {
   BookOpen,
   Briefcase,
   CalendarCheck,
-  Compass,
   FileText,
   GraduationCap,
   Home,
@@ -13,8 +12,8 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
+  Route,
   Search,
-  Sparkles,
   UserCircle,
   Users,
 } from 'lucide-react';
@@ -31,28 +30,22 @@ interface Item {
 }
 
 const EXPLORER: Item[] = [
-  { group: 'Explorer', label: 'Passer le test RIASEC', to: '/tests/riasec', icon: Sparkles, keywords: 'orientation interets holland questionnaire' },
-  { group: 'Explorer', label: 'Découvrir mon profil', to: '/tests', icon: Compass, keywords: 'tests connaissance de soi' },
+  {
+    group: 'Orientation',
+    label: 'Construire mon Projet de vie',
+    to: '/parcours',
+    icon: Route,
+    keywords: 'orientation riasec interets holland questionnaire test profil scenarios rapport action',
+  },
   { group: 'Explorer', label: 'Explorer les métiers', to: '/careers', icon: GraduationCap, keywords: 'catalogue onet professions carriere' },
   { group: 'Explorer', label: "Voir les offres d'emploi", to: '/jobs', icon: Briefcase, keywords: 'travail recrutement emploi' },
   { group: 'Explorer', label: 'Lire le blog et les ressources', to: '/blog', icon: BookOpen, keywords: 'articles guides actualites' },
 ];
 
-const TESTS: Item[] = [
-  { group: "Tests d'orientation", label: 'Test RIASEC (intérêts)', to: '/tests/riasec', icon: Sparkles, keywords: 'holland' },
-  { group: "Tests d'orientation", label: 'Intelligence émotionnelle', to: '/tests/emotional', icon: Compass, keywords: 'emotions' },
-  { group: "Tests d'orientation", label: "Style d'apprentissage", to: '/tests/learning', icon: Compass, keywords: 'apprendre etudes' },
-  { group: "Tests d'orientation", label: 'Intelligences multiples', to: '/tests/multiple', icon: Compass, keywords: 'gardner' },
-  { group: "Tests d'orientation", label: 'Reconversion professionnelle', to: '/tests/career-transition', icon: Compass, keywords: 'changer de metier' },
-  { group: "Tests d'orientation", label: 'Orientation sans diplôme', to: '/tests/no-diploma', icon: Compass, keywords: 'sans bac formation' },
-  { group: "Tests d'orientation", label: 'Emploi des seniors', to: '/tests/senior-employment', icon: Compass, keywords: 'age experience' },
-  { group: "Tests d'orientation", label: 'Profil entrepreneurial', to: '/tests/entrepreneurial', icon: Compass, keywords: 'entreprise creer' },
-];
-
 const PAGES: Item[] = [
   { group: 'Aller à', label: 'Accueil', to: '/', icon: Home },
   { group: 'Aller à', label: 'À propos', to: '/about', icon: Info, keywords: 'mission methode' },
-  { group: 'Aller à', label: 'Conseillers', to: '/conseiller', icon: Users, keywords: 'coach accompagnement' },
+  { group: 'Aller à', label: 'Accompagnement facultatif', to: '/conseiller', icon: Users, keywords: 'conseiller coach accompagnement' },
   { group: 'Aller à', label: 'Prendre rendez-vous', to: '/book-appointment', icon: CalendarCheck, keywords: 'rdv' },
   { group: 'Aller à', label: 'Optimiser mon CV', to: '/cv-optimizer', icon: FileText, keywords: 'ats curriculum' },
   { group: 'Aller à', label: 'Guide des études au Congo 2024', to: '/guide-congo-2024', icon: BookOpen, keywords: 'post-bac filieres' },
@@ -63,10 +56,8 @@ const LOGOUT = '__logout';
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /**
- * Palette de commandes globale (⌘K / Ctrl+K). Recherche instantanée des
- * pages, tests et espaces publics. Construite sur le Dialog Radix (sans
- * dépendance cmdk) : ouverture au clavier ou via l'événement
- * « makoki:open-search » (boutons du header), navigation ↑↓ + Entrée.
+ * Palette de commandes globale (⌘K / Ctrl+K). Les recherches liées aux tests,
+ * au RIASEC, au profil ou au rapport convergent toutes vers le Projet de vie.
  */
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -110,7 +101,7 @@ export function CommandPalette() {
       ];
 
   const filtered = useMemo(() => {
-    const all = [...EXPLORER, ...TESTS, ...PAGES, ...account];
+    const all = [...EXPLORER, ...PAGES, ...account];
     const q = norm(query.trim());
     if (!q) return all;
     return all.filter((item) => norm(`${item.label} ${item.keywords ?? ''}`).includes(q));
@@ -156,7 +147,7 @@ export function CommandPalette() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onInputKey}
-            placeholder="Rechercher une page, un test, un métier…"
+            placeholder="Rechercher un parcours, un métier, une ressource…"
             aria-label="Rechercher"
             className="h-12 w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
           />
@@ -165,7 +156,7 @@ export function CommandPalette() {
         <div className="max-h-80 overflow-y-auto p-2">
           {filtered.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-slate-500">
-              Aucun résultat. Essaie « test », « métiers » ou « rendez-vous ».
+              Aucun résultat. Essaie « Projet de vie », « métiers » ou « rendez-vous ».
             </p>
           ) : (
             filtered.map((item, index) => {

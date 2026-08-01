@@ -1,6 +1,6 @@
 import { CommandPalette } from '@/components/search/CommandPalette';
 import React, { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -45,20 +45,8 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
-const Tests = lazy(() => import('@/pages/Tests'));
-const RiasecTest = lazy(() => import('@/pages/RiasecTest'));
-const RiasecResult = lazy(() => import('@/pages/RiasecResult'));
-const RiasecResults = lazy(() => import('@/pages/RiasecResults'));
-const CareerMatches = lazy(() => import('@/pages/CareerMatches'));
 const CareerCatalog = lazy(() => import('@/pages/CareerCatalog'));
 const OccupationDetail = lazy(() => import('@/pages/OccupationDetail'));
-const EmotionalTest = lazy(() => import('@/pages/EmotionalTest'));
-const LearningTest = lazy(() => import('@/pages/LearningTest'));
-const MultipleIntelligenceTest = lazy(() => import('@/pages/MultipleIntelligenceTest'));
-const CareerTransitionTest = lazy(() => import('@/pages/CareerTransitionTest'));
-const NoDiplomaTest = lazy(() => import('@/pages/NoDiplomaTest'));
-const SeniorEmploymentTest = lazy(() => import('@/pages/SeniorEmploymentTest'));
-const EntrepreneurialTest = lazy(() => import('@/pages/EntrepreneurialTest'));
 const Recrutement = lazy(() => import('@/pages/Recrutement'));
 const ProfessionalJobsPage = lazy(() => import('@/pages/ProfessionalJobsPage'));
 const Conseillers = lazy(() => import('@/pages/Conseillers'));
@@ -72,9 +60,8 @@ const GuideEtudesCongo2024 = lazy(() => import('@/pages/GuideEtudesCongo2024'));
 const BookAppointment = lazy(() => import('@/pages/BookAppointment'));
 const RecruitmentPage = lazy(() => import('@/pages/RecruitmentPage'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const TestResults = lazy(() => import('@/pages/TestResults'));
 const Profile = lazy(() => import('@/pages/Profile'));
-const LifeProjectPage = lazy(() => import('@/features/life-project/AdvisorLifeProjectPage'));
+const LifeProjectPage = lazy(() => import('@/features/life-project/UnifiedLifeProjectPage'));
 const AtsJobListPage = lazy(() => import('@/features/ats-candidate/JobListPage'));
 const AtsJobDetailPage = lazy(() => import('@/features/ats-candidate/JobDetailPage'));
 const AtsMyApplicationsPage = lazy(() => import('@/features/ats-candidate/MyApplicationsPage'));
@@ -92,6 +79,8 @@ const RhDashboard = lazy(() => import('@/pages/rh/Dashboard'));
 const SuperAdminDashboard = lazy(() => import('@/pages/superadmin/Dashboard'));
 const lifeProjectFrontendEnabled = isLifeProjectFrontendEnabled();
 const atsCandidateFrontendEnabled = isAtsCandidateFrontendEnabled();
+
+const unifiedJourney = <Navigate to="/parcours" replace />;
 
 export const AppRouter = () => (
   <Router>
@@ -123,26 +112,30 @@ export const AppRouter = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/tests" element={<Tests />} />
             <Route path="/post-bac" element={<PostBac />} />
-            <Route path="/tests/riasec" element={<UserRoute><RiasecTest /></UserRoute>} />
-            <Route path="/orientation/results" element={<UserRoute><RiasecResults /></UserRoute>} />
-            <Route path="/orientation/results/:resultId" element={<UserRoute><RiasecResult /></UserRoute>} />
-            <Route path="/orientation/results/:resultId/careers" element={<UserRoute><CareerMatches /></UserRoute>} />
+
+            {/* Tous les anciens tunnels d’orientation convergent vers le parcours unique. */}
+            <Route path="/tests" element={unifiedJourney} />
+            <Route path="/tests/riasec" element={unifiedJourney} />
+            <Route path="/tests/emotional" element={unifiedJourney} />
+            <Route path="/tests/learning" element={unifiedJourney} />
+            <Route path="/tests/multiple" element={unifiedJourney} />
+            <Route path="/tests/career-transition" element={unifiedJourney} />
+            <Route path="/tests/no-diploma" element={unifiedJourney} />
+            <Route path="/tests/senior-employment" element={unifiedJourney} />
+            <Route path="/tests/entrepreneurial" element={unifiedJourney} />
+            <Route path="/orientation/results" element={unifiedJourney} />
+            <Route path="/orientation/results/:resultId" element={unifiedJourney} />
+            <Route path="/orientation/results/:resultId/careers" element={unifiedJourney} />
+            <Route path="/orientation-services" element={unifiedJourney} />
+            <Route path="/test-results" element={unifiedJourney} />
+
             <Route path="/careers" element={<UserRoute><CareerCatalog /></UserRoute>} />
             <Route path="/careers/:occupationId" element={<UserRoute><OccupationDetail /></UserRoute>} />
-            <Route path="/tests/emotional" element={<EmotionalTest />} />
-            <Route path="/tests/learning" element={<LearningTest />} />
-            <Route path="/tests/multiple" element={<MultipleIntelligenceTest />} />
-            <Route path="/tests/career-transition" element={<CareerTransitionTest />} />
-            <Route path="/tests/no-diploma" element={<NoDiplomaTest />} />
-            <Route path="/tests/senior-employment" element={<SeniorEmploymentTest />} />
-            <Route path="/tests/entrepreneurial" element={<EntrepreneurialTest />} />
             <Route path="/ats" element={<Recrutement />} />
             <Route path="/conseiller" element={<Conseillers />} />
             <Route path="/recrutement" element={<Recrutement />} />
             <Route path="/jobs" element={<ProfessionalJobsPage />} />
-            <Route path="/orientation-services" element={<Tests />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/cv-optimizer" element={<UserRoute><CVOptimizer /></UserRoute>} />
@@ -164,7 +157,6 @@ export const AppRouter = () => (
                 <Route path="/mes-candidatures/:applicationId" element={<UserRoute><AtsApplicationDetailPage /></UserRoute>} />
               </>
             )}
-            <Route path="/test-results" element={<UserRoute><TestResults /></UserRoute>} />
             <Route path="/profile" element={<UserRoute><Profile /></UserRoute>} />
 
             <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

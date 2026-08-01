@@ -25,6 +25,25 @@ const diagnostic = (overrides = {}) => createLifeProjectDiagnostic({
   ...overrides,
 });
 
+const riasecProfile = {
+  resultId: 'result-riasec-1',
+  attemptId: 'attempt-riasec-1',
+  instrumentId: 'instrument-riasec-1',
+  algorithmVersion: 'riasec-v2',
+  primaryCode: 'ISE',
+  displayCode: 'I-S-E',
+  scores: { R: 35, I: 88, A: 42, S: 74, E: 61, C: 40 },
+  ranking: [
+    { dimension: 'I', score: 88 },
+    { dimension: 'S', score: 74 },
+    { dimension: 'E', score: 61 },
+    { dimension: 'A', score: 42 },
+    { dimension: 'C', score: 40 },
+    { dimension: 'R', score: 35 },
+  ],
+  completedAt: at,
+};
+
 test('missing numeric constraints remain unknown instead of becoming zero in the engine', () => {
   const input = diagnosticToEngineInput(diagnostic());
   const normalized = normalizeDiagnostic(input);
@@ -62,4 +81,26 @@ test('missing-information list names every counselor field needed before confide
   assert.ok(missing.includes('Intérêts et activités appréciées'));
   assert.ok(missing.includes('Compétences, expériences ou projets personnels'));
   assert.ok(missing.includes('Critères de décision classés'));
+});
+
+test('RIASEC profile is persisted and its leading dimensions enrich recommendation tokens', () => {
+  const created = diagnostic({ riasecProfile });
+  const input = diagnosticToEngineInput(created);
+  const normalized = normalizeDiagnostic(input);
+
+  assert.equal(created.riasecProfile.resultId, 'result-riasec-1');
+  assert.equal(created.riasecProfile.displayCode, 'I-S-E');
+  assert.equal(created.riasecProfile.scores.I, 88);
+  assert.equal(input.riasecProfile.resultId, 'result-riasec-1');
+  assert.ok(normalized.interests.includes('sciences'));
+  assert.ok(normalized.interests.includes('analyse'));
+  assert.ok(normalized.interests.includes('accompagnement'));
+  assert.ok(normalized.interests.includes('entrepreneuriat'));
+  assert.ok(normalized.preferences.includes('leadership'));
+});
+
+test('a completed RIASEC profile satisfies the interests signal without duplicate manual questions', () => {
+  const missing = diagnosticMissingInformation(diagnostic({ riasecProfile }));
+
+  assert.equal(missing.includes('Intérêts et activités appréciées'), false);
 });
