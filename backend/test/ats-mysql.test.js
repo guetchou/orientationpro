@@ -174,6 +174,49 @@ test('ATS workflow persists on real MySQL: constraints, atomic append-only histo
   );
   assert.equal(Number(eventCountAfterSubmit.c), 1);
 
+  // listApplicationsForCandidate is scoped server-side and isolates candidates from each other.
+  const job2 = await jobStore.createJob({
+    id: crypto.randomUUID(),
+    ownerAccountId: ownerId,
+    title: 'Chargé de recrutement',
+    description: 'Autre offre publiée par le même recruteur.',
+    actorAccountId: ownerId,
+    actorRole: 'recruiter',
+  });
+  await jobStore.publishJob({
+    jobId: job2.id,
+    expectedVersion: 1,
+    actorAccountId: ownerId,
+    actorRole: 'recruiter',
+    authorize: async () => true,
+  });
+  const depositedB = await store.createApplication({
+    id: crypto.randomUUID(),
+    jobId: job2.id,
+    candidateAccountId: candidateB,
+  });
+
+  const candidateAApplications = await store.listApplicationsForCandidate(candidateA);
+  assert.equal(candidateAApplications.length, 1);
+  assert.equal(candidateAApplications[0].id, applicationId);
+  assert.equal(candidateAApplications[0].candidateAccountId, candidateA);
+
+  const candidateBApplications = await store.listApplicationsForCandidate(candidateB);
+  assert.equal(candidateBApplications.length, 1);
+  assert.equal(candidateBApplications[0].id, depositedB.application.id);
+  assert.equal(candidateBApplications[0].jobId, job2.id);
+
+  const recruiterApplications = await store.listApplicationsForCandidate(recruiterId);
+  assert.deepEqual(recruiterApplications, []);
+
+  await pool.query(
+    'DELETE FROM ats_application_events_v1 WHERE application_id = ?',
+    [depositedB.application.id],
+  );
+  await pool.query('DELETE FROM ats_applications_v1 WHERE id = ?', [depositedB.application.id]);
+  await pool.query('DELETE FROM ats_job_events_v1 WHERE job_id = ?', [job2.id]);
+  await pool.query('DELETE FROM ats_jobs_v1 WHERE id = ?', [job2.id]);
+
   await jobStore.assignRecruiter({
     jobId,
     recruiterAccountId: recruiterId,

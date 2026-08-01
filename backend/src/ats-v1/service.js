@@ -25,10 +25,29 @@ const createAtsService = ({ store, jobStore, authorizer, pool }) => {
     return application;
   };
 
+  // Le candidat propriétaire ne voit jamais l'identité de l'acteur interne, le
+  // motif ou les métadonnées d'un événement — seuls l'état atteint et l'horodatage
+  // sont publics. Le personnel autorisé (recruteur affecté, responsable, admin)
+  // conserve le détail complet.
+  const redactEventForCandidate = (event) => Object.freeze({
+    id: event.id,
+    applicationId: event.applicationId,
+    eventType: event.eventType,
+    from: event.from,
+    to: event.to,
+    occurredAt: event.occurredAt,
+  });
+
   const listHistory = async (account, applicationId) => {
-    await getApplication(account, applicationId);
-    return store.listHistory(applicationId);
+    const application = await getApplication(account, applicationId);
+    const events = await store.listHistory(applicationId);
+    if (application.candidateAccountId === account.id) {
+      return events.map(redactEventForCandidate);
+    }
+    return events;
   };
+
+  const listMyApplications = (account) => store.listApplicationsForCandidate(account.id);
 
   const transition = async (account, applicationId, command = {}) => {
     const application = await store.getApplication(applicationId);
@@ -174,6 +193,7 @@ const createAtsService = ({ store, jobStore, authorizer, pool }) => {
 
   return Object.freeze({
     getApplication,
+    listMyApplications,
     listHistory,
     transition,
     depositApplication,
