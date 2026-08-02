@@ -6,6 +6,11 @@ on:
       - test/v6h-authenticated-recipe-20260802
     paths:
       - ops/recipe/start-v6h
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ops/recipe/start-v6h
 
 permissions:
   contents: read
