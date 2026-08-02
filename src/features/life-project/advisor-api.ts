@@ -7,6 +7,15 @@ import type {
 } from './advisor-types';
 import { readPersistedRiasecProfile } from './riasec-profile';
 
+export const LIFE_PROJECT_UPDATED_EVENT = 'makoki:life-project-updated';
+
+const publishProjectUpdate = (envelope: AdvisorEnvelope) => {
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+    window.dispatchEvent(new CustomEvent<AdvisorEnvelope>(LIFE_PROJECT_UPDATED_EVENT, { detail: envelope }));
+  }
+  return envelope;
+};
+
 const commandId = () => globalThis.crypto?.randomUUID?.()
   || `command-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -21,9 +30,9 @@ export const listAdvisorProjects = () => apiFetch<{
   projects: AdvisorProjectSummary[];
 }>('/v1/life-projects');
 
-export const getAdvisorProject = (projectId: string) => apiFetch<AdvisorEnvelope>(
+export const getAdvisorProject = async (projectId: string) => publishProjectUpdate(await apiFetch<AdvisorEnvelope>(
   `/v1/life-projects/${encodeURIComponent(projectId)}`,
-);
+));
 
 export const createAdvisorProject = (title: string, purpose: string) => apiFetch<AdvisorEnvelope>(
   '/v1/life-projects',
@@ -52,18 +61,18 @@ export const saveAdvisorDiagnostic = (
   );
 };
 
-export const generateAdvisorRecommendations = (
+export const generateAdvisorRecommendations = async (
   projectId: string,
   persistenceVersion: number,
   maximumScenarios = 5,
-) => apiFetch<AdvisorEnvelope>(
+) => publishProjectUpdate(await apiFetch<AdvisorEnvelope>(
   `/v1/life-projects/${encodeURIComponent(projectId)}/recommendations`,
   {
     method: 'POST',
     headers: { 'If-Match': `"${persistenceVersion}"` },
     body: JSON.stringify({ maximumScenarios }),
   },
-);
+));
 
 export const selectAdvisorScenario = async (
   envelope: AdvisorEnvelope,
@@ -81,9 +90,9 @@ export const selectAdvisorScenario = async (
     },
   );
 
-  if (selected.project.state !== 'comparison') return selected;
+  if (selected.project.state !== 'comparison') return publishProjectUpdate(selected);
 
-  return apiFetch<AdvisorEnvelope>(
+  const transitioned = await apiFetch<AdvisorEnvelope>(
     `/v1/life-projects/${encodeURIComponent(selected.project.id)}/transitions`,
     {
       method: 'POST',
@@ -95,4 +104,5 @@ export const selectAdvisorScenario = async (
       }),
     },
   );
+  return publishProjectUpdate(transitioned);
 };
