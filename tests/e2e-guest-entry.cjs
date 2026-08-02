@@ -93,7 +93,7 @@ async function main() {
     await page.setCacheEnabled(false);
 
     await assertPublicRoute(page, baseUrl, '/parcours', 'Commence ton parcours');
-    await assertPublicRoute(page, baseUrl, '/careers', 'Exploration publique');
+    await assertPublicRoute(page, baseUrl, '/careers', 'Explore les métiers qui t’intéressent');
 
     await page.goto(`${baseUrl}/tests/riasec`, { waitUntil: 'networkidle0' });
     if (new URL(page.url()).pathname !== '/parcours') {
