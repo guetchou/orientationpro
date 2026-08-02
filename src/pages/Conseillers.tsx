@@ -1,336 +1,158 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { CounselorCard } from "@/components/counselors/CounselorCard";
-import { CounselorFilter } from "@/components/counselors/CounselorFilter";
-import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  Search,
-  Users,
-  MapPin,
-  Phone,
-  Mail,
-  Target,
-  ShieldCheck,
-  Award,
-} from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
-import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Calendar, Mail, MapPin, Phone, Search, Users } from 'lucide-react';
+import { CounselorCard } from '@/components/counselors/CounselorCard';
+import { CounselorFilter } from '@/components/counselors/CounselorFilter';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/lib/supabaseClient';
+
+type Counselor = {
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  department?: string | null;
+  [key: string]: unknown;
+};
+
+const specialties = [
+  'Orientation scolaire',
+  'Reconversion',
+  'Insertion professionnelle',
+  'Bilan de compétences',
+  'Coaching carrière',
+];
 
 export default function Conseillers() {
-  usePageMeta({ title: "Conseillers en orientation", description: "Prenez rendez-vous avec des conseillers et coachs pour être accompagné dans votre orientation.", path: "/conseiller" });
-  const [counselors, setCounselors] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    specialty: "all",
-    availability: "all",
+  usePageMeta({
+    title: 'Accompagnement',
+    description: 'Contactez MAKOKI pour demander un accompagnement adapté à votre projet.',
+    path: '/conseiller',
   });
-  // Add state variables for the filter props
-  const [searchTerm, setSearchTerm] = useState("");
+  const [counselors, setCounselors] = useState<Counselor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([
-    "Orientation scolaire",
-    "Reconversion",
-    "Insertion professionnelle",
-    "Bilan de compétences",
-    "Coaching carrière"
-  ]);
 
   useEffect(() => {
+    let active = true;
     const fetchCounselors = async () => {
       setIsLoading(true);
       try {
-        // Fetch counselors from Supabase
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('position', 'conseiller')
           .order('first_name', { ascending: true });
-
         if (error) throw error;
-        setCounselors(data || []);
-      } catch (error) {
-        console.error('Error fetching counselors:', error);
+        if (active) setCounselors((data || []) as Counselor[]);
+      } catch {
+        if (active) setCounselors([]);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
-
-    fetchCounselors();
+    void fetchCounselors();
+    return () => { active = false; };
   }, []);
 
-  // Handle specialty toggle
-  const handleSpecialtyToggle = (specialty: string) => {
-    setSelectedSpecialties(prev => {
-      if (prev.includes(specialty)) {
-        return prev.filter(s => s !== specialty);
-      } else {
-        return [...prev, specialty];
-      }
-    });
+  const filteredCounselors = useMemo(() => counselors.filter((counselor) => {
+    const fullName = `${counselor.first_name || ''} ${counselor.last_name || ''}`.toLowerCase();
+    const specialty = String(counselor.department || '');
+    if (searchTerm && !fullName.includes(searchTerm.toLowerCase()) && !specialty.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (selectedSpecialties.length > 0 && !selectedSpecialties.includes(specialty)) return false;
+    return true;
+  }), [counselors, searchTerm, selectedSpecialties]);
+
+  const toggleSpecialty = (specialty: string) => {
+    setSelectedSpecialties((current) => current.includes(specialty)
+      ? current.filter((entry) => entry !== specialty)
+      : [...current, specialty]);
   };
 
-  // Filter counselors based on selected filters and search term
-  const filteredCounselors = counselors.filter((counselor: any) => {
-    // Filter by search term
-    if (searchTerm && !`${counselor.first_name} ${counselor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !counselor.department?.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    // Filter by specialties
-    if (selectedSpecialties.length > 0 && !selectedSpecialties.includes(counselor.department)) {
-      return false;
-    }
-
-    // Apply specialty filter if not "all"
-    if (filters.specialty !== "all" && counselor.department !== filters.specialty) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const values = [
-    {
-      icon: Award,
-      title: "Professionnels vérifiés",
-      description: "Des conseillers et coachs autorisés, dont le profil est contrôlé.",
-    },
-    {
-      icon: Target,
-      title: "Accompagnement personnalisé",
-      description: "Un suivi adapté à votre situation : études, reconversion, insertion.",
-    },
-    {
-      icon: ShieldCheck,
-      title: "Méthode explicable",
-      description: "Des outils dont on assume les sources, les versions et les limites.",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-stone-50">
-
-      {/* ============================ HERO ============================ */}
-      <section className="relative isolate overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <img
-            src="/images/hero/accompagnement-conseiller.webp"
-            srcSet="/images/hero/accompagnement-conseiller-sm.webp 768w, /images/hero/accompagnement-conseiller.webp 1600w"
-            sizes="100vw"
-            alt="Un conseiller d’orientation échange avec un jeune couple autour d’un bureau à Brazzaville."
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/80 to-emerald-900/40" />
-        </div>
-
-        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="max-w-2xl text-white"
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-white/10 px-4 py-1.5 text-sm font-medium text-amber-100 backdrop-blur-sm">
-              <Users className="h-4 w-4" />
-              Être accompagné
-            </span>
-            <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Un conseiller à vos côtés,
-              <span className="block text-amber-200">pour décider en confiance</span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
-              Rencontrez des conseillers et coachs autorisés pour transformer un résultat
-              d’orientation en projet concret d’études ou d’emploi.
-            </p>
-            <Button size="lg" asChild className="mt-8 bg-amber-400 text-emerald-950 hover:bg-amber-300">
-              <Link to="/book-appointment">
-                <Calendar className="mr-2 h-5 w-5" /> Prendre rendez-vous
-              </Link>
-            </Button>
-          </motion.div>
+    <main className="min-h-screen bg-stone-50 pb-20 pt-24">
+      <section className="mx-auto max-w-6xl px-6 py-14">
+        <div className="max-w-3xl">
+          <p className="font-semibold text-emerald-700">Accompagnement</p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight text-stone-950 sm:text-5xl">Parler de ton projet avec une personne</h1>
+          <p className="mt-6 text-lg leading-8 text-stone-700">
+            Tu peux demander de l’aide pour clarifier tes études, une formation, une recherche d’emploi ou une réorientation. MAKOKI te répond d’abord par téléphone, WhatsApp ou e-mail, puis précise la forme d’accompagnement possible.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button size="lg" asChild><Link to="/book-appointment"><Calendar className="mr-2 h-5 w-5" />Demander un rendez-vous</Link></Button>
+            <Button size="lg" variant="outline" asChild><a href="tel:+242055344253"><Phone className="mr-2 h-5 w-5" />Appeler</a></Button>
+          </div>
         </div>
       </section>
 
-      {/* ========================= VALEURS ========================= */}
-      <section className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid gap-6 sm:grid-cols-3">
-          {values.map((value, index) => (
-            <motion.div
-              key={value.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-primary">
-                <value.icon className="h-6 w-6" />
-              </span>
-              <h3 className="mt-4 font-heading text-lg font-semibold text-stone-900">{value.title}</h3>
-              <p className="mt-2 text-stone-600">{value.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ==================== RECHERCHE ET FILTRES ==================== */}
       <section className="border-y border-stone-200 bg-white py-12">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="mb-8 text-center">
-            <h2 className="font-heading text-3xl font-bold text-stone-900">Trouvez votre conseiller</h2>
-            <p className="mt-2 text-stone-600">
-              Filtrez par spécialité et par nom pour trouver l’accompagnement adapté à vos besoins.
-            </p>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-5 md:grid-cols-3">
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-emerald-700" />Clarifier ta demande</CardTitle></CardHeader>
+              <CardContent className="text-sm leading-7 text-stone-700">Explique ta situation, ce qui te bloque et la décision que tu dois prendre.</CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5 text-emerald-700" />Choisir un échange</CardTitle></CardHeader>
+              <CardContent className="text-sm leading-7 text-stone-700">Le format, la disponibilité et le tarif éventuel sont confirmés avant le rendez-vous.</CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Search className="h-5 w-5 text-emerald-700" />Préparer la suite</CardTitle></CardHeader>
+              <CardContent className="text-sm leading-7 text-stone-700">Repars avec des pistes à vérifier et une prochaine action claire.</CardContent>
+            </Card>
           </div>
-          <CounselorFilter
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedSpecialties={selectedSpecialties}
-            onSpecialtyToggle={handleSpecialtyToggle}
-            availableSpecialties={availableSpecialties}
-            onFilterChange={(newFilters) => setFilters({ ...filters, ...newFilters })}
-            currentFilters={filters}
-          />
         </div>
       </section>
 
-      {/* ===================== LISTE DES CONSEILLERS ===================== */}
-      <section className="bg-stone-50 py-16">
-        <div className="mx-auto max-w-7xl px-6">
-          {isLoading ? (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, index) => (
-                <div key={index} className="animate-pulse rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-                  <div className="mx-auto mb-4 h-24 w-24 rounded-full bg-stone-200"></div>
-                  <div className="mx-auto mb-2 h-6 w-3/4 rounded bg-stone-200"></div>
-                  <div className="mx-auto mb-4 h-4 w-1/2 rounded bg-stone-200"></div>
-                  <div className="mb-4 h-20 rounded bg-stone-200"></div>
-                  <div className="h-10 rounded bg-stone-200"></div>
-                </div>
-              ))}
-            </div>
-          ) : filteredCounselors.length > 0 ? (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCounselors.map((counselor, index) => (
-                <motion.div
-                  key={counselor.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: (index % 3) * 0.1 }}
-                >
-                  <CounselorCard counselor={counselor} />
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-16 text-center">
-              <div className="mx-auto max-w-md rounded-2xl border border-stone-200 bg-white p-12 shadow-sm">
-                <Search className="mx-auto mb-6 h-16 w-16 text-stone-300" />
-                <h3 className="mb-3 font-heading text-2xl font-semibold text-stone-900">Aucun conseiller trouvé</h3>
-                <p className="mb-8 text-stone-600">
-                  Modifiez vos filtres, ou prenez rendez-vous pour être orienté vers le bon interlocuteur.
-                </p>
-                <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                  <Button asChild variant="outline">
-                    <Link to="/book-appointment">Prendre rendez-vous</Link>
-                  </Button>
-                  <Button
-                    className="bg-primary hover:bg-primary-800"
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedSpecialties([]);
-                    }}
-                  >
-                    Réinitialiser les filtres
-                  </Button>
-                </div>
-              </div>
-            </div>
+      {(isLoading || counselors.length > 0) && (
+        <section className="mx-auto max-w-7xl px-6 py-14">
+          <div className="mb-8 max-w-3xl">
+            <h2 className="text-3xl font-bold text-stone-950">Profils actuellement publiés</h2>
+            <p className="mt-3 text-stone-600">Seuls les profils présents dans l’annuaire sont affichés. Vérifie les qualifications, conditions et disponibilités avant de confirmer un accompagnement.</p>
+          </div>
+
+          {counselors.length > 0 && (
+            <CounselorFilter
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedSpecialties={selectedSpecialties}
+              onSpecialtyToggle={toggleSpecialty}
+              availableSpecialties={specialties}
+              onFilterChange={() => undefined}
+              currentFilters={{ specialty: 'all', availability: 'all' }}
+            />
           )}
-        </div>
+
+          {isLoading ? (
+            <p className="mt-8 text-sm text-stone-600" role="status">Chargement des profils…</p>
+          ) : filteredCounselors.length > 0 ? (
+            <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCounselors.map((counselor) => <CounselorCard key={counselor.id} counselor={counselor} />)}
+            </div>
+          ) : counselors.length > 0 ? (
+            <div className="mt-8 rounded-xl border bg-white p-8 text-center">
+              <h3 className="font-semibold text-stone-950">Aucun profil ne correspond aux filtres</h3>
+              <Button className="mt-4" variant="outline" onClick={() => { setSearchTerm(''); setSelectedSpecialties([]); }}>Effacer les filtres</Button>
+            </div>
+          ) : null}
+        </section>
+      )}
+
+      <section className="mx-auto max-w-5xl px-6 py-14">
+        <Card className="border-emerald-200 bg-emerald-50/60">
+          <CardHeader>
+            <CardTitle>Contacter MAKOKI</CardTitle>
+            <CardDescription>Présente brièvement ta situation et indique comment tu souhaites être recontacté.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-3">
+            <a className="rounded-lg border bg-white p-4 text-sm" href="mailto:contact@makoki.org"><Mail className="mb-2 h-5 w-5 text-emerald-700" /><strong>E-mail</strong><span className="mt-1 block text-stone-600">contact@makoki.org</span></a>
+            <a className="rounded-lg border bg-white p-4 text-sm" href="tel:+242055344253"><Phone className="mb-2 h-5 w-5 text-emerald-700" /><strong>Téléphone</strong><span className="mt-1 block text-stone-600">+242 05 534 42 53</span></a>
+            <div className="rounded-lg border bg-white p-4 text-sm"><MapPin className="mb-2 h-5 w-5 text-emerald-700" /><strong>Localisation</strong><span className="mt-1 block text-stone-600">Brazzaville, République du Congo</span></div>
+          </CardContent>
+        </Card>
       </section>
-
-      {/* =========================== CTA =========================== */}
-      <section className="relative isolate overflow-hidden bg-primary-900">
-        <div className="mx-auto max-w-4xl px-6 py-20 text-center text-white">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="font-heading text-3xl font-bold sm:text-4xl">
-              Besoin d’aide pour choisir un conseiller ?
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-emerald-50/90">
-              Prenez rendez-vous : nous vous orientons vers le professionnel adapté à votre projet.
-            </p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
-                <Link to="/book-appointment">
-                  <Calendar className="mr-2 h-5 w-5" /> Prendre rendez-vous
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                asChild
-                className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
-              >
-                <a href="tel:+242055344253">
-                  <Phone className="mr-2 h-5 w-5" /> Nous appeler
-                </a>
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ===================== INFORMATIONS DE CONTACT ===================== */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="mb-12 text-center">
-            <h2 className="font-heading text-3xl font-bold text-stone-900">Informations de contact</h2>
-            <p className="mt-2 text-lg text-stone-600">
-              Notre équipe est disponible pour répondre à toutes vos questions.
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
-                <Mail className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="font-heading text-lg font-semibold text-stone-900">Email</h3>
-              <a href="mailto:contact@makoki.org" className="text-stone-600 hover:text-primary">
-                contact@makoki.org
-              </a>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
-                <Phone className="h-7 w-7 text-amber-600" />
-              </div>
-              <h3 className="font-heading text-lg font-semibold text-stone-900">Téléphone</h3>
-              <a href="tel:+242055344253" className="text-stone-600 hover:text-primary">
-                +242 05 534 42 53
-              </a>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
-                <MapPin className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="font-heading text-lg font-semibold text-stone-900">Adresse</h3>
-              <p className="text-stone-600">Brazzaville, République du Congo</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </div>
+    </main>
   );
 }
