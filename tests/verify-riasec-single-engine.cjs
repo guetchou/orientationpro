@@ -16,6 +16,9 @@ const careerRouter = read('backend/src/career/router.js');
 const atsRoutes = read('backend/src/routes/ats.routes.js');
 const server = read('backend/src/server.js');
 const appRouter = read('src/router/AppRouter.tsx');
+const homePage = read('src/pages/Home.tsx');
+const header = read('src/components/layout/Header.tsx');
+const careerCatalog = read('src/pages/CareerCatalog.tsx');
 const unifiedPage = read('src/features/life-project/UnifiedLifeProjectPage.tsx');
 const embeddedRiasec = read('src/features/life-project/EmbeddedRiasecStep.tsx');
 const workspace = read('src/features/life-project/LifeProjectWorkspace.tsx');
@@ -79,15 +82,35 @@ assert.match(careerRouter, /recommendationsEnabled/u);
 assert.match(careerRouter, /includeLocallyExcluded: publicCatalog \? false/u);
 assert.match(careerRouter, /protectedRoute\('career\.match\.read_own'\)/u);
 
+// Public entry points describe user value, not account mechanics or implementation details.
+assert.match(homePage, /Découvre les métiers qui te correspondent/u);
+assert.match(homePage, /<Link to="\/parcours">[\s\S]*Commencer mon projet/u);
+assert.doesNotMatch(homePage, /Ton métier idéal|service est en développement continu/iu);
+assert.match(header, /Construire mon projet/u);
+assert.match(header, /<Link to="\/parcours">Commencer<\/Link>/u);
+assert.doesNotMatch(header, /<Link to="\/register">Créer un compte<\/Link>/u);
+assert.match(careerCatalog, /Catalogue des métiers/u);
+assert.match(careerCatalog, /profil d’intérêts disponible/iu);
+assert.doesNotMatch(
+  careerCatalog,
+  /Exploration publique|Sans compte|profil RIASEC classable|O\*NET \{|Français ESCO|adaptation au contexte congolais reste une revue séparée/iu,
+);
+
 // The same page contains visible value, the contextual auth gate and one account report.
 assert.match(unifiedPage, /<EmbeddedRiasecStep onComplete=\{handleRiasecComplete\} \/>/u);
 assert.match(unifiedPage, /guest-life-project-soft-gate/u);
 assert.match(unifiedPage, /Créer mon espace/u);
-assert.match(unifiedPage, /Continuer à explorer sans compte/u);
+assert.match(unifiedPage, /Explorer les métiers/u);
+assert.doesNotMatch(unifiedPage, /sans compte|sans inscription/iu);
 assert.match(unifiedPage, /<LifeProjectWorkspace riasecProfile=\{riasecProfile\} \/>/u);
 assert.match(embeddedRiasec, /claimGuestOrientation/u);
 assert.match(embeddedRiasec, /submitRiasecAttempt/u);
-assert.match(embeddedRiasec, /Commencer sans compte/u);
+assert.match(embeddedRiasec, /Commencer le test/u);
+assert.doesNotMatch(embeddedRiasec, /sans compte|sans inscription|0 inscription/iu);
+assert.doesNotMatch(
+  embeddedRiasec,
+  /Étape RIASEC indisponible|Le RIASEC décrit|Profil RIASEC|RIASEC intégré/u,
+);
 assert.doesNotMatch(embeddedRiasec, /scoreRiasec/u);
 assert.match(workspace, /Mon rapport Projet de vie/u);
 assert.match(workspace, /window\.print\(\)/u);

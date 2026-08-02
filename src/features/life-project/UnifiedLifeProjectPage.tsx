@@ -15,7 +15,7 @@ import {
 } from './riasec-profile';
 
 const journeySteps = [
-  'Profil d’intérêts RIASEC',
+  'Profil d’intérêts',
   'Situation, compétences et contraintes',
   'Scénarios recommandés',
   'Choix provisoire et première action',
@@ -28,12 +28,12 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
     <Card className="border-primary/20 print:hidden" data-testid="unified-riasec-summary">
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge>Profil RIASEC intégré</Badge>
+          <Badge>Profil d’intérêts</Badge>
           <Badge variant="outline">Code {profile.displayCode}</Badge>
         </div>
         <CardTitle className="flex items-center gap-2 text-xl"><Brain className="h-5 w-5" />Tes intérêts dominants</CardTitle>
         <CardDescription>
-          Cette première restitution est visible sans compte. Elle décrit tes préférences actuelles et sert de point de départ à l’exploration.
+          Cette première restitution décrit tes préférences actuelles et sert de point de départ à l’exploration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -48,10 +48,10 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
         </div>
         <p className="flex gap-2 text-sm text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-          Le RIASEC décrit des préférences d’activités et d’environnements. Il ne constitue ni une aptitude, ni un diagnostic, ni une décision définitive.
+          Ce profil décrit des préférences d’activités et d’environnements. Il ne constitue ni une aptitude, ni un diagnostic, ni une décision définitive.
         </p>
         <p className="text-xs text-muted-foreground">
-          Résultat {profile.resultId} · algorithme {profile.algorithmVersion} · calculé le {new Date(profile.completedAt).toLocaleString('fr-FR')}
+          Résultat {profile.resultId} · version {profile.algorithmVersion} · calculé le {new Date(profile.completedAt).toLocaleString('fr-FR')}
         </p>
       </CardContent>
     </Card>
@@ -109,7 +109,7 @@ export default function UnifiedLifeProjectPage() {
             <Route className="h-8 w-8 text-primary" />Construis ton Projet de vie
           </h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            Commence sans compte. Découvre d’abord ton profil d’intérêts et des familles de métiers, puis crée ton espace uniquement pour sauvegarder, personnaliser et obtenir le rapport complet.
+            Découvre ton profil d’intérêts et des familles de métiers, puis construis un projet adapté à ta situation, tes compétences et tes contraintes.
           </p>
           <div className="mt-6 grid gap-2 md:grid-cols-5">
             {journeySteps.map((step, index) => (
@@ -126,7 +126,7 @@ export default function UnifiedLifeProjectPage() {
           <Card className="print:hidden">
             <CardContent className="flex min-h-44 items-center justify-center p-8" role="status">
               <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" />
-              Vérification de ta session avant de reprendre ou créer ton parcours…
+              Préparation de ton parcours…
             </CardContent>
           </Card>
         ) : (
@@ -136,7 +136,7 @@ export default function UnifiedLifeProjectPage() {
         {!authLoading && riasecProfile ? (
           <>
             <section aria-labelledby="unified-profile-title">
-              <h2 id="unified-profile-title" className="sr-only">Profil RIASEC intégré</h2>
+              <h2 id="unified-profile-title" className="sr-only">Profil d’intérêts</h2>
               <RiasecProfileSummary profile={riasecProfile} />
             </section>
             <GuestValue profile={riasecProfile} />
@@ -154,10 +154,10 @@ export default function UnifiedLifeProjectPage() {
             ) : (
               <Card className="border-primary/30 print:hidden">
                 <CardHeader>
-                  <Badge className="w-fit" variant="outline">Ton résultat reste visible</Badge>
+                  <Badge className="w-fit" variant="outline">Ton résultat reste disponible</Badge>
                   <CardTitle>Crée ton espace pour aller plus loin</CardTitle>
                   <CardDescription>
-                    Le compte permet de ne pas perdre ce travail, d’ajouter ta situation réelle, de comparer des scénarios, de retenir une piste, de construire une première action et d’obtenir le rapport Projet de vie complet.
+                    Ton espace permet de conserver ce travail, d’ajouter ta situation réelle, de comparer des scénarios, de retenir une piste, de construire une première action et d’obtenir le rapport Projet de vie complet.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-3">
@@ -170,7 +170,7 @@ export default function UnifiedLifeProjectPage() {
                     <Link to="/login" state={{ from: location }}>J’ai déjà un compte</Link>
                   </Button>
                   <Button asChild size="lg" variant="ghost">
-                    <Link to="/careers">Continuer à explorer sans compte</Link>
+                    <Link to="/careers">Explorer les métiers</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -179,9 +179,9 @@ export default function UnifiedLifeProjectPage() {
         ) : !authLoading ? (
           <Card className="print:hidden">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />Commence sans inscription</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />Commence ton parcours</CardTitle>
               <CardDescription>
-                Termine le RIASEC pour voir ton profil et tes premières familles de métiers. Le formulaire détaillé et le rapport complet seront proposés ensuite, lorsque leur valeur sera claire.
+                Réponds aux affirmations pour découvrir ton profil et tes premières familles de métiers. Tu pourras ensuite approfondir ta situation et construire ton Projet de vie.
               </CardDescription>
             </CardHeader>
           </Card>

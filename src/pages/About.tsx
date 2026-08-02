@@ -4,27 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const methodPillars = [
   {
-    title: 'Comprendre vos centres d’intérêt',
+    title: 'Comprendre tes centres d’intérêt',
     description:
-      'Makoki utilise un questionnaire inspiré du modèle RIASEC pour organiser les activités et les environnements professionnels qui attirent votre attention. Ce résultat ouvre des pistes : il ne définit pas votre avenir.',
+      'Makoki organise les activités et les environnements professionnels qui attirent ton attention afin de faire apparaître plusieurs pistes à explorer.',
     icon: Compass,
   },
   {
-    title: 'Relier votre profil aux métiers',
+    title: 'Relier ton profil aux métiers',
     description:
-      'Les métiers et les compétences sont décrits à partir de sources reconnues, notamment ESCO et O*NET. Elles nous aident à présenter les métiers, leurs activités et les compétences associées de manière structurée.',
+      'Les fiches métiers s’appuient sur des sources reconnues pour présenter les activités, les compétences et les différentes appellations de chaque métier.',
     icon: Database,
   },
   {
     title: 'Expliquer les pistes proposées',
     description:
-      'Makoki distingue vos réponses, les informations que vous confirmez et les données métiers. Vous pouvez ainsi comprendre pourquoi une piste apparaît et décider si elle mérite d’être explorée.',
+      'Tu peux comprendre quels éléments de ton profil ont contribué aux suggestions et décider toi-même des pistes qui méritent d’être approfondies.',
     icon: ShieldCheck,
   },
   {
-    title: 'Améliorer le service progressivement',
+    title: 'Faire évoluer ton projet',
     description:
-      'La plateforme est en développement continu. Les outils sont ajoutés et renforcés par étapes, avec des tests, des limites explicites et une attention particulière à la compréhension du public.',
+      'Ton projet n’est pas figé. Tu peux compléter tes informations, comparer de nouvelles possibilités et ajuster tes prochaines étapes au fil du temps.',
     icon: BookOpenCheck,
   },
 ];
@@ -32,15 +32,15 @@ const methodPillars = [
 const limits = [
   'Makoki ne pose aucun diagnostic psychologique ou médical.',
   'Une piste métier ne garantit ni emploi, ni salaire, ni admission en formation.',
-  'Certains métiers exigent des diplômes, des autorisations ou des conditions à vérifier séparément.',
-  'Les résultats soutiennent votre réflexion, mais ne remplacent pas votre décision ni un accompagnement professionnel lorsque vous en avez besoin.',
+  'Certains métiers exigent des diplômes, des autorisations ou des conditions à vérifier auprès des organismes compétents.',
+  'Les résultats soutiennent ta réflexion, mais la décision finale t’appartient.',
 ];
 
 export default function About() {
   usePageMeta({
     title: 'À propos',
     description:
-      'Découvrez la mission de Makoki, les sources utilisées pour explorer les métiers et les limites de ses recommandations.',
+      'Découvre la mission de Makoki, sa manière de présenter les métiers et les limites de ses recommandations.',
     path: '/about',
   });
 
@@ -49,23 +49,19 @@ export default function About() {
       <div className="mx-auto max-w-6xl">
         <p className="font-semibold text-emerald-700">À propos de Makoki</p>
         <h1 className="mt-3 max-w-4xl text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">
-          Vous aider à mieux vous connaître et à explorer vos possibilités avec plus de clarté.
+          Mieux te connaître, explorer tes possibilités et avancer avec plus de clarté.
         </h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-700">
-          Makoki est une plateforme d’orientation, de compétences et d’emploi. Elle rassemble progressivement
-          les informations de votre parcours, vos centres d’intérêt et des données sur les métiers afin de vous
-          aider à identifier plusieurs pistes et à préparer vos prochaines étapes.
+          Makoki est une plateforme d’orientation, de compétences et d’emploi. Elle t’aide à relier
+          ton parcours, tes centres d’intérêt et les informations sur les métiers pour construire
+          plusieurs pistes et préparer tes prochaines étapes.
         </p>
 
         <section className="mt-14" aria-labelledby="methode-title">
-          <p className="font-semibold text-emerald-700">Notre méthode</p>
+          <p className="font-semibold text-emerald-700">Notre approche</p>
           <h2 id="methode-title" className="mt-2 max-w-3xl text-3xl font-bold tracking-tight text-slate-950">
-            Des outils expliqués, des sources identifiées et une décision qui reste la vôtre
+            Des pistes compréhensibles et une décision qui reste la tienne
           </h2>
-          <p className="mt-4 max-w-3xl leading-7 text-slate-700">
-            Cette page présente les bases utilisées par Makoki. Les termes techniques sont expliqués ici pour
-            préserver une communication simple dans le reste du service.
-          </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {methodPillars.map((pillar) => (
@@ -83,28 +79,14 @@ export default function About() {
         </section>
 
         <section className="mt-14 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="sources-title">
-          <h2 id="sources-title" className="text-2xl font-semibold text-slate-950">Les principales sources métiers</h2>
-          <div className="mt-5 grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="font-semibold text-slate-900">ESCO</h3>
-              <p className="mt-2 leading-7 text-slate-700">
-                ESCO est une classification européenne des métiers et des compétences. Makoki l’utilise notamment
-                pour afficher des intitulés en français et relier les métiers aux compétences qui leur sont associées.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900">O*NET</h3>
-              <p className="mt-2 leading-7 text-slate-700">
-                O*NET décrit de nombreux métiers, leurs activités et leurs caractéristiques. Makoki utilise certaines
-                de ces informations pour enrichir l’exploration professionnelle, sans les présenter comme une vérité
-                universelle ou comme une description de chaque situation locale.
-              </p>
-            </div>
-          </div>
+          <h2 id="sources-title" className="text-2xl font-semibold text-slate-950">D’où viennent les informations métiers ?</h2>
+          <p className="mt-3 max-w-3xl leading-7 text-slate-700">
+            Makoki utilise des référentiels métiers reconnus pour structurer les descriptions, les compétences et les appellations. Ces informations sont ensuite présentées simplement dans les fiches métiers. Les détails méthodologiques et les licences restent disponibles lorsque cela est nécessaire.
+          </p>
         </section>
 
         <section className="mt-12 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950" aria-labelledby="limites-title">
-          <h2 id="limites-title" className="text-xl font-semibold">Ce que les résultats ne peuvent pas décider</h2>
+          <h2 id="limites-title" className="text-xl font-semibold">Ce que Makoki ne peut pas décider à ta place</h2>
           <ul className="mt-4 space-y-3">
             {limits.map((limit) => (
               <li key={limit} className="flex gap-3 leading-7">

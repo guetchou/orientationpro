@@ -73,23 +73,23 @@ const benefits = [
 const steps = [
   {
     number: '1',
-    title: 'Crée ton profil',
-    description: 'Parle de ton parcours, de ta situation et de ce que tu souhaites changer ou construire.',
+    title: 'Découvre tes intérêts',
+    description: 'Réponds à des affirmations simples pour identifier les activités et environnements qui t’attirent.',
   },
   {
     number: '2',
-    title: 'Réponds à quelques questions',
-    description: 'Prends le temps de préciser ce qui t’attire, ce que tu sais faire et ce qui compte pour toi.',
+    title: 'Précise ta situation',
+    description: 'Ajoute ton parcours, tes compétences, tes contraintes et ce que tu souhaites construire.',
   },
   {
     number: '3',
     title: 'Découvre des pistes',
-    description: 'Consulte plusieurs métiers et les raisons pour lesquelles ils peuvent être intéressants à explorer.',
+    description: 'Consulte plusieurs métiers et comprends pourquoi ils peuvent être intéressants à explorer.',
   },
   {
     number: '4',
-    title: 'Affine ton parcours',
-    description: 'Reviens sur ton profil, ajoute de nouvelles informations et fais évoluer tes choix.',
+    title: 'Choisis tes prochaines étapes',
+    description: 'Compare les possibilités et transforme ta réflexion en premières actions concrètes.',
   },
 ];
 
@@ -146,16 +146,15 @@ export default function Home() {
               Orientation • Compétences • Emploi
             </span>
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Ton métier idéal,
+              Découvre les métiers qui te correspondent,
               <span className="block text-amber-200">en 15 minutes.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50">
-              Makoki t’aide à trouver les métiers qui te correspondent, les formations à viser et
-              les prochaines étapes pour avancer.
+              Makoki t’aide à comprendre tes intérêts, explorer des métiers et identifier les prochaines étapes pour avancer.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
-                <Link to="/register">
+                <Link to="/parcours">
                   Commencer mon projet <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -297,10 +296,9 @@ export default function Home() {
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
           <Reveal>
             <Compass className="mx-auto h-9 w-9 text-primary" />
-            <h2 className="mt-4 font-heading text-3xl font-bold text-stone-900">Makoki évolue avec ton parcours</h2>
+            <h2 className="mt-4 font-heading text-3xl font-bold text-stone-900">Ton projet évolue, Makoki t’accompagne</h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-stone-700">
-              Le service est en développement continu. De nouveaux outils viendront progressivement enrichir
-              ta réflexion, organiser tes prochaines étapes et t’aider à suivre ta progression.
+              Reviens compléter ton profil, explorer de nouvelles pistes et ajuster tes prochaines étapes au fil de ton parcours.
             </p>
           </Reveal>
         </div>
@@ -320,11 +318,11 @@ export default function Home() {
           <Reveal>
             <h2 className="font-heading text-3xl font-bold sm:text-4xl">Prêt à faire le point ?</h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-emerald-50/90">
-              Crée ton profil et commence à explorer des pistes adaptées à ta situation actuelle.
+              Découvre tes intérêts et commence à explorer des pistes adaptées à ta situation actuelle.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
-                <Link to="/register">
+                <Link to="/parcours">
                   Commencer mon projet <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
