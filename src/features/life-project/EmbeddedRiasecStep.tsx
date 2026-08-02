@@ -53,10 +53,10 @@ const readDraft = (): LocalDraft | null => {
 const errorMessage = (error: unknown) => {
   if (error instanceof ApiError) {
     if (error.code === 'RIASEC_INSTRUMENT_UNAVAILABLE') {
-      return 'Le profil d’intérêts n’est pas disponible dans cet environnement.';
+      return 'Le profil d’intérêts n’est pas disponible pour le moment.';
     }
     if (error.code === 'PERMISSION_DENIED') {
-      return 'Ton compte ne possède pas l’autorisation nécessaire pour continuer.';
+      return 'Cette action n’est pas disponible pour le moment.';
     }
     if (error.code === 'INCOMPLETE_RESPONSES') {
       return 'Toutes les affirmations doivent recevoir une réponse.';
@@ -184,7 +184,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       <Card className="print:hidden">
         <CardContent className="flex min-h-44 items-center justify-center p-8" role="status">
           <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" />
-          {phase === 'submitting' ? 'Calcul du profil d’intérêts…' : 'Chargement du profil d’intérêts…'}
+          {phase === 'submitting' ? 'Préparation de ton profil…' : 'Chargement de ton parcours…'}
         </CardContent>
       </Card>
     );
@@ -195,7 +195,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       <Card className="border-red-200 print:hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-red-700">
-            <AlertCircle className="h-5 w-5" />Étape RIASEC indisponible
+            <AlertCircle className="h-5 w-5" />Étape momentanément indisponible
           </CardTitle>
           <CardDescription>{error}</CardDescription>
         </CardHeader>
@@ -211,30 +211,26 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       <Card className="overflow-hidden border-primary/20 print:hidden" data-testid="unified-riasec-intro">
         <div className="h-1.5 bg-primary" />
         <CardHeader>
-          <div className="flex flex-wrap gap-2">
-            <Badge>Étape 1 sur 5</Badge>
-            <Badge variant="outline">Sans compte</Badge>
-          </div>
-          <CardTitle className="text-2xl">Commence par ton profil d’intérêts</CardTitle>
+          <Badge className="w-fit">Étape 1 sur 5</Badge>
+          <CardTitle className="text-2xl">Commence par découvrir tes intérêts</CardTitle>
           <CardDescription className="text-base">
-            Réponds aux {instrument.itemCount} affirmations et vois immédiatement tes intérêts dominants ainsi que des familles de métiers à explorer. Aucune adresse e-mail n’est demandée pour commencer.
+            Réponds aux {instrument.itemCount} affirmations pour découvrir tes intérêts dominants et les familles de métiers qui peuvent te correspondre.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border bg-muted/30 p-4"><strong>{instrument.itemCount}</strong><span className="block text-sm text-muted-foreground">affirmations</span></div>
             <div className="rounded-lg border bg-muted/30 p-4"><strong>10–15 min</strong><span className="block text-sm text-muted-foreground">en moyenne</span></div>
-            <div className="rounded-lg border bg-muted/30 p-4"><strong>0 inscription</strong><span className="block text-sm text-muted-foreground">avant le résultat</span></div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Le RIASEC décrit tes intérêts actuels. Il ne mesure pas ton intelligence, ton aptitude ou ta valeur et ne décide pas à ta place.
+            Ce parcours explore tes intérêts actuels. Il ne mesure pas ton intelligence, ton aptitude ou ta valeur et ne décide pas à ta place.
           </p>
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
             <ShieldCheck className="mr-2 inline h-4 w-4" />
-            Une session temporaire protégée conserve cette passation. Tu pourras ensuite créer un compte pour la sauvegarder durablement et poursuivre le Projet de vie complet.
+            Ta progression est protégée pendant le parcours. Tu pourras ensuite conserver ton résultat et approfondir ton Projet de vie.
           </div>
           <Button type="button" size="lg" onClick={() => void startNewAttempt()}>
-            Commencer sans compte <ArrowRight className="ml-2 h-5 w-5" />
+            Commencer le test <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </CardContent>
       </Card>
