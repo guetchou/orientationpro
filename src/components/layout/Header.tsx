@@ -17,7 +17,7 @@ const navigation = [
   ...(String(import.meta.env.VITE_POSTBAC_AUTO_V1_ENABLED ?? '').trim() === 'true'
     ? [{ name: 'Après le bac', path: '/post-bac' }]
     : []),
-  { name: 'Mon Projet de vie', path: '/parcours' },
+  { name: 'Construire mon projet', path: '/parcours' },
   { name: 'Explorer les métiers', path: '/careers' },
   { name: 'Emploi', path: '/jobs' },
   { name: 'Ressources', path: '/blog' },
@@ -126,7 +126,7 @@ export const Header = () => {
           ) : (
             <>
               <Button variant="ghost" asChild><Link to="/login">Connexion</Link></Button>
-              <Button asChild><Link to="/register">Créer un compte</Link></Button>
+              <Button asChild><Link to="/parcours">Commencer</Link></Button>
             </>
           )}
         </div>
@@ -186,7 +186,7 @@ export const Header = () => {
                 ) : (
                   <div className="grid gap-2">
                     <Button variant="outline" asChild><Link to="/login">Connexion</Link></Button>
-                    <Button asChild><Link to="/register">Créer un compte</Link></Button>
+                    <Button asChild><Link to="/parcours">Commencer</Link></Button>
                   </div>
                 )}
               </div>
