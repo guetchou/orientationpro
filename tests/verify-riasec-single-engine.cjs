@@ -105,8 +105,9 @@ assert.doesNotMatch(embeddedRiasec, /scoreRiasec/u);
 assert.match(workspace, /Donne les informations utiles pour affiner ton projet/u);
 assert.match(workspace, /Tes réponses précédentes sont déjà prises en compte/u);
 assert.match(workspace, /Tes pistes ont été préparées/u);
-assert.match(workspace, /Mon choix provisoire/u);
-assert.match(workspace, /Ma première action/u);
+assert.match(workspace, /selectAdvisorScenario\(current, scenarioId\)/u);
+assert.match(workspace, /selectedScenario/u);
+assert.match(workspace, /Cette piste est maintenant ton choix provisoire/u);
 assert.doesNotMatch(workspace, /Mon profil RIASEC|adéquation|Confiance .*\/100|engineVersion|capabilityStatus/iu);
 
 // Retired alternate analyzers and ATS routes remain impossible to invoke.
