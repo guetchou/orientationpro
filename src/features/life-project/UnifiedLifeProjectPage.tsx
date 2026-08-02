@@ -69,7 +69,7 @@ const GuestPreview = ({ profile }: { profile: AdvisorRiasecProfile }) => {
   if (!primary) return null;
 
   return (
-    <section className="space-y-5 print:hidden" data-testid="guest-result-preview">
+    <section className="space-y-5 print:hidden" data-testid="guest-life-project-soft-gate">
       <Card className="border-primary/20">
         <CardHeader>
           <Badge className="w-fit">Aperçu de ton résultat</Badge>
