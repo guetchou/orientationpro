@@ -86,7 +86,3 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
-
-// Variables d'environnement pour les tests
-process.env.VITE_SUPABASE_URL = 'http://localhost:54321'
-process.env.VITE_SUPABASE_ANON_KEY = 'test-key'
