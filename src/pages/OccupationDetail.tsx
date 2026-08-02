@@ -86,7 +86,7 @@ export default function OccupationDetail() {
               <Badge variant="outline">{fallback ? 'Informations disponibles en anglais' : 'Fiche en français'}</Badge>
               <Badge variant="outline">{localRelevanceLabel(occupation.localRelevanceStatus)}</Badge>
             </div>
-            <CardTitle className="break-words text-3xl leading-tight md:text-4xl">{occupation.preferredLabel}</CardTitle>
+            <h1 className="break-words text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{occupation.preferredLabel}</h1>
             <CardDescription className="break-words text-base leading-relaxed">
               {occupation.description || 'La description détaillée de ce métier sera prochainement enrichie.'}
             </CardDescription>
