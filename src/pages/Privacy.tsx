@@ -1,42 +1,39 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
-const retentionRows = [
-  ['Parcours invité sans compte', '7 jours maximum après la dernière utilisation. La session pseudonyme, les réponses RIASEC et le résultat temporaire sont ensuite supprimés automatiquement s’ils n’ont pas été rattachés à un compte.'],
-  ['Compte utilisateur', 'Pendant l’utilisation du service, puis suppression ou anonymisation après 24 mois d’inactivité. Un avertissement doit être envoyé avant suppression lorsque les coordonnées restent valides.'],
-  ['Résultats des tests d’orientation rattachés à un compte', '24 mois après la dernière activité liée au résultat, sauf suppression anticipée demandée par l’utilisateur ou nécessité de conservation plus courte.'],
-  ['Réponses détaillées aux questionnaires rattachées à un compte', '12 mois après la production du résultat, puis suppression ou anonymisation. Le score agrégé peut être conservé selon la durée applicable au résultat.'],
-  ['CV et documents téléversés', '24 mois après la dernière utilisation du document ou la dernière démarche associée, puis suppression.'],
-  ['Candidatures', '24 mois après la clôture de la candidature ou le dernier échange, sauf obligation légale ou transfert licite vers l’employeur concerné.'],
-  ['Rendez-vous', '24 mois après la date du rendez-vous ou son annulation. Les notes sensibles ne doivent pas être conservées au-delà de ce qui est strictement nécessaire.'],
-  ['Journaux techniques et de sécurité', '12 mois, sauf incident de sécurité, fraude, contentieux ou obligation légale justifiant une conservation plus longue et documentée.'],
-  ['Demandes de support', '24 mois après la clôture de la demande.'],
-  ['Preuves de consentement', '5 ans après le retrait du consentement ou la fin de la relation concernée, afin de documenter la conformité.'],
-  ['Données financières et pièces comptables', '10 ans lorsque leur conservation relève des obligations comptables applicables.'],
-  ['Fermeture du compte', 'Suppression des données actives dans un délai cible de 30 jours. Les copies de sauvegarde sont purgées au plus tard dans les 90 jours, sauf obligation légale ou gel probatoire.'],
+
+const dataCategories = [
+  'informations de compte et de profil ;',
+  'réponses aux questionnaires et résultats d’orientation ;',
+  'CV, candidatures et documents transmis ;',
+  'demandes de rendez-vous et échanges avec le support ;',
+  'informations techniques nécessaires à la sécurité et au fonctionnement du service.',
 ];
 
-const providers = [
-  ['OVHcloud', 'Hébergement du serveur applicatif en France. Nexora administre directement le VPS.'],
-  ['Spaceship, Inc.', 'Enregistrement du nom de domaine et, si ce service est effectivement utilisé, messagerie professionnelle.'],
-  ['Google', 'Authentification Google et Google Analytics lorsque ces fonctions sont activées.'],
-  ['Meta', 'Meta Pixel uniquement après consentement valable lorsque ce dispositif est activé.'],
-  ['Chatwoot', 'Assistance en ligne et gestion des échanges de support lorsque le widget est activé.'],
-  ['Prestataire d’e-mail', 'Envoi des messages de vérification, sécurité et service. Le fournisseur exact doit être documenté dans le registre des traitements.'],
-  ['Prestataires de paiement', 'Mobile Money et autres moyens de paiement lorsqu’ils seront activés. MAKOKI ne doit jamais demander ni conserver le code secret Mobile Money de l’utilisateur.'],
+const purposes = [
+  'fournir les services demandés et permettre la reprise du parcours ;',
+  'sécuriser les comptes et prévenir les usages frauduleux ;',
+  'présenter des métiers, des pistes d’orientation et des outils d’employabilité ;',
+  'répondre aux demandes de support et de rendez-vous ;',
+  'respecter les obligations légales applicables et améliorer le service.',
 ];
 
 export default function Privacy() {
-  usePageMeta({ title: "Politique de confidentialité", description: "Comment MAKOKI protège et traite vos données personnelles.", path: "/privacy" });
+  usePageMeta({
+    title: 'Politique de confidentialité',
+    description: 'Comment MAKOKI protège et traite vos données personnelles.',
+    path: '/privacy',
+  });
+
   return (
     <main className="min-h-screen bg-white px-6 pb-20 pt-28">
       <article className="mx-auto max-w-5xl">
         <p className="font-semibold text-emerald-700">Informations légales</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">Politique de confidentialité</h1>
-        <p className="mt-5 text-sm text-slate-500">Version du 1er août 2026</p>
+        <p className="mt-5 text-sm text-slate-500">Version du 2 août 2026</p>
 
         <section className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-950">
           <h2 className="text-xl font-semibold">Responsable du traitement</h2>
           <p className="mt-3 leading-7">
-            Nexora, exploitant la marque MAKOKI, Brazzaville, République du Congo. Représentant légal : NGUIE Gess. Pour toute question relative aux données personnelles : <a className="font-semibold underline" href="mailto:rgpd@makoki.org">rgpd@makoki.org</a>. Contact général : <a className="font-semibold underline" href="mailto:contact@makoki.org">contact@makoki.org</a>.
+            Nexora, exploitant de MAKOKI à Brazzaville, République du Congo. Pour toute question relative aux données personnelles : <a className="font-semibold underline" href="mailto:rgpd@makoki.org">rgpd@makoki.org</a>.
           </p>
         </section>
 
@@ -44,83 +41,60 @@ export default function Privacy() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-950">Cadre applicable</h2>
             <p className="mt-3">
-              MAKOKI applique la loi congolaise n° 29-2019 du 10 octobre 2019 portant protection des données à caractère personnel. Les traitements doivent être licites, loyaux, transparents, limités à une finalité déterminée et conservés uniquement pendant la durée nécessaire.
+              MAKOKI traite les données personnelles conformément au droit applicable en République du Congo, notamment aux principes de licéité, de transparence, de sécurité, de finalité déterminée et de conservation limitée.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-slate-950">Données traitées</h2>
+            <p className="mt-3">Selon les services utilisés, MAKOKI peut traiter les catégories de données suivantes :</p>
+            <ul className="mt-3 list-disc space-y-2 pl-6">
+              {dataCategories.map((item) => <li key={item}>{item}</li>)}
+            </ul>
             <p className="mt-3">
-              Selon les fonctions utilisées, MAKOKI peut traiter l’adresse e-mail, les informations du compte et du profil, la date de naissance lorsque le contrôle d’âge sera activé, les réponses aux questionnaires, les résultats d’orientation, les CV, les candidatures, les demandes de rendez-vous, les échanges de support, les références de paiement et les journaux techniques nécessaires à la sécurité.
-            </p>
-            <p className="mt-3">
-              Le parcours peut commencer sans compte. Dans ce cas, MAKOKI utilise un identifiant invité aléatoire conservé dans un cookie protégé ; aucune adresse e-mail, aucun nom et aucun numéro de téléphone ne sont demandés pour calculer la première restitution RIASEC. Le serveur conserve temporairement la passation et peut la rattacher au compte uniquement lorsque l’utilisateur se connecte volontairement.
-            </p>
-            <p className="mt-3">
-              Les résultats RIASEC et les réponses associées décrivent des intérêts déclarés. Ils ne doivent pas être utilisés seuls pour prendre une décision d’embauche, d’admission, d’assurance, de crédit ou d’accès à un métier.
+              Le parcours d’orientation peut commencer avant la création d’un espace personnel. Les réponses et le résultat provisoire sont alors conservés temporairement afin de permettre la continuité du parcours. Ils peuvent être rattachés à l’espace de l’utilisateur lorsqu’il choisit de se connecter ou de créer un compte.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-slate-950">Finalités et bases du traitement</h2>
+            <h2 className="text-2xl font-semibold text-slate-950">Finalités du traitement</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-6">
+              {purposes.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-slate-950">Partage des données</h2>
             <p className="mt-3">
-              Les données sont utilisées pour fournir la restitution demandée, créer et sécuriser le compte lorsque l’utilisateur le choisit, permettre la reprise du parcours, restituer les résultats, permettre l’accès aux outils d’employabilité, assurer le support, prévenir la fraude, respecter les obligations légales et améliorer la fiabilité technique. Selon le cas, le traitement repose sur l’exécution du service demandé, le consentement, une obligation légale ou la sauvegarde des droits et intérêts légitimes des personnes.
+              MAKOKI peut faire appel à des prestataires techniques pour l’hébergement, l’envoi d’e-mails, l’authentification, l’assistance et la mesure d’audience. Seules les données nécessaires à leur mission leur sont transmises, dans le respect des obligations de confidentialité et de sécurité applicables.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-slate-950">Mineurs</h2>
+            <h2 className="text-2xl font-semibold text-slate-950">Durée de conservation</h2>
             <p className="mt-3">
-              En République du Congo, un mineur peut consentir seul à un service de la société de l’information à partir de 16 ans. Entre 14 et 15 ans, l’ouverture d’un compte MAKOKI ne peut être autorisée qu’avec le consentement conjoint du mineur et du ou des titulaires de l’autorité parentale. Tant que le mécanisme vérifiable de consentement parental n’est pas disponible, l’inscription doit rester réservée aux personnes âgées d’au moins 16 ans.
+              Les données sont conservées pendant la durée nécessaire à la fourniture du service, à la sécurité, au traitement des demandes et au respect des obligations légales. Elles sont ensuite supprimées ou anonymisées, sauf lorsqu’une conservation plus longue est requise par la loi, un contentieux ou un impératif de sécurité documenté.
             </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-slate-950">Prestataires et transferts internationaux</h2>
-            <p className="mt-3">
-              Certains prestataires peuvent traiter des données en dehors du Congo et de l’espace CEMAC/CEEAC. Ces transferts doivent être documentés, limités, sécurisés et accomplis après les formalités requises auprès de la Commission nationale pour la protection des données à caractère personnel. Les outils non essentiels de mesure ou de publicité doivent rester désactivés tant qu’un consentement valable et les garanties de transfert nécessaires ne sont pas en place.
-            </p>
-            <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-                <thead className="bg-slate-100 text-slate-950"><tr><th className="p-3">Prestataire ou catégorie</th><th className="p-3">Rôle envisagé</th></tr></thead>
-                <tbody>
-                  {providers.map(([name, role]) => <tr key={name} className="border-t border-slate-200"><td className="p-3 font-medium text-slate-950">{name}</td><td className="p-3">{role}</td></tr>)}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-slate-950">Durées de conservation proposées</h2>
-            <p className="mt-3">Ces durées constituent la politique opérationnelle retenue pour MAKOKI. Une durée plus longue n’est admise que lorsqu’une obligation légale, un contentieux ou un besoin de sécurité dûment documenté l’impose.</p>
-            <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-                <thead className="bg-slate-100 text-slate-950"><tr><th className="p-3">Catégorie</th><th className="p-3">Durée</th></tr></thead>
-                <tbody>
-                  {retentionRows.map(([category, duration]) => <tr key={category} className="border-t border-slate-200"><td className="p-3 font-medium text-slate-950">{category}</td><td className="p-3">{duration}</td></tr>)}
-                </tbody>
-              </table>
-            </div>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-slate-950">Vos droits</h2>
             <p className="mt-3">
-              Vous pouvez demander l’accès à vos données, leur copie, leur rectification, leur portabilité lorsque les conditions sont réunies, vous opposer à certains traitements et demander la suppression de données inexactes, périmées ou conservées illicitement. Les demandes sont adressées à <a className="font-semibold text-emerald-700 underline" href="mailto:rgpd@makoki.org">rgpd@makoki.org</a>. Une réponse ou justification doit être apportée dans le délai légal applicable, sous réserve de la vérification de l’identité du demandeur.
+              Vous pouvez demander l’accès à vos données, leur rectification, leur suppression ou vous opposer à certains traitements dans les conditions prévues par la réglementation applicable. Les demandes sont adressées à <a className="font-semibold text-emerald-700 underline" href="mailto:rgpd@makoki.org">rgpd@makoki.org</a>. Une vérification d’identité peut être demandée afin de protéger vos données.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-slate-950">Sécurité et violations</h2>
+            <h2 className="text-2xl font-semibold text-slate-950">Sécurité</h2>
             <p className="mt-3">
-              Nexora met en œuvre des mesures d’accès limité, de journalisation, de sauvegarde, de chiffrement lorsque cela est adapté et de séparation des environnements. Le cookie du parcours invité est configuré pour ne pas être lisible par le code JavaScript de la page, n’être transmis qu’en HTTPS en production et réduire les envois intersites. Toute violation de données doit être analysée, documentée et notifiée à l’autorité ou aux personnes concernées lorsque la réglementation l’exige.
+              Nexora met en œuvre des mesures techniques et organisationnelles destinées à limiter les accès non autorisés, protéger les comptes, sécuriser les échanges et assurer la disponibilité du service. Aucun dispositif ne pouvant garantir une sécurité absolue, tout incident identifié fait l’objet d’une analyse et des mesures nécessaires.
             </p>
           </section>
 
-          <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-950">
-            <h2 className="text-xl font-semibold">Éléments encore à confirmer</h2>
+          <section>
+            <h2 className="text-2xl font-semibold text-slate-950">Contact</h2>
             <p className="mt-3">
-              L’adresse complète de Nexora, le RCCM, le NIU, le fournisseur exact de messagerie, les prestataires Mobile Money et les éventuels autres destinataires de données doivent être ajoutés avant l’ouverture générale des fonctions concernées.
+              Pour toute question concernant cette politique ou le traitement de vos données, contactez <a className="font-semibold text-emerald-700 underline" href="mailto:rgpd@makoki.org">rgpd@makoki.org</a> ou <a className="font-semibold text-emerald-700 underline" href="mailto:contact@makoki.org">contact@makoki.org</a>.
             </p>
           </section>
         </div>
