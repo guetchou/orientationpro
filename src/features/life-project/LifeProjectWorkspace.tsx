@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { AlertTriangle, ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, Loader2, Printer, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -172,6 +172,23 @@ const scenarioSummary = (scenario: AdvisorRecommendationScenario) => {
   }
   return parts.join(' · ') || 'Durée et coût à confirmer';
 };
+
+const scenarioCalendar = (scenario: AdvisorRecommendationScenario) => {
+  if (scenario.calendar.status === 'closed') return 'Inscriptions fermées pour la période connue';
+  if (scenario.calendar.status === 'unknown') return 'Dates à confirmer auprès de l’organisme';
+  const details = ['Inscriptions ouvertes'];
+  if (scenario.calendar.applicationDeadlineAt) {
+    details.push(`candidature avant le ${new Date(scenario.calendar.applicationDeadlineAt).toLocaleDateString('fr-FR')}`);
+  }
+  if (scenario.calendar.nextStartAt) {
+    details.push(`prochain démarrage le ${new Date(scenario.calendar.nextStartAt).toLocaleDateString('fr-FR')}`);
+  }
+  return details.join(' · ');
+};
+
+const scenarioModes = (scenario: AdvisorRecommendationScenario) => (
+  scenario.modes.length > 0 ? scenario.modes.join(', ') : 'Modalités à confirmer'
+);
 
 export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile: AdvisorRiasecProfile }) {
   const [form, setForm] = useState<SimpleForm>(() => readDraft());
@@ -402,6 +419,16 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
                     <CardTitle>{scenario.title}</CardTitle>
                     <CardDescription>{scenarioSummary(scenario)}</CardDescription>
                   </CardHeader>
+                  <CardContent className="grid gap-3 border-b pb-4 text-sm sm:grid-cols-2">
+                    <div className="rounded-lg bg-muted/40 p-3">
+                      <h3 className="font-semibold">Calendrier</h3>
+                      <p className="mt-1 text-muted-foreground">{scenarioCalendar(scenario)}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 p-3">
+                      <h3 className="font-semibold">Modalités</h3>
+                      <p className="mt-1 text-muted-foreground">{scenarioModes(scenario)}</p>
+                    </div>
+                  </CardContent>
                   <CardContent className="space-y-4">
                     {scenario.reasons.length > 0 && (
                       <div>
@@ -439,14 +466,57 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
       )}
 
       {selectedScenario && (
-        <Card className="border-emerald-200 bg-emerald-50/50">
-          <CardHeader>
-            <CardTitle>Ta prochaine étape</CardTitle>
-            <CardDescription>
-              Vérifie les conditions réelles de « {selectedScenario.title} », puis note une première action concrète à réaliser cette semaine.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <section id="life-project-summary" aria-labelledby="life-project-summary-title" className="space-y-4">
+          <Card className="border-emerald-200 bg-emerald-50/50">
+            <CardHeader>
+              <Badge className="w-fit">Choix provisoire</Badge>
+              <CardTitle id="life-project-summary-title">Ta synthèse de projet</CardTitle>
+              <CardDescription>
+                Cette synthèse t’aide à préparer la prochaine vérification. Elle ne remplace ni les conditions officielles ni une décision accompagnée.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <h3 className="font-semibold">Piste retenue</h3>
+                <p className="mt-1 text-lg font-medium">{selectedScenario.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{scenarioSummary(selectedScenario)}</p>
+              </div>
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="rounded-lg border bg-background p-3">
+                  <h3 className="font-semibold">Calendrier</h3>
+                  <p className="mt-1 text-muted-foreground">{scenarioCalendar(selectedScenario)}</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <h3 className="font-semibold">Modalités</h3>
+                  <p className="mt-1 text-muted-foreground">{scenarioModes(selectedScenario)}</p>
+                </div>
+              </div>
+              {selectedScenario.firstActions[0] && (
+                <div>
+                  <h3 className="font-semibold">Première action</h3>
+                  <p className="mt-1">{selectedScenario.firstActions[0].title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    À réaliser sous {selectedScenario.firstActions[0].deadlineDays} jour(s). Preuve attendue : {selectedScenario.firstActions[0].expectedEvidence}
+                  </p>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Vérifie les admissions, les coûts, les dates, les modalités et les débouchés auprès des organismes concernés avant tout engagement.
+              </p>
+              <Button type="button" variant="outline" className="print:hidden" onClick={() => window.print()}>
+                <Printer className="mr-2 h-4 w-4" />Imprimer ma synthèse
+              </Button>
+            </CardContent>
+          </Card>
+          <Card className="border-emerald-200 bg-emerald-50/50 print:hidden">
+            <CardHeader>
+              <CardTitle>Ta prochaine étape</CardTitle>
+              <CardDescription>
+                Vérifie les conditions réelles de « {selectedScenario.title} », puis réalise la première action proposée cette semaine.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </section>
       )}
 
       {projects.length > 1 && (
