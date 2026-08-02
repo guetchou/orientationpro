@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import EmbeddedRiasecStep from './EmbeddedRiasecStep';
 import LifeProjectWorkspace from './LifeProjectWorkspace';
+import LifeProjectCompletionPanel from './LifeProjectCompletionPanel';
 import type { AdvisorRiasecProfile } from './advisor-types';
 import { guestCareerFamilies } from './guest-career-families';
 import {
@@ -192,9 +193,10 @@ export default function UnifiedLifeProjectPage() {
                   <CheckCircle2 className="mr-2 inline h-4 w-4" />
                   Ton résultat est enregistré. Tu peux maintenant compléter ta situation et poursuivre ton projet.
                 </div>
-                <section aria-label="Suite de ton parcours">
+                <section aria-label="Suite de ton parcours" className="print:hidden">
                   <LifeProjectWorkspace riasecProfile={riasecProfile} />
                 </section>
+                <LifeProjectCompletionPanel />
               </>
             ) : (
               <>
