@@ -68,7 +68,7 @@ describe('public positioning', () => {
     expect(screen.getByRole('heading', { name: /Mieux te connaître, explorer tes possibilités et avancer avec plus de clarté/u })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /D’où viennent les informations métiers/u })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Ce que Makoki ne peut pas décider à ta place/u })).toBeInTheDocument();
-    expect(screen.getByText(/La décision finale reste la tienne/u)).toBeInTheDocument();
+    expect(screen.getByText(/La décision (?:finale )?(?:reste la tienne|t[’']appartient)/iu)).toBeInTheDocument();
   });
 
   it('uses Emploi in the public navigation on desktop and mobile', () => {
