@@ -3,12 +3,13 @@ name: V6-H Authenticated Recipe
 on:
   push:
     branches:
-      - agent/v6h-authenticated-recipe
+      - test/v6h-authenticated-recipe-20260802
     paths:
       - ops/recipe/start-v6h
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   recipe:
@@ -17,7 +18,8 @@ jobs:
     env:
       V6H_WEB_URL: https://makoki.org
       V6H_API_ROOT: https://makoki.org/api
-      RECIPE_BRANCH: agent/v6h-authenticated-recipe
+      RECIPE_BRANCH: test/v6h-authenticated-recipe-20260802
+      TRACKING_ISSUE: '184'
     steps:
       - uses: actions/checkout@v6
 
@@ -27,7 +29,7 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          recipe_email="makemba02+v6h-${GITHUB_RUN_ID}@gmail.com"
+          recipe_email="makemba.02+v6h-${GITHUB_RUN_ID}@gmail.com"
           recipe_password="$(openssl rand -base64 36 | tr -d '\n')"
           token_path="ops/recipe/token-${GITHUB_RUN_ID}.b64"
 
@@ -41,7 +43,6 @@ jobs:
           openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out /tmp/v6h-private.pem
           chmod 600 /tmp/v6h-private.pem
           openssl pkey -in /tmp/v6h-private.pem -pubout -out /tmp/v6h-public.pem
-          public_key_b64="$(base64 -w0 /tmp/v6h-public.pem)"
 
           jq -n --arg email "${recipe_email}" --arg password "${recipe_password}" \
             '{email: $email, password: $password}' >/tmp/register.json
@@ -52,12 +53,46 @@ jobs:
             "${V6H_API_ROOT}/v1/auth/register")
           test "${register_status}" = 201
 
-          echo "V6H_RECIPE_HANDSHAKE_BEGIN"
-          echo "RUN_ID=${GITHUB_RUN_ID}"
-          echo "RECIPE_EMAIL=${recipe_email}"
-          echo "TOKEN_PATH=${token_path}"
-          echo "PUBLIC_KEY_B64=${public_key_b64}"
-          echo "V6H_RECIPE_HANDSHAKE_END"
+          {
+            echo "RUN_ID=${GITHUB_RUN_ID}"
+            echo "RECIPE_EMAIL=${recipe_email}"
+            echo "TOKEN_PATH=${token_path}"
+          } >/tmp/v6h-handshake.txt
+          chmod 600 /tmp/v6h-handshake.txt
+
+      - name: Upload public handshake
+        uses: actions/upload-artifact@v4
+        with:
+          name: v6h-authenticated-handshake-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 1
+          path: |
+            /tmp/v6h-public.pem
+            /tmp/v6h-handshake.txt
+
+      - name: Publish recipe checkpoint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          body=$(cat <<EOF
+          ## V6-H — nouvelle recette authentifiée
+
+          - Run ID : \`${GITHUB_RUN_ID}\`
+          - Branche : \`${RECIPE_BRANCH}\`
+          - Compte dédié : \`${V6H_RECIPE_EMAIL}\`
+          - État : attente de la vérification chiffrée de l’adresse e-mail
+          EOF
+          )
+          jq -n --arg body "${body}" '{body: $body}' >/tmp/issue-comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/issue-comment.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${TRACKING_ISSUE}/comments" >/dev/null
 
       - name: Wait for encrypted verification token
         shell: bash
@@ -100,7 +135,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.19.4
+          node-version: 22.23.1
           cache: npm
 
       - name: Install recipe dependencies and Chromium
@@ -109,13 +144,13 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Verify account and generate recommendations through public API
+      - name: Verify account and served production SHA
         env:
           V6H_RECIPE_PHASE: initial
           V6H_RECIPE_OUTPUT: /tmp/v6h-api-initial.json
         run: node scripts/release/v6h-authenticated-recipe.cjs
 
-      - name: Select a provisional option through the public browser
+      - name: Execute guest to account browser journey
         env:
           V6H_BROWSER_OUTPUT: /tmp/v6h-browser.json
           V6H_SCREENSHOT_PATH: /tmp/v6h-authenticated-parcours.png
@@ -129,11 +164,11 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          project_id=$(jq -r '.projectId' /tmp/v6h-api-initial.json)
+          project_id=$(jq -r '.projectId' /tmp/v6h-browser.json)
           test -n "${project_id}"
           V6H_PROJECT_ID="${project_id}" node scripts/release/v6h-authenticated-recipe.cjs
 
-      - name: Build and print sanitized evidence
+      - name: Build sanitized evidence
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
@@ -148,34 +183,63 @@ jobs:
           const initial = read('/tmp/v6h-api-initial.json');
           const browser = read('/tmp/v6h-browser.json');
           const final = read('/tmp/v6h-api-final.json');
-          const passed = process.env.JOB_STATUS === 'success' && initial && browser && final;
+          const technicallyPassed = process.env.JOB_STATUS === 'success' && initial && browser && final;
+          const completeComparison = Boolean(browser?.comparisonComplete);
+          const printableSynthesis = Boolean(browser?.printableSynthesisVisible);
+          const fullyPassed = technicallyPassed && completeComparison && printableSynthesis;
+          const decision = fullyPassed ? 'GO AUTHENTIFIÉ' : technicallyPassed ? 'GO LIMITÉ' : 'NON CONCLUE';
           const lines = [
-            `## V6-H — recette authentifiée ${passed ? 'GO' : 'NON CONCLUE'}`,
+            `## V6-H — recette authentifiée ${decision}`,
             '',
+            `- SHA réellement servi : \`${initial?.servedSha || 'non observé'}\``,
             `- Compte dédié : \`${process.env.V6H_RECIPE_EMAIL || 'non créé'}\``,
-            `- Vérification email : ${initial ? 'réussie' : 'non prouvée'}`,
-            `- Création et persistance du diagnostic : ${initial ? 'réussies' : 'non prouvées'}`,
-            `- Recommandations : ${initial ? `${initial.scenarioCount} scénario(s), statut \`${initial.recommendationStatus}\`` : 'non prouvées'}`,
-            `- État après génération : \`${initial?.projectState || 'non observé'}\``,
-            `- Navigateur : ${browser ? `URL \`${browser.currentUrl}\`, ${browser.scenarioCount} carte(s), 0 erreur console/page` : 'non prouvé'}`,
-            `- Comparaison durée/coût/calendrier : ${browser?.comparisonColumns?.includes('Calendrier') ? 'visible' : 'non prouvée'}`,
-            `- Choix provisoire : ${browser?.provisionalChoiceVisible ? 'effectué dans le navigateur' : 'non prouvé'}`,
-            `- Synthèse : ${browser?.synthesisVisible ? 'visible, capture et PDF créés' : 'non prouvée'}`,
-            `- État final persistant : \`${final?.projectState || 'non observé'}\``,
+            `- Vérification email et connexion : ${initial?.verified ? 'réussies' : 'non prouvées'}`,
+            `- Questionnaire invité : ${browser?.guestPreviewVisible ? '60 affirmations terminées' : 'non prouvé'}`,
+            `- Aperçu invité limité : ${browser?.lockedSectionsVisible && browser?.guestCareerLinkCount === 0 ? 'conforme, sans lien de contournement' : 'non conforme ou non prouvé'}`,
+            `- Rattachement après connexion : ${browser?.claimedAfterLogin ? 'réussi' : 'non prouvé'}`,
+            `- Recommandations : ${browser ? `${browser.scenarioCount} scénario(s)` : 'non prouvées'}`,
+            `- Durée et coût : ${browser?.durationCostVisible ? 'visibles' : 'non prouvés'}`,
+            `- Calendrier et modalités : ${completeComparison ? 'visibles' : 'incomplets dans l’interface actuelle'}`,
+            `- Première action : ${browser?.firstActionVisible && final?.selectedScenario?.firstAction ? final.selectedScenario.firstAction : 'non prouvée'}`,
+            `- Choix provisoire : ${browser?.provisionalChoiceVisible ? 'effectué' : 'non prouvé'}`,
+            `- Persistance après actualisation : ${browser?.persistenceAfterReload ? 'réussie' : 'non prouvée'}`,
+            `- Persistance après nouvelle connexion : ${browser?.persistenceAfterRelogin ? 'réussie' : 'non prouvée'}`,
+            `- Synthèse dédiée et impression : ${printableSynthesis ? 'présentes' : 'absentes ou incomplètes dans le parcours actuel'}`,
+            `- Erreurs console / page / HTTP 5xx : ${browser ? `${browser.consoleErrorCount} / ${browser.pageErrorCount} / ${browser.serverErrorCount}` : 'non observées'}`,
+            `- État final API : \`${final?.projectState || 'non observé'}\``,
             `- Option retenue : ${final?.selectedScenario?.title || 'non observée'}`,
-            `- Première action : ${final?.selectedScenario?.firstAction || 'non observée'}`,
             '',
-            passed
-              ? 'Décision : **GO authentifié**. Le parcours public complet fonctionne avec un compte réel de recette. Le pilote humain jeune + conseiller reste nécessaire pour clôturer #169.'
-              : 'Décision : **NON CONCLUE**. Consulter le run privé pour identifier l’étape manquante sans exposer de secret.',
+            fullyPassed
+              ? 'Décision : **GO authentifié**. Les critères techniques et fonctionnels de #184 sont démontrés. Le pilote humain #205 reste distinct.'
+              : technicallyPassed
+                ? 'Décision : **GO limité**. Le parcours invité → compte → recommandations → choix persiste réellement, mais la comparaison complète et/ou la synthèse imprimable doivent être complétées avant de fermer #184.'
+                : 'Décision : **NON CONCLUE**. Une étape technique ou fonctionnelle a échoué ; consulter les artefacts privés du run.',
             '',
-            'Note : le compte aliasé est dédié à la recette. La suppression publique de compte reste indisponible tant que Data Rights est désactivé ; il ne contient aucune donnée personnelle réelle.',
+            'Note : le compte aliasé est réservé à la recette et ne contient aucune donnée personnelle réelle.',
           ];
           fs.writeFileSync('/tmp/v6h-authenticated-evidence.md', `${lines.join('\n')}\n`);
           NODE
-          echo "V6H_RECIPE_EVIDENCE_BEGIN"
           cat /tmp/v6h-authenticated-evidence.md
-          echo "V6H_RECIPE_EVIDENCE_END"
+
+      - name: Publish sanitized evidence to issue
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -f /tmp/v6h-authenticated-evidence.md ]]; then
+            jq -Rs '{body: .}' </tmp/v6h-authenticated-evidence.md >/tmp/evidence-comment.json
+          else
+            jq -n --arg body "## V6-H — recette NON CONCLUE\n\nLe run ${GITHUB_RUN_ID} n’a pas produit de rapport exploitable." '{body: $body}' >/tmp/evidence-comment.json
+          fi
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/evidence-comment.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${TRACKING_ISSUE}/comments" >/dev/null
 
       - name: Upload private recipe evidence
         if: always()
