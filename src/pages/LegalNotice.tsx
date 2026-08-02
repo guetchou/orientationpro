@@ -1,5 +1,5 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { AlertTriangle, Building2, Globe2, Mail, Phone, Server } from 'lucide-react';
+import { Building2, Globe2, Mail, Phone, Server } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const contacts = [
@@ -10,47 +10,34 @@ const contacts = [
 ];
 
 export default function LegalNotice() {
-  usePageMeta({ title: "Mentions légales", description: "Mentions légales de la plateforme d’orientation MAKOKI.", path: "/legal" });
+  usePageMeta({ title: 'Mentions légales', description: 'Mentions légales de la plateforme MAKOKI.', path: '/legal' });
+
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
       <article className="mx-auto max-w-5xl">
         <p className="font-semibold text-emerald-700">Informations légales</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">Mentions légales</h1>
         <p className="mt-5 text-lg leading-8 text-slate-700">
-          Le site <strong>makoki.org</strong> et le service MAKOKI sont édités par Nexora.
+          Le site <strong>makoki.org</strong> et le service MAKOKI sont exploités par Nexora à Brazzaville, République du Congo.
         </p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-emerald-700" />Éditeur</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-emerald-700" />Éditeur du service</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-7 text-slate-700">
-              <p><strong>Raison sociale :</strong> Nexora</p>
-              <p><strong>Nom commercial :</strong> MAKOKI</p>
-              <p><strong>Forme déclarée :</strong> établissement individuel, sous réserve de confirmation par les documents d’immatriculation</p>
-              <p><strong>Capital social :</strong> sans objet si la forme « établissement individuel » est confirmée</p>
-              <p><strong>Ville et pays :</strong> Brazzaville, République du Congo</p>
-              <p><strong>Personne responsable déclarée :</strong> NGUIE Gess</p>
-              <p><strong>Qualité juridique et direction de publication :</strong> à confirmer</p>
-              <p><strong>Support :</strong> 08h00 à 20h00 ; jours d’ouverture à préciser</p>
+              <p><strong>Exploitant :</strong> Nexora</p>
+              <p><strong>Marque :</strong> MAKOKI</p>
+              <p><strong>Localisation :</strong> Brazzaville, République du Congo</p>
+              <p><strong>Responsable :</strong> NGUIE Gess</p>
             </CardContent>
           </Card>
 
-          <Card className="border-amber-300 bg-amber-50 shadow-none">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-amber-950"><AlertTriangle className="h-5 w-5" />Informations obligatoires manquantes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-7 text-amber-950">
-              <p>Les éléments suivants doivent être renseignés avant la publication générale de ces mentions :</p>
-              <ul className="list-disc space-y-2 pl-5">
-                <li>adresse complète du siège ou de l’établissement ;</li>
-                <li>numéro RCCM ;</li>
-                <li>numéro NIU ;</li>
-                <li>intitulé juridique exact de la fonction exercée par NGUIE Gess ;</li>
-                <li>identité du directeur ou responsable de publication ;</li>
-                <li>jours d’ouverture du support.</li>
-              </ul>
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader><CardTitle>Objet du service</CardTitle></CardHeader>
+            <CardContent className="text-sm leading-7 text-slate-700">
+              MAKOKI propose des services d’orientation, d’exploration des métiers, de compétences, d’employabilité et de mise en relation avec des opportunités professionnelles.
             </CardContent>
           </Card>
         </div>
@@ -69,11 +56,11 @@ export default function LegalNotice() {
 
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader><CardTitle className="flex items-center gap-2"><Server className="h-5 w-5 text-emerald-700" />Hébergement de l’application</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Server className="h-5 w-5 text-emerald-700" />Hébergement</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm leading-7 text-slate-700">
               <p><strong>Prestataire d’infrastructure :</strong> OVH SAS</p>
               <p><strong>Adresse :</strong> 2 rue Kellermann, 59100 Roubaix, France</p>
-              <p><strong>Administration du serveur :</strong> assurée directement par Nexora</p>
+              <p><strong>Administration du serveur :</strong> Nexora</p>
             </CardContent>
           </Card>
 
@@ -82,8 +69,6 @@ export default function LegalNotice() {
             <CardContent className="space-y-3 text-sm leading-7 text-slate-700">
               <p><strong>Registraire :</strong> Spaceship, Inc.</p>
               <p><strong>Adresse :</strong> 4600 East Washington Street, Suite 300, Phoenix, Arizona 85034, États-Unis</p>
-              <p><strong>Site :</strong> spaceship.com</p>
-              <p>Le registraire du domaine ne doit pas être confondu avec l’hébergeur du serveur applicatif.</p>
             </CardContent>
           </Card>
         </section>
@@ -91,7 +76,7 @@ export default function LegalNotice() {
         <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 text-sm leading-7 text-slate-700 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-950">Droit applicable</h2>
           <p className="mt-3">
-            Le site est soumis au droit de la République du Congo et, lorsqu’ils sont applicables, aux Actes uniformes de l’OHADA. Toute réclamation doit d’abord être adressée à <a className="font-medium text-emerald-700 underline" href="mailto:support@makoki.org">support@makoki.org</a>. À défaut de règlement amiable, les juridictions compétentes de Brazzaville peuvent être saisies, sous réserve des règles impératives de compétence.
+            Le site est soumis au droit de la République du Congo et, lorsqu’ils sont applicables, aux Actes uniformes de l’OHADA. Toute réclamation peut être adressée à <a className="font-medium text-emerald-700 underline" href="mailto:support@makoki.org">support@makoki.org</a>.
           </p>
         </section>
       </article>
