@@ -30,9 +30,9 @@ export const listAdvisorProjects = () => apiFetch<{
   projects: AdvisorProjectSummary[];
 }>('/v1/life-projects');
 
-export const getAdvisorProject = (projectId: string) => apiFetch<AdvisorEnvelope>(
+export const getAdvisorProject = async (projectId: string) => publishProjectUpdate(await apiFetch<AdvisorEnvelope>(
   `/v1/life-projects/${encodeURIComponent(projectId)}`,
-);
+));
 
 export const createAdvisorProject = (title: string, purpose: string) => apiFetch<AdvisorEnvelope>(
   '/v1/life-projects',
