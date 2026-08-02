@@ -194,8 +194,22 @@ async function main() {
 
     await page.goto(`${baseUrl}/privacy`, { waitUntil: 'networkidle0' });
     const privacyText = await page.$eval('body', (body) => body.innerText);
-    for (const expected of ['24 mois d’inactivité', '12 mois après la production du résultat', '10 ans', 'rgpd@makoki.org']) {
+    for (const expected of [
+      'Durée de conservation',
+      'pendant la durée nécessaire à la fourniture du service',
+      'supprimées ou anonymisées',
+      'rgpd@makoki.org',
+    ]) {
       if (!privacyText.includes(expected)) throw new Error(`/privacy is missing ${expected}`);
+    }
+    for (const unsupportedRetentionClaim of [
+      '24 mois d’inactivité',
+      '12 mois après la production du résultat',
+      '10 ans',
+    ]) {
+      if (privacyText.includes(unsupportedRetentionClaim)) {
+        throw new Error(`/privacy exposes an unverified retention promise: ${unsupportedRetentionClaim}`);
+      }
     }
 
     await page.goto(`${baseUrl}/register`, { waitUntil: 'networkidle0' });
