@@ -89,11 +89,17 @@ assert.doesNotMatch(
   /Exploration publique|Sans compte|profil RIASEC classable|profil d’intérêts disponible|O\*NET \{|Français ESCO|adaptation au contexte congolais reste une revue séparée/iu,
 );
 
-// The same page contains visible value, the contextual auth gate and one account workspace.
+// The same page contains visible value, a limited guest preview, the auth gate and one account workspace.
 assert.match(unifiedPage, /<EmbeddedRiasecStep onComplete=\{handleRiasecComplete\} \/>/u);
 assert.match(unifiedPage, /guest-life-project-soft-gate/u);
+assert.match(unifiedPage, /const GuestPreview/u);
+assert.match(unifiedPage, /topRiasecDimensions\(profile\)\[0\]/u);
+assert.match(unifiedPage, /Ton résultat complet tient compte de plusieurs tendances/u);
+assert.match(unifiedPage, /data-testid="guest-registration-gate"/u);
 assert.match(unifiedPage, /Créer mon espace/u);
-assert.match(unifiedPage, /Explorer les métiers/u);
+assert.match(unifiedPage, /J’ai déjà un compte/u);
+assert.match(unifiedPage, /const FullCareerValue/u);
+assert.match(unifiedPage, /authenticated-career-value/u);
 assert.doesNotMatch(unifiedPage, /sans compte|sans inscription/iu);
 assert.match(unifiedPage, /<LifeProjectWorkspace riasecProfile=\{riasecProfile\} \/>/u);
 assert.match(embeddedRiasec, /claimGuestOrientation/u);
