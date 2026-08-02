@@ -149,7 +149,7 @@ const fillDiagnosticAndGenerate = async (page) => {
     throw new Error(`Expected 3 to 5 scenario cards, received ${scenarioCount}.`);
   }
 
-  const pageText = await page.locator('main').innerText();
+  const pageText = await page.locator('#contenu-principal').innerText();
   const durationCostVisible = /mois|FCFA|Durée et coût à confirmer/u.test(pageText);
   const calendarVisible = /Calendrier/u.test(pageText);
   const modalitiesVisible = /Modalités|présentiel|à distance|en ligne/u.test(pageText);
@@ -168,6 +168,12 @@ const fillDiagnosticAndGenerate = async (page) => {
     firstActionVisible,
     provisionalChoiceVisible: true,
   };
+};
+
+const pageReadyAfterAuthentication = async (page) => {
+  await page.locator('[data-testid="unified-riasec-summary"]').waitFor({ timeout: 60000 });
+  await page.locator('[data-testid="authenticated-career-value"]').waitFor({ timeout: 60000 });
+  await waitForHeading(page, 'Donne les informations utiles pour affiner ton projet', 2);
 };
 
 const main = async () => {
@@ -252,12 +258,6 @@ const main = async () => {
     if (secondContext) await secondContext.close();
     await browser.close();
   }
-};
-
-const pageReadyAfterAuthentication = async (page) => {
-  await page.locator('[data-testid="unified-riasec-summary"]').waitFor({ timeout: 60000 });
-  await page.locator('[data-testid="authenticated-career-value"]').waitFor({ timeout: 60000 });
-  await waitForHeading(page, 'Donne les informations utiles pour affiner ton projet', 2);
 };
 
 main().catch((error) => {
