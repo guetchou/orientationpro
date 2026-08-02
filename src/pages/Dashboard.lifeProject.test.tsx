@@ -3,10 +3,6 @@ import { MemoryRouter } from 'react-router-dom';
 import type { RiasecResult } from '@/types/riasec';
 import type { AdaptiveProfilePayload } from '@/features/profile/profileApi';
 
-// isLifeProjectFrontendEnabled() is read once at Dashboard module load time (a top-level
-// constant, not reactive). Dashboard.test.tsx always mocks it to false, which meant the
-// flag=true branch was never exercised by any test. This file covers that gap in isolation.
-
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return { ...actual, useNavigate: () => vi.fn() };
@@ -33,7 +29,7 @@ vi.mock('@/hooks/useAuth', () => ({
 }));
 
 describe('Dashboard with Life Project flag enabled', () => {
-  it('suggests the Parcours next step instead of Explorer les métiers once test + profile are done', async () => {
+  it('propose de poursuivre le parcours lorsque le questionnaire et le profil sont terminés', async () => {
     const { default: Dashboard } = await import('./Dashboard');
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -41,8 +37,8 @@ describe('Dashboard with Life Project flag enabled', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText(/Construisez votre parcours/)).toBeInTheDocument();
-    expect(screen.queryByText(/Explorez les métiers/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/Poursuis ton projet/)).toBeInTheDocument();
+    expect(screen.queryByText(/Explore les métiers/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Mon parcours/ })).toBeInTheDocument();
   });
 });
