@@ -70,67 +70,67 @@ beforeEach(() => {
 });
 
 describe('Dashboard', () => {
-  it('shows the "first test" next step and an honest empty state when nothing is completed yet', async () => {
+  it('propose de commencer le parcours et affiche un état vide honnête', async () => {
     listRiasecResultsMock.mockResolvedValue([]);
     renderDashboard();
 
-    expect(await screen.findByText('Bienvenue, Amina !')).toBeInTheDocument();
-    expect(screen.getByText(/Passez votre premier test/)).toBeInTheDocument();
-    expect(await screen.findByText(/Aucun résultat enregistré/)).toBeInTheDocument();
+    expect(await screen.findByText('Bienvenue, Amina')).toBeInTheDocument();
+    expect(screen.getByText(/Découvre ce qui t’intéresse/)).toBeInTheDocument();
+    expect(await screen.findByText(/Tu n’as pas encore de résultat enregistré/)).toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('À commencer')).toBeInTheDocument();
   });
 
-  it('loads real results via the RIASEC API, and only stops suggesting profile work once completion is genuinely 100%', async () => {
+  it('charge les résultats réels et propose les métiers lorsque le profil est complet', async () => {
     getAdaptiveProfileMock.mockResolvedValue(buildProfilePayload(100));
     listRiasecResultsMock.mockResolvedValue([buildResult()]);
     renderDashboard();
 
-    expect(await screen.findByText('Test RIASEC — RIA')).toBeInTheDocument();
-    expect(screen.getByText('RIA')).toBeInTheDocument();
+    expect(await screen.findByText('Résultat 1')).toBeInTheDocument();
+    expect(screen.queryByText('RIA')).not.toBeInTheDocument();
     expect(await screen.findByText('100 %')).toBeInTheDocument();
-    expect(screen.getByText(/Explorez les métiers/)).toBeInTheDocument();
+    expect(screen.getByText(/Explore les métiers/)).toBeInTheDocument();
     expect(listRiasecResultsMock).toHaveBeenCalledWith(50, 0);
   });
 
-  it('keeps suggesting profile completion using the real backend percentage, not an invented threshold', async () => {
+  it('continue de proposer le profil tant que le pourcentage backend reste incomplet', async () => {
     getAdaptiveProfileMock.mockResolvedValue(buildProfilePayload(40));
     listRiasecResultsMock.mockResolvedValue([buildResult()]);
     renderDashboard();
 
-    expect(await screen.findByText(/Continuez votre profil \(40 % complété\)/)).toBeInTheDocument();
+    expect(await screen.findByText(/Continue ton profil \(40 % renseigné\)/)).toBeInTheDocument();
     expect(await screen.findByText('40 %')).toBeInTheDocument();
-    expect(screen.queryByText(/Explorez les métiers/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Explore les métiers/)).not.toBeInTheDocument();
   });
 
-  it('does not fabricate a profile percentage when the profile call fails; falls back without a false number', async () => {
+  it('n’invente pas de pourcentage lorsque le profil ne peut pas être chargé', async () => {
     getAdaptiveProfileMock.mockRejectedValue(new ApiError('indisponible', 503));
     listRiasecResultsMock.mockResolvedValue([buildResult()]);
     renderDashboard();
 
-    await screen.findByText('Test RIASEC — RIA');
-    expect(await screen.findByText('—')).toBeInTheDocument();
-    expect(screen.getByText(/Complétez votre profil/)).toBeInTheDocument();
+    await screen.findByText('Résultat 1');
+    expect(await screen.findByText('Non disponible')).toBeInTheDocument();
+    expect(screen.getByText(/Complète ton profil/)).toBeInTheDocument();
   });
 
-  it('recovers from a failed results load without losing the user in a dead end', async () => {
+  it('permet de réessayer après un échec de chargement des résultats', async () => {
     listRiasecResultsMock
       .mockRejectedValueOnce(new ApiError('Service indisponible', 503))
       .mockResolvedValueOnce([buildResult()]);
     renderDashboard();
 
-    expect(await screen.findByText('Service indisponible')).toBeInTheDocument();
+    expect(await screen.findByText('Tes résultats ne peuvent pas être chargés pour le moment.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Réessayer/ }));
 
-    await waitFor(() => expect(screen.getByText('Test RIASEC — RIA')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Résultat 1')).toBeInTheDocument());
     expect(listRiasecResultsMock).toHaveBeenCalledTimes(2);
   });
 
-  it('opens a result on the real orientation results route, not the legacy dead route', async () => {
+  it('ouvre le parcours unifié depuis un résultat enregistré', async () => {
     listRiasecResultsMock.mockResolvedValue([buildResult({ id: 'result-42' })]);
     renderDashboard();
 
-    fireEvent.click(await screen.findByText('Test RIASEC — RIA'));
-    expect(navigateMock).toHaveBeenCalledWith('/orientation/results/result-42');
+    fireEvent.click(await screen.findByText('Résultat 1'));
+    expect(navigateMock).toHaveBeenCalledWith('/parcours');
   });
 });
