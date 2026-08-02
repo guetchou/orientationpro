@@ -38,12 +38,12 @@ describe('public positioning', () => {
   it('speaks to visitor needs without exposing technical vocabulary or unsupported promises', () => {
     const view = renderWithRouter(<Home />);
 
-    expect(screen.getByRole('heading', { name: /Ton métier idéal, en 15 minutes/u })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Découvre les métiers qui te correspondent, en 15 minutes/u })).toBeInTheDocument();
     expect(screen.getByText(/Tu n’as pas besoin d’avoir déjà toutes les réponses/u)).toBeInTheDocument();
     expect(screen.getByText(/La décision t’appartient/u)).toBeInTheDocument();
 
     const primaryLinks = screen.getAllByRole('link', { name: /Commencer mon projet/u });
-    expect(primaryLinks[0]).toHaveAttribute('href', '/register');
+    expect(primaryLinks[0]).toHaveAttribute('href', '/parcours');
 
     const publicCopy = view.container.textContent || '';
     for (const forbidden of [
@@ -54,19 +54,21 @@ describe('public positioning', () => {
       'conseillers et coachs autorisés',
       'opportunités au Congo',
       'métiers et contexte locaux',
+      'Ton métier idéal',
+      'sans compte',
+      'sans inscription',
     ]) {
       expect(publicCopy).not.toContain(forbidden);
     }
   });
 
-  it('keeps method names and limitations on the About page', () => {
+  it('explains the approach and its limitations on the About page', () => {
     renderWithRouter(<About />);
 
-    expect(screen.getByRole('heading', { name: /Vous aider à mieux vous connaître/u })).toBeInTheDocument();
-    expect(screen.getByText('ESCO')).toBeInTheDocument();
-    expect(screen.getByText('O*NET')).toBeInTheDocument();
-    expect(screen.getByText(/modèle RIASEC/u)).toBeInTheDocument();
-    expect(screen.getByText(/ne pose aucun diagnostic/u)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Mieux te connaître, explorer tes possibilités et avancer avec plus de clarté/u })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /D’où viennent les informations métiers/u })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Ce que Makoki ne peut pas décider à ta place/u })).toBeInTheDocument();
+    expect(screen.getByText(/La décision finale reste la tienne/u)).toBeInTheDocument();
   });
 
   it('uses Emploi in the public navigation on desktop and mobile', () => {
