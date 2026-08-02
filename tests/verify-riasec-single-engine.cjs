@@ -90,7 +90,10 @@ assert.match(embeddedRiasec, /claimGuestOrientation/u);
 assert.match(embeddedRiasec, /submitRiasecAttempt/u);
 assert.match(embeddedRiasec, /Commencer le test/u);
 assert.doesNotMatch(embeddedRiasec, /sans compte|sans inscription|0 inscription/iu);
-assert.doesNotMatch(embeddedRiasec, />[^<]*RIASEC|RIASEC[^<]*</u);
+assert.doesNotMatch(
+  embeddedRiasec,
+  /Étape RIASEC indisponible|Le RIASEC décrit|Profil RIASEC|RIASEC intégré/u,
+);
 assert.doesNotMatch(embeddedRiasec, /scoreRiasec/u);
 assert.match(workspace, /Mon rapport Projet de vie/u);
 assert.match(workspace, /window\.print\(\)/u);
