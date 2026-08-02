@@ -29,11 +29,11 @@ const destinationForRole = (role?: string) => {
 const messageForError = (error: unknown) => {
   if (error instanceof ApiError) {
     if (error.code === 'INVALID_CREDENTIALS') return 'Adresse e-mail ou mot de passe incorrect.';
-    if (error.code === 'ACCOUNT_NOT_VERIFIED') return 'Ce compte doit être vérifié avant la connexion.';
+    if (error.code === 'ACCOUNT_NOT_VERIFIED') return 'Vérifie ton adresse e-mail avant de te connecter.';
     if (error.status === 429) return 'Trop de tentatives. Réessaie dans quelques minutes.';
-    return error.message;
+    return 'La connexion n’a pas abouti. Réessaie dans quelques instants.';
   }
-  return 'La connexion a échoué. Vérifie la disponibilité du serveur.';
+  return 'La connexion n’a pas abouti. Vérifie ta connexion internet puis réessaie.';
 };
 
 const loginSchema = z.object({
@@ -43,7 +43,11 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  usePageMeta({ title: "Connexion", description: "Connectez-vous à votre compte MAKOKI pour accéder à vos passations et résultats d’orientation.", path: "/login" });
+  usePageMeta({
+    title: 'Connexion',
+    description: 'Connecte-toi à MAKOKI pour enregistrer tes résultats et poursuivre ton projet.',
+    path: '/login',
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [oauthCompleting, setOauthCompleting] = useState(false);
@@ -72,7 +76,6 @@ export default function Login() {
 
   useEffect(() => {
     if (user) finishAuthentication(destinationForRole(user.role));
-    // finishAuthentication intentionally follows the current location state/local return hint.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -82,13 +85,13 @@ export default function Login() {
     const code = params.get('code');
     if (oauth === 'error') {
       const messages: Record<string, string> = {
-        ACCOUNT_LINK_REQUIRED: 'Un compte existe déjà avec cette adresse. Connecte-toi avec ton mot de passe avant de lier ce fournisseur.',
-        OAUTH_CANCELLED: 'La connexion sociale a été annulée.',
+        ACCOUNT_LINK_REQUIRED: 'Un compte existe déjà avec cette adresse. Connecte-toi avec ton mot de passe.',
+        OAUTH_CANCELLED: 'La connexion a été annulée.',
         OAUTH_STATE_INVALID: 'La tentative de connexion a expiré. Recommence depuis cette page.',
-        OAUTH_PROVIDER_REJECTED: 'Le fournisseur n’a pas pu confirmer ton identité.',
+        OAUTH_PROVIDER_REJECTED: 'Ton identité n’a pas pu être confirmée.',
         OAUTH_ACCOUNT_UNAVAILABLE: 'Ce compte ne peut pas être utilisé actuellement.',
       };
-      setServerError(messages[code || ''] || 'La connexion sociale a échoué.');
+      setServerError(messages[code || ''] || 'La connexion n’a pas abouti.');
       return;
     }
     if (oauth !== 'success') return;
@@ -98,17 +101,16 @@ export default function Login() {
     void refreshAuthSession()
       .then((payload) => {
         if (!active) return;
-        if (!payload) throw new Error('Session sociale indisponible');
+        if (!payload) throw new Error('session unavailable');
         finishAuthentication(destinationForRole(payload.account.roles[0]));
       })
       .catch(() => {
-        if (active) setServerError('La session sociale n’a pas pu être finalisée. Recommence la connexion.');
+        if (active) setServerError('La connexion n’a pas pu être finalisée. Recommence depuis cette page.');
       })
       .finally(() => {
         if (active) setOauthCompleting(false);
       });
     return () => { active = false; };
-    // finishAuthentication intentionally uses the return destination captured for this page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
@@ -122,20 +124,18 @@ export default function Login() {
     }
   };
 
-  const rememberReturnPath = () => {
-    saveAuthReturnPath(requestedPath);
-  };
+  const rememberReturnPath = () => saveAuthReturnPath(requestedPath);
   const submitting = form.formState.isSubmitting;
 
   return (
     <AuthLayout
       headline="Content de te revoir"
-      tagline="Connecte-toi pour rattacher ton profil invité, sauvegarder ton Projet de vie et le poursuivre sans perdre ton travail."
+      tagline="Connecte-toi pour enregistrer tes résultats, retrouver ton projet et continuer là où tu t’es arrêté."
       imageName="accompagnement-conseiller"
     >
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-slate-900">Connexion</h1>
-        <p className="mt-2 text-slate-600">Après connexion, tu reviens automatiquement à ton parcours en cours.</p>
+        <p className="mt-2 text-slate-600">Tu retrouveras automatiquement le parcours que tu étais en train de suivre.</p>
       </div>
 
       {serverError && (
@@ -148,78 +148,53 @@ export default function Login() {
       <div className="mb-5 grid gap-3">
         <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
           <a href={oauthStartUrl('google')} onClick={rememberReturnPath}>
-            <SocialProviderIcon provider="google" />
-            Continuer avec Google
+            <SocialProviderIcon provider="google" />Continuer avec Google
           </a>
         </Button>
         <Button asChild type="button" variant="outline" className="w-full" aria-disabled={oauthCompleting}>
           <a href={oauthStartUrl('meta')} onClick={rememberReturnPath}>
-            <SocialProviderIcon provider="meta" />
-            Continuer avec Facebook
+            <SocialProviderIcon provider="meta" />Continuer avec Facebook
           </a>
         </Button>
         <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-600" aria-hidden="true">
-          <span className="h-px flex-1 bg-gray-200" />
-          ou avec ton mot de passe
-          <span className="h-px flex-1 bg-gray-200" />
+          <span className="h-px flex-1 bg-gray-200" />ou avec ton mot de passe<span className="h-px flex-1 bg-gray-200" />
         </div>
       </div>
 
       <Form {...form}>
         <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel htmlFor="login-email">Adresse e-mail</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <Input id="login-email" type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel htmlFor="login-password">Mot de passe</FormLabel>
-                  <Link to="/forgot-password" className="text-sm font-medium text-emerald-700 hover:underline">
-                    Mot de passe oublié ?
-                  </Link>
+          <FormField control={form.control} name="email" render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="login-email">Adresse e-mail</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input id="login-email" type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
                 </div>
-                <FormControl>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <Input
-                      id="login-password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      className="px-10"
-                      {...field}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((value) => !value)}
-                      className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-600"
-                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-            {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="password" render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between">
+                <FormLabel htmlFor="login-password">Mot de passe</FormLabel>
+                <Link to="/forgot-password" className="text-sm font-medium text-emerald-700 hover:underline">Mot de passe oublié ?</Link>
+              </div>
+              <FormControl>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input id="login-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" className="px-10" {...field} />
+                  <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-600" aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <Button type="submit" size="lg" className="w-full" disabled={submitting || oauthCompleting}>
+            {submitting || oauthCompleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Se connecter
           </Button>
         </form>
@@ -227,9 +202,7 @@ export default function Login() {
 
       <p className="mt-8 text-center text-sm text-gray-600">
         Pas encore de compte ?{' '}
-        <Link to="/register" state={location.state} className="font-semibold text-emerald-700 hover:underline">
-          Créer un compte
-        </Link>
+        <Link to="/register" state={location.state} className="font-semibold text-emerald-700 hover:underline">Créer un compte</Link>
       </p>
     </AuthLayout>
   );

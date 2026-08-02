@@ -15,11 +15,11 @@ import {
 } from './riasec-profile';
 
 const journeySteps = [
-  'Profil d’intérêts',
-  'Situation, compétences et contraintes',
-  'Scénarios recommandés',
-  'Choix provisoire et première action',
-  'Rapport unique',
+  'Ce qui t’intéresse',
+  'Tes compétences et ta situation',
+  'Les métiers à explorer',
+  'Ton choix et tes prochaines actions',
+  'Ton plan personnel',
 ];
 
 const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) => {
@@ -27,31 +27,26 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
   return (
     <Card className="border-primary/20 print:hidden" data-testid="unified-riasec-summary">
       <CardHeader>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>Profil d’intérêts</Badge>
-          <Badge variant="outline">Code {profile.displayCode}</Badge>
-        </div>
-        <CardTitle className="flex items-center gap-2 text-xl"><Brain className="h-5 w-5" />Tes intérêts dominants</CardTitle>
+        <Badge className="w-fit">Tes centres d’intérêt</Badge>
+        <CardTitle className="flex items-center gap-2 text-xl"><Brain className="h-5 w-5" />Ce qui ressort de tes réponses</CardTitle>
         <CardDescription>
-          Cette première restitution décrit tes préférences actuelles et sert de point de départ à l’exploration.
+          Voici les types d’activités et d’environnements qui semblent le plus te correspondre aujourd’hui.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          {leading.map((entry, index) => (
+          {leading.map((entry) => (
             <div key={entry.dimension} className="rounded-lg border bg-muted/30 p-4">
-              <span className="text-xs font-medium uppercase text-muted-foreground">Dimension {index + 1}</span>
-              <p className="mt-1 font-semibold">{riasecDimensionLabels[entry.dimension]} ({entry.dimension})</p>
-              <p className="text-sm text-muted-foreground">Score descriptif : {Math.round(entry.score)}/100</p>
+              <p className="font-semibold">{riasecDimensionLabels[entry.dimension]}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Une piste utile pour mieux comprendre les activités qui peuvent te motiver.
+              </p>
             </div>
           ))}
         </div>
         <p className="flex gap-2 text-sm text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-          Ce profil décrit des préférences d’activités et d’environnements. Il ne constitue ni une aptitude, ni un diagnostic, ni une décision définitive.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Résultat {profile.resultId} · version {profile.algorithmVersion} · calculé le {new Date(profile.completedAt).toLocaleString('fr-FR')}
+          Ce résultat décrit tes préférences actuelles. Il ne décide pas à ta place et ne mesure ni ton intelligence ni tes capacités.
         </p>
       </CardContent>
     </Card>
@@ -64,16 +59,16 @@ const GuestValue = ({ profile }: { profile: AdvisorRiasecProfile }) => {
     <section className="space-y-5 print:hidden" data-testid="guest-life-project-soft-gate">
       <Card className="border-emerald-200 bg-emerald-50/60">
         <CardHeader>
-          <Badge className="w-fit">Première valeur obtenue</Badge>
-          <CardTitle>Des familles de métiers à explorer maintenant</CardTitle>
+          <Badge className="w-fit">Des pistes pour avancer</Badge>
+          <CardTitle>Des métiers à explorer</CardTitle>
           <CardDescription>
-            Ces pistes découlent uniquement de tes intérêts dominants. Elles ne tiennent pas encore compte de ton niveau, de tes compétences, de ta ville, de ton budget ou de tes contraintes.
+            Voici quelques familles de métiers qui correspondent à tes réponses. Elles constituent un point de départ. Tes compétences, ton niveau d’études, ta situation et tes contraintes permettront ensuite d’affiner ton projet.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           {families.map((family) => (
             <div key={family.dimension} className="rounded-lg border bg-background p-4">
-              <Badge variant="outline">{family.dimension}</Badge>
+              <Badge variant="outline">Piste à explorer</Badge>
               <h3 className="mt-3 font-semibold">{family.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">Exemples : {family.examples.join(', ')}.</p>
               <Button asChild variant="outline" className="mt-4 w-full">
@@ -104,12 +99,12 @@ export default function UnifiedLifeProjectPage() {
     <div className="min-h-screen bg-muted/20">
       <section className="border-b bg-background print:hidden">
         <div className="container max-w-7xl py-10">
-          <Badge variant="outline">Parcours unique MAKOKI</Badge>
+          <Badge variant="outline">Mon parcours</Badge>
           <h1 className="mt-3 flex items-center gap-3 text-3xl font-bold tracking-tight md:text-4xl">
-            <Route className="h-8 w-8 text-primary" />Construis ton Projet de vie
+            <Route className="h-8 w-8 text-primary" />Construis ton projet d’avenir
           </h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            Découvre ton profil d’intérêts et des familles de métiers, puis construis un projet adapté à ta situation, tes compétences et tes contraintes.
+            Réponds à quelques questions pour mieux comprendre ce qui t’intéresse, découvrir des métiers et avancer vers un projet adapté à ta situation.
           </p>
           <div className="mt-6 grid gap-2 md:grid-cols-5">
             {journeySteps.map((step, index) => (
@@ -136,7 +131,7 @@ export default function UnifiedLifeProjectPage() {
         {!authLoading && riasecProfile ? (
           <>
             <section aria-labelledby="unified-profile-title">
-              <h2 id="unified-profile-title" className="sr-only">Profil d’intérêts</h2>
+              <h2 id="unified-profile-title" className="sr-only">Tes centres d’intérêt</h2>
               <RiasecProfileSummary profile={riasecProfile} />
             </section>
             <GuestValue profile={riasecProfile} />
@@ -145,19 +140,19 @@ export default function UnifiedLifeProjectPage() {
               <>
                 <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-950 print:hidden">
                   <CheckCircle2 className="mr-2 inline h-4 w-4" />
-                  Ton profil est rattaché à ton espace. Complète maintenant ta situation : il sera enregistré avec ce dossier et utilisé dans les recommandations.
+                  Ton résultat est enregistré. Tu peux maintenant compléter ta situation et poursuivre ton projet.
                 </div>
-                <section aria-label="Suite du parcours Projet de vie">
+                <section aria-label="Suite de ton parcours">
                   <LifeProjectWorkspace riasecProfile={riasecProfile} />
                 </section>
               </>
             ) : (
               <Card className="border-primary/30 print:hidden">
                 <CardHeader>
-                  <Badge className="w-fit" variant="outline">Ton résultat reste disponible</Badge>
+                  <Badge className="w-fit" variant="outline">Poursuis ton projet</Badge>
                   <CardTitle>Crée ton espace pour aller plus loin</CardTitle>
                   <CardDescription>
-                    Ton espace permet de conserver ce travail, d’ajouter ta situation réelle, de comparer des scénarios, de retenir une piste, de construire une première action et d’obtenir le rapport Projet de vie complet.
+                    En créant ton espace, tu peux conserver ton résultat, préciser ta situation, comparer plusieurs pistes et construire un plan d’action personnel.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-3">
@@ -181,7 +176,7 @@ export default function UnifiedLifeProjectPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />Commence ton parcours</CardTitle>
               <CardDescription>
-                Réponds aux affirmations pour découvrir ton profil et tes premières familles de métiers. Tu pourras ensuite approfondir ta situation et construire ton Projet de vie.
+                Réponds aux affirmations pour mieux comprendre tes centres d’intérêt et découvrir tes premières pistes de métiers.
               </CardDescription>
             </CardHeader>
           </Card>

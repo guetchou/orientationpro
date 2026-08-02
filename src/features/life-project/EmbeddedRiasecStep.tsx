@@ -7,7 +7,6 @@ import {
   Loader2,
   RotateCcw,
   Save,
-  ShieldCheck,
 } from 'lucide-react';
 import { ApiError } from '@/lib/apiClient';
 import { Badge } from '@/components/ui/badge';
@@ -52,18 +51,10 @@ const readDraft = (): LocalDraft | null => {
 
 const errorMessage = (error: unknown) => {
   if (error instanceof ApiError) {
-    if (error.code === 'RIASEC_INSTRUMENT_UNAVAILABLE') {
-      return 'Le profil d’intérêts n’est pas disponible pour le moment.';
-    }
-    if (error.code === 'PERMISSION_DENIED') {
-      return 'Cette action n’est pas disponible pour le moment.';
-    }
-    if (error.code === 'INCOMPLETE_RESPONSES') {
-      return 'Toutes les affirmations doivent recevoir une réponse.';
-    }
-    return error.message;
+    if (error.code === 'INCOMPLETE_RESPONSES') return 'Réponds à toutes les affirmations avant de terminer.';
+    if (error.status === 429) return 'Trop de tentatives rapprochées. Réessaie dans quelques minutes.';
   }
-  return 'Le profil d’intérêts n’a pas pu être chargé.';
+  return 'Cette étape n’est pas disponible pour le moment. Réessaie dans quelques instants.';
 };
 
 export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepProps) {
@@ -81,8 +72,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       await claimGuestOrientation();
       const existing = await listRiasecResults(1, 0);
       if (existing[0]) {
-        const profile = persistRiasecResult(existing[0]);
-        onComplete(profile);
+        onComplete(persistRiasecResult(existing[0]));
         setPhase('completed');
         return;
       }
@@ -97,10 +87,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
             setAttempt(restored.attempt);
             setInstrument(restored.instrument);
             setAnswers(draft.answers || {});
-            setCurrentIndex(Math.min(
-              Math.max(draft.currentIndex || 0, 0),
-              restored.instrument.itemCount - 1,
-            ));
+            setCurrentIndex(Math.min(Math.max(draft.currentIndex || 0, 0), restored.instrument.itemCount - 1));
             setPhase('questions');
             return;
           }
@@ -115,9 +102,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     }
   }, [onComplete]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   useEffect(() => {
     if (phase !== 'questions' || !attempt || !instrument) return;
@@ -167,9 +152,8 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     setError(null);
     try {
       const completion = await submitRiasecAttempt(attempt.id, responses);
-      const profile = persistRiasecResult(completion.result);
       localStorage.removeItem(DRAFT_KEY);
-      onComplete(profile);
+      onComplete(persistRiasecResult(completion.result));
       setPhase('completed');
     } catch (caught) {
       setError(errorMessage(caught));
@@ -184,7 +168,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       <Card className="print:hidden">
         <CardContent className="flex min-h-44 items-center justify-center p-8" role="status">
           <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" />
-          {phase === 'submitting' ? 'Préparation de ton profil…' : 'Chargement de ton parcours…'}
+          {phase === 'submitting' ? 'Préparation de ton résultat…' : 'Préparation de ton parcours…'}
         </CardContent>
       </Card>
     );
@@ -194,14 +178,10 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     return (
       <Card className="border-red-200 print:hidden">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-700">
-            <AlertCircle className="h-5 w-5" />Étape momentanément indisponible
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2 text-red-700"><AlertCircle className="h-5 w-5" />Étape momentanément indisponible</CardTitle>
           <CardDescription>{error}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button type="button" onClick={() => void load()}>Réessayer</Button>
-        </CardContent>
+        <CardContent><Button type="button" onClick={() => void load()}>Réessayer</Button></CardContent>
       </Card>
     );
   }
@@ -211,24 +191,23 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       <Card className="overflow-hidden border-primary/20 print:hidden" data-testid="unified-riasec-intro">
         <div className="h-1.5 bg-primary" />
         <CardHeader>
-          <Badge className="w-fit">Étape 1 sur 5</Badge>
-          <CardTitle className="text-2xl">Commence par découvrir tes intérêts</CardTitle>
+          <Badge className="w-fit">Première étape</Badge>
+          <CardTitle className="text-2xl">Découvre ce qui t’intéresse</CardTitle>
           <CardDescription className="text-base">
-            Réponds aux {instrument.itemCount} affirmations pour découvrir tes intérêts dominants et les familles de métiers qui peuvent te correspondre.
+            Réponds aux affirmations pour mieux comprendre les activités et environnements qui peuvent te motiver.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border bg-muted/30 p-4"><strong>{instrument.itemCount}</strong><span className="block text-sm text-muted-foreground">affirmations</span></div>
-            <div className="rounded-lg border bg-muted/30 p-4"><strong>10–15 min</strong><span className="block text-sm text-muted-foreground">en moyenne</span></div>
+            <div className="rounded-lg border bg-muted/30 p-4"><strong>10 à 15 minutes</strong><span className="block text-sm text-muted-foreground">en moyenne</span></div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Ce parcours explore tes intérêts actuels. Il ne mesure pas ton intelligence, ton aptitude ou ta valeur et ne décide pas à ta place.
+            Il n’y a pas de bonne ou de mauvaise réponse. Choisis simplement ce qui te ressemble le plus aujourd’hui.
           </p>
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
-            <ShieldCheck className="mr-2 inline h-4 w-4" />
-            Ta progression est protégée pendant le parcours. Tu pourras ensuite conserver ton résultat et approfondir ton Projet de vie.
-          </div>
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+            Tes réponses sont conservées sur cet appareil pendant le test afin que tu puisses reprendre en cas d’interruption.
+          </p>
           <Button type="button" size="lg" onClick={() => void startNewAttempt()}>
             Commencer le test <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
@@ -243,7 +222,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     <Card className="print:hidden" data-testid="unified-riasec-questions">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <Badge>Étape 1 sur 5</Badge>
+          <Badge>Questionnaire en cours</Badge>
           <span className="text-sm text-muted-foreground">{answeredCount}/{instrument.itemCount}</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
@@ -266,7 +245,6 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
                 onClick={() => setAnswers((previous) => ({ ...previous, [currentItem.id]: option.value }))}
                 className={`rounded-lg border p-3 text-sm transition ${selected ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:border-primary/50'}`}
               >
-                <span className="block text-lg font-bold">{option.value}</span>
                 {option.label}
               </button>
             );
@@ -286,19 +264,15 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
             }}>
               <RotateCcw className="mr-2 h-4 w-4" />Recommencer
             </Button>
-            <Button
-              type="button"
-              disabled={selectedValue === undefined}
-              onClick={() => {
-                if (isLast) void submit();
-                else setCurrentIndex((index) => Math.min(instrument.itemCount - 1, index + 1));
-              }}
-            >
-              {isLast ? <><CheckCircle2 className="mr-2 h-4 w-4" />Voir mon profil</> : <>Suivant<ArrowRight className="ml-2 h-4 w-4" /></>}
+            <Button type="button" disabled={selectedValue === undefined} onClick={() => {
+              if (isLast) void submit();
+              else setCurrentIndex((index) => Math.min(instrument.itemCount - 1, index + 1));
+            }}>
+              {isLast ? <><CheckCircle2 className="mr-2 h-4 w-4" />Voir mon résultat</> : <>Suivant<ArrowRight className="ml-2 h-4 w-4" /></>}
             </Button>
           </div>
         </div>
-        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Ta progression reste disponible sur cet appareil pendant le parcours.</p>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Tes réponses restent disponibles sur cet appareil pendant le test.</p>
       </CardContent>
     </Card>
   );

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Languages, Loader2, Search } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/lib/apiClient';
-import { localRelevanceLabel, profileStatusLabel } from '@/lib/careerPresentation';
 import { getCareerCatalogSummary, searchCareerOccupations } from '@/services/careerApi';
 import type { CareerCatalogSourceSummary, CareerOccupation } from '@/types/career';
 import { Badge } from '@/components/ui/badge';
@@ -11,16 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
-const errorMessage = (error: unknown) => error instanceof ApiError
-  ? error.message
-  : 'Le catalogue métiers n’a pas pu être chargé.';
+const errorMessage = (error: unknown) => error instanceof ApiError ? error.message : 'Le catalogue métiers n’a pas pu être chargé.';
 
 export default function CareerCatalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = String(searchParams.get('q') || '').trim().slice(0, 120);
   const [queryInput, setQueryInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery);
-  const [riasecOnly, setRiasecOnly] = useState(false);
+  const [detailedOnly, setDetailedOnly] = useState(false);
   const [offset, setOffset] = useState(0);
   const [occupations, setOccupations] = useState<CareerOccupation[]>([]);
   const [sources, setSources] = useState<CareerCatalogSourceSummary[]>([]);
@@ -35,11 +32,9 @@ export default function CareerCatalog() {
       try {
         const [catalogSources, results] = await Promise.all([
           getCareerCatalogSummary(),
-          searchCareerOccupations({ query, locale: 'fr', riasecOnly, limit: PAGE_SIZE, offset }),
+          searchCareerOccupations({ query, locale: 'fr', riasecOnly: detailedOnly, limit: PAGE_SIZE, offset }),
         ]);
-        if (!Array.isArray(catalogSources) || !Array.isArray(results)) {
-          throw new Error('Réponse du catalogue incomplète.');
-        }
+        if (!Array.isArray(catalogSources) || !Array.isArray(results)) throw new Error('Réponse du catalogue incomplète.');
         if (active) {
           setSources(catalogSources);
           setOccupations(results);
@@ -52,7 +47,7 @@ export default function CareerCatalog() {
     };
     void load();
     return () => { active = false; };
-  }, [query, riasecOnly, offset]);
+  }, [query, detailedOnly, offset]);
 
   const submitSearch = () => {
     const normalized = queryInput.trim().slice(0, 120);
@@ -63,27 +58,27 @@ export default function CareerCatalog() {
     else next.delete('q');
     setSearchParams(next, { replace: true });
   };
-  const onet = sources.find((source) => source.kind === 'onet');
-  const esco = sources.find((source) => source.kind === 'esco' && source.locale === 'fr');
+
+  const frenchSource = sources.find((source) => source.locale === 'fr');
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-10">
-      <h1 className="sr-only">Explorer les métiers en français</h1>
+      <h1 className="sr-only">Explorer les métiers</h1>
       <div className="mx-auto min-w-0 max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button asChild variant="ghost"><Link to="/parcours"><ArrowLeft className="mr-2 h-4 w-4" />Revenir à mon projet</Link></Button>
-          <Button asChild><Link to="/parcours">Découvrir mon profil</Link></Button>
+          <Button asChild><Link to="/parcours">Mieux définir mon projet</Link></Button>
         </div>
+
         <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <Badge>Catalogue des métiers</Badge>
-              {onet ? <Badge variant="outline">Plus de {onet.occupationCount} métiers</Badge> : null}
-              {esco ? <Badge variant="outline">Fiches en français</Badge> : null}
+              {frenchSource ? <Badge variant="outline">Informations en français</Badge> : null}
             </div>
             <CardTitle className="text-3xl">Explore les métiers qui t’intéressent</CardTitle>
             <CardDescription className="max-w-4xl text-base leading-relaxed">
-              Recherche un métier, découvre ses activités et consulte les profils d’intérêts associés. Tu pourras ensuite affiner les pistes selon ta situation.
+              Recherche un métier, découvre ses activités et compare plusieurs pistes avant de choisir tes prochaines étapes.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -94,9 +89,12 @@ export default function CareerCatalog() {
               </div>
               <Button type="button" className="self-end" onClick={submitSearch}><Search className="mr-2 h-4 w-4" />Rechercher</Button>
             </div>
-            <label className="flex items-center gap-3 rounded-xl border p-4 text-sm text-slate-700"><input type="checkbox" checked={riasecOnly} onChange={(event) => { setOffset(0); setRiasecOnly(event.target.checked); }} className="h-4 w-4" />Afficher uniquement les métiers avec un profil d’intérêts disponible</label>
+            <label className="flex items-center gap-3 rounded-xl border p-4 text-sm text-slate-700">
+              <input type="checkbox" checked={detailedOnly} onChange={(event) => { setOffset(0); setDetailedOnly(event.target.checked); }} className="h-4 w-4" />
+              Afficher uniquement les fiches les plus détaillées
+            </label>
             <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-950">
-              Les fiches présentent des informations descriptives sur les métiers. Les informations locales sont enrichies progressivement afin de mieux refléter les réalités du Congo.
+              Les fiches t’aident à explorer. Vérifie ensuite les formations, les conditions d’accès et les réalités du métier auprès des organismes concernés.
             </div>
           </CardContent>
         </Card>
@@ -110,17 +108,12 @@ export default function CareerCatalog() {
                 <Card key={occupation.id} className="h-full min-w-0 overflow-hidden border-slate-200 shadow-sm">
                   <CardHeader className="min-w-0 space-y-3">
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant={occupation.riasecProfileStatus === 'missing' ? 'outline' : 'default'}>{occupation.riasecDisplayCode ? 'Profil d’intérêts disponible' : 'Profil en cours d’enrichissement'}</Badge>
-                      <Badge variant="secondary">{profileStatusLabel(occupation.riasecProfileStatus)}</Badge>
-                      {occupation.translationStatus === 'unavailable' ? <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Fiche en anglais</Badge> : <Badge variant="outline">Fiche en français</Badge>}
+                      {occupation.translationStatus === 'unavailable' ? <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Informations en anglais</Badge> : <Badge variant="outline">Informations en français</Badge>}
                     </div>
                     <CardTitle className="break-words text-xl">{occupation.preferredLabel}</CardTitle>
-                    <CardDescription className="line-clamp-4 break-words leading-relaxed">{occupation.description || 'Description indisponible.'}</CardDescription>
+                    <CardDescription className="line-clamp-4 break-words leading-relaxed">{occupation.description || 'Description en cours d’enrichissement.'}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex flex-wrap gap-2 text-xs"><Badge variant="outline">{localRelevanceLabel(occupation.localRelevanceStatus)}</Badge></div>
-                    <Button asChild variant="outline" className="w-full"><Link to={`/careers/${encodeURIComponent(occupation.id)}`}>Découvrir ce métier</Link></Button>
-                  </CardContent>
+                  <CardContent><Button asChild variant="outline" className="w-full"><Link to={`/careers/${encodeURIComponent(occupation.id)}`}>Découvrir ce métier</Link></Button></CardContent>
                 </Card>
               ))}
             </div>

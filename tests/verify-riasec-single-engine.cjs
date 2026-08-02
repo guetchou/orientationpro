@@ -36,19 +36,11 @@ assert.match(orientationRouter, /scoreRiasec/u);
 
 // The runtime creates one shared store and mounts one canonical RIASEC router.
 const storeCreations = server.match(/createRiasecStore\(authV1\.pool\)/gu) || [];
-assert.equal(
-  storeCreations.length,
-  1,
-  'the RIASEC store must be created exactly once and shared with Projet de vie',
-);
+assert.equal(storeCreations.length, 1, 'the RIASEC store must be created exactly once and shared with Projet de vie');
 const canonicalRouteMounts = server.match(
   /app\.use\('\/api\/v1\/orientation',(?:\s*[A-Za-z][A-Za-z0-9]*,)*\s*createRiasecRouter/gu,
 ) || [];
-assert.equal(
-  canonicalRouteMounts.length,
-  1,
-  'the canonical RIASEC router must be mounted exactly once, after optional middleware',
-);
+assert.equal(canonicalRouteMounts.length, 1, 'the canonical RIASEC router must be mounted exactly once, after optional middleware');
 assert.match(server, /riasecStore,\s*\n\s*\}\)\);/u);
 
 // Guest mode changes ownership, never scoring. The raw token stays in an HttpOnly cookie.
@@ -90,13 +82,14 @@ assert.match(header, /Construire mon projet/u);
 assert.match(header, /<Link to="\/parcours">Commencer<\/Link>/u);
 assert.doesNotMatch(header, /<Link to="\/register">Créer un compte<\/Link>/u);
 assert.match(careerCatalog, /Catalogue des métiers/u);
-assert.match(careerCatalog, /profil d’intérêts disponible/iu);
+assert.match(careerCatalog, /Afficher uniquement les fiches les plus détaillées/iu);
+assert.match(careerCatalog, /searchCareerOccupations\(\{ query, locale: 'fr', riasecOnly: detailedOnly/u);
 assert.doesNotMatch(
   careerCatalog,
-  /Exploration publique|Sans compte|profil RIASEC classable|O\*NET \{|Français ESCO|adaptation au contexte congolais reste une revue séparée/iu,
+  /Exploration publique|Sans compte|profil RIASEC classable|profil d’intérêts disponible|O\*NET \{|Français ESCO|adaptation au contexte congolais reste une revue séparée/iu,
 );
 
-// The same page contains visible value, the contextual auth gate and one account report.
+// The same page contains visible value, the contextual auth gate and one account workspace.
 assert.match(unifiedPage, /<EmbeddedRiasecStep onComplete=\{handleRiasecComplete\} \/>/u);
 assert.match(unifiedPage, /guest-life-project-soft-gate/u);
 assert.match(unifiedPage, /Créer mon espace/u);
@@ -107,16 +100,15 @@ assert.match(embeddedRiasec, /claimGuestOrientation/u);
 assert.match(embeddedRiasec, /submitRiasecAttempt/u);
 assert.match(embeddedRiasec, /Commencer le test/u);
 assert.doesNotMatch(embeddedRiasec, /sans compte|sans inscription|0 inscription/iu);
-assert.doesNotMatch(
-  embeddedRiasec,
-  /Étape RIASEC indisponible|Le RIASEC décrit|Profil RIASEC|RIASEC intégré/u,
-);
+assert.doesNotMatch(embeddedRiasec, /Étape RIASEC indisponible|Le RIASEC décrit|Profil RIASEC|RIASEC intégré/u);
 assert.doesNotMatch(embeddedRiasec, /scoreRiasec/u);
-assert.match(workspace, /Mon rapport Projet de vie/u);
-assert.match(workspace, /window\.print\(\)/u);
-assert.match(workspace, /Mon profil RIASEC/u);
-assert.match(workspace, /Mon choix provisoire/u);
-assert.match(workspace, /Ma première action/u);
+assert.match(workspace, /Donne les informations utiles pour affiner ton projet/u);
+assert.match(workspace, /Tes réponses précédentes sont déjà prises en compte/u);
+assert.match(workspace, /Tes pistes ont été préparées/u);
+assert.match(workspace, /selectAdvisorScenario\(current, scenarioId\)/u);
+assert.match(workspace, /selectedScenario/u);
+assert.match(workspace, /Cette piste est maintenant ton choix provisoire/u);
+assert.doesNotMatch(workspace, /Mon profil RIASEC|adéquation|Confiance .*\/100|engineVersion|capabilityStatus/iu);
 
 // Retired alternate analyzers and ATS routes remain impossible to invoke.
 assert.match(atsRoutes, /router\.post\('\/tests\/analyze', rejectLegacyRiasec/u);
@@ -145,10 +137,10 @@ console.log(JSON.stringify({
   canonicalJourney: '/parcours',
   guestSoftGate: true,
   publicCareerCatalog: true,
-  unifiedReport: 'src/features/life-project/LifeProjectWorkspace.tsx',
+  unifiedWorkspace: 'src/features/life-project/LifeProjectWorkspace.tsx',
   ownedResultVerification: true,
   retiredFrontendAnalyzers: 1,
   retiredLegacyAtsRoutes: 2,
   productionSeed: 'migration -> seed-riasec -> api restart',
 }, null, 2));
-console.log('RIASEC SINGLE ENGINE, GUEST SOFT GATE AND UNIFIED REPORT VERIFICATION PASSED');
+console.log('RIASEC SINGLE ENGINE, GUEST SOFT GATE AND UNIFIED WORKSPACE VERIFICATION PASSED');
