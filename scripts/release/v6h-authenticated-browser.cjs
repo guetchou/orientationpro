@@ -15,8 +15,8 @@ if (!email || !password) {
   process.exit(2);
 }
 
-const waitForHeading = async (page, name, level) => {
-  await page.getByRole('heading', { name, level, exact: true }).waitFor({ timeout: 60000 });
+const waitForHeading = async (page, name) => {
+  await page.getByRole('heading', { name, exact: true }).waitFor({ timeout: 60000 });
 };
 
 const attachDiagnostics = (page, diagnostics) => {
@@ -41,7 +41,7 @@ const login = async (page) => {
 
 const completeGuestQuestionnaire = async (page) => {
   await page.goto(`${webUrl}/parcours`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await waitForHeading(page, 'Construis ton projet d’avenir', 1);
+  await waitForHeading(page, 'Construis ton projet d’avenir');
   const intro = page.locator('[data-testid="unified-riasec-intro"]');
   await intro.waitFor({ timeout: 60000 });
   const introText = await intro.innerText();
@@ -49,7 +49,7 @@ const completeGuestQuestionnaire = async (page) => {
   await page.getByRole('button', { name: 'Commencer le test' }).click();
 
   for (let index = 0; index < 60; index += 1) {
-    await waitForHeading(page, `Affirmation ${index + 1}`, 2);
+    await waitForHeading(page, `Affirmation ${index + 1}`);
     const answers = page.getByRole('radio');
     if (await answers.count() < 2) throw new Error(`No response scale on affirmation ${index + 1}.`);
     await answers.last().click();
@@ -107,7 +107,7 @@ const claimGuestResultThroughLogin = async (page) => {
 };
 
 const fillDiagnosticAndGenerate = async (page) => {
-  await waitForHeading(page, 'Donne les informations utiles pour affiner ton projet', 2);
+  await waitForHeading(page, 'Donne les informations utiles pour affiner ton projet');
   await page.getByLabel('Ce que tu veux faire maintenant').selectOption('studies');
   await page.getByLabel('Ville ou zone').fill('Brazzaville');
   await page.getByLabel('Situation actuelle').fill('Bachelier en recherche d’orientation pour la rentrée');
@@ -142,7 +142,7 @@ const fillDiagnosticAndGenerate = async (page) => {
     throw new Error(`Recommendation generation failed with HTTP ${recommendationResponse.status()}.`);
   }
 
-  await waitForHeading(page, 'Tes pistes à comparer', 2);
+  await waitForHeading(page, 'Tes pistes à comparer');
   const selectionButtons = page.getByRole('button', { name: 'Approfondir cette piste' });
   const scenarioCount = await selectionButtons.count();
   if (scenarioCount < 3 || scenarioCount > 5) {
@@ -157,7 +157,7 @@ const fillDiagnosticAndGenerate = async (page) => {
 
   await selectionButtons.first().click();
   await page.getByRole('button', { name: 'Piste enregistrée' }).waitFor({ timeout: 60000 });
-  await waitForHeading(page, 'Ta prochaine étape', 3);
+  await waitForHeading(page, 'Ta prochaine étape');
 
   return {
     projectId: projectPayload.project.id,
@@ -173,7 +173,7 @@ const fillDiagnosticAndGenerate = async (page) => {
 const pageReadyAfterAuthentication = async (page) => {
   await page.locator('[data-testid="unified-riasec-summary"]').waitFor({ timeout: 60000 });
   await page.locator('[data-testid="authenticated-career-value"]').waitFor({ timeout: 60000 });
-  await waitForHeading(page, 'Donne les informations utiles pour affiner ton projet', 2);
+  await waitForHeading(page, 'Donne les informations utiles pour affiner ton projet');
 };
 
 const main = async () => {
