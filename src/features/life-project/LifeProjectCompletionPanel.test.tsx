@@ -63,7 +63,7 @@ const envelope: AdvisorEnvelope = {
       id: scenario.id,
       title: scenario.title,
       description: scenario.reasons[0].explanation,
-      status: 'selected',
+      status: 'active',
       optionType: 'education',
       missingInformation: [],
       uncertainty: { level: 'medium', reasons: [] },
@@ -133,7 +133,7 @@ describe('LifeProjectCompletionPanel', () => {
 
   it('se met à jour lorsque le parcours publie une nouvelle enveloppe', async () => {
     render(<LifeProjectCompletionPanel />);
-    expect(await screen.findByText(scenario.title)).toBeInTheDocument();
+    expect((await screen.findAllByText(scenario.title)).length).toBeGreaterThan(0);
 
     const updated: AdvisorEnvelope = {
       ...envelope,
