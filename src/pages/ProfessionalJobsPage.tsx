@@ -6,16 +6,10 @@ import { BriefcaseBusiness, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfessionalJobBoard } from '@/components/recruitment/ProfessionalJobBoard';
 
-/**
- * Page des offres d'emploi : un hero éditorial (identité congolaise) au-dessus
- * du tableau d'offres réel. Le composant ProfessionalJobBoard conserve toute sa
- * logique (chargement des offres, recherche, garde-fous de candidature).
- */
 export default function ProfessionalJobsPage() {
   usePageMeta({ title: "Offres d’emploi", description: "Découvrez des offres d’emploi et des opportunités professionnelles au Congo.", path: "/jobs" });
   return (
     <div className="min-h-screen bg-stone-50">
-      {/* ============================ HERO ============================ */}
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <img
@@ -44,12 +38,11 @@ export default function ProfessionalJobsPage() {
               <span className="block text-amber-200">avec méthode</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
-              Des opportunités réelles, présentées sans faux boutons de candidature. Votre profil
-              d’intérêts éclaire les postes à considérer en priorité.
+              Consulte des offres, compare les missions et prépare une candidature adaptée à chaque opportunité.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
-                <Link to="/tests/riasec">Découvrir mon profil</Link>
+                <Link to="/parcours">Mieux définir mon projet</Link>
               </Button>
               <Button
                 size="lg"
@@ -57,18 +50,17 @@ export default function ProfessionalJobsPage() {
                 asChild
                 className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                <Link to="/cv-optimizer">Optimiser mon CV</Link>
+                <Link to="/cv-optimizer">Préparer mon CV</Link>
               </Button>
             </div>
             <p className="mt-6 flex items-center gap-2 text-sm text-emerald-50/70">
               <ShieldCheck className="h-4 w-4 text-amber-200" />
-              Vérifiez toujours l’identité de l’employeur avant de transmettre vos informations.
+              Vérifie toujours l’identité de l’employeur avant de transmettre tes informations.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* ==================== TABLEAU D'OFFRES (INCHANGÉ) ==================== */}
       <ProfessionalJobBoard />
     </div>
   );
