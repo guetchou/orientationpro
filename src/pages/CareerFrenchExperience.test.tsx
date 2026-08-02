@@ -117,15 +117,18 @@ describe('French career experience', () => {
     expect(careerApi.createCareerRecommendationSnapshot).toHaveBeenCalledWith('result-1', { locale: 'fr', limit: 50 });
   });
 
-  it('renders French detail, skills and separate O*NET/ESCO sources without React errors', async () => {
-    render(<MemoryRouter initialEntries={['/careers/onet%3Ajob']}><Routes><Route path="/careers/:occupationId" element={<OccupationDetail />} /></Routes></MemoryRouter>);
-    // Le nom du métier apparaît deux fois : le <h1 className="sr-only"> ajouté
-    // pour l'accessibilité (repère de page pour lecteur d'écran) et le
-    // CardTitle visible (h3). On cible ici précisément le titre visible.
-    expect(await screen.findByRole('heading', { level: 3, name: 'infirmier/infirmière' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: 'infirmier/infirmière' })).toBeInTheDocument();
+  it('renders a public French career detail without exposing technical source labels', async () => {
+    const view = render(<MemoryRouter initialEntries={['/careers/onet%3Ajob']}><Routes><Route path="/careers/:occupationId" element={<OccupationDetail />} /></Routes></MemoryRouter>);
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'infirmier/infirmière' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ce que ce métier mobilise souvent' })).toBeInTheDocument();
     expect(screen.getByText('prodiguer des soins')).toBeInTheDocument();
-    expect(screen.getByText(/Description : ESCO 1.2.1/u)).toBeInTheDocument();
-    expect(screen.getByText(/RIASEC : O\*NET 30.3/u)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Voir si ce métier me correspond' })).toHaveAttribute('href', '/parcours');
+
+    const publicCopy = view.container.textContent || '';
+    expect(publicCopy).not.toContain('O*NET');
+    expect(publicCopy).not.toContain('ESCO');
+    expect(publicCopy).not.toContain('RIASEC');
+    expect(publicCopy).not.toContain('Job Zone');
   });
 });
