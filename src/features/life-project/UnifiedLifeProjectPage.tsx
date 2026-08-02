@@ -123,7 +123,7 @@ const FullCareerValue = ({ profile }: { profile: AdvisorRiasecProfile }) => {
               <p className="mt-2 text-sm text-muted-foreground">Exemples : {family.examples.join(', ')}.</p>
               <Button asChild variant="outline" className="mt-4 w-full">
                 <Link to={`/careers?q=${encodeURIComponent(family.searchQuery)}`}>
-                  Explorer ces métiers <ArrowRight className="ml-2 h-4 w-4" />
+                  Explorer les métiers <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
