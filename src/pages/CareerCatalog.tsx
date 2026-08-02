@@ -71,20 +71,19 @@ export default function CareerCatalog() {
       <h1 className="sr-only">Explorer les métiers en français</h1>
       <div className="mx-auto min-w-0 max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost"><Link to="/parcours"><ArrowLeft className="mr-2 h-4 w-4" />Revenir à mon profil</Link></Button>
-          <Button asChild><Link to="/parcours">Commencer mon Projet de vie</Link></Button>
+          <Button asChild variant="ghost"><Link to="/parcours"><ArrowLeft className="mr-2 h-4 w-4" />Revenir à mon projet</Link></Button>
+          <Button asChild><Link to="/parcours">Découvrir mon profil</Link></Button>
         </div>
         <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Badge>Exploration publique</Badge>
-              <Badge variant="outline">Sans compte</Badge>
-              {onet ? <Badge variant="outline">{onet.occupationCount} métiers O*NET</Badge> : null}
-              {esco ? <Badge variant="outline">ESCO français {esco.version}</Badge> : null}
+              <Badge>Catalogue des métiers</Badge>
+              {onet ? <Badge variant="outline">Plus de {onet.occupationCount} métiers</Badge> : null}
+              {esco ? <Badge variant="outline">Fiches en français</Badge> : null}
             </div>
-            <CardTitle className="text-3xl">Explorer les métiers en français</CardTitle>
+            <CardTitle className="text-3xl">Explore les métiers qui t’intéressent</CardTitle>
             <CardDescription className="max-w-4xl text-base leading-relaxed">
-              Découvre librement les activités, descriptions et profils d’intérêts des métiers. La création de compte n’est demandée que pour sauvegarder, comparer et personnaliser ton Projet de vie.
+              Recherche un métier, découvre ses activités et consulte les profils d’intérêts associés. Tu pourras ensuite affiner les pistes selon ta situation.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -95,9 +94,9 @@ export default function CareerCatalog() {
               </div>
               <Button type="button" className="self-end" onClick={submitSearch}><Search className="mr-2 h-4 w-4" />Rechercher</Button>
             </div>
-            <label className="flex items-center gap-3 rounded-xl border p-4 text-sm text-slate-700"><input type="checkbox" checked={riasecOnly} onChange={(event) => { setOffset(0); setRiasecOnly(event.target.checked); }} className="h-4 w-4" />Afficher uniquement les métiers disposant d’un profil RIASEC classable</label>
+            <label className="flex items-center gap-3 rounded-xl border p-4 text-sm text-slate-700"><input type="checkbox" checked={riasecOnly} onChange={(event) => { setOffset(0); setRiasecOnly(event.target.checked); }} className="h-4 w-4" />Afficher uniquement les métiers avec un profil d’intérêts disponible</label>
             <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-950">
-              Données descriptives : <strong>{esco?.title || 'ESCO français non importé'}</strong>. Profil d’intérêts : <strong>{onet?.title || 'O*NET'}</strong>. L’adaptation au contexte congolais reste une revue séparée et les métiers exclus localement ne sont pas publiés.
+              Les fiches présentent des informations descriptives sur les métiers. Les informations locales sont enrichies progressivement afin de mieux refléter les réalités du Congo.
             </div>
           </CardContent>
         </Card>
@@ -111,16 +110,16 @@ export default function CareerCatalog() {
                 <Card key={occupation.id} className="h-full min-w-0 overflow-hidden border-slate-200 shadow-sm">
                   <CardHeader className="min-w-0 space-y-3">
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant={occupation.riasecProfileStatus === 'missing' ? 'outline' : 'default'}>{occupation.riasecDisplayCode || 'Sans profil'}</Badge>
+                      <Badge variant={occupation.riasecProfileStatus === 'missing' ? 'outline' : 'default'}>{occupation.riasecDisplayCode ? 'Profil d’intérêts disponible' : 'Profil en cours d’enrichissement'}</Badge>
                       <Badge variant="secondary">{profileStatusLabel(occupation.riasecProfileStatus)}</Badge>
-                      {occupation.translationStatus === 'unavailable' ? <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Anglais</Badge> : <Badge variant="outline">Français ESCO</Badge>}
+                      {occupation.translationStatus === 'unavailable' ? <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Fiche en anglais</Badge> : <Badge variant="outline">Fiche en français</Badge>}
                     </div>
                     <CardTitle className="break-words text-xl">{occupation.preferredLabel}</CardTitle>
                     <CardDescription className="line-clamp-4 break-words leading-relaxed">{occupation.description || 'Description indisponible.'}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex flex-wrap gap-2 text-xs"><Badge variant="outline">O*NET {occupation.sourceCode}</Badge><Badge variant="outline">{localRelevanceLabel(occupation.localRelevanceStatus)}</Badge></div>
-                    <Button asChild variant="outline" className="w-full"><Link to={`/careers/${encodeURIComponent(occupation.id)}`}>Consulter la fiche</Link></Button>
+                    <div className="flex flex-wrap gap-2 text-xs"><Badge variant="outline">{localRelevanceLabel(occupation.localRelevanceStatus)}</Badge></div>
+                    <Button asChild variant="outline" className="w-full"><Link to={`/careers/${encodeURIComponent(occupation.id)}`}>Découvrir ce métier</Link></Button>
                   </CardContent>
                 </Card>
               ))}
