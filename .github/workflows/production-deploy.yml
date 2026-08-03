@@ -12,6 +12,13 @@ on:
       - main
     paths:
       - ops/production/deploy-guest-first-life-project
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+    paths:
+      - ops/production/deploy-guest-first-life-project
 
 permissions:
   contents: read
@@ -23,36 +30,65 @@ concurrency:
 jobs:
   deploy:
     if: >-
-      github.ref == 'refs/heads/main' &&
       (
-        (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'DEPLOY_PRODUCTION') ||
-        github.event_name == 'push'
+        github.event_name == 'workflow_dispatch' &&
+        github.ref == 'refs/heads/main' &&
+        inputs.confirmation == 'DEPLOY_PRODUCTION'
+      ) ||
+      (
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main'
+      ) ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.merged == true &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'release/production-')
       )
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment:
       name: Production
       url: https://makoki.org
+    env:
+      DEPLOY_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.merge_commit_sha || github.sha }}
     steps:
       - name: Check out the selected main commit
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.DEPLOY_SHA }}
 
       - name: Validate deployment authorization and scripts
         shell: bash
         run: |
           set -Eeuo pipefail
-          test "${GITHUB_REF}" = refs/heads/main
           bash -n scripts/deploy-production-vps.sh
           bash -n scripts/release/activate-life-project-flags.sh
 
-          if [[ "${GITHUB_EVENT_NAME}" == push ]]; then
-            test -f ops/production/deploy-guest-first-life-project
-            grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-guest-first-life-project
-          else
-            test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
-          fi
+          case "${GITHUB_EVENT_NAME}" in
+            push)
+              test "${GITHUB_REF}" = refs/heads/main
+              test -f ops/production/deploy-guest-first-life-project
+              grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-guest-first-life-project
+              ;;
+            workflow_dispatch)
+              test "${GITHUB_REF}" = refs/heads/main
+              test "${{ inputs.confirmation }}" = DEPLOY_PRODUCTION
+              ;;
+            pull_request)
+              test "${{ github.event.pull_request.merged }}" = true
+              test "${{ github.event.pull_request.base.ref }}" = main
+              test "${{ github.event.pull_request.head.repo.full_name }}" = "${GITHUB_REPOSITORY}"
+              [[ "${{ github.event.pull_request.head.ref }}" == release/production-* ]]
+              test -f ops/production/deploy-guest-first-life-project
+              grep -qx 'DEPLOY_PRODUCTION' ops/production/deploy-guest-first-life-project
+              ;;
+            *)
+              echo "Unsupported event: ${GITHUB_EVENT_NAME}" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Configure restricted production SSH key
         env:
@@ -82,7 +118,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "${PRODUCTION_SSH_USER}@${PRODUCTION_SSH_HOST}" \
-            "deploy ${GITHUB_SHA}"
+            "deploy ${DEPLOY_SHA}"
 
       - name: Verify public production endpoints and capabilities
         shell: bash
@@ -138,8 +174,8 @@ jobs:
           const byId = (id) => registry.capabilities.find((entry) => entry.id === id);
 
           if (health.status !== 'OK') throw new Error('Public health endpoint is not OK.');
-          if (health.gitSha !== process.env.GITHUB_SHA) {
-            throw new Error(`Served SHA ${health.gitSha || 'null'} does not match ${process.env.GITHUB_SHA}.`);
+          if (health.gitSha !== process.env.DEPLOY_SHA) {
+            throw new Error(`Served SHA ${health.gitSha || 'null'} does not match ${process.env.DEPLOY_SHA}.`);
           }
           if (!instrument.instrument || instrument.instrument.itemCount !== 60) {
             throw new Error('Public RIASEC instrument is unavailable or incomplete.');
