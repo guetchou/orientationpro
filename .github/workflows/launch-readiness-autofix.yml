@@ -1,0 +1,65 @@
+name: Launch Readiness Autofix
+
+on:
+  push:
+    branches:
+      - feat/launch-readiness-final-20260803
+    paths:
+      - scripts/launch/apply-launch-readiness.mjs
+      - .github/workflows/launch-readiness-autofix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Importer le harnais V6-H le plus récent
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin test/v6h-authenticated-recipe-20260802 --depth=1
+          git show FETCH_HEAD:.github/workflows/v6h-authenticated-recipe.yml > .github/workflows/v6h-authenticated-recipe.yml
+          git show FETCH_HEAD:scripts/release/v6h-authenticated-browser.cjs > scripts/release/v6h-authenticated-browser.cjs
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.1
+          cache: npm
+
+      - name: Appliquer les correctifs
+        run: node scripts/launch/apply-launch-readiness.mjs
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérifier les changements
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          npm run typecheck
+          npm run test
+          npm run build
+          node --check backend/src/orientation/riasec/instrument.js
+          node --check scripts/release/v6h-authenticated-browser.cjs
+          git diff --check
+
+      - name: Publier le lot généré sur la branche
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "Aucun changement généré."
+            exit 0
+          fi
+          git commit -m "feat(launch): finaliser les contenus, services et rapports"
+          git push origin HEAD:${GITHUB_REF_NAME}
