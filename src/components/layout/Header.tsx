@@ -4,6 +4,7 @@ import { ChevronDown, LogOut, Menu, Search, User, X } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { isAuthRoute } from '@/lib/authRoutes';
+import { RoleSpaceSwitcher } from '@/components/auth/RoleSpaceSwitcher';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -113,10 +114,11 @@ export const Header = () => {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuItem asChild>
                   <Link to="/profile"><User className="mr-2 h-4 w-4" />Mon profil</Link>
                 </DropdownMenuItem>
+                <RoleSpaceSwitcher autoPrompt className="w-full justify-start px-2 py-1.5 text-sm font-normal" />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-700">
                   <LogOut className="mr-2 h-4 w-4" />Déconnexion
@@ -179,6 +181,7 @@ export const Header = () => {
                     <Button variant="ghost" className="w-full justify-start" asChild>
                       <Link to="/profile" onClick={() => setIsMenuOpen(false)}>Mon profil</Link>
                     </Button>
+                    <RoleSpaceSwitcher className="w-full justify-start" />
                     <Button variant="ghost" className="w-full justify-start text-red-700" onClick={handleLogout}>
                       Déconnexion
                     </Button>
