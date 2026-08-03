@@ -28,7 +28,7 @@ const expectedEnvironment = Object.freeze({
   RIASEC_API_ENABLED: 'false',
   RIASEC_ALLOW_DRAFT: 'false',
   CAREER_API_ENABLED: 'false',
-  CV_API_V1_ENABLED: 'false',
+  CV_API_V1_ENABLED: 'true',
   FEATURE_CHATBOT: 'false',
   FEATURE_ANALYTICS: 'false',
 });
@@ -40,8 +40,10 @@ for (const [key, expected] of Object.entries(expectedEnvironment)) {
   }
 }
 
-if (String(buildArgs.VITE_LIFE_PROJECT_ENABLED ?? '') !== 'true') {
-  throw new Error('Resolved web build argument VITE_LIFE_PROJECT_ENABLED must be true.');
+for (const key of ['VITE_LIFE_PROJECT_ENABLED', 'VITE_CV_ANALYSIS_ENABLED']) {
+  if (String(buildArgs[key] ?? '') !== 'true') {
+    throw new Error(`Resolved web build argument ${key} must be true.`);
+  }
 }
 
-process.stdout.write('Resolved Compose configuration satisfies V6-H.\n');
+process.stdout.write('Resolved Compose configuration satisfies Projet de vie and CV V1 production boundaries.\n');
