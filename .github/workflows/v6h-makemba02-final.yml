@@ -1,0 +1,315 @@
+name: V6-H Makemba02 Final Recipe
+
+on:
+  push:
+    branches:
+      - agent/v6h-makemba02-final
+    paths:
+      - ops/recipe/start-makemba02-final
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  recipe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      V6H_WEB_URL: https://makoki.org
+      V6H_API_ROOT: https://makoki.org/api
+      V6H_RECIPE_EMAIL: makemba02@gmail.com
+      RECIPE_BRANCH: agent/v6h-makemba02-final
+      TRACKING_ISSUE: '184'
+      EXPECTED_PRODUCTION_SHA: 4cb3b7c61c973fc6861ab5d33881637081de8dfa
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create encrypted credential handshake
+        id: handshake
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          token_path="ops/recipe/verification-${GITHUB_RUN_ID}.b64"
+          password_path="ops/recipe/password-${GITHUB_RUN_ID}.b64"
+
+          printf 'V6H_TOKEN_PATH=%s\n' "${token_path}" >>"${GITHUB_ENV}"
+          printf 'V6H_PASSWORD_PATH=%s\n' "${password_path}" >>"${GITHUB_ENV}"
+          printf 'token_path=%s\n' "${token_path}" >>"${GITHUB_OUTPUT}"
+          printf 'password_path=%s\n' "${password_path}" >>"${GITHUB_OUTPUT}"
+
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out /tmp/v6h-private.pem
+          chmod 600 /tmp/v6h-private.pem
+          openssl pkey -in /tmp/v6h-private.pem -pubout -out /tmp/v6h-public.pem
+
+          {
+            echo "RUN_ID=${GITHUB_RUN_ID}"
+            echo "RECIPE_EMAIL=${V6H_RECIPE_EMAIL}"
+            echo "TOKEN_PATH=${token_path}"
+            echo "PASSWORD_PATH=${password_path}"
+            echo "EXPECTED_PRODUCTION_SHA=${EXPECTED_PRODUCTION_SHA}"
+          } >/tmp/v6h-handshake.txt
+          chmod 600 /tmp/v6h-handshake.txt
+
+      - name: Upload public handshake
+        uses: actions/upload-artifact@v4
+        with:
+          name: v6h-makemba02-handshake-${{ github.run_id }}
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            /tmp/v6h-public.pem
+            /tmp/v6h-handshake.txt
+
+      - name: Publish recipe checkpoint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          body=$(cat <<EOF
+          ## V6-H — recette finale avec le compte exact
+
+          - Run ID : \`${GITHUB_RUN_ID}\`
+          - Compte : \`${V6H_RECIPE_EMAIL}\`
+          - SHA production attendu : \`${EXPECTED_PRODUCTION_SHA}\`
+          - État : attente des identifiants chiffrés, sans secret public
+          EOF
+          )
+          jq -n --arg body "${body}" '{body:$body}' >/tmp/checkpoint.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/checkpoint.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${TRACKING_ISSUE}/comments" >/dev/null
+
+      - name: Wait for encrypted verification token and password
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          fetch_and_decrypt() {
+            local repository_path="$1"
+            local output_path="$2"
+            local response_path="$3"
+            local encoded_path="$4"
+            local binary_path="$5"
+
+            local status
+            status=$(curl --silent --show-error --output "${response_path}" --write-out '%{http_code}' \
+              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+              --header 'Accept: application/vnd.github+json' \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/${repository_path}?ref=${RECIPE_BRANCH}" || true)
+            [[ "${status}" == 200 ]] || return 1
+
+            jq -r '.content' "${response_path}" | tr -d '\n' | base64 -d >"${encoded_path}"
+            tr -d '\r\n ' <"${encoded_path}" | base64 -d >"${binary_path}"
+            openssl pkeyutl -decrypt \
+              -inkey /tmp/v6h-private.pem \
+              -in "${binary_path}" \
+              -out "${output_path}" \
+              -pkeyopt rsa_padding_mode:oaep \
+              -pkeyopt rsa_oaep_md:sha256 \
+              -pkeyopt rsa_mgf1_md:sha256
+            [[ -s "${output_path}" ]]
+          }
+
+          ready=false
+          for attempt in $(seq 1 120); do
+            token_ready=false
+            password_ready=false
+            fetch_and_decrypt "${V6H_TOKEN_PATH}" /tmp/verification-token.txt /tmp/token.json /tmp/token.b64 /tmp/token.bin && token_ready=true
+            fetch_and_decrypt "${V6H_PASSWORD_PATH}" /tmp/password.txt /tmp/password.json /tmp/password.b64 /tmp/password.bin && password_ready=true
+
+            if [[ "${token_ready}" == true && "${password_ready}" == true ]]; then
+              ready=true
+              break
+            fi
+            echo "Waiting for encrypted credentials (${attempt}/120)."
+            sleep 10
+          done
+          test "${ready}" = true
+
+          verification_token="$(tr -d '\r\n' </tmp/verification-token.txt)"
+          recipe_password="$(tr -d '\r\n' </tmp/password.txt)"
+          test -n "${verification_token}"
+          test -n "${recipe_password}"
+          echo "::add-mask::${verification_token}"
+          echo "::add-mask::${recipe_password}"
+          printf 'V6H_VERIFICATION_TOKEN=%s\n' "${verification_token}" >>"${GITHUB_ENV}"
+          printf 'V6H_RECIPE_PASSWORD=%s\n' "${recipe_password}" >>"${GITHUB_ENV}"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.1
+          cache: npm
+
+      - name: Install dependencies and Chromium
+        run: |
+          set -Eeuo pipefail
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Verify served production SHA
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          status=$(curl --silent --show-error --output /tmp/v6h-health.json --write-out '%{http_code}' \
+            https://makoki.org/api/test/health)
+          test "${status}" = 200
+          test "$(jq -r '.status' /tmp/v6h-health.json)" = OK
+          test "$(jq -r '.gitSha' /tmp/v6h-health.json)" = "${EXPECTED_PRODUCTION_SHA}"
+
+      - name: Verify account and create complete project
+        env:
+          V6H_RECIPE_PHASE: initial
+          V6H_RECIPE_OUTPUT: /tmp/v6h-api-initial.json
+        run: node scripts/release/v6h-authenticated-recipe.cjs
+
+      - name: Validate comparison, provisional choice and printable synthesis
+        env:
+          V6H_BROWSER_OUTPUT: /tmp/v6h-browser.json
+          V6H_SCREENSHOT_PATH: /tmp/v6h-makemba02-parcours.png
+          V6H_PDF_PATH: /tmp/v6h-makemba02-synthesis.pdf
+        run: node scripts/release/v6h-authenticated-browser.cjs
+
+      - name: Verify final persisted state through public API
+        env:
+          V6H_RECIPE_PHASE: final
+          V6H_RECIPE_OUTPUT: /tmp/v6h-api-final.json
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          project_id=$(jq -r '.projectId' /tmp/v6h-api-initial.json)
+          test -n "${project_id}"
+          V6H_PROJECT_ID="${project_id}" node scripts/release/v6h-authenticated-recipe.cjs
+
+      - name: Request password reset delivery proof
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          status=$(curl --silent --show-error --output /tmp/password-reset-response.json --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "$(jq -nc --arg email "${V6H_RECIPE_EMAIL}" '{email:$email}')" \
+            "${V6H_API_ROOT}/v1/auth/password-reset/request")
+          test "${status}" = 202
+          jq -n --argjson status "${status}" '{requested:true,httpStatus:$status}' >/tmp/password-reset-request.json
+
+      - name: Build sanitized final evidence
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          JOB_STATUS="${JOB_STATUS}" EXPECTED_PRODUCTION_SHA="${EXPECTED_PRODUCTION_SHA}" V6H_RECIPE_EMAIL="${V6H_RECIPE_EMAIL}" node <<'NODE'
+          const fs = require('node:fs');
+          const read = (path) => {
+            try { return JSON.parse(fs.readFileSync(path, 'utf8')); } catch { return null; }
+          };
+          const health = read('/tmp/v6h-health.json');
+          const initial = read('/tmp/v6h-api-initial.json');
+          const browser = read('/tmp/v6h-browser.json');
+          const final = read('/tmp/v6h-api-final.json');
+          const reset = read('/tmp/password-reset-request.json');
+          const requiredColumns = ['Option', 'Adéquation', 'Confiance', 'Durée', 'Coût', 'Calendrier', 'Accès / mobilité'];
+          const structuredFacts = Array.isArray(initial?.scenarioFacts)
+            && initial.scenarioFacts.length >= 3
+            && initial.scenarioFacts.length <= 5
+            && initial.scenarioFacts.every((entry) =>
+              Object.hasOwn(entry, 'durationMonths')
+              && Boolean(entry.costStatus)
+              && Boolean(entry.calendarStatus)
+              && Array.isArray(entry.modes)
+              && entry.modes.length > 0
+            );
+          const comparisonComplete = requiredColumns.every((column) => browser?.comparisonColumns?.includes(column));
+          const passed = process.env.JOB_STATUS === 'success'
+            && health?.status === 'OK'
+            && health?.gitSha === process.env.EXPECTED_PRODUCTION_SHA
+            && initial?.accountStatus === 'active'
+            && structuredFacts
+            && browser?.scenarioCount >= 3
+            && browser?.scenarioCount <= 5
+            && comparisonComplete
+            && browser?.provisionalChoiceVisible === true
+            && browser?.synthesisVisible === true
+            && browser?.pdfCreated === true
+            && browser?.screenshotCreated === true
+            && browser?.consoleErrorCount === 0
+            && browser?.pageErrorCount === 0
+            && final?.projectId === initial?.projectId
+            && final?.projectState === 'provisional_choice'
+            && Boolean(final?.selectedScenario?.firstAction)
+            && reset?.requested === true
+            && reset?.httpStatus === 202;
+
+          const decision = passed ? 'GO AUTHENTIFIÉ' : 'NON CONCLUE';
+          const lines = [
+            `## V6-H — recette finale ${decision}`,
+            '',
+            `- SHA réellement servi : \`${health?.gitSha || 'non observé'}\``,
+            `- Compte exact : \`${process.env.V6H_RECIPE_EMAIL}\``,
+            `- Vérification e-mail et connexion : ${initial?.accountStatus === 'active' ? 'réussies' : 'non prouvées'}`,
+            `- Options générées : ${initial?.scenarioCount ?? 'non prouvées'}`,
+            `- Durée, coût, calendrier et modalités : ${structuredFacts ? 'structurés' : 'incomplets ou non prouvés'}`,
+            `- Tableau comparatif complet : ${comparisonComplete ? 'présent' : 'non prouvé'}`,
+            `- Choix provisoire : ${browser?.provisionalChoiceVisible ? 'effectué' : 'non prouvé'}`,
+            `- Synthèse dédiée : ${browser?.synthesisVisible ? 'présente' : 'non prouvée'}`,
+            `- PDF et capture : ${browser?.pdfCreated && browser?.screenshotCreated ? 'créés' : 'non prouvés'}`,
+            `- Erreurs console / page : ${browser ? `${browser.consoleErrorCount} / ${browser.pageErrorCount}` : 'non observées'}`,
+            `- Persistance finale : \`${final?.projectState || 'non observée'}\``,
+            `- Option retenue : ${final?.selectedScenario?.title || 'non observée'}`,
+            `- Première action : ${final?.selectedScenario?.firstAction || 'non observée'}`,
+            `- Réinitialisation demandée après activation : ${reset?.httpStatus === 202 ? 'HTTP 202' : 'non prouvée'}`,
+            '',
+            passed
+              ? 'Décision : **GO AUTHENTIFIÉ**. Les critères techniques et fonctionnels de #184 sont démontrés sur le compte exact.'
+              : 'Décision : **NON CONCLUE**. Consulter les artefacts privés du run sans exposer les secrets.',
+          ];
+          fs.writeFileSync('/tmp/v6h-final-evidence.md', `${lines.join('\n')}\n`);
+          console.log(lines.join('\n'));
+          NODE
+
+      - name: Publish sanitized evidence to issue 184
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -f /tmp/v6h-final-evidence.md ]]; then
+            jq -Rs '{body:.}' </tmp/v6h-final-evidence.md >/tmp/evidence-comment.json
+          else
+            jq -n --arg body "## V6-H — recette finale NON CONCLUE\n\nLe run ${GITHUB_RUN_ID} n’a pas produit de rapport exploitable." '{body:$body}' >/tmp/evidence-comment.json
+          fi
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/evidence-comment.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${TRACKING_ISSUE}/comments" >/dev/null
+
+      - name: Upload private final evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v6h-makemba02-final-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            /tmp/v6h-health.json
+            /tmp/v6h-api-initial.json
+            /tmp/v6h-browser.json
+            /tmp/v6h-api-final.json
+            /tmp/password-reset-request.json
+            /tmp/v6h-makemba02-parcours.png
+            /tmp/v6h-makemba02-synthesis.pdf
+            /tmp/v6h-final-evidence.md
