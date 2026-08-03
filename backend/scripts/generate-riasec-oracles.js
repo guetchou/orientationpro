@@ -11,6 +11,11 @@ const { scoreRiasec } = require('../src/orientation/riasec/scoring');
 
 const DIMENSIONS = ['R', 'I', 'A', 'S', 'E', 'C'];
 const OUTPUT_PATH = path.join(__dirname, '..', '..', 'tests', 'life-project', 'oracles', 'riasec-profiles.v1.json');
+// L'ordre d'affichage des items est mélangé côté serveur à chaque tentative
+// (backend/src/orientation/riasec/router.js) : un test navigateur ne peut
+// donc pas répondre "l'item N" mais doit retrouver chaque affirmation par
+// son texte affiché. Ce fichier compagnon fournit id -> {prompt, dimension}.
+const ITEMS_OUTPUT_PATH = path.join(__dirname, '..', '..', 'tests', 'life-project', 'oracles', 'riasec-items.v1.json');
 
 // Construit les 60 réponses {itemId, value} à partir d'une règle
 // item -> valeur brute (1-5, telle qu'un utilisateur cliquerait — l'inversion
@@ -116,3 +121,16 @@ const bank = {
 fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
 fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(bank, null, 2)}\n`);
 process.stdout.write(`Banque d'oracles écrite : ${OUTPUT_PATH} (${bank.profiles.length} profils)\n`);
+
+const items = {
+  schemaVersion: 'life-project-riasec-items-v1',
+  instrumentId: instrument.id,
+  instrumentVersion: instrument.version,
+  items: Object.fromEntries(instrument.items.map((item) => [
+    item.id,
+    { prompt: item.prompt, dimension: item.dimension, reverseScored: Boolean(item.reverseScored) },
+  ])),
+};
+
+fs.writeFileSync(ITEMS_OUTPUT_PATH, `${JSON.stringify(items, null, 2)}\n`);
+process.stdout.write(`Table des affirmations écrite : ${ITEMS_OUTPUT_PATH} (${instrument.items.length} items)\n`);

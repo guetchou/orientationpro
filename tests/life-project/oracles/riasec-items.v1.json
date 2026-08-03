@@ -1,0 +1,307 @@
+{
+  "schemaVersion": "life-project-riasec-items-v1",
+  "instrumentId": "riasec-makoki-fr-draft-v2",
+  "instrumentVersion": 2,
+  "items": {
+    "riasec-makoki-fr-draft-v2-r-01": {
+      "prompt": "Je prends plaisir à fabriquer, monter ou réparer un objet.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-01": {
+      "prompt": "J’aime rechercher des informations avant de tirer une conclusion.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-01": {
+      "prompt": "Créer un texte, une image, un objet ou un contenu original me plaît.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-01": {
+      "prompt": "Aider une personne à résoudre une difficulté me donne de l’énergie.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-01": {
+      "prompt": "Présenter une idée pour obtenir l’adhésion des autres m’intéresse.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-01": {
+      "prompt": "Classer des informations de manière claire et facile à retrouver me plaît.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-02": {
+      "prompt": "J’aime installer ou régler un équipement pour qu’il fonctionne correctement.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-02": {
+      "prompt": "Analyser des données pour comprendre une situation m’intéresse.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-02": {
+      "prompt": "J’aime imaginer plusieurs solutions inhabituelles à un même problème.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-02": {
+      "prompt": "Expliquer une notion jusqu’à ce qu’elle soit comprise me plaît.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-02": {
+      "prompt": "Prendre l’initiative lorsqu’un projet doit avancer me plaît.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-02": {
+      "prompt": "Suivre une procédure précise pour éviter les erreurs me convient.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-03": {
+      "prompt": "Je préfère certaines activités qui se déroulent sur le terrain plutôt que seulement derrière un bureau.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-03": {
+      "prompt": "Je prends plaisir à diagnostiquer la cause d’un problème complexe.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-03": {
+      "prompt": "Exprimer une idée par le design, la musique, l’écriture ou la scène m’intéresse.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-03": {
+      "prompt": "J’écoute volontiers une personne qui cherche un conseil.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-03": {
+      "prompt": "Coordonner une équipe vers un objectif peut me motiver.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-03": {
+      "prompt": "Vérifier les détails d’un document, d’un chiffre ou d’un dossier m’intéresse.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-04": {
+      "prompt": "L’utilisation d’outils ou de matériel technique m’intéresse.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-04": {
+      "prompt": "Tester une hypothèse ou comparer plusieurs explications me motive.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-04": {
+      "prompt": "Je remarque facilement la présentation, les formes, les sons ou l’esthétique.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-04": {
+      "prompt": "Faciliter l’entente entre plusieurs personnes m’intéresse.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-04": {
+      "prompt": "Négocier un accord ou défendre une proposition m’intéresse.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-04": {
+      "prompt": "Planifier les étapes d’une activité et respecter les délais me motive.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-05": {
+      "prompt": "J’aime rechercher la cause pratique d’une panne mécanique ou électrique.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-05": {
+      "prompt": "Je cherche volontiers à comprendre comment un système fonctionne en profondeur.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-05": {
+      "prompt": "Je préfère les activités qui laissent une place à l’imagination.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-05": {
+      "prompt": "Participer à une activité éducative, sanitaire ou communautaire peut me motiver.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-05": {
+      "prompt": "Je suis prêt à prendre une décision lorsque plusieurs options sont possibles.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-05": {
+      "prompt": "Travailler avec des tableaux, des budgets ou des données administratives peut me plaire.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-06": {
+      "prompt": "Je suis motivé par les tâches dont le résultat concret est rapidement visible.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-06": {
+      "prompt": "Les problèmes logiques ou scientifiques retiennent facilement mon attention.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-06": {
+      "prompt": "Concevoir une identité visuelle ou une manière nouvelle de communiquer peut me motiver.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-06": {
+      "prompt": "Je suis à l’aise lorsque mon travail consiste à accompagner une progression.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-06": {
+      "prompt": "Développer une activité commerciale ou entrepreneuriale m’attire.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-06": {
+      "prompt": "J’apprécie les outils qui permettent de suivre méthodiquement l’avancement d’un travail.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-07": {
+      "prompt": "Conduire ou manipuler un équipement en respectant des consignes m’attire.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-07": {
+      "prompt": "Je vérifie les preuves et les sources avant d’accepter une affirmation.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-07": {
+      "prompt": "Raconter une histoire ou transmettre une émotion par un contenu me plaît.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-07": {
+      "prompt": "Travailler avec un groupe pour répondre à un besoin humain me plaît.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-07": {
+      "prompt": "Mobiliser des personnes et des ressources autour d’un projet me plaît.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-07": {
+      "prompt": "Contrôler l’exactitude et la conformité d’une opération m’intéresse.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-08": {
+      "prompt": "Contrôler physiquement la qualité d’un produit ou d’une installation peut me plaire.",
+      "dimension": "R",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-i-08": {
+      "prompt": "Apprendre de nouvelles notions techniques ou scientifiques me stimule.",
+      "dimension": "I",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-a-08": {
+      "prompt": "Améliorer l’apparence ou l’originalité d’un projet m’intéresse.",
+      "dimension": "A",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-s-08": {
+      "prompt": "Je prends plaisir à transmettre une méthode ou une compétence.",
+      "dimension": "S",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-e-08": {
+      "prompt": "Atteindre un objectif mesurable et assumer le résultat me stimule.",
+      "dimension": "E",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-c-08": {
+      "prompt": "Un environnement organisé avec des responsabilités bien définies me convient.",
+      "dimension": "C",
+      "reverseScored": false
+    },
+    "riasec-makoki-fr-draft-v2-r-09": {
+      "prompt": "Je préfère éviter les activités qui demandent de manipuler du matériel ou des équipements.",
+      "dimension": "R",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-i-09": {
+      "prompt": "Je préfère éviter les questions qui demandent une analyse approfondie.",
+      "dimension": "I",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-a-09": {
+      "prompt": "Je préfère les tâches où aucune créativité personnelle n’est attendue.",
+      "dimension": "A",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-s-09": {
+      "prompt": "Je préfère que mon travail implique le moins possible de contacts avec d’autres personnes.",
+      "dimension": "S",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-e-09": {
+      "prompt": "Je préfère éviter les rôles où je dois prendre des responsabilités importantes.",
+      "dimension": "E",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-c-09": {
+      "prompt": "La documentation et le classement des informations me dérangent.",
+      "dimension": "C",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-r-10": {
+      "prompt": "Les tâches manuelles et techniques m’intéressent peu.",
+      "dimension": "R",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-i-10": {
+      "prompt": "Je suis plus à l’aise avec une réponse immédiate qu’avec une longue recherche.",
+      "dimension": "I",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-a-10": {
+      "prompt": "Les activités artistiques ou créatives m’attirent peu.",
+      "dimension": "A",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-s-10": {
+      "prompt": "Les activités d’aide ou d’accompagnement me motivent peu.",
+      "dimension": "S",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-e-10": {
+      "prompt": "Défendre une idée ou convaincre un interlocuteur me met généralement mal à l’aise.",
+      "dimension": "E",
+      "reverseScored": true
+    },
+    "riasec-makoki-fr-draft-v2-c-10": {
+      "prompt": "Je préfère improviser plutôt que travailler avec un plan ou une méthode établie.",
+      "dimension": "C",
+      "reverseScored": true
+    }
+  }
+}
