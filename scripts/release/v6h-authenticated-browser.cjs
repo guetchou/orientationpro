@@ -34,7 +34,7 @@ const main = async () => {
   try {
     await page.goto(`${webUrl}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.getByLabel('Adresse e-mail').fill(email);
-    await page.getByLabel('Mot de passe').fill(password);
+    await page.locator('#login-password').fill(password);
     await page.getByRole('button', { name: 'Se connecter' }).click();
     await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 60000 });
 
