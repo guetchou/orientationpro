@@ -5,8 +5,10 @@ import App from './App';
 import './index.css';
 import './styles/themes.css';
 import './styles/mobile.css';
+import './styles/launch-readiness.css';
 import { ThemeProvider } from 'next-themes';
 import { ErrorBoundary } from './components/errors/ErrorBoundary';
+import { PublicCopyNormalizer } from './components/content/PublicCopyNormalizer';
 
 // Configuration des performances pour framer-motion
 if (typeof window !== 'undefined') {
@@ -82,6 +84,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       }}
     >
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <PublicCopyNormalizer />
         <App />
       </ThemeProvider>
     </ErrorBoundary>
