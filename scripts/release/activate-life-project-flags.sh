@@ -4,6 +4,57 @@ set -Eeuo pipefail
 env_file="${1:-}"
 [[ -f "${env_file}" ]] || { printf 'Usage: %s ENV_FILE\n' "$0" >&2; exit 2; }
 
+read_value() {
+  local key="$1"
+  awk -F= -v key="${key}" '$1 == key { value = substr($0, index($0, "=") + 1) } END { print value }' "${env_file}"
+}
+
+require_value() {
+  local key="$1"
+  local value
+  value="$(read_value "${key}")"
+  [[ -n "${value}" ]] || {
+    printf '%s is required before enabling Makoki authentication\n' "${key}" >&2
+    exit 1
+  }
+}
+
+# AUTH_V1 mounts /api/v1/auth. Both social providers are part of the public
+# login surface, so production activation must fail closed when one of their
+# settings is absent instead of deploying endpoints that return 404.
+for required_key in \
+  JWT_SECRET \
+  APP_WEB_URL \
+  OAUTH_CALLBACK_BASE_URL \
+  GOOGLE_OAUTH_CLIENT_ID \
+  GOOGLE_OAUTH_CLIENT_SECRET \
+  META_APP_ID \
+  META_APP_SECRET \
+  META_GRAPH_API_VERSION; do
+  require_value "${required_key}"
+done
+
+jwt_secret="$(read_value JWT_SECRET)"
+[[ ${#jwt_secret} -ge 32 ]] || {
+  printf 'JWT_SECRET must contain at least 32 characters\n' >&2
+  exit 1
+}
+
+app_web_url="$(read_value APP_WEB_URL)"
+oauth_callback_base_url="$(read_value OAUTH_CALLBACK_BASE_URL)"
+[[ "${app_web_url}" == 'https://makoki.org' ]] || {
+  printf 'APP_WEB_URL must be https://makoki.org in production\n' >&2
+  exit 1
+}
+[[ "${oauth_callback_base_url}" == 'https://makoki.org' ]] || {
+  printf 'OAUTH_CALLBACK_BASE_URL must be https://makoki.org in production\n' >&2
+  exit 1
+}
+[[ "$(read_value META_GRAPH_API_VERSION)" =~ ^v[0-9]+\.[0-9]+$ ]] || {
+  printf 'META_GRAPH_API_VERSION must use the vNN.N format\n' >&2
+  exit 1
+}
+
 upsert_flag() {
   local key="$1"
   local value="$2"
@@ -68,7 +119,7 @@ for flag in "${required_false[@]}"; do
   }
 done
 
-printf 'Protected VPS baseline and CV V1 web release flags verified\n'
+printf 'Protected VPS baseline, OAuth providers and CV V1 web release flags verified\n'
 
 release_dir="$(dirname "${env_file}")"
 smtp_diagnostic_marker="${release_dir}/ops/production/diagnose-auth-email-delivery"
