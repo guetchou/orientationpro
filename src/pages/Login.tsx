@@ -45,7 +45,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function Login() {
   usePageMeta({
     title: 'Connexion',
-    description: 'Connecte-toi à MAKOKI pour enregistrer tes résultats et poursuivre ton projet.',
+    description: 'Connecte-toi à MAKOKI pour retrouver ton résultat et poursuivre ton projet.',
     path: '/login',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -130,12 +130,12 @@ export default function Login() {
   return (
     <AuthLayout
       headline="Content de te revoir"
-      tagline="Connecte-toi pour enregistrer tes résultats, retrouver ton projet et continuer là où tu t’es arrêté."
+      tagline="Connecte-toi pour retrouver ton résultat, reprendre ton parcours et continuer là où tu t’es arrêté."
       imageName="accompagnement-conseiller"
     >
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-slate-900">Connexion</h1>
-        <p className="mt-2 text-slate-600">Tu retrouveras automatiquement le parcours que tu étais en train de suivre.</p>
+        <p className="mt-2 text-slate-600">Après connexion, tu retrouveras automatiquement le parcours que tu avais commencé.</p>
       </div>
 
       {serverError && (
