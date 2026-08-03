@@ -26,7 +26,6 @@ required_true=(
   AUTH_V1_ENABLED
   LIFE_PROJECT_API_ENABLED
   VITE_LIFE_PROJECT_ENABLED
-  CV_API_V1_ENABLED
   VITE_CV_ANALYSIS_ENABLED
 )
 
@@ -37,6 +36,7 @@ required_false=(
   RIASEC_API_ENABLED
   RIASEC_ALLOW_DRAFT
   CAREER_API_ENABLED
+  CV_API_V1_ENABLED
   FEATURE_CHATBOT
   FEATURE_ANALYTICS
 )
@@ -56,19 +56,19 @@ read_flag() {
 
 for flag in "${required_true[@]}"; do
   [[ "$(read_flag "${flag}")" == true ]] || {
-    printf '%s must be true for the Projet de vie and CV V1 production release\n' "${flag}" >&2
+    printf '%s must be true for the Projet de vie and CV V1 web release\n' "${flag}" >&2
     exit 1
   }
 done
 
 for flag in "${required_false[@]}"; do
   [[ "$(read_flag "${flag}")" == false ]] || {
-    printf '%s must remain false during the Projet de vie and CV V1 production release\n' "${flag}" >&2
+    printf '%s must remain false in the protected VPS baseline\n' "${flag}" >&2
     exit 1
   }
 done
 
-printf 'Projet de vie and CV V1 release flags verified\n'
+printf 'Protected VPS baseline and CV V1 web release flags verified\n'
 
 release_dir="$(dirname "${env_file}")"
 smtp_diagnostic_marker="${release_dir}/ops/production/diagnose-auth-email-delivery"
