@@ -39,13 +39,19 @@ export const normalizeAuthRoles = (roles?: string | string[] | null): string[] =
 
 export const spacesForRoles = (roles?: string | string[] | null): AuthSpace[] => {
   const normalized = normalizeAuthRoles(roles);
-  return ROLE_PRIORITY
-    .filter((role) => normalized.includes(role))
-    .map((role) => ({ role, ...ROLE_SPACES[role] }));
+  const destinations = new Set<string>();
+
+  return ROLE_PRIORITY.flatMap((role) => {
+    if (!normalized.includes(role)) return [];
+    const space = ROLE_SPACES[role];
+    if (destinations.has(space.destination)) return [];
+    destinations.add(space.destination);
+    return [{ role, ...space }];
+  });
 };
 
 export const hasMultipleAuthSpaces = (roles?: string | string[] | null): boolean => (
-  new Set(spacesForRoles(roles).map((space) => space.destination)).size > 1
+  spacesForRoles(roles).length > 1
 );
 
 export const destinationForRoles = (roles?: string | string[] | null): string => {
