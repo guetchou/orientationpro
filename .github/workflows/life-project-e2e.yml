@@ -1,0 +1,82 @@
+name: Life Project E2E (issue #216)
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/src/orientation/**'
+      - 'backend/src/life-project/**'
+      - 'backend/src/capabilities/**'
+      - 'src/features/life-project/**'
+      - 'tests/life-project/**'
+      - 'playwright.life-project.config.ts'
+      - '.github/workflows/life-project-e2e.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: life-project-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright — parcours invité → compte → rapport
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: e2e_root_password
+          MYSQL_DATABASE: orientationpro_life_project_e2e
+        ports:
+          - 34075:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pe2e_root_password --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.4
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - run: npm ci
+      - run: npm --prefix backend ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Seed dedicated throwaway database
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: '34075'
+          DB_USER: root
+          DB_PASSWORD: e2e_root_password
+          DB_NAME: orientationpro_life_project_e2e
+        run: node backend/scripts/e2e-life-project-seed.js up
+
+      - name: Verify the RIASEC oracle bank against the real scoring engine
+        run: node --test backend/test/riasec-oracle-bank.test.js
+
+      - name: Run Playwright suite (critical path, oracles, resilience)
+        run: npx playwright test --config=playwright.life-project.config.ts
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: life-project-playwright-report
+          path: |
+            playwright-report/life-project.json
+            test-results/life-project/**
+          if-no-files-found: warn
+          retention-days: 7

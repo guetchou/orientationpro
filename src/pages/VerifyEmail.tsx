@@ -1,5 +1,5 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, Loader2, Mail, MailCheck } from 'lucide-react';
 import {
@@ -22,6 +22,11 @@ export default function VerifyEmail() {
   const [email, setEmail] = useState('');
   const [resending, setResending] = useState(false);
   const [resendComplete, setResendComplete] = useState(false);
+  // Le jeton est à usage unique côté serveur : React.StrictMode invoque cet
+  // effet deux fois en dev (monte/démonte/remonte), donc le second appel
+  // partage la même requête en vol au lieu d'en émettre une nouvelle, qui
+  // échouerait inutilement en 400 après le premier appel déjà réussi.
+  const verificationRequest = useRef<Promise<{ account: AuthAccount }> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -31,8 +36,8 @@ export default function VerifyEmail() {
         setMessage('Lien de vérification manquant');
         return;
       }
-      try {
-        await apiFetch<{ account: AuthAccount }>(
+      if (!verificationRequest.current) {
+        verificationRequest.current = apiFetch<{ account: AuthAccount }>(
           '/v1/auth/verify-email',
           {
             method: 'POST',
@@ -40,6 +45,9 @@ export default function VerifyEmail() {
           },
           { auth: false },
         );
+      }
+      try {
+        await verificationRequest.current;
         if (active) {
           setStatus('success');
           setMessage('Ton adresse e-mail est vérifiée. Tu peux maintenant te connecter.');
