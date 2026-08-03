@@ -22,8 +22,6 @@ const formatDate = (value: string) =>
     new Date(value),
   );
 
-// Historique pagine des analyses ATS du compte connecte, avec ouverture du
-// detail, telechargement du rapport et suppression. Tous les etats sont explicites.
 export const CvAnalysisHistory = () => {
   const [page, setPage] = useState<AtsAnalysisPage | null>(null);
   const [offset, setOffset] = useState(0);
@@ -75,7 +73,7 @@ export const CvAnalysisHistory = () => {
   if (detailLoading) {
     return (
       <main className="min-h-screen bg-stone-50 px-4 py-10">
-        <CvLoading label="Chargement de l’analyse ATS…" />
+        <CvLoading label="Chargement de l’analyse…" />
       </main>
     );
   }
@@ -85,7 +83,7 @@ export const CvAnalysisHistory = () => {
       <main className="min-h-screen bg-stone-50 px-4 py-10">
         <div className="mx-auto max-w-3xl">
           <Button variant="ghost" className="mb-6" onClick={() => setDetail(null)}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l’historique
+            <ArrowLeft className="mr-2 h-4 w-4" /> Retour à mes analyses
           </Button>
           <AtsAnalysisResult analysis={detail} onDelete={handleDelete} />
         </div>
@@ -94,30 +92,30 @@ export const CvAnalysisHistory = () => {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-10">
+    <main className="min-h-screen bg-stone-50 px-4 pb-12 pt-24 lg:pt-28">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold text-stone-900">Mes analyses ATS</h1>
+            <h1 className="font-heading text-3xl font-bold text-stone-900">Mes analyses de CV</h1>
             <p className="mt-2 text-stone-600">
-              Historique des analyses de compatibilité ATS enregistrées sur votre compte.
+              Retrouve les analyses enregistrées dans ton espace et consulte les améliorations proposées.
             </p>
           </div>
           <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
             <Link to="/cv-optimizer">
-              <Plus className="mr-2 h-4 w-4" /> Nouvelle analyse ATS
+              <Plus className="mr-2 h-4 w-4" /> Analyser un autre CV
             </Link>
           </Button>
         </div>
 
         {loading ? (
-          <CvLoading label="Chargement de votre historique ATS…" />
+          <CvLoading label="Chargement de tes analyses…" />
         ) : error ? (
           <CvErrorState error={error} onRetry={() => void load(offset)} />
         ) : !page || page.analyses.length === 0 ? (
           <CvEmpty
-            title="Aucune analyse ATS pour le moment"
-            description="Lancez une première analyse pour obtenir un indice de compatibilité ATS et des recommandations d’optimisation."
+            title="Aucune analyse pour le moment"
+            description="Lance une première analyse pour repérer les points forts de ton CV et les éléments à améliorer."
             action={
               <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
                 <Link to="/cv-optimizer">Analyser mon CV</Link>
@@ -132,7 +130,7 @@ export const CvAnalysisHistory = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between gap-2 font-heading text-lg">
                       <span className="text-emerald-700">
-                        Compatibilité ATS : {item.scores.generalReadiness} / 100
+                        Préparation du CV : {item.scores.generalReadiness} / 100
                       </span>
                       <Badge variant="outline">{item.document.detectedLanguage}</Badge>
                     </CardTitle>
@@ -147,7 +145,7 @@ export const CvAnalysisHistory = () => {
                     ) : null}
                     <p className="text-xs text-stone-400">{formatDate(item.createdAt)}</p>
                     <Button variant="outline" className="w-full" onClick={() => void openDetail(item.id)}>
-                      Ouvrir <ArrowRight className="ml-2 h-4 w-4" />
+                      Voir l’analyse <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardContent>
                 </Card>
