@@ -4,23 +4,24 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ServiceRequestCard } from '@/components/services/ServiceRequestCard';
 
 const candidateFeatures = [
-  'Consulter les offres publiées sur MAKOKI.',
+  'Consulter les offres réellement publiées sur MAKOKI.',
   'Préparer un CV clair et adapté au poste recherché.',
-  'Retrouver ses démarches d’emploi dans un espace personnel.',
+  'Demander une recherche d’opportunités ciblée.',
 ];
 
 const organizationFeatures = [
   'Présenter clairement le poste, les missions et les critères attendus.',
-  'Organiser le suivi des candidatures au sein de votre équipe.',
-  'Évaluer les candidats à partir de leurs compétences, de leur expérience et des exigences du poste.',
+  'Déposer un besoin de recrutement directement auprès de MAKOKI.',
+  'Définir le périmètre, le délai et les conditions avant toute prestation.',
 ];
 
 export default function RecruitmentPage() {
   usePageMeta({
     title: 'Recrutement',
-    description: 'Découvrez les services MAKOKI pour rechercher un emploi, préparer une candidature ou mieux organiser un recrutement.',
+    description: 'Déposez un besoin de recrutement ou préparez une candidature avec MAKOKI.',
     path: '/recruitment',
   });
 
@@ -33,7 +34,7 @@ export default function RecruitmentPage() {
             Mieux préparer les candidatures et les recrutements
           </h1>
           <p className="mt-6 text-lg leading-8 text-slate-700">
-            MAKOKI aide les candidats à découvrir des opportunités et à mieux présenter leur parcours. Les organisations peuvent également structurer leurs offres et leurs critères de sélection de manière plus claire.
+            MAKOKI aide les candidats à mieux présenter leur parcours. Les organisations peuvent déposer un besoin concret de recrutement afin d’être recontactées pour préciser le poste, le délai et le niveau d’accompagnement attendu.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button size="lg" asChild>
@@ -45,12 +46,21 @@ export default function RecruitmentPage() {
           </div>
         </div>
 
+        <section className="mt-12">
+          <ServiceRequestCard
+            service="recrutement"
+            title="Déposer un besoin de recrutement"
+            description="Présente le poste, le lieu, le contrat, les compétences indispensables et la date souhaitée. L’équipe MAKOKI te recontacte pour valider le besoin et proposer un accompagnement réaliste."
+            submitLabel="Déposer le besoin"
+          />
+        </section>
+
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><BriefcaseBusiness className="h-6 w-6" /></span>
               <CardTitle className="mt-3">Pour les candidats</CardTitle>
-              <CardDescription>Des outils pour avancer de l’offre à la candidature.</CardDescription>
+              <CardDescription>Des services utilisables dès maintenant.</CardDescription>
             </CardHeader>
             <CardContent><ul className="space-y-3 text-sm leading-7 text-slate-700">{candidateFeatures.map((feature) => <li key={feature}>• {feature}</li>)}</ul></CardContent>
           </Card>
@@ -59,7 +69,7 @@ export default function RecruitmentPage() {
             <CardHeader>
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-800"><Building2 className="h-6 w-6" /></span>
               <CardTitle className="mt-3">Pour les organisations</CardTitle>
-              <CardDescription>Des recrutements mieux structurés et plus lisibles.</CardDescription>
+              <CardDescription>Un point d’entrée concret avant toute mission.</CardDescription>
             </CardHeader>
             <CardContent><ul className="space-y-3 text-sm leading-7 text-slate-700">{organizationFeatures.map((feature) => <li key={feature}>• {feature}</li>)}</ul></CardContent>
           </Card>
