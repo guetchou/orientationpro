@@ -17,9 +17,9 @@ interface AuthLayoutProps {
 }
 
 const POINTS = [
-  "Tests d'orientation basés sur le modèle RIASEC",
-  'Métiers sourcés (O*NET), adaptés au Congo',
-  'Des résultats expliqués — tu gardes la décision',
+  'Retrouve ton résultat quand tu veux',
+  'Découvre progressivement les métiers qui te correspondent',
+  'Construis ton projet et tes prochaines étapes à ton rythme',
 ];
 
 /**
