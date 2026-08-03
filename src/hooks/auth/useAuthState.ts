@@ -12,12 +12,21 @@ import {
 } from '@/lib/apiClient';
 import type { ProfileData, User } from '../useAuthTypes';
 
-const mapStoredUser = (stored: any): User => ({
-  id: stored.id,
-  email: stored.email,
-  role: stored.role || stored.roles?.[0] || 'user',
-  displayName: stored.full_name || stored.email?.split('@')[0],
-});
+const mapStoredUser = (stored: any): User => {
+  const roles = Array.isArray(stored.roles)
+    ? stored.roles.filter((role: unknown): role is string => typeof role === 'string')
+    : stored.role
+      ? [stored.role]
+      : ['user'];
+
+  return {
+    id: stored.id,
+    email: stored.email,
+    role: stored.role || roles[0] || 'user',
+    roles,
+    displayName: stored.full_name || stored.email?.split('@')[0],
+  };
+};
 
 const mapStoredProfile = (stored: any): ProfileData => ({
   id: stored.id,

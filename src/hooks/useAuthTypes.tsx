@@ -21,6 +21,7 @@ export interface User {
   id: string;
   email: string;
   role?: string;
+  roles?: string[];
   displayName?: string;
   photoURL?: string;
 }
