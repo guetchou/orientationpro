@@ -18,7 +18,7 @@ const answerOneQuestion = async (page: Page, value: number) => {
 const startRiasecAttempt = async (page: Page) => {
   await page.goto('/parcours');
   await expect(page.getByTestId('unified-riasec-intro')).toBeVisible();
-  await page.getByRole('button', { name: 'Commencer le test' }).click();
+  await page.getByRole('button', { name: 'Commencer le questionnaire' }).click();
   await expect(page.getByTestId('unified-riasec-questions')).toBeVisible();
 };
 
@@ -141,7 +141,7 @@ test.describe('résilience du parcours invité → compte → rapport (issue #21
       await page.getByRole('button', { name: 'Créer le compte' }).click();
 
       await expect(page.getByRole('alert')).toBeVisible();
-      await expect(page.getByText('Ton compte est créé.')).toHaveCount(0);
+      await expect(page.getByText('Ton espace est presque prêt.')).toHaveCount(0);
     });
   });
 
