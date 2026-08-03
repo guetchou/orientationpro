@@ -65,6 +65,8 @@ export const Header = () => {
         isScrolled ? 'border-slate-200 bg-white/95 shadow-sm backdrop-blur' : 'border-transparent bg-white/90 backdrop-blur'
       }`}
     >
+      {user ? <RoleSpaceSwitcher autoPrompt showTrigger={false} /> : null}
+
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-6">
         <Link to="/" className="flex items-center" aria-label="MAKOKI — accueil">
           <img
@@ -118,7 +120,7 @@ export const Header = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/profile"><User className="mr-2 h-4 w-4" />Mon profil</Link>
                 </DropdownMenuItem>
-                <RoleSpaceSwitcher autoPrompt className="w-full justify-start px-2 py-1.5 text-sm font-normal" />
+                <RoleSpaceSwitcher className="w-full justify-start px-2 py-1.5 text-sm font-normal" />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-700">
                   <LogOut className="mr-2 h-4 w-4" />Déconnexion
