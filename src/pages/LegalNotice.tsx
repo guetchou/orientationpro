@@ -1,5 +1,5 @@
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { Building2, Globe2, Mail, Phone, Server } from 'lucide-react';
+import { Building2, Globe2, Mail, Phone, Server, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const contacts = [
@@ -10,7 +10,11 @@ const contacts = [
 ];
 
 export default function LegalNotice() {
-  usePageMeta({ title: 'Mentions légales', description: 'Mentions légales de la plateforme MAKOKI.', path: '/legal' });
+  usePageMeta({
+    title: 'Mentions légales',
+    description: 'Mentions légales de la plateforme MAKOKI.',
+    path: '/legal',
+  });
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-28">
@@ -18,7 +22,7 @@ export default function LegalNotice() {
         <p className="font-semibold text-emerald-700">Informations légales</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">Mentions légales</h1>
         <p className="mt-5 text-lg leading-8 text-slate-700">
-          Le site <strong>makoki.org</strong> et le service MAKOKI sont exploités par Nexora à Brazzaville, République du Congo.
+          Le site <strong>makoki.org</strong> et le service MAKOKI sont édités sous le nom d’exploitation <strong>Nexora</strong>, sous la responsabilité de <strong>NGUIE Gess</strong>, à Brazzaville, République du Congo.
         </p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
@@ -27,20 +31,28 @@ export default function LegalNotice() {
               <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-emerald-700" />Éditeur du service</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-7 text-slate-700">
-              <p><strong>Exploitant :</strong> Nexora</p>
-              <p><strong>Marque :</strong> MAKOKI</p>
+              <p><strong>Nom d’exploitation :</strong> Nexora</p>
+              <p><strong>Service et marque :</strong> MAKOKI</p>
+              <p><strong>Responsable de publication :</strong> NGUIE Gess</p>
               <p><strong>Localisation :</strong> Brazzaville, République du Congo</p>
-              <p><strong>Responsable :</strong> NGUIE Gess</p>
+              <p><strong>Contact officiel :</strong> contact@makoki.org</p>
             </CardContent>
           </Card>
 
           <Card className="border-slate-200 shadow-sm">
             <CardHeader><CardTitle>Objet du service</CardTitle></CardHeader>
             <CardContent className="text-sm leading-7 text-slate-700">
-              MAKOKI propose des services d’orientation, d’exploration des métiers, de compétences, d’employabilité et de mise en relation avec des opportunités professionnelles.
+              MAKOKI propose des services d’orientation, d’exploration des métiers, d’accompagnement CV, de recherche d’opportunités et d’appui au recrutement. Le périmètre, la disponibilité et le tarif éventuel d’une prestation humaine sont confirmés avant tout engagement.
             </CardContent>
           </Card>
         </div>
+
+        <section className="mt-10 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-950">
+          <h2 className="flex items-center gap-2 text-xl font-semibold"><ShieldCheck className="h-5 w-5" />Identification contractuelle</h2>
+          <p className="mt-3">
+            Les seules informations publiées ici sont celles vérifiées dans les sources du projet. Avant toute prestation payante, le devis, le contrat ou la facture doit préciser l’identité juridique complète de l’émetteur, son adresse, ainsi que ses références d’immatriculation et fiscales applicables. Aucun paiement ne doit être demandé sans ce document.
+          </p>
+        </section>
 
         <section className="mt-10">
           <h2 className="text-2xl font-semibold text-slate-950">Contacts officiels</h2>
