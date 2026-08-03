@@ -1,0 +1,4639 @@
+{
+  "schemaVersion": "life-project-riasec-oracles-v1",
+  "generatedAt": null,
+  "instrumentId": "riasec-makoki-fr-draft-v2",
+  "instrumentVersion": 2,
+  "algorithmVersion": "riasec-makoki-scoring-v2",
+  "profiles": [
+    {
+      "id": "dominant-r",
+      "label": "R dominant",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 2
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "I": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "A": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "S": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "E": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "C": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "R",
+              "score": 80
+            },
+            {
+              "dimension": "I",
+              "score": 65
+            },
+            {
+              "dimension": "A",
+              "score": 50
+            },
+            {
+              "dimension": "S",
+              "score": 35
+            },
+            {
+              "dimension": "E",
+              "score": 35
+            },
+            {
+              "dimension": "C",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "A"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "A"
+              ]
+            }
+          ],
+          "primaryCode": "RIA",
+          "displayCode": "R-I-A",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "dominant-i",
+      "label": "I dominant",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 2
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "I": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "A": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "S": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "E": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "C": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "I",
+              "score": 80
+            },
+            {
+              "dimension": "A",
+              "score": 65
+            },
+            {
+              "dimension": "S",
+              "score": 50
+            },
+            {
+              "dimension": "R",
+              "score": 35
+            },
+            {
+              "dimension": "E",
+              "score": 35
+            },
+            {
+              "dimension": "C",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "A"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "R",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "A"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "S"
+              ]
+            }
+          ],
+          "primaryCode": "IAS",
+          "displayCode": "I-A-S",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "dominant-a",
+      "label": "A dominant",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 2
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "I": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "A": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "S": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "E": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "C": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "A",
+              "score": 80
+            },
+            {
+              "dimension": "S",
+              "score": 65
+            },
+            {
+              "dimension": "E",
+              "score": 50
+            },
+            {
+              "dimension": "R",
+              "score": 35
+            },
+            {
+              "dimension": "I",
+              "score": 35
+            },
+            {
+              "dimension": "C",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "A"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "E"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "R",
+                "I",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "A"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "E"
+              ]
+            }
+          ],
+          "primaryCode": "ASE",
+          "displayCode": "A-S-E",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "dominant-s",
+      "label": "S dominant",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 3
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "I": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "A": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "S": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "E": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "C": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "S",
+              "score": 80
+            },
+            {
+              "dimension": "E",
+              "score": 65
+            },
+            {
+              "dimension": "C",
+              "score": 50
+            },
+            {
+              "dimension": "R",
+              "score": 35
+            },
+            {
+              "dimension": "I",
+              "score": 35
+            },
+            {
+              "dimension": "A",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "E"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "C"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "R",
+                "I",
+                "A"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "E"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "C"
+              ]
+            }
+          ],
+          "primaryCode": "SEC",
+          "displayCode": "S-E-C",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "dominant-e",
+      "label": "E dominant",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 4
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "I": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "A": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "S": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "E": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "C": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "E",
+              "score": 80
+            },
+            {
+              "dimension": "C",
+              "score": 65
+            },
+            {
+              "dimension": "R",
+              "score": 50
+            },
+            {
+              "dimension": "I",
+              "score": 35
+            },
+            {
+              "dimension": "A",
+              "score": 35
+            },
+            {
+              "dimension": "S",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "E"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "C"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "I",
+                "A",
+                "S"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "E"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "C"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "R"
+              ]
+            }
+          ],
+          "primaryCode": "ECR",
+          "displayCode": "E-C-R",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "dominant-c",
+      "label": "C dominant",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 5
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "I": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "A": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "S": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "E": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "C": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "C",
+              "score": 80
+            },
+            {
+              "dimension": "R",
+              "score": 65
+            },
+            {
+              "dimension": "I",
+              "score": 50
+            },
+            {
+              "dimension": "A",
+              "score": 35
+            },
+            {
+              "dimension": "S",
+              "score": 35
+            },
+            {
+              "dimension": "E",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "C"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "A",
+                "S",
+                "E"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "C"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "I"
+              ]
+            }
+          ],
+          "primaryCode": "CRI",
+          "displayCode": "C-R-I",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "mixed",
+      "label": "Profil mixte (aucune dimension extrême, trio de tête net sans égalité)",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 2
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "I": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "A": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "S": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "E": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "C": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "I",
+              "score": 65
+            },
+            {
+              "dimension": "S",
+              "score": 50
+            },
+            {
+              "dimension": "C",
+              "score": 35
+            },
+            {
+              "dimension": "R",
+              "score": 20
+            },
+            {
+              "dimension": "A",
+              "score": 20
+            },
+            {
+              "dimension": "E",
+              "score": 20
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 65,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "C"
+              ]
+            },
+            {
+              "score": 20,
+              "dimensions": [
+                "R",
+                "A",
+                "E"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 65,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "S"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "C"
+              ]
+            }
+          ],
+          "primaryCode": "ISC",
+          "displayCode": "I-S-C",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 17.32,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.15
+        }
+      }
+    },
+    {
+      "id": "tie-top",
+      "label": "Égalité en tête (A et S strictement à égalité)",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 2
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "I": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "A": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "S": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "E": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "C": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "A",
+              "score": 80
+            },
+            {
+              "dimension": "S",
+              "score": 80
+            },
+            {
+              "dimension": "I",
+              "score": 50
+            },
+            {
+              "dimension": "R",
+              "score": 35
+            },
+            {
+              "dimension": "E",
+              "score": 35
+            },
+            {
+              "dimension": "C",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "A",
+                "S"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "R",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "A",
+                "S"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "I"
+              ]
+            }
+          ],
+          "primaryCode": null,
+          "displayCode": "A/S-I",
+          "codeStatus": "tied",
+          "hasLeadingTie": true
+        },
+        "differentiation": {
+          "range": 45,
+          "standardDeviation": 20.16,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.34
+        }
+      }
+    },
+    {
+      "id": "all-identical-mid",
+      "label": "Toutes réponses identiques (valeur médiane 3)",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 3
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "I": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "A": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "S": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "E": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "C": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "R",
+              "score": 50
+            },
+            {
+              "dimension": "I",
+              "score": 50
+            },
+            {
+              "dimension": "A",
+              "score": 50
+            },
+            {
+              "dimension": "S",
+              "score": 50
+            },
+            {
+              "dimension": "E",
+              "score": 50
+            },
+            {
+              "dimension": "C",
+              "score": 50
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 50,
+              "dimensions": [
+                "R",
+                "I",
+                "A",
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 50,
+              "dimensions": [
+                "R",
+                "I",
+                "A",
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "primaryCode": null,
+          "displayCode": "R/I/A/S/E/C",
+          "codeStatus": "tied",
+          "hasLeadingTie": true
+        },
+        "differentiation": {
+          "range": 0,
+          "standardDeviation": 0,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 100,
+          "responseStandardDeviation": 0
+        }
+      }
+    },
+    {
+      "id": "all-minimum",
+      "label": "Réponses minimales (toujours 1 — \"pas du tout d'accord\")",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 1
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 1
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "I": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "A": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "S": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "E": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          },
+          "C": {
+            "raw": 18,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 20
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "R",
+              "score": 20
+            },
+            {
+              "dimension": "I",
+              "score": 20
+            },
+            {
+              "dimension": "A",
+              "score": 20
+            },
+            {
+              "dimension": "S",
+              "score": 20
+            },
+            {
+              "dimension": "E",
+              "score": 20
+            },
+            {
+              "dimension": "C",
+              "score": 20
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 20,
+              "dimensions": [
+                "R",
+                "I",
+                "A",
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 20,
+              "dimensions": [
+                "R",
+                "I",
+                "A",
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "primaryCode": null,
+          "displayCode": "R/I/A/S/E/C",
+          "codeStatus": "tied",
+          "hasLeadingTie": true
+        },
+        "differentiation": {
+          "range": 0,
+          "standardDeviation": 0,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 100,
+          "responseStandardDeviation": 0
+        }
+      }
+    },
+    {
+      "id": "all-maximum",
+      "label": "Réponses maximales (toujours 5 — \"tout à fait d'accord\")",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 5
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "I": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "A": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "S": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "E": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          },
+          "C": {
+            "raw": 42,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 80
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "R",
+              "score": 80
+            },
+            {
+              "dimension": "I",
+              "score": 80
+            },
+            {
+              "dimension": "A",
+              "score": 80
+            },
+            {
+              "dimension": "S",
+              "score": 80
+            },
+            {
+              "dimension": "E",
+              "score": 80
+            },
+            {
+              "dimension": "C",
+              "score": 80
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "R",
+                "I",
+                "A",
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 80,
+              "dimensions": [
+                "R",
+                "I",
+                "A",
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "primaryCode": null,
+          "displayCode": "R/I/A/S/E/C",
+          "codeStatus": "tied",
+          "hasLeadingTie": true
+        },
+        "differentiation": {
+          "range": 0,
+          "standardDeviation": 0,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 100,
+          "responseStandardDeviation": 0
+        }
+      }
+    },
+    {
+      "id": "single-item-variation",
+      "label": "Variation d'une seule réponse par rapport à \"R dominant\" (un item R : 5 -> 4)",
+      "instrumentId": "riasec-makoki-fr-draft-v2",
+      "instrumentVersion": 2,
+      "baselineProfileId": "dominant-r",
+      "changedItemId": "riasec-makoki-fr-draft-v2-r-01",
+      "responses": [
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-01",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-01",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-01",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-02",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-02",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-02",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-02",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-03",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-03",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-03",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-03",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-04",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-04",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-04",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-04",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-05",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-05",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-05",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-05",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-06",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-06",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-06",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-06",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-07",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-07",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-07",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-07",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-08",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-08",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-08",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-08",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-09",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-09",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-09",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-09",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-r-10",
+          "value": 5
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-i-10",
+          "value": 4
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-a-10",
+          "value": 3
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-s-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-e-10",
+          "value": 2
+        },
+        {
+          "itemId": "riasec-makoki-fr-draft-v2-c-10",
+          "value": 2
+        }
+      ],
+      "expected": {
+        "algorithmVersion": "riasec-makoki-scoring-v2",
+        "resultSchemaVersion": "riasec-result-v2",
+        "scale": {
+          "minimum": 1,
+          "maximum": 5
+        },
+        "scores": {
+          "R": {
+            "raw": 41,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 77.5
+          },
+          "I": {
+            "raw": 36,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 65
+          },
+          "A": {
+            "raw": 30,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 50
+          },
+          "S": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "E": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          },
+          "C": {
+            "raw": 24,
+            "minimum": 10,
+            "maximum": 50,
+            "itemCount": 10,
+            "normalized": 35
+          }
+        },
+        "ranking": {
+          "ordered": [
+            {
+              "dimension": "R",
+              "score": 77.5
+            },
+            {
+              "dimension": "I",
+              "score": 65
+            },
+            {
+              "dimension": "A",
+              "score": 50
+            },
+            {
+              "dimension": "S",
+              "score": 35
+            },
+            {
+              "dimension": "E",
+              "score": 35
+            },
+            {
+              "dimension": "C",
+              "score": 35
+            }
+          ],
+          "tieGroups": [
+            {
+              "score": 77.5,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "A"
+              ]
+            },
+            {
+              "score": 35,
+              "dimensions": [
+                "S",
+                "E",
+                "C"
+              ]
+            }
+          ],
+          "leadingGroups": [
+            {
+              "score": 77.5,
+              "dimensions": [
+                "R"
+              ]
+            },
+            {
+              "score": 65,
+              "dimensions": [
+                "I"
+              ]
+            },
+            {
+              "score": 50,
+              "dimensions": [
+                "A"
+              ]
+            }
+          ],
+          "primaryCode": "RIA",
+          "displayCode": "R-I-A",
+          "codeStatus": "determinate",
+          "hasLeadingTie": false
+        },
+        "differentiation": {
+          "range": 42.5,
+          "standardDeviation": 16.61,
+          "kind": "descriptive",
+          "normativeBasis": null,
+          "percentile": null
+        },
+        "responsePattern": {
+          "completionRate": 100,
+          "sameAnswerRatio": 50,
+          "responseStandardDeviation": 1.13
+        }
+      }
+    }
+  ]
+}
