@@ -1,0 +1,58 @@
+name: Probe makemba02 account
+
+on:
+  push:
+    branches:
+      - agent/probe-makemba02-account
+    paths:
+      - ops/recipe/probe-makemba02-account
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Request verification and password reset
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TARGET_EMAIL: makemba02@gmail.com
+          API_ROOT: https://makoki.org/api
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          verify_status=$(curl --silent --show-error --output /tmp/verify-response.txt --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "$(jq -nc --arg email "$TARGET_EMAIL" '{email:$email}')" \
+            "$API_ROOT/v1/auth/verification/request")
+
+          reset_status=$(curl --silent --show-error --output /tmp/reset-response.txt --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "$(jq -nc --arg email "$TARGET_EMAIL" '{email:$email}')" \
+            "$API_ROOT/v1/auth/password-reset/request")
+
+          body=$(cat <<EOF
+          ## Diagnostic du compte exact Makoki
+
+          - Adresse testée : \`$TARGET_EMAIL\`
+          - Run ID : \`$GITHUB_RUN_ID\`
+          - Demande de vérification : HTTP \`$verify_status\`
+          - Demande de réinitialisation : HTTP \`$reset_status\`
+          - Interprétation : vérifier Gmail pour déterminer si le compte est en attente de vérification ou déjà actif.
+          EOF
+          )
+
+          jq -n --arg body "$body" '{body:$body}' >/tmp/comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GITHUB_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/comment.json \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/184/comments" >/dev/null
