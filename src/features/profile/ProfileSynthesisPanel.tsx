@@ -21,6 +21,20 @@ const errorMessage = (error: unknown) => {
   return 'Impossible de créer ta synthèse pour le moment.';
 };
 
+const cleanPublicText = (text: string) => text
+  .replace(/Résultat RIASEC/giu, 'résultat de ton parcours')
+  .replace(/RIASEC/giu, 'centres d’intérêt')
+  .replace(/ESCO/giu, '')
+  .replace(/O\*NET/giu, '')
+  .replace(/\s{2,}/gu, ' ')
+  .trim();
+
+const publicHeadline = (headline: string) => (
+  /RIASEC|ESCO|O\*NET|snapshot|engine|immutable/iu.test(headline)
+    ? 'Voici les principaux éléments de ton profil et les pistes à explorer.'
+    : headline
+);
+
 export default function ProfileSynthesisPanel() {
   const [latest, setLatest] = useState<ProfileSynthesisEnvelope | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,20 +97,20 @@ export default function ProfileSynthesisPanel() {
           </p>
         ) : (
           <div className="rounded-xl border border-emerald-200 bg-white p-4">
-            <p className="font-semibold text-slate-900">{latest.synthesis.summary.headline}</p>
+            <p className="font-semibold text-slate-900">{publicHeadline(latest.synthesis.summary.headline)}</p>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
                 <p className="text-sm font-semibold text-slate-800">Ce qui ressort de ton profil</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
                   {latest.synthesis.summary.strengths.length > 0
-                    ? latest.synthesis.summary.strengths.map((item) => <li key={item}>{item}</li>)
+                    ? latest.synthesis.summary.strengths.map((item) => <li key={item}>{cleanPublicText(item)}</li>)
                     : <li>Aucun élément supplémentaire confirmé pour le moment.</li>}
                 </ul>
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-800">Prochaines actions</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                  {latest.synthesis.summary.nextActions.map((item) => <li key={item}>{item}</li>)}
+                  {latest.synthesis.summary.nextActions.map((item) => <li key={item}>{cleanPublicText(item)}</li>)}
                 </ul>
               </div>
             </div>
@@ -111,7 +125,7 @@ export default function ProfileSynthesisPanel() {
               </div>
             </div>
             <p className="mt-4 text-xs leading-relaxed text-slate-500">
-              {latest.synthesis.limitations[0]}
+              Cette synthèse aide à organiser ta réflexion. Elle ne décide pas à ta place et ne garantit ni admission, ni emploi, ni réussite.
             </p>
           </div>
         )}
