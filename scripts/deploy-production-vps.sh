@@ -99,7 +99,11 @@ stage docker-space
 space_helper=$(mktemp)
 git --git-dir="${mirror}" show "${sha}:scripts/release/prepare-docker-build-space.sh" >"${space_helper}"
 chmod 700 "${space_helper}"
-bash "${space_helper}" "${release_root}" "${deploy_root}/current" "${deploy_root}/deployments.tsv"
+bash "${space_helper}" \
+  "${release_root}" \
+  "${deploy_root}/current" \
+  "${deploy_root}/deployments.tsv" \
+  "${compose_project}"
 rm -f "${space_helper}"
 
 stage release-checkout
