@@ -67,7 +67,7 @@ export default function CareerCatalog() {
       <div className="mx-auto min-w-0 max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button asChild variant="ghost"><Link to="/parcours"><ArrowLeft className="mr-2 h-4 w-4" />Revenir à mon projet</Link></Button>
-          <Button asChild><Link to="/parcours">Mieux définir mon projet</Link></Button>
+          <Button asChild><Link to="/parcours">Mieux préciser mes choix</Link></Button>
         </div>
 
         <Card className="border-0 shadow-xl">
@@ -78,7 +78,7 @@ export default function CareerCatalog() {
             </div>
             <CardTitle className="text-3xl">Explore les métiers qui t’intéressent</CardTitle>
             <CardDescription className="max-w-4xl text-base leading-relaxed">
-              Recherche un métier, découvre ses activités et compare plusieurs pistes avant de choisir tes prochaines étapes.
+              Recherche un métier, découvre ce qu’il implique au quotidien et compare plusieurs pistes avant de décider lesquelles approfondir.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -94,7 +94,7 @@ export default function CareerCatalog() {
               Afficher uniquement les fiches les plus détaillées
             </label>
             <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-950">
-              Les fiches t’aident à explorer. Vérifie ensuite les formations, les conditions d’accès et les réalités du métier auprès des organismes concernés.
+              Ces fiches servent à explorer. Avant de choisir une voie, vérifie aussi les formations disponibles, les conditions d’accès et la réalité du métier auprès des organismes concernés.
             </div>
           </CardContent>
         </Card>
@@ -102,7 +102,7 @@ export default function CareerCatalog() {
         {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800"><p className="flex items-center gap-2 font-medium"><AlertCircle className="h-5 w-5" />Catalogue indisponible</p><p className="mt-2 text-sm">{error}</p></div> : null}
         {loading ? <div className="flex min-h-52 items-center justify-center text-slate-600"><Loader2 className="mr-3 h-7 w-7 animate-spin text-emerald-700" />Chargement des métiers…</div> : (
           <div className="min-w-0 space-y-4">
-            <p className="text-sm text-slate-600">{occupations.length} résultat(s) affiché(s){query ? ` pour « ${query} »` : ''}.</p>
+            <p className="text-sm text-slate-600">{occupations.length} métier{occupations.length > 1 ? 's' : ''} affiché{occupations.length > 1 ? 's' : ''}{query ? ` pour « ${query} »` : ''}.</p>
             <div className="grid min-w-0 gap-4 md:grid-cols-2">
               {occupations.map((occupation) => (
                 <Card key={occupation.id} className="h-full min-w-0 overflow-hidden border-slate-200 shadow-sm">
@@ -111,16 +111,21 @@ export default function CareerCatalog() {
                       {occupation.translationStatus === 'unavailable' ? <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Informations en anglais</Badge> : <Badge variant="outline">Informations en français</Badge>}
                     </div>
                     <CardTitle className="break-words text-xl">{occupation.preferredLabel}</CardTitle>
-                    <CardDescription className="line-clamp-4 break-words leading-relaxed">{occupation.description || 'Description en cours d’enrichissement.'}</CardDescription>
+                    <CardDescription className="line-clamp-4 break-words leading-relaxed">{occupation.description || 'Cette fiche est encore en cours d’enrichissement.'}</CardDescription>
                   </CardHeader>
-                  <CardContent><Button asChild variant="outline" className="w-full"><Link to={`/careers/${encodeURIComponent(occupation.id)}`}>Découvrir ce métier</Link></Button></CardContent>
+                  <CardContent><Button asChild variant="outline" className="w-full"><Link to={`/careers/${encodeURIComponent(occupation.id)}`}>Voir les activités et compétences</Link></Button></CardContent>
                 </Card>
               ))}
             </div>
-            {!occupations.length && !error ? <div className="rounded-xl border p-6 text-center text-slate-600">Aucun métier ne correspond aux critères actuels.</div> : null}
+            {!occupations.length && !error ? (
+              <div className="rounded-xl border bg-white p-6 text-center text-slate-700">
+                <p className="font-medium">Aucun métier ne correspond à cette recherche.</p>
+                <p className="mt-2 text-sm text-slate-500">Essaie un mot plus simple, un secteur d’activité ou enlève le filtre sur les fiches détaillées.</p>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Button type="button" variant="outline" disabled={offset === 0 || loading} onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}><ChevronLeft className="mr-2 h-4 w-4" />Précédent</Button>
-              <span className="text-sm text-slate-600">Résultats {occupations.length ? offset + 1 : 0} à {offset + occupations.length}</span>
+              <span className="text-sm text-slate-600">Métiers {occupations.length ? offset + 1 : 0} à {offset + occupations.length}</span>
               <Button type="button" variant="outline" disabled={occupations.length < PAGE_SIZE || loading} onClick={() => setOffset(offset + PAGE_SIZE)}>Suivant<ChevronRight className="ml-2 h-4 w-4" /></Button>
             </div>
           </div>

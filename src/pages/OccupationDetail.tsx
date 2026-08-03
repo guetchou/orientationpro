@@ -88,7 +88,7 @@ export default function OccupationDetail() {
             </div>
             <h1 className="break-words text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{occupation.preferredLabel}</h1>
             <CardDescription className="break-words text-base leading-relaxed">
-              {occupation.description || 'La description détaillée de ce métier sera prochainement enrichie.'}
+              {occupation.description || 'Cette fiche est encore en cours d’enrichissement.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3 p-6 pt-0 md:p-8 md:pt-0">
@@ -101,22 +101,16 @@ export default function OccupationDetail() {
           <Card className="border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Ce que ce métier mobilise souvent</CardTitle>
-              <CardDescription>Les principaux types d’activités associés à ce métier.</CardDescription>
+              <CardDescription>Voici les trois types d’activités qui ressortent le plus dans cette fiche. Elles servent de repères, pas de verdict.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {interestAreas.length ? interestAreas.map(({ code, label, score }) => (
-                <div key={code}>
-                  <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium">{label}</span>
-                    <span className="text-slate-500">{Math.round(score)}/100</span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-emerald-600" style={{ width: `${Math.max(0, Math.min(score, 100))}%` }} />
-                  </div>
+              {interestAreas.length ? interestAreas.map(({ code, label }) => (
+                <div key={code} className="rounded-xl border bg-white p-4">
+                  <p className="font-medium text-slate-900">{label}</p>
                 </div>
               )) : (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-                  Les informations sur les centres d’intérêt associés à ce métier sont encore en cours d’enrichissement.
+                  Les informations sur les activités liées à ce métier sont encore en cours d’enrichissement.
                 </div>
               )}
             </CardContent>
@@ -125,16 +119,17 @@ export default function OccupationDetail() {
           <Card className="border-0 shadow-lg">
             <CardHeader><CardTitle>À vérifier avant de choisir</CardTitle></CardHeader>
             <CardContent className="space-y-4 text-sm leading-6 text-slate-700">
-              <div className="rounded-xl bg-emerald-50 p-4 text-emerald-950"><MapPin className="mb-2 h-5 w-5" /><p className="font-medium">Contexte local</p><p className="mt-1">{localRelevanceLabel(occupation.localRelevanceStatus)}</p></div>
-              <div className="rounded-xl bg-blue-50 p-4 text-blue-950"><Languages className="mb-2 h-5 w-5" /><p className="font-medium">Langue de la fiche</p><p className="mt-1">{fallback ? 'Certaines informations ne sont disponibles qu’en anglais.' : 'Les informations principales sont disponibles en français.'}</p></div>
-              <div className="rounded-xl bg-slate-100 p-4 text-slate-900"><ShieldCheck className="mb-2 h-5 w-5" /><p className="font-medium">Diplômes et conditions</p><p className="mt-1">Vérifie les formations, autorisations et conditions d’exercice auprès des organismes compétents.</p></div>
+              <div className="rounded-xl bg-emerald-50 p-4 text-emerald-950"><MapPin className="mb-2 h-5 w-5" /><p className="font-medium">Présence locale</p><p className="mt-1">{localRelevanceLabel(occupation.localRelevanceStatus)}</p></div>
+              <div className="rounded-xl bg-blue-50 p-4 text-blue-950"><Languages className="mb-2 h-5 w-5" /><p className="font-medium">Langue des informations</p><p className="mt-1">{fallback ? 'Certaines informations ne sont disponibles qu’en anglais.' : 'Les informations principales sont disponibles en français.'}</p></div>
+              <div className="rounded-xl bg-slate-100 p-4 text-slate-900"><ShieldCheck className="mb-2 h-5 w-5" /><p className="font-medium">Formations et conditions d’exercice</p><p className="mt-1">Vérifie les diplômes, autorisations et conditions d’exercice auprès des écoles, employeurs ou organismes compétents.</p></div>
             </CardContent>
           </Card>
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5" />Compétences et autres appellations</CardTitle>
+            <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5" />Ce qu’il faut savoir pour aller plus loin</CardTitle>
+            <CardDescription>Découvre les autres noms utilisés pour ce métier et les compétences qui y sont souvent associées.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5 md:grid-cols-2">
             <div>
