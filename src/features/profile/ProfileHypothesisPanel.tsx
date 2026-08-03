@@ -28,7 +28,7 @@ export default function ProfileHypothesisPanel() {
   useEffect(() => {
     void getAdaptiveProfile()
       .then(setPayload)
-      .catch(() => toast.error('Impossible de charger les suggestions du profil.'))
+      .catch(() => toast.error('Impossible de charger les suggestions de ton profil.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -43,9 +43,11 @@ export default function ProfileHypothesisPanel() {
       const next = await generateProfileHypotheses();
       setPayload(next);
       const created = next.hypothesisGeneration?.createdCount || 0;
-      toast.success(created ? `${created} suggestion${created > 1 ? 's' : ''} créée${created > 1 ? 's' : ''}.` : 'Suggestions déjà à jour.');
+      toast.success(created
+        ? `${created} nouvelle${created > 1 ? 's' : ''} suggestion${created > 1 ? 's' : ''} à examiner.`
+        : 'Tes suggestions sont déjà à jour.');
     } catch {
-      toast.error('Impossible d’analyser le profil pour le moment.');
+      toast.error('Impossible de mettre à jour les suggestions pour le moment.');
     } finally {
       setGenerating(false);
     }
@@ -55,39 +57,55 @@ export default function ProfileHypothesisPanel() {
     setDeciding(hypothesisId);
     try {
       setPayload(await decideProfileHypothesis(hypothesisId, status));
-      toast.success(status === 'confirmed' ? 'Suggestion confirmée.' : 'Suggestion rejetée.');
+      toast.success(status === 'confirmed' ? 'Suggestion confirmée.' : 'Suggestion écartée.');
     } catch {
-      toast.error('Impossible d’enregistrer cette décision.');
+      toast.error('Impossible d’enregistrer ton choix.');
     } finally {
       setDeciding(null);
     }
   };
 
-  if (loading) return <Card><CardContent className="flex items-center gap-2 py-6 text-sm text-slate-600"><Loader2 className="h-4 w-4 animate-spin" /> Chargement des suggestions…</CardContent></Card>;
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center gap-2 py-6 text-sm text-slate-600">
+          <Loader2 className="h-4 w-4 animate-spin" /> Chargement des suggestions…
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-amber-200 bg-amber-50/40">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="flex items-center gap-2 text-2xl font-semibold leading-none tracking-tight"><Lightbulb className="h-5 w-5 text-amber-600" /> Hypothèses à examiner</h2>
-            <CardDescription className="mt-2 max-w-3xl">Le système propose des questions à partir des données du profil. Rien n’est confirmé automatiquement : vous gardez la décision finale.</CardDescription>
+            <h2 className="flex items-center gap-2 text-2xl font-semibold leading-none tracking-tight">
+              <Lightbulb className="h-5 w-5 text-amber-600" /> Suggestions à confirmer
+            </h2>
+            <CardDescription className="mt-2 max-w-3xl">
+              Makoki peut te proposer des éléments à vérifier à partir de ton profil. Confirme seulement ce qui est juste pour toi.
+            </CardDescription>
           </div>
           <Button type="button" onClick={() => void generate()} disabled={generating}>
             {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Analyser mon profil
+            Mettre à jour les suggestions
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {payload?.hypothesisGeneration ? (
-          <div className="flex flex-wrap gap-2 text-xs">
-            <Badge variant="outline">{payload.hypothesisGeneration.generatorVersion}</Badge>
-            <Badge variant="outline">{payload.hypothesisGeneration.createdCount} créée(s)</Badge>
-            <Badge variant="outline">{payload.hypothesisGeneration.preservedDecisionCount} décision(s) conservée(s)</Badge>
-          </div>
+        {proposed.length > 0 ? (
+          <Badge variant="outline">
+            {proposed.length} suggestion{proposed.length > 1 ? 's' : ''} à examiner
+          </Badge>
         ) : null}
-        {proposed.length === 0 ? <p className="text-sm text-slate-600">Aucune suggestion en attente. Lancez une analyse après avoir mis à jour votre profil.</p> : null}
+
+        {proposed.length === 0 ? (
+          <p className="text-sm text-slate-600">
+            Aucune suggestion en attente. Complète ton profil puis relance la mise à jour lorsque tu le souhaites.
+          </p>
+        ) : null}
+
         {proposed.map((hypothesis) => {
           const value = valueOf(hypothesis);
           return (
@@ -96,12 +114,28 @@ export default function ProfileHypothesisPanel() {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900">{value.title || 'Suggestion à examiner'}</p>
                   <p className="mt-1 text-sm text-slate-800">{value.question || hypothesis.rationale}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600">{hypothesis.rationale}</p>
-                  {hypothesis.confidence !== null ? <p className="mt-2 text-xs text-slate-500">Confiance technique : {Math.round(hypothesis.confidence * 100)} %</p> : null}
+                  {value.question && hypothesis.rationale ? (
+                    <p className="mt-2 text-xs leading-relaxed text-slate-600">{hypothesis.rationale}</p>
+                  ) : null}
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" type="button" onClick={() => void decide(hypothesis.id, 'confirmed')} disabled={deciding === hypothesis.id}><Check className="mr-1 h-4 w-4" /> Confirmer</Button>
-                  <Button size="sm" type="button" variant="outline" onClick={() => void decide(hypothesis.id, 'rejected')} disabled={deciding === hypothesis.id}><X className="mr-1 h-4 w-4" /> Rejeter</Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    onClick={() => void decide(hypothesis.id, 'confirmed')}
+                    disabled={deciding === hypothesis.id}
+                  >
+                    <Check className="mr-1 h-4 w-4" /> Confirmer
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    onClick={() => void decide(hypothesis.id, 'rejected')}
+                    disabled={deciding === hypothesis.id}
+                  >
+                    <X className="mr-1 h-4 w-4" /> Écarter
+                  </Button>
                 </div>
               </div>
             </div>
