@@ -81,20 +81,28 @@ export default function ProfileSynthesisPanel() {
               Synthèse de mon profil
             </h2>
             <CardDescription className="mt-2 max-w-3xl">
-              Retrouve les éléments confirmés de ton profil, les métiers à explorer et les prochaines actions utiles.
+              Retrouve au même endroit ce qui ressort de ton profil, les métiers à explorer et les prochaines étapes utiles.
             </CardDescription>
           </div>
           <Button type="button" onClick={() => void create()} disabled={creating}>
             {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            {latest ? 'Mettre à jour la synthèse' : 'Créer ma synthèse'}
+            {latest ? 'Mettre à jour ma synthèse' : 'Créer ma synthèse'}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {!latest ? (
-          <p className="text-sm text-slate-600">
-            Ta synthèse sera disponible après le questionnaire sur tes centres d’intérêt et le choix de premières pistes de métiers.
-          </p>
+          <div className="rounded-xl border border-dashed border-emerald-300 bg-white p-5 text-sm text-slate-700">
+            <p className="font-semibold text-slate-900">Ta synthèse réunira progressivement :</p>
+            <ul className="mt-3 list-disc space-y-1 pl-5">
+              <li>un résumé clair de ton profil ;</li>
+              <li>des métiers à explorer ;</li>
+              <li>des prochaines étapes adaptées à ton projet.</li>
+            </ul>
+            <p className="mt-3 text-slate-600">
+              Termine le questionnaire sur tes centres d’intérêt et choisis une première piste pour la créer.
+            </p>
+          </div>
         ) : (
           <div className="rounded-xl border border-emerald-200 bg-white p-4">
             <p className="font-semibold text-slate-900">{publicHeadline(latest.synthesis.summary.headline)}</p>
