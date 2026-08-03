@@ -21,7 +21,7 @@ describe('verrou de résultat invité', () => {
 
     expect(guestPreview).toContain('topRiasecDimensions(profile)[0]');
     expect(guestPreview).toContain('Une première tendance se dégage');
-    expect(guestPreview).toContain('Ton résultat complet tient compte de plusieurs tendances');
+    expect(guestPreview).toContain('La suite prendra aussi en compte tes autres tendances');
     expect(guestPreview).not.toContain('guestCareerFamilies');
     expect(guestPreview).not.toContain('/careers');
     expect(guestPreview).not.toContain('examples.join');
