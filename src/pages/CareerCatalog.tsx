@@ -59,8 +59,6 @@ export default function CareerCatalog() {
     setSearchParams(next, { replace: true });
   };
 
-  const frenchSource = sources.find((source) => source.locale === 'fr');
-
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-10">
       <h1 className="sr-only">Explorer les métiers</h1>
@@ -74,7 +72,6 @@ export default function CareerCatalog() {
           <CardHeader className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <Badge>Catalogue des métiers</Badge>
-              {frenchSource ? <Badge variant="outline">Informations en français</Badge> : null}
             </div>
             <CardTitle className="text-3xl">Explore les métiers qui t’intéressent</CardTitle>
             <CardDescription className="max-w-4xl text-base leading-relaxed">
@@ -107,9 +104,11 @@ export default function CareerCatalog() {
               {occupations.map((occupation) => (
                 <Card key={occupation.id} className="h-full min-w-0 overflow-hidden border-slate-200 shadow-sm">
                   <CardHeader className="min-w-0 space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {occupation.translationStatus === 'unavailable' ? <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Informations en anglais</Badge> : <Badge variant="outline">Informations en français</Badge>}
-                    </div>
+                    {occupation.translationStatus === 'unavailable' ? (
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline"><Languages className="mr-1 h-3 w-3" />Informations en anglais</Badge>
+                      </div>
+                    ) : null}
                     <CardTitle className="break-words text-xl">{occupation.preferredLabel}</CardTitle>
                     <CardDescription className="line-clamp-4 break-words leading-relaxed">{occupation.description || 'Cette fiche est encore en cours d’enrichissement.'}</CardDescription>
                   </CardHeader>
