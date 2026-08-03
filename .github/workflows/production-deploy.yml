@@ -125,12 +125,10 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
-            https://makoki.org/ >/dev/null
-          curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
-            https://makoki.org/parcours >/dev/null
-          curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
-            https://makoki.org/careers >/dev/null
+          for path in / /parcours /careers /cv-optimizer; do
+            curl --fail --retry 12 --retry-all-errors --retry-delay 5 \
+              "https://makoki.org${path}" >/dev/null
+          done
 
           status=$(curl --silent --show-error --output /tmp/health.json --write-out '%{http_code}' \
             https://makoki.org/api/test/health)
@@ -163,6 +161,10 @@ jobs:
             https://makoki.org/api/v1/life-projects)
           test "${unauthenticated_status}" = 401
 
+          cv_unauthenticated_status=$(curl --silent --show-error --output /tmp/cv-unauthenticated.json --write-out '%{http_code}' \
+            https://makoki.org/api/v1/cv/analyses)
+          test "${cv_unauthenticated_status}" = 401
+
           node <<'NODE'
           const fs = require('node:fs');
           const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
@@ -178,7 +180,7 @@ jobs:
             throw new Error(`Served SHA ${health.gitSha || 'null'} does not match ${process.env.DEPLOY_SHA}.`);
           }
           if (!instrument.instrument || instrument.instrument.itemCount !== 60) {
-            throw new Error('Public RIASEC instrument is unavailable or incomplete.');
+            throw new Error('Public orientation instrument is unavailable or incomplete.');
           }
           if (!Array.isArray(guestResults.results)) {
             throw new Error('Guest result history did not return an isolated result list.');
@@ -191,6 +193,8 @@ jobs:
           const riasec = byId('orientation.riasec');
           const publicCareerCatalog = byId('career.catalog-public-v1');
           const lifeProject = byId('life-project.core-v1');
+          const cv = byId('cv.analysis-v1');
+
           if (!auth || auth.status !== 'active' || auth.configured !== true) {
             throw new Error('Auth V1 is not active in production.');
           }
@@ -200,7 +204,7 @@ jobs:
             riasec.configured !== true ||
             riasec.configuration?.key !== 'LIFE_PROJECT_API_ENABLED'
           ) {
-            throw new Error('Guest-capable RIASEC is not configured through Projet de vie in production.');
+            throw new Error('Guest-capable orientation is not configured through Projet de vie in production.');
           }
           if (
             !publicCareerCatalog ||
@@ -213,17 +217,24 @@ jobs:
           if (!lifeProject || lifeProject.status !== 'experimental' || lifeProject.configured !== true) {
             throw new Error('Projet de vie is not configured in production.');
           }
+          if (
+            !cv ||
+            cv.status !== 'active' ||
+            cv.configured !== true ||
+            cv.configuration?.key !== 'CV_API_V1_ENABLED'
+          ) {
+            throw new Error('CV Analysis V1 is not active in production.');
+          }
 
           for (const id of [
             'career.recommendations',
-            'cv.analysis-v1',
             'privacy.data-rights-v1',
             'ats.workflow-v1',
             'identity.auth-legacy',
           ]) {
             const capability = byId(id);
             if (!capability || capability.status !== 'disabled' || capability.configured !== false) {
-              throw new Error(`${id} must remain disabled during V6-H.`);
+              throw new Error(`${id} must remain disabled during the CV V1 activation.`);
             }
           }
           NODE

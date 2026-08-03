@@ -9,10 +9,11 @@ services:
       RIASEC_API_ENABLED: "false"
       RIASEC_ALLOW_DRAFT: "false"
       CAREER_API_ENABLED: "false"
-      CV_API_V1_ENABLED: "false"
+      CV_API_V1_ENABLED: "true"
       FEATURE_CHATBOT: "false"
       FEATURE_ANALYTICS: "false"
   web:
     build:
       args:
         VITE_LIFE_PROJECT_ENABLED: "true"
+        VITE_CV_ANALYSIS_ENABLED: "true"

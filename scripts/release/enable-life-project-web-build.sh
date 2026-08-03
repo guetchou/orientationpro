@@ -9,9 +9,13 @@ awk '
   BEGIN { inserted = 0 }
   /^ARG[[:space:]]+VITE_LIFE_PROJECT_ENABLED([=[:space:]]|$)/ { next }
   /^ENV[[:space:]]+VITE_LIFE_PROJECT_ENABLED=/ { next }
+  /^ARG[[:space:]]+VITE_CV_ANALYSIS_ENABLED([=[:space:]]|$)/ { next }
+  /^ENV[[:space:]]+VITE_CV_ANALYSIS_ENABLED=/ { next }
   /^RUN[[:space:]]+npm[[:space:]]+run[[:space:]]+build([[:space:]]|$)/ && !inserted {
     print "ARG VITE_LIFE_PROJECT_ENABLED=false"
     print "ENV VITE_LIFE_PROJECT_ENABLED=${VITE_LIFE_PROJECT_ENABLED}"
+    print "ARG VITE_CV_ANALYSIS_ENABLED=false"
+    print "ENV VITE_CV_ANALYSIS_ENABLED=${VITE_CV_ANALYSIS_ENABLED}"
     print ""
     inserted = 1
   }
@@ -30,16 +34,24 @@ chmod --reference="${dockerfile}" "${temporary}"
 chown --reference="${dockerfile}" "${temporary}" 2>/dev/null || true
 mv "${temporary}" "${dockerfile}"
 
-grep -qx 'ARG VITE_LIFE_PROJECT_ENABLED=false' "${dockerfile}"
-grep -qx 'ENV VITE_LIFE_PROJECT_ENABLED=${VITE_LIFE_PROJECT_ENABLED}' "${dockerfile}"
-[[ "$(grep -c '^ARG VITE_LIFE_PROJECT_ENABLED=false$' "${dockerfile}")" == 1 ]]
-[[ "$(grep -c '^ENV VITE_LIFE_PROJECT_ENABLED=${VITE_LIFE_PROJECT_ENABLED}$' "${dockerfile}")" == 1 ]]
+for expected in \
+  'ARG VITE_LIFE_PROJECT_ENABLED=false' \
+  'ENV VITE_LIFE_PROJECT_ENABLED=${VITE_LIFE_PROJECT_ENABLED}' \
+  'ARG VITE_CV_ANALYSIS_ENABLED=false' \
+  'ENV VITE_CV_ANALYSIS_ENABLED=${VITE_CV_ANALYSIS_ENABLED}'; do
+  grep -Fqx "${expected}" "${dockerfile}"
+  [[ "$(grep -Fxc "${expected}" "${dockerfile}")" == 1 ]]
+done
 
-arg_line=$(grep -n '^ARG VITE_LIFE_PROJECT_ENABLED=false$' "${dockerfile}" | cut -d: -f1)
 build_line=$(grep -n '^RUN[[:space:]]\+npm[[:space:]]\+run[[:space:]]\+build' "${dockerfile}" | head -n1 | cut -d: -f1)
-[[ -n "${arg_line}" && -n "${build_line}" && "${arg_line}" -lt "${build_line}" ]] || {
-  printf 'VITE_LIFE_PROJECT_ENABLED must be declared before the Vite build\n' >&2
-  exit 1
-}
+for marker in \
+  'ARG VITE_LIFE_PROJECT_ENABLED=false' \
+  'ARG VITE_CV_ANALYSIS_ENABLED=false'; do
+  marker_line=$(grep -Fn "${marker}" "${dockerfile}" | cut -d: -f1)
+  [[ -n "${marker_line}" && -n "${build_line}" && "${marker_line}" -lt "${build_line}" ]] || {
+    printf '%s must be declared before the Vite build\n' "${marker}" >&2
+    exit 1
+  }
+done
 
-printf 'Projet de vie Vite build argument normalized: %s\n' "${dockerfile}"
+printf 'Projet de vie and CV V1 Vite build arguments normalized: %s\n' "${dockerfile}"
