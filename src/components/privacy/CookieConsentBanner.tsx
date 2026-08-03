@@ -115,32 +115,32 @@ export const CookieConsentBanner = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-white p-4 shadow-2xl" role="dialog" aria-label="Gestion des cookies">
+    <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-white px-4 py-3 shadow-xl" role="dialog" aria-label="Gestion des cookies">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-3xl">
-            <h2 className="text-lg font-semibold text-slate-950">Votre choix concernant les cookies</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-700">
-              Les fonctions nécessaires restent actives. Google Analytics, Meta Pixel et les autres outils non essentiels ne sont chargés qu’après votre accord. Consultez la <Link className="font-medium text-emerald-700 underline" to="/cookies">politique relative aux cookies</Link>.
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 max-w-3xl">
+            <h2 className="text-base font-semibold text-slate-950">Votre choix concernant les cookies</h2>
+            <p className="mt-1 text-sm leading-5 text-slate-700">
+              Nous utilisons des cookies nécessaires au fonctionnement du site et, avec votre accord, des cookies de mesure d’audience. <Link className="font-medium text-emerald-700 underline" to="/cookies">En savoir plus</Link>.
             </p>
           </div>
           {!customizing ? (
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button variant="outline" onClick={() => commit(defaultPreferences)}>Tout refuser</Button>
-              <Button variant="outline" onClick={() => setCustomizing(true)}>Personnaliser</Button>
-              <Button onClick={() => commit({ analytics: true, marketing: true, support: true })}>Tout accepter</Button>
+            <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3">
+              <Button variant="outline" size="sm" onClick={() => commit(defaultPreferences)}>Tout refuser</Button>
+              <Button variant="outline" size="sm" onClick={() => setCustomizing(true)}>Personnaliser</Button>
+              <Button size="sm" onClick={() => commit({ analytics: true, marketing: true, support: true })}>Tout accepter</Button>
             </div>
           ) : null}
         </div>
 
         {customizing ? (
-          <div className="mt-5 grid gap-4 border-t border-slate-200 pt-5 md:grid-cols-3">
+          <div className="mt-4 grid gap-3 border-t border-slate-200 pt-4 md:grid-cols-3">
             {([
               ['analytics', 'Mesure d’audience', 'Autorise Google Analytics et les mesures locales de navigation.'],
               ['marketing', 'Publicité', 'Autorise Meta Pixel et les mesures de campagnes.'],
               ['support', 'Assistance', 'Autorise les outils de conversation et de support lorsqu’ils sont activés.'],
             ] as const).map(([key, label, description]) => (
-              <label key={key} className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+              <label key={key} className="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
                 <input
                   type="checkbox"
                   className="mt-1 h-4 w-4"
@@ -151,8 +151,8 @@ export const CookieConsentBanner = () => {
               </label>
             ))}
             <div className="flex flex-col gap-2 md:col-span-3 sm:flex-row sm:justify-end">
-              <Button variant="outline" onClick={() => commit(defaultPreferences)}>Tout refuser</Button>
-              <Button onClick={() => commit(preferences)}>Enregistrer mes choix</Button>
+              <Button variant="outline" size="sm" onClick={() => commit(defaultPreferences)}>Tout refuser</Button>
+              <Button size="sm" onClick={() => commit(preferences)}>Enregistrer mes choix</Button>
             </div>
           </div>
         ) : null}
