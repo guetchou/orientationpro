@@ -1,3 +1,4 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-03T13:00:30+01:00
-# application-base: 3c075d716d4fc2a1367a0f384d39e2bf885b35a6
+# trigger: 2026-08-03T13:18:00+01:00
+# application-base: 244f2204189f5ed4e46289956ab773009658e430
+# trigger-method: github-pull-request-merge
