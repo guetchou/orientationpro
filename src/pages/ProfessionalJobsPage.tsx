@@ -5,9 +5,15 @@ import { motion } from 'framer-motion';
 import { BriefcaseBusiness, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfessionalJobBoard } from '@/components/recruitment/ProfessionalJobBoard';
+import { ServiceRequestCard } from '@/components/services/ServiceRequestCard';
 
 export default function ProfessionalJobsPage() {
-  usePageMeta({ title: "Offres d’emploi", description: "Découvrez des offres d’emploi et des opportunités professionnelles au Congo.", path: "/jobs" });
+  usePageMeta({
+    title: "Offres d’emploi",
+    description: "Consultez les offres disponibles ou demandez une recherche d’opportunités ciblée au Congo.",
+    path: "/jobs",
+  });
+
   return (
     <div className="min-h-screen bg-stone-50">
       <section className="relative isolate overflow-hidden">
@@ -34,15 +40,15 @@ export default function ProfessionalJobsPage() {
               Emploi
             </span>
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              L’emploi au Congo,
-              <span className="block text-amber-200">avec méthode</span>
+              Cherche un emploi,
+              <span className="block text-amber-200">avec une méthode claire</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50/90">
-              Consulte des offres, compare les missions et prépare une candidature adaptée à chaque opportunité.
+              Consulte les offres réellement publiées. Lorsqu’aucune offre ne correspond, demande une recherche ciblée selon ton métier, ta ville et ton expérience.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="bg-amber-400 text-emerald-950 hover:bg-amber-300">
-                <Link to="/parcours">Mieux définir mon projet</Link>
+                <a href="#recherche-ciblee">Demander une recherche ciblée</a>
               </Button>
               <Button
                 size="lg"
@@ -62,6 +68,15 @@ export default function ProfessionalJobsPage() {
       </section>
 
       <ProfessionalJobBoard />
+
+      <section id="recherche-ciblee" className="mx-auto max-w-6xl scroll-mt-24 px-6 pb-20">
+        <ServiceRequestCard
+          service="emploi"
+          title="Demander une recherche d’opportunités ciblée"
+          description="Indique le métier, la ville, ton niveau d’expérience et le type de contrat recherché. MAKOKI vérifie les pistes disponibles et te répond sans afficher de fausses offres."
+          submitLabel="Demander la recherche"
+        />
+      </section>
     </div>
   );
 }
