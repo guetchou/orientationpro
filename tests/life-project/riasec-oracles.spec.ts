@@ -48,7 +48,7 @@ const responseByItemId = (profile: ReturnType<typeof profileById>) => new Map(
 // présentées : chaque question est reconnue par son texte, pas sa position.
 const answerRiasecSurveyAsProfile = async (page: Page, profile: ReturnType<typeof profileById>) => {
   await expect(page.getByTestId('unified-riasec-intro')).toBeVisible();
-  await page.getByRole('button', { name: 'Commencer le test' }).click();
+  await page.getByRole('button', { name: 'Commencer le questionnaire' }).click();
   await expect(page.getByTestId('unified-riasec-questions')).toBeVisible();
 
   const values = responseByItemId(profile);
@@ -57,7 +57,7 @@ const answerRiasecSurveyAsProfile = async (page: Page, profile: ReturnType<typeo
     const questions = page.getByTestId('unified-riasec-questions');
     if (!(await questions.isVisible().catch(() => false))) break;
 
-    await expect(questions.getByRole('heading', { name: /^Affirmation \d+$/ })).toBeVisible();
+    await expect(questions.getByRole('heading', { name: /^Affirmation \d+ sur \d+$/ })).toBeVisible();
     // Le texte de la question est le seul contenu de ce bloc qui corresponde
     // à une affirmation connue : pas besoin de dépendre d'un sélecteur CSS
     // fragile pour l'isoler.

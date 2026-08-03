@@ -107,15 +107,16 @@ describe('LifeProjectCompletionPanel', () => {
     vi.restoreAllMocks();
   });
 
-  it('affiche calendrier, modalités, synthèse et impression PDF', async () => {
+  it('affiche calendrier, organisation, synthèse et impression PDF', async () => {
     const print = vi.fn();
     Object.defineProperty(window, 'print', { configurable: true, value: print });
 
     render(<LifeProjectCompletionPanel />);
 
-    expect(await screen.findByRole('heading', { name: 'Comparaison complète de tes pistes' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Comparaison de tes pistes' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Calendrier' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Modalités' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Organisation' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Lieu ou disponibilité' })).toBeInTheDocument();
     expect(screen.getAllByText('24 mois').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/250.*000 XAF/u).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/candidature avant le 01\/09\/2026/u).length).toBeGreaterThan(0);
@@ -123,8 +124,10 @@ describe('LifeProjectCompletionPanel', () => {
     expect(screen.getAllByText('Brazzaville').length).toBeGreaterThan(0);
 
     expect(document.querySelector('#life-project-summary')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Ton choix provisoire et ta prochaine action' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ta piste retenue et la première action' })).toBeInTheDocument();
+    expect(screen.getAllByText('Piste retenue').length).toBeGreaterThan(0);
     expect(screen.getByText('Contacter la FST')).toBeInTheDocument();
+    expect(screen.getByText(/Résultat attendu/u)).toBeInTheDocument();
     expect(screen.getByText(/Réponse datée sur les conditions et les frais/u)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Imprimer ou télécharger en PDF' }));

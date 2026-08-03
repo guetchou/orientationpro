@@ -94,7 +94,7 @@ assert.match(unifiedPage, /<EmbeddedRiasecStep onComplete=\{handleRiasecComplete
 assert.match(unifiedPage, /guest-life-project-soft-gate/u);
 assert.match(unifiedPage, /const GuestPreview/u);
 assert.match(unifiedPage, /topRiasecDimensions\(profile\)\[0\]/u);
-assert.match(unifiedPage, /Ton résultat complet tient compte de plusieurs tendances/u);
+assert.match(unifiedPage, /La suite prendra aussi en compte tes autres tendances, ta situation et tes contraintes/u);
 assert.match(unifiedPage, /data-testid="guest-registration-gate"/u);
 assert.match(unifiedPage, /Créer mon espace/u);
 assert.match(unifiedPage, /J’ai déjà un compte/u);
@@ -104,16 +104,22 @@ assert.doesNotMatch(unifiedPage, /sans compte|sans inscription/iu);
 assert.match(unifiedPage, /<LifeProjectWorkspace riasecProfile=\{riasecProfile\} \/>/u);
 assert.match(embeddedRiasec, /claimGuestOrientation/u);
 assert.match(embeddedRiasec, /submitRiasecAttempt/u);
-assert.match(embeddedRiasec, /Commencer le test/u);
+assert.match(embeddedRiasec, /Commencer le questionnaire/u);
+assert.doesNotMatch(embeddedRiasec, /Commencer le test|pendant le test/u);
 assert.doesNotMatch(embeddedRiasec, /sans compte|sans inscription|0 inscription/iu);
 assert.doesNotMatch(embeddedRiasec, /Étape RIASEC indisponible|Le RIASEC décrit|Profil RIASEC|RIASEC intégré/u);
 assert.doesNotMatch(embeddedRiasec, /scoreRiasec/u);
-assert.match(workspace, /Donne les informations utiles pour affiner ton projet/u);
-assert.match(workspace, /Tes réponses précédentes sont déjà prises en compte/u);
-assert.match(workspace, /Tes pistes ont été préparées/u);
+assert.match(workspace, /const formSteps = \[/u);
+assert.match(workspace, /title: 'Ta situation'/u);
+assert.match(workspace, /title: 'Tes possibilités'/u);
+assert.match(workspace, /title: 'Ce que tu apportes'/u);
+assert.match(workspace, /title: 'Tes priorités'/u);
+assert.match(workspace, /Tes pistes sont prêtes/u);
 assert.match(workspace, /selectAdvisorScenario\(current, scenarioId\)/u);
 assert.match(workspace, /selectedScenario/u);
-assert.match(workspace, /Cette piste est maintenant ton choix provisoire/u);
+assert.match(workspace, /Cette piste est enregistrée pour la suite/u);
+assert.match(workspace, /importanceByPosition = \[1, 0\.85, 0\.7\]/u);
+assert.doesNotMatch(workspace, /priorities: \['interest', 'cost', 'duration', 'employability'\]/u);
 assert.doesNotMatch(workspace, /Mon profil RIASEC|adéquation|Confiance .*\/100|engineVersion|capabilityStatus/iu);
 
 // Retired alternate analyzers and ATS routes remain impossible to invoke.

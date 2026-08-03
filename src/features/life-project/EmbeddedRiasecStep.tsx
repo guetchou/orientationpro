@@ -194,22 +194,22 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
           <Badge className="w-fit">Première étape</Badge>
           <CardTitle className="text-2xl">Découvre ce qui t’intéresse</CardTitle>
           <CardDescription className="text-base">
-            Réponds aux affirmations pour mieux comprendre les activités et environnements qui peuvent te motiver.
+            Lis chaque affirmation et indique simplement si elle te ressemble aujourd’hui.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border bg-muted/30 p-4"><strong>{instrument.itemCount}</strong><span className="block text-sm text-muted-foreground">affirmations</span></div>
-            <div className="rounded-lg border bg-muted/30 p-4"><strong>10 à 15 minutes</strong><span className="block text-sm text-muted-foreground">en moyenne</span></div>
+            <div className="rounded-lg border bg-muted/30 p-4"><strong>Prévois 10 à 15 minutes</strong><span className="block text-sm text-muted-foreground">tu peux reprendre plus tard</span></div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Il n’y a pas de bonne ou de mauvaise réponse. Choisis simplement ce qui te ressemble le plus aujourd’hui.
+            Il n’y a pas de bonne ou de mauvaise réponse. Choisis ce qui te ressemble le plus, sans chercher la réponse idéale.
           </p>
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
-            Tes réponses sont conservées sur cet appareil pendant le test afin que tu puisses reprendre en cas d’interruption.
+            Tes réponses restent sur cet appareil pendant le questionnaire afin que tu puisses reprendre après une interruption.
           </p>
           <Button type="button" size="lg" onClick={() => void startNewAttempt()}>
-            Commencer le test <ArrowRight className="ml-2 h-5 w-5" />
+            Commencer le questionnaire <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </CardContent>
       </Card>
@@ -228,12 +228,12 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
         <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
         </div>
-        <CardTitle className="pt-4 text-xl">Affirmation {currentIndex + 1}</CardTitle>
+        <CardTitle className="pt-4 text-xl">Affirmation {currentIndex + 1} sur {instrument.itemCount}</CardTitle>
         <CardDescription className="text-base text-foreground">{currentItem.prompt}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {error && <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        <div className="grid gap-2 sm:grid-cols-5" role="radiogroup" aria-label="Réponse">
+        <div className="grid gap-2 sm:grid-cols-5" role="radiogroup" aria-label="À quel point cette affirmation te ressemble-t-elle ?">
           {instrument.responseScale.map((option) => {
             const selected = selectedValue === option.value;
             return (
@@ -272,7 +272,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
             </Button>
           </div>
         </div>
-        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Tes réponses restent disponibles sur cet appareil pendant le test.</p>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Tes réponses sont enregistrées sur cet appareil pendant le questionnaire.</p>
       </CardContent>
     </Card>
   );

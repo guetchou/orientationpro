@@ -30,7 +30,7 @@ const waitForServer = async (url, process, timeoutMs = 15_000) => {
   throw new Error('Vite preview did not become ready.');
 };
 
-const assertPublicRoute = async (page, baseUrl, pathname, expectedText) => {
+const assertPublicRoute = async (page, baseUrl, pathname, expectedTexts, forbiddenTexts = []) => {
   const response = await page.goto(`${baseUrl}${pathname}`, { waitUntil: 'networkidle0' });
   const status = response?.status();
   if (status === undefined || status < 200 || status >= 400) {
@@ -41,8 +41,15 @@ const assertPublicRoute = async (page, baseUrl, pathname, expectedText) => {
   if (current.pathname === '/login') throw new Error(`${pathname} redirected to login`);
   if (current.pathname !== pathname) throw new Error(`${pathname} resolved to ${current.pathname}`);
   const text = await page.$eval('body', (body) => body.innerText);
-  if (!text.includes(expectedText)) {
-    throw new Error(`${pathname} does not expose expected guest content: ${expectedText}`);
+  for (const expectedText of expectedTexts) {
+    if (!text.includes(expectedText)) {
+      throw new Error(`${pathname} does not expose expected guest content: ${expectedText}`);
+    }
+  }
+  for (const forbiddenText of forbiddenTexts) {
+    if (text.includes(forbiddenText)) {
+      throw new Error(`${pathname} still exposes removed or duplicated guest content: ${forbiddenText}`);
+    }
   }
 };
 
@@ -92,15 +99,21 @@ async function main() {
     const page = await browser.newPage();
     await page.setCacheEnabled(false);
 
-    await assertPublicRoute(page, baseUrl, '/parcours', 'Commence ton parcours');
-    await assertPublicRoute(page, baseUrl, '/careers', 'Explore les métiers qui t’intéressent');
+    await assertPublicRoute(
+      page,
+      baseUrl,
+      '/parcours',
+      ['Construis ton projet d’avenir', 'Commence par 60 affirmations'],
+      ['Commence ton parcours', 'Réponds à quelques questions'],
+    );
+    await assertPublicRoute(page, baseUrl, '/careers', ['Explore les métiers qui t’intéressent']);
 
     await page.goto(`${baseUrl}/tests/riasec`, { waitUntil: 'networkidle0' });
     if (new URL(page.url()).pathname !== '/parcours') {
       throw new Error('Legacy RIASEC route does not converge to /parcours.');
     }
 
-    console.log('Guest entry browser smoke passed: /parcours, /careers, legacy RIASEC redirect.');
+    console.log('Guest entry browser smoke passed: clear /parcours entry, /careers, legacy RIASEC redirect.');
   } catch (error) {
     if (output) process.stderr.write(output);
     throw error;
