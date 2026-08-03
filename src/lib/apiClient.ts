@@ -3,7 +3,6 @@ const API_ROOT = String(import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, 
 export const oauthStartUrl = (provider: 'google' | 'meta') =>
   `${API_ROOT}/v1/auth/oauth/${provider}/start`;
 
-const ACCESS_TOKEN_KEY = 'userToken';
 const ACCOUNT_KEY = 'userData';
 const AUTH_EVENT = 'orientationpro:auth-changed';
 const SESSION_HINT_KEY = 'makoki.session';
@@ -16,8 +15,7 @@ export interface AuthAccount {
 }
 
 export interface AuthSessionPayload {
-  accessToken: string;
-  expiresIn: number;
+  expiresIn?: number;
   account: AuthAccount;
 }
 
@@ -62,7 +60,6 @@ export const storedUserFromAccount = (account: AuthAccount) => ({
 });
 
 export const persistAuthSession = (payload: AuthSessionPayload) => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, payload.accessToken);
   localStorage.setItem(ACCOUNT_KEY, JSON.stringify(storedUserFromAccount(payload.account)));
   localStorage.setItem('userRole', primaryRole(payload.account));
   localStorage.setItem(SESSION_HINT_KEY, '1');
@@ -71,7 +68,7 @@ export const persistAuthSession = (payload: AuthSessionPayload) => {
 
 export const clearAuthSession = () => {
   [
-    ACCESS_TOKEN_KEY,
+    'userToken',
     ACCOUNT_KEY,
     'userRole',
     'adminToken',
@@ -85,7 +82,8 @@ export const clearAuthSession = () => {
   notifyAuthChanged();
 };
 
-export const getStoredAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
+/** @deprecated Auth V1 is cookie-only. Kept temporarily for compatibility. */
+export const getStoredAccessToken = () => null;
 export const hasSessionHint = () => localStorage.getItem(SESSION_HINT_KEY) === '1';
 
 export const getStoredUserData = () => {
@@ -160,11 +158,6 @@ export const apiFetch = async <T>(
     headers.set('Content-Type', 'application/json');
   }
 
-  if (auth) {
-    const token = getStoredAccessToken();
-    if (token) headers.set('Authorization', `Bearer ${token}`);
-  }
-
   try {
     return await request<T>(`${API_ROOT}${path}`, { ...init, headers });
   } catch (error) {
@@ -203,26 +196,18 @@ export const confirmPasswordReset = async (token: string, password: string): Pro
     body: JSON.stringify({ token, password }),
   }, { auth: false });
 };
-/**
- * Envoi multipart authentifie (upload de fichier). Contrairement a apiFetch,
- * on ne fixe jamais Content-Type : le navigateur pose lui-meme la frontiere
- * multipart. Meme logique de rafraichissement de session sur 401.
- */
+
 export const apiUpload = async <T>(
   path: string,
   formData: FormData,
   options: { retryAfterRefresh?: boolean } = {},
 ): Promise<T> => {
   const retryAfterRefresh = options.retryAfterRefresh !== false;
-  const headers = new Headers();
-  const token = getStoredAccessToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
 
   try {
     return await request<T>(`${API_ROOT}${path}`, {
       method: 'POST',
       body: formData,
-      headers,
     });
   } catch (error) {
     if (retryAfterRefresh && error instanceof ApiError && error.status === 401) {
@@ -235,29 +220,17 @@ export const apiUpload = async <T>(
   }
 };
 
-/**
- * Telechargement binaire authentifie (rapport PDF). Renvoie un Blob et gere le
- * rafraichissement de session sur 401. Ne simule jamais de contenu.
- */
 export const apiDownload = async (
   path: string,
   options: { retryAfterRefresh?: boolean } = {},
 ): Promise<Blob> => {
   const retryAfterRefresh = options.retryAfterRefresh !== false;
-  const headers = new Headers();
-  const token = getStoredAccessToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-
   const response = await fetch(`${API_ROOT}${path}`, {
-    headers,
     credentials: 'include',
   });
 
   if (!response.ok) {
-    if (
-      retryAfterRefresh
-      && response.status === 401
-    ) {
+    if (retryAfterRefresh && response.status === 401) {
       const refreshed = await refreshAuthSession();
       if (refreshed) {
         return apiDownload(path, { retryAfterRefresh: false });
