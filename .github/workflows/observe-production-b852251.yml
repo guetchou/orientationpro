@@ -1,0 +1,80 @@
+name: Observe Production b852251
+
+on:
+  push:
+    branches:
+      - ops/observe-production-b852251
+    paths:
+      - .github/workflows/observe-production-b852251.yml
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: b852251548cc44e5ce5f251f6604392054852c89
+    steps:
+      - name: Observe production deployment and publish evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          run=''
+          for _ in $(seq 1 180); do
+            runs=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/production-deploy.yml/runs?branch=main&event=push&per_page=30")
+            run=$(jq -c --arg sha "${TARGET_SHA}" '.workflow_runs[] | select(.head_sha == $sha)' <<<"${runs}" | head -n1 || true)
+            if [[ -n "${run}" ]]; then
+              status=$(jq -r '.status' <<<"${run}")
+              if [[ "${status}" == completed ]]; then
+                break
+              fi
+            fi
+            sleep 10
+          done
+
+          if [[ -z "${run}" ]]; then
+            printf '## Déploiement production — run introuvable\n\n- SHA ciblé : `%s`\n- Verdict : aucun run Production Deploy retrouvé dans la fenêtre d’observation.\n' "${TARGET_SHA}" >/tmp/comment.md
+            gh issue comment 184 --repo "${GITHUB_REPOSITORY}" --body-file /tmp/comment.md
+            exit 1
+          fi
+
+          run_id=$(jq -r '.id' <<<"${run}")
+          conclusion=$(jq -r '.conclusion // "unknown"' <<<"${run}")
+          run_url=$(jq -r '.html_url' <<<"${run}")
+          created_at=$(jq -r '.created_at' <<<"${run}")
+          updated_at=$(jq -r '.updated_at' <<<"${run}")
+
+          root_code=$(curl -sS -o /dev/null -w '%{http_code}' https://makoki.org/ || true)
+          parcours_code=$(curl -sS -o /dev/null -w '%{http_code}' https://makoki.org/parcours || true)
+          health_code=$(curl -sS -o /tmp/health.json -w '%{http_code}' https://makoki.org/api/test/health || true)
+          served_sha=$(jq -r '.gitSha // "unknown"' /tmp/health.json 2>/dev/null || printf unknown)
+          health_status=$(jq -r '.status // "unknown"' /tmp/health.json 2>/dev/null || printf unknown)
+
+          cat >/tmp/comment.md <<EOF
+          ## Déploiement du main actuel
+
+          - SHA ciblé : \`${TARGET_SHA}\`
+          - Run Production Deploy : \`${run_id}\`
+          - Conclusion : **${conclusion}**
+          - Début : \`${created_at}\`
+          - Fin/dernière mise à jour : \`${updated_at}\`
+          - Page d’accueil : HTTP \`${root_code}\`
+          - Parcours : HTTP \`${parcours_code}\`
+          - Santé API : HTTP \`${health_code}\`, statut \`${health_status}\`
+          - SHA servi : \`${served_sha}\`
+          - Run : ${run_url}
+          EOF
+
+          gh issue comment 184 --repo "${GITHUB_REPOSITORY}" --body-file /tmp/comment.md
+
+          test "${conclusion}" = success
+          test "${root_code}" = 200
+          test "${parcours_code}" = 200
+          test "${health_code}" = 200
+          test "${health_status}" = OK
+          test "${served_sha}" = "${TARGET_SHA}"
