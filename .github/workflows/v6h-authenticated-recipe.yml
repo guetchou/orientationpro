@@ -19,8 +19,25 @@ jobs:
       V6H_WEB_URL: https://makoki.org
       V6H_API_ROOT: https://makoki.org/api
       RECIPE_BRANCH: agent/v6h-authenticated-recipe
+      EXPECTED_PRODUCTION_SHA: 5032cbb8313622c7d6b949d29cc0e1c6a8a1c6d4
     steps:
       - uses: actions/checkout@v6
+
+      - name: Prove the expected production release before creating data
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          status=$(curl --silent --show-error --output /tmp/health.json --write-out '%{http_code}' \
+            https://makoki.org/api/test/health)
+          test "${status}" = 200
+          node <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+          if (health.status !== 'OK') throw new Error('Production health is not OK.');
+          if (health.gitSha !== process.env.EXPECTED_PRODUCTION_SHA) {
+            throw new Error(`Expected ${process.env.EXPECTED_PRODUCTION_SHA}, received ${health.gitSha || 'null'}.`);
+          }
+          NODE
 
       - name: Create dedicated account and request verification
         id: register
@@ -57,6 +74,7 @@ jobs:
           ## V6-H — vérification chiffrée requise
 
           - Run ID : \`${GITHUB_RUN_ID}\`
+          - SHA production vérifié : \`${EXPECTED_PRODUCTION_SHA}\`
           - Compte dédié : \`${recipe_email}\`
           - Chemin attendu : \`${token_path}\`
           - Branche : \`${RECIPE_BRANCH}\`
@@ -167,7 +185,7 @@ jobs:
           const lines = [
             '## V6-H — recette authentifiée finale GO',
             '',
-            `- SHA production observé par le déploiement : \`${process.env.GITHUB_SHA}\``,
+            `- SHA production : \`${process.env.EXPECTED_PRODUCTION_SHA}\``,
             `- Compte dédié : \`${process.env.V6H_RECIPE_EMAIL}\``,
             '- Questionnaire invité : 60 affirmations terminées',
             '- Aperçu invité limité : conforme',
@@ -207,6 +225,7 @@ jobs:
             -f body="## V6-H — recette finale NON CONCLUE
 
 - Run ID : \`${GITHUB_RUN_ID}\`
+- SHA production attendu : \`${EXPECTED_PRODUCTION_SHA}\`
 - Compte dédié : \`${V6H_RECIPE_EMAIL:-non créé}\`
 - Décision : **NON CONCLUE**. Une étape technique ou fonctionnelle a échoué ; consulter les artefacts privés sans exposer de secret."
 
