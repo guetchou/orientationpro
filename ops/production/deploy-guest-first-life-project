@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-03T16:51:00+01:00
-# application-base: 20d1ed1f43c3fb38bcb2728e83cc7d008d263f2f
+# trigger: 2026-08-03T18:53:00+01:00
+# application-base: 485648a62fa46328ab86c4863bd544fc6625e4af
 # trigger-method: merged-internal-production-pr
-# release-scope: public-copy-profile-cv
+# release-scope: life-project-questionnaire-and-form
