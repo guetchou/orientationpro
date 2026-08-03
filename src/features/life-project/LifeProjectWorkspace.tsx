@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { AlertTriangle, ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +29,7 @@ import type {
 } from './advisor-types';
 
 const DRAFT_KEY = 'makoki.life-project.simple-diagnostic.v1';
+const DRAFT_STEP_KEY = 'makoki.life-project.simple-diagnostic.step.v1';
 const fieldClass = 'mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 type SimpleForm = {
@@ -58,7 +65,7 @@ const emptyForm: SimpleForm = {
   skills: '',
   experiences: '',
   constraints: '',
-  priorities: ['interest', 'cost', 'duration', 'employability'],
+  priorities: [],
 };
 
 const objectiveLabels: Record<AdvisorObjective, string> = {
@@ -72,6 +79,32 @@ const objectiveLabels: Record<AdvisorObjective, string> = {
   uncertain: 'Clarifier mon projet',
 };
 
+const situationOptions = [
+  'Lycéen',
+  'Étudiant',
+  'En formation professionnelle',
+  'En emploi',
+  'En recherche d’emploi',
+  'Entrepreneur',
+  'En interruption d’études ou d’activité',
+  'Autre situation',
+];
+
+const educationOptions = [
+  'Primaire',
+  'Collège',
+  'Lycée',
+  'Terminale',
+  'Baccalauréat obtenu',
+  'Formation professionnelle',
+  'Bac +1',
+  'Bac +2',
+  'Licence / Bac +3',
+  'Master / Bac +5',
+  'Doctorat',
+  'Autre niveau',
+];
+
 const priorityLabels: Record<string, string> = {
   interest: 'Ce qui m’intéresse',
   cost: 'Le coût',
@@ -82,6 +115,13 @@ const priorityLabels: Record<string, string> = {
   stability: 'La stabilité',
   family_compatibility: 'La compatibilité avec ma vie familiale',
 };
+
+const formSteps = [
+  { title: 'Ta situation', description: 'Où tu en es aujourd’hui et ce que tu veux faire.' },
+  { title: 'Tes possibilités', description: 'Mobilité, budget et temps disponible.' },
+  { title: 'Ce que tu apportes', description: 'Tes intérêts, compétences et expériences.' },
+  { title: 'Tes priorités', description: 'Classe ce qui compte le plus pour comparer les pistes.' },
+];
 
 const splitList = (value: string) => [...new Set(value
   .split(/[;,\n]/u)
@@ -102,12 +142,19 @@ const readDraft = (): SimpleForm => {
   }
 };
 
+const readDraftStep = () => {
+  const value = Number(localStorage.getItem(DRAFT_STEP_KEY));
+  return Number.isInteger(value) ? Math.max(0, Math.min(formSteps.length - 1, value)) : 0;
+};
+
 const buildDiagnostic = (form: SimpleForm, profile: AdvisorRiasecProfile): AdvisorDiagnosticInput => {
   const experiences = splitList(form.experiences);
   const constraints = splitList(form.constraints);
   const budget = optionalNumber(form.budget);
   const maxDurationMonths = optionalNumber(form.maxDurationMonths);
   const needIncomeWithinMonths = optionalNumber(form.needIncomeWithinMonths);
+  const orderedPriorities = form.priorities.filter(Boolean).slice(0, 3);
+  const importanceByPosition = [1, 0.85, 0.7];
 
   return {
     objective: form.objective,
@@ -159,7 +206,10 @@ const buildDiagnostic = (form: SimpleForm, profile: AdvisorRiasecProfile): Advis
       evidence: [],
       regulatoryQualifications: [],
     },
-    priorities: form.priorities.map((id, index) => ({ id, importance: Math.max(0.55, 1 - index * 0.1) })),
+    priorities: orderedPriorities.map((id, index) => ({
+      id,
+      importance: importanceByPosition[index] ?? 0.7,
+    })),
     notes: constraints.join('; ') || undefined,
   };
 };
@@ -170,11 +220,12 @@ const scenarioSummary = (scenario: AdvisorRecommendationScenario) => {
   if (scenario.cost.amount !== null) {
     parts.push(`${new Intl.NumberFormat('fr-FR').format(scenario.cost.amount)} ${scenario.cost.currency || 'FCFA'}`);
   }
-  return parts.join(' · ') || 'Durée et coût à confirmer';
+  return parts.join(' · ') || 'Durée et coût encore inconnus';
 };
 
 export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile: AdvisorRiasecProfile }) {
   const [form, setForm] = useState<SimpleForm>(() => readDraft());
+  const [activeStep, setActiveStep] = useState(() => readDraftStep());
   const [projects, setProjects] = useState<AdvisorProjectSummary[]>([]);
   const [current, setCurrent] = useState<AdvisorEnvelope | null>(null);
   const [loading, setLoading] = useState(true);
@@ -204,6 +255,7 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
 
   useEffect(() => { void load(); }, [load]);
   useEffect(() => { localStorage.setItem(DRAFT_KEY, JSON.stringify(form)); }, [form]);
+  useEffect(() => { localStorage.setItem(DRAFT_STEP_KEY, String(activeStep)); }, [activeStep]);
 
   const recommendations = current?.project.recommendation?.scenarios || [];
   const selectedId = current?.project.activeScenarioId || null;
@@ -212,12 +264,41 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
     [recommendations, selectedId],
   );
 
+  const validateCurrentStep = () => {
+    if (activeStep === 0) {
+      if (!form.zone.trim() || !form.situation.trim() || !form.educationLevel.trim()) {
+        setError('Indique ta ville ou zone, ta situation actuelle et ton niveau d’études.');
+        return false;
+      }
+    }
+    if (activeStep === 3 && form.priorities.filter(Boolean).length === 0) {
+      setError('Choisis au moins une priorité pour comparer les pistes.');
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
+  const goNext = () => {
+    if (!validateCurrentStep()) return;
+    setActiveStep((step) => Math.min(formSteps.length - 1, step + 1));
+  };
+
+  const setPriority = (index: number, value: string) => {
+    const next = [...form.priorities];
+    while (next.length < 3) next.push('');
+    if (value) {
+      for (let position = 0; position < next.length; position += 1) {
+        if (position !== index && next[position] === value) next[position] = '';
+      }
+    }
+    next[index] = value;
+    setForm({ ...form, priorities: next });
+  };
+
   const saveAndGenerate = async (event: FormEvent) => {
     event.preventDefault();
-    if (!form.zone.trim() || !form.situation.trim() || !form.educationLevel.trim()) {
-      setError('Indique ta ville ou zone, ta situation actuelle et ton niveau d’études.');
-      return;
-    }
+    if (!validateCurrentStep()) return;
     setSaving(true);
     setError(null);
     setNotice(null);
@@ -243,7 +324,8 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
         persistenceVersion: recommended.persistenceVersion,
       }, ...existing.filter((item) => item.id !== recommended.project.id)]);
       localStorage.removeItem(DRAFT_KEY);
-      setNotice('Tes pistes ont été préparées. Compare-les, puis choisis celle que tu veux approfondir en premier.');
+      localStorage.removeItem(DRAFT_STEP_KEY);
+      setNotice('Tes pistes sont prêtes. Compare-les, puis choisis celle que tu veux vérifier en premier.');
     } catch {
       setError('Tes informations n’ont pas pu être enregistrées. Vérifie ta connexion puis réessaie.');
     } finally {
@@ -258,7 +340,7 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
     try {
       const updated = await selectAdvisorScenario(current, scenarioId);
       setCurrent(updated);
-      setNotice('Cette piste est maintenant ton choix provisoire. Vérifie les conditions locales avant de prendre une décision définitive.');
+      setNotice('Cette piste est enregistrée pour la suite. Tu peux encore la changer après avoir vérifié les informations réelles.');
     } catch {
       setError('Cette piste n’a pas pu être enregistrée. Réessaie dans quelques instants.');
     } finally {
@@ -290,107 +372,138 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
       <form onSubmit={(event) => void saveAndGenerate(event)} className="space-y-6">
         <Card>
           <CardHeader>
-            <Badge className="w-fit">Ta situation</Badge>
-            <CardTitle>Donne les informations utiles pour affiner ton projet</CardTitle>
-            <CardDescription>
-              Tes réponses précédentes sont déjà prises en compte. Ajoute maintenant ce qui peut changer la faisabilité de tes choix.
-            </CardDescription>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <Badge className="w-fit">Étape {activeStep + 1} sur {formSteps.length}</Badge>
+                <CardTitle className="mt-3">{formSteps[activeStep].title}</CardTitle>
+                <CardDescription className="mt-2">{formSteps[activeStep].description}</CardDescription>
+              </div>
+              <span className="text-sm text-muted-foreground">Ta saisie est conservée sur cet appareil.</span>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-4" aria-label="Étapes du formulaire">
+              {formSteps.map((step, index) => (
+                <div key={step.title} className={`rounded-md border px-3 py-2 text-sm ${index === activeStep ? 'border-primary bg-primary/5 font-semibold' : index < activeStep ? 'border-emerald-200 bg-emerald-50' : 'bg-muted/20 text-muted-foreground'}`}>
+                  {index + 1}. {step.title}
+                </div>
+              ))}
+            </div>
           </CardHeader>
-          <CardContent className="grid gap-5 md:grid-cols-2">
-            <label className="text-sm font-medium">Nom de ton projet
-              <input className={fieldClass} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium">Ce que tu veux faire maintenant
-              <select className={fieldClass} value={form.objective} onChange={(event) => setForm({ ...form, objective: event.target.value as AdvisorObjective })}>
-                {Object.entries(objectiveLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </label>
-            <label className="text-sm font-medium">Ville ou zone
-              <input className={fieldClass} required value={form.zone} onChange={(event) => setForm({ ...form, zone: event.target.value })} placeholder="Brazzaville, Pointe-Noire…" />
-            </label>
-            <label className="text-sm font-medium">Situation actuelle
-              <input className={fieldClass} required value={form.situation} onChange={(event) => setForm({ ...form, situation: event.target.value })} placeholder="Lycéen, étudiant, en emploi, en recherche…" />
-            </label>
-            <label className="text-sm font-medium">Niveau d’études
-              <input className={fieldClass} required value={form.educationLevel} onChange={(event) => setForm({ ...form, educationLevel: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium">Diplôme principal
-              <input className={fieldClass} value={form.diploma} onChange={(event) => setForm({ ...form, diploma: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium">Mobilité possible
-              <select className={fieldClass} value={form.mobility} onChange={(event) => setForm({ ...form, mobility: event.target.value as SimpleForm['mobility'] })}>
-                <option value="unknown">Je ne sais pas encore</option>
-                <option value="none">Je souhaite rester dans ma zone</option>
-                <option value="local">Je peux me déplacer à proximité</option>
-                <option value="national">Je peux me déplacer au Congo</option>
-                <option value="international">J’envisage l’étranger</option>
-                <option value="flexible">Je suis flexible</option>
-              </select>
-            </label>
-            <label className="text-sm font-medium">Budget maximum en FCFA
-              <input inputMode="numeric" className={fieldClass} value={form.budget} onChange={(event) => setForm({ ...form, budget: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium">Durée maximale envisagée en mois
-              <input inputMode="numeric" className={fieldClass} value={form.maxDurationMonths} onChange={(event) => setForm({ ...form, maxDurationMonths: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium">Dans combien de mois as-tu besoin d’un revenu ?
-              <input inputMode="numeric" className={fieldClass} value={form.needIncomeWithinMonths} onChange={(event) => setForm({ ...form, needIncomeWithinMonths: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium md:col-span-2">Autres centres d’intérêt
-              <textarea className={`${fieldClass} min-h-20`} value={form.interests} onChange={(event) => setForm({ ...form, interests: event.target.value })} placeholder="Sépare les éléments par des virgules" />
-            </label>
-            <label className="text-sm font-medium md:col-span-2">Compétences que tu maîtrises déjà
-              <textarea className={`${fieldClass} min-h-20`} value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} />
-            </label>
-            <label className="text-sm font-medium md:col-span-2">Expériences utiles
-              <textarea className={`${fieldClass} min-h-20`} value={form.experiences} onChange={(event) => setForm({ ...form, experiences: event.target.value })} placeholder="Stage, emploi, bénévolat, projet personnel…" />
-            </label>
-            <label className="text-sm font-medium md:col-span-2">Contraintes importantes
-              <textarea className={`${fieldClass} min-h-20`} value={form.constraints} onChange={(event) => setForm({ ...form, constraints: event.target.value })} placeholder="Disponibilité, responsabilités familiales, transport…" />
-            </label>
+          <CardContent className="space-y-5">
+            {activeStep === 0 && (
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="text-sm font-medium">Ce que tu veux faire maintenant
+                  <select className={fieldClass} value={form.objective} onChange={(event) => setForm({ ...form, objective: event.target.value as AdvisorObjective })}>
+                    {Object.entries(objectiveLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select>
+                </label>
+                <label className="text-sm font-medium">Ville ou zone
+                  <input className={fieldClass} required value={form.zone} onChange={(event) => setForm({ ...form, zone: event.target.value })} placeholder="Brazzaville, Pointe-Noire…" />
+                </label>
+                <label className="text-sm font-medium">Situation actuelle
+                  <select className={fieldClass} required value={form.situation} onChange={(event) => setForm({ ...form, situation: event.target.value })}>
+                    <option value="">Choisis ta situation</option>
+                    {situationOptions.map((label) => <option key={label} value={label}>{label}</option>)}
+                  </select>
+                </label>
+                <label className="text-sm font-medium">Niveau d’études
+                  <select className={fieldClass} required value={form.educationLevel} onChange={(event) => setForm({ ...form, educationLevel: event.target.value })}>
+                    <option value="">Choisis ton niveau</option>
+                    {educationOptions.map((label) => <option key={label} value={label}>{label}</option>)}
+                  </select>
+                </label>
+                <label className="text-sm font-medium md:col-span-2">Diplôme principal <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <input className={fieldClass} value={form.diploma} onChange={(event) => setForm({ ...form, diploma: event.target.value })} placeholder="Ex. Baccalauréat, BTS, Licence…" />
+                </label>
+              </div>
+            )}
+
+            {activeStep === 1 && (
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="text-sm font-medium">Mobilité possible
+                  <select className={fieldClass} value={form.mobility} onChange={(event) => setForm({ ...form, mobility: event.target.value as SimpleForm['mobility'] })}>
+                    <option value="unknown">Je ne sais pas encore</option>
+                    <option value="none">Je souhaite rester dans ma zone</option>
+                    <option value="local">Je peux me déplacer à proximité</option>
+                    <option value="national">Je peux me déplacer au Congo</option>
+                    <option value="international">J’envisage l’étranger</option>
+                    <option value="flexible">Je suis flexible</option>
+                  </select>
+                </label>
+                <label className="text-sm font-medium">Budget maximum en FCFA <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <input inputMode="numeric" className={fieldClass} value={form.budget} onChange={(event) => setForm({ ...form, budget: event.target.value.replace(/\D/gu, '') })} placeholder="Ex. 350000" />
+                </label>
+                <label className="text-sm font-medium">Durée maximale envisagée en mois <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <input inputMode="numeric" className={fieldClass} value={form.maxDurationMonths} onChange={(event) => setForm({ ...form, maxDurationMonths: event.target.value.replace(/\D/gu, '') })} placeholder="Ex. 36" />
+                </label>
+                <label className="text-sm font-medium">Dans combien de mois as-tu besoin d’un revenu ? <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <input inputMode="numeric" className={fieldClass} value={form.needIncomeWithinMonths} onChange={(event) => setForm({ ...form, needIncomeWithinMonths: event.target.value.replace(/\D/gu, '') })} placeholder="Ex. 6" />
+                </label>
+              </div>
+            )}
+
+            {activeStep === 2 && (
+              <div className="grid gap-5">
+                <label className="text-sm font-medium">Autres centres d’intérêt <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <textarea className={`${fieldClass} min-h-20`} value={form.interests} onChange={(event) => setForm({ ...form, interests: event.target.value })} placeholder="Ex. numérique, santé, commerce, création…" />
+                </label>
+                <label className="text-sm font-medium">Compétences que tu maîtrises déjà <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <textarea className={`${fieldClass} min-h-20`} value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} placeholder="Ex. communiquer, organiser, utiliser un tableur…" />
+                </label>
+                <label className="text-sm font-medium">Expériences utiles <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <textarea className={`${fieldClass} min-h-20`} value={form.experiences} onChange={(event) => setForm({ ...form, experiences: event.target.value })} placeholder="Stage, emploi, bénévolat, projet scolaire ou personnel…" />
+                </label>
+                <label className="text-sm font-medium">Contraintes importantes <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  <textarea className={`${fieldClass} min-h-20`} value={form.constraints} onChange={(event) => setForm({ ...form, constraints: event.target.value })} placeholder="Transport, horaires, responsabilités familiales, équipement…" />
+                </label>
+              </div>
+            )}
+
+            {activeStep === 3 && (
+              <div className="space-y-5">
+                <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+                  Choisis jusqu’à trois priorités. La première comptera davantage que la deuxième, puis la troisième.
+                </p>
+                {[0, 1, 2].map((index) => (
+                  <label key={index} className="block text-sm font-medium">
+                    Priorité {index + 1}{index === 0 ? ' — la plus importante' : ''}
+                    <select className={fieldClass} value={form.priorities[index] || ''} onChange={(event) => setPriority(index, event.target.value)}>
+                      <option value="">{index === 0 ? 'Choisis au moins une priorité' : 'Aucune priorité supplémentaire'}</option>
+                      {Object.entries(priorityLabels).map(([id, label]) => (
+                        <option key={id} value={id} disabled={form.priorities.some((entry, position) => position !== index && entry === id)}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-between gap-3 border-t pt-5">
+              <Button type="button" variant="outline" disabled={activeStep === 0 || saving} onClick={() => {
+                setError(null);
+                setActiveStep((step) => Math.max(0, step - 1));
+              }}>
+                <ArrowLeft className="mr-2 h-4 w-4" />Précédent
+              </Button>
+              {activeStep < formSteps.length - 1 ? (
+                <Button type="button" onClick={goNext} disabled={saving}>
+                  Continuer <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button type="submit" size="lg" disabled={saving}>
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                  Préparer mes pistes
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Ce qui compte le plus pour toi</CardTitle>
-            <CardDescription>Sélectionne les éléments qui doivent guider la comparaison.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            {Object.entries(priorityLabels).map(([id, label]) => (
-              <label key={id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.priorities.includes(id)}
-                  onChange={(event) => setForm({
-                    ...form,
-                    priorities: event.target.checked
-                      ? [...new Set([...form.priorities, id])]
-                      : form.priorities.filter((entry) => entry !== id),
-                  })}
-                />
-                {label}
-              </label>
-            ))}
-          </CardContent>
-        </Card>
-
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit" size="lg" disabled={saving}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}
-            Préparer mes pistes
-          </Button>
-          <Button type="button" variant="outline" onClick={() => void load()} disabled={saving}>
-            <RefreshCw className="mr-2 h-4 w-4" />Actualiser
-          </Button>
-        </div>
       </form>
 
       {recommendations.length > 0 && (
         <section className="space-y-4" aria-labelledby="life-project-options-title">
           <div>
             <h2 id="life-project-options-title" className="text-2xl font-bold">Tes pistes à comparer</h2>
-            <p className="mt-2 text-muted-foreground">Ces pistes servent à avancer. Vérifie toujours les admissions, coûts, dates et débouchés auprès des organismes concernés.</p>
+            <p className="mt-2 text-muted-foreground">Ces pistes servent à avancer. Vérifie toujours les admissions, coûts, dates et possibilités réelles auprès des organismes concernés.</p>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             {recommendations.map((scenario) => {
@@ -398,7 +511,7 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
               return (
                 <Card key={scenario.id} className={selected ? 'border-emerald-500 shadow-md' : ''}>
                   <CardHeader>
-                    {selected && <Badge className="w-fit">Piste choisie provisoirement</Badge>}
+                    {selected && <Badge className="w-fit">Piste retenue pour la suite</Badge>}
                     <CardTitle>{scenario.title}</CardTitle>
                     <CardDescription>{scenarioSummary(scenario)}</CardDescription>
                   </CardHeader>
@@ -413,7 +526,7 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
                     )}
                     {scenario.conditions.length > 0 && (
                       <div>
-                        <h3 className="text-sm font-semibold">Points à vérifier</h3>
+                        <h3 className="text-sm font-semibold">Informations à vérifier</h3>
                         <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                           {scenario.conditions.slice(0, 4).map((condition) => <li key={condition}>• {condition}</li>)}
                         </ul>
@@ -428,7 +541,7 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
                       </div>
                     )}
                     <Button type="button" variant={selected ? 'outline' : 'default'} disabled={saving || selected} onClick={() => void chooseScenario(scenario.id)}>
-                      {selected ? 'Piste enregistrée' : 'Approfondir cette piste'}
+                      {selected ? 'Piste retenue' : 'Choisir cette piste pour la suite'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -443,7 +556,7 @@ export default function LifeProjectWorkspace({ riasecProfile }: { riasecProfile:
           <CardHeader>
             <CardTitle>Ta prochaine étape</CardTitle>
             <CardDescription>
-              Vérifie les conditions réelles de « {selectedScenario.title} », puis note une première action concrète à réaliser cette semaine.
+              Vérifie les informations réelles de « {selectedScenario.title} », puis réalise une première action concrète cette semaine.
             </CardDescription>
           </CardHeader>
         </Card>
