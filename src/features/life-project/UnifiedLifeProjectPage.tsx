@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Brain,
   CheckCircle2,
-  FileText,
   Loader2,
   LockKeyhole,
   Route,
@@ -26,10 +25,10 @@ import {
 
 const journeySteps = [
   'Ce qui t’intéresse',
-  'Tes compétences et ta situation',
-  'Les métiers à explorer',
-  'Ton choix et tes prochaines actions',
-  'Ton plan personnel',
+  'Ta situation',
+  'Tes possibilités',
+  'Les pistes à comparer',
+  'Ta prochaine action',
 ];
 
 const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) => {
@@ -42,7 +41,7 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
           <Brain className="h-5 w-5" />Ce qui ressort de tes réponses
         </CardTitle>
         <CardDescription>
-          Voici les types d’activités et d’environnements qui semblent le plus te correspondre aujourd’hui.
+          Voici les activités et les environnements qui semblent le plus te correspondre aujourd’hui.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -51,14 +50,14 @@ const RiasecProfileSummary = ({ profile }: { profile: AdvisorRiasecProfile }) =>
             <div key={entry.dimension} className="rounded-lg border bg-muted/30 p-4">
               <p className="font-semibold">{riasecDimensionLabels[entry.dimension]}</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Cette tendance aide à comprendre les activités et les environnements qui peuvent te motiver.
+                Cette tendance aide à repérer les activités qui peuvent te donner envie de t’investir.
               </p>
             </div>
           ))}
         </div>
         <p className="flex gap-2 text-sm text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-          Ce résultat décrit tes préférences actuelles. Il ne décide pas à ta place et ne mesure ni ton intelligence ni tes capacités.
+          Ce résultat décrit tes préférences actuelles. Il ne mesure ni ton intelligence ni tes capacités, et il ne décide pas à ta place.
         </p>
       </CardContent>
     </Card>
@@ -78,13 +77,13 @@ const GuestPreview = ({ profile }: { profile: AdvisorRiasecProfile }) => {
             <Brain className="h-5 w-5" />Une première tendance se dégage
           </CardTitle>
           <CardDescription>
-            Tes réponses montrent notamment un intérêt pour les activités de type{' '}
+            Tes réponses montrent notamment un intérêt pour les activités liées à{' '}
             <strong className="text-foreground">{riasecDimensionLabels[primary.dimension]}</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            C’est un premier indice, pas une conclusion. Ton résultat complet tient compte de plusieurs tendances et de ta situation personnelle.
+            C’est un premier indice, pas une conclusion. La suite prendra aussi en compte tes autres tendances, ta situation et tes contraintes.
           </p>
           <div className="grid gap-3 sm:grid-cols-3" aria-label="Contenu disponible après connexion">
             {[
@@ -113,7 +112,7 @@ const FullCareerValue = ({ profile }: { profile: AdvisorRiasecProfile }) => {
           <Badge className="w-fit">Des pistes pour avancer</Badge>
           <CardTitle>Des familles de métiers à explorer</CardTitle>
           <CardDescription>
-            Ces pistes constituent un point de départ. Tes compétences, ton niveau d’études, ta situation et tes contraintes permettront ensuite d’affiner ton projet.
+            Ces pistes sont un point de départ. Ta situation, tes études, tes compétences et tes contraintes permettront de les préciser.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
@@ -155,7 +154,7 @@ export default function UnifiedLifeProjectPage() {
             <Route className="h-8 w-8 text-primary" />Construis ton projet d’avenir
           </h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            Réponds à quelques questions pour mieux comprendre ce qui t’intéresse, découvrir des métiers et avancer vers un projet adapté à ta situation.
+            Commence par 60 affirmations sur ce qui t’intéresse. Tu ajouteras ensuite quelques informations sur ta situation pour comparer des pistes adaptées.
           </p>
           <div className="mt-6 grid gap-2 md:grid-cols-5">
             {journeySteps.map((step, index) => (
@@ -191,7 +190,7 @@ export default function UnifiedLifeProjectPage() {
                 <FullCareerValue profile={riasecProfile} />
                 <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-950 print:hidden">
                   <CheckCircle2 className="mr-2 inline h-4 w-4" />
-                  Ton résultat est enregistré. Tu peux maintenant compléter ta situation et poursuivre ton projet.
+                  Ton résultat est enregistré. Complète maintenant ta situation en quatre petites étapes.
                 </div>
                 <section aria-label="Suite de ton parcours" className="print:hidden">
                   <LifeProjectWorkspace riasecProfile={riasecProfile} />
@@ -203,10 +202,10 @@ export default function UnifiedLifeProjectPage() {
                 <GuestPreview profile={riasecProfile} />
                 <Card className="border-primary/30 print:hidden" data-testid="guest-registration-gate">
                   <CardHeader>
-                    <Badge className="w-fit" variant="outline">Ton résultat complet est prêt</Badge>
-                    <CardTitle>Enregistre ton résultat et découvre la suite</CardTitle>
+                    <Badge className="w-fit" variant="outline">Ton premier résultat est prêt</Badge>
+                    <CardTitle>Enregistre ce résultat pour construire la suite</CardTitle>
                     <CardDescription>
-                      Crée ton espace pour voir toutes tes tendances, découvrir les familles de métiers associées et poursuivre avec un plan adapté à ta situation.
+                      Crée ton espace pour voir toutes tes tendances, explorer des familles de métiers et préparer un plan adapté à ta situation.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-wrap gap-3">
@@ -223,17 +222,6 @@ export default function UnifiedLifeProjectPage() {
               </>
             )}
           </>
-        ) : !authLoading ? (
-          <Card className="print:hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5" />Commence ton parcours
-              </CardTitle>
-              <CardDescription>
-                Réponds aux affirmations pour mieux comprendre tes centres d’intérêt et découvrir tes premières pistes de métiers.
-              </CardDescription>
-            </CardHeader>
-          </Card>
         ) : null}
       </main>
     </div>
