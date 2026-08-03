@@ -75,7 +75,6 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('react-router')) return 'react-router';
             if (id.includes('@radix-ui')) return 'radix-ui';
             if (id.includes('@tanstack/react-query')) return 'react-query';
-            if (id.includes('@supabase')) return 'supabase';
             if (id.includes('recharts')) return 'recharts';
             // Autres dépendances node_modules en un chunk séparé
             return 'vendor';

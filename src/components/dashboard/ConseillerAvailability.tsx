@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useUser } from "@supabase/auth-helpers-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -16,7 +16,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export const ConseillerAvailability = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const { availabilities, loading, fetchAvailabilities, addAvailability, deleteAvailability } = useAvailability(user?.id);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAvailability, setNewAvailability] = useState({

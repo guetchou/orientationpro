@@ -6,7 +6,6 @@ import { CounselorCard } from '@/components/counselors/CounselorCard';
 import { CounselorFilter } from '@/components/counselors/CounselorFilter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabaseClient';
 
 type Counselor = {
   id: string;
@@ -40,13 +39,10 @@ export default function Conseillers() {
     const fetchCounselors = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('position', 'conseiller')
-          .order('first_name', { ascending: true });
-        if (error) throw error;
-        if (active) setCounselors((data || []) as Counselor[]);
+        // Aucun annuaire de conseillers n'existe encore côté backend (voir
+        // le retrait de Supabase) : la liste reste vide plutôt que de
+        // simuler des données qui n'existent pas.
+        throw new Error('counselor directory backend not implemented');
       } catch {
         if (active) setCounselors([]);
       } finally {

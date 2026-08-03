@@ -34,8 +34,12 @@ import {
   Archive
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+
+// Aucun backend de stockage de médias n'existe encore (voir issue de retrait
+// de Supabase) : l'upload et la suppression échouent volontairement plutôt
+// que de simuler un succès qui ne persisterait rien.
+const mediaStorageUnavailable = () => Promise.reject(new Error());
 
 interface MediaFile {
   id: string;
@@ -165,14 +169,7 @@ export default function MediaManager() {
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        
-        // Simuler l'upload vers Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('resumes')
-          .upload(`media/${file.name}`, file);
-
-        if (error) throw error;
+        await mediaStorageUnavailable();
 
         // Mettre à jour le progrès
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);
@@ -203,12 +200,7 @@ export default function MediaManager() {
       const file = files.find(f => f.id === fileId);
       if (!file) return;
 
-      // Supprimer de Supabase Storage
-      const { error } = await supabase.storage
-        .from('resumes')
-        .remove([`media/${file.name}`]);
-
-      if (error) throw error;
+      await mediaStorageUnavailable();
 
       setFiles(prevFiles => prevFiles.filter(f => f.id !== fileId));
       toast.success('Fichier supprimé avec succès');

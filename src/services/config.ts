@@ -7,12 +7,7 @@ export const config = {
     // Remplacez cette URL par celle de votre instance WordPress
     baseUrl: import.meta.env.VITE_WORDPRESS_API_URL || 'https://demo.wp-api.org/wp-json/wp/v2',
   },
-  
-  // Autres configurations
-  supabase: {
-    // Configurations Supabase, si nécessaire
-  },
-  
+
   // Paramètres généraux
   app: {
     name: "Orientation App",

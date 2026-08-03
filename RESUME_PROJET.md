@@ -198,18 +198,14 @@ npm run dev
 
 # Test de santé
 node test-app-health.cjs
-
-# Supabase
-supabase status
-supabase start
-./deploy_edge_functions.sh
 ```
+
+Supabase a été retiré du projet (voir commit `e06ef13`). Le backend est
+désormais Node/Express + MySQL — voir `backend/README.md` pour le
+démarrage et la configuration.
 
 ### **URLs de Développement**
 - **Application**: http://localhost:8045
-- **Supabase Studio**: http://localhost:55511
-- **API Supabase**: http://localhost:55508
-- **Base de données**: postgresql://postgres:postgres@localhost:55509/postgres
 
 ## 📚 **Documentation**
 

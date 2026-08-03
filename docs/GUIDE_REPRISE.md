@@ -54,17 +54,10 @@ npm run dev
 
 ### 3. **Backend et Base de Données**
 
-#### 🗄️ **Supabase**
-```bash
-# Vérifier le statut
-supabase status
-
-# Déployer les Edge Functions
-./deploy_edge_functions.sh
-
-# Appliquer les migrations
-supabase db reset
-```
+#### 🗄️ **Backend**
+Supabase a été retiré du projet (voir commit `e06ef13`). Le backend est
+désormais Node/Express + MySQL — voir `backend/README.md` pour le
+démarrage, la configuration et les migrations.
 
 #### ⚡ **Edge Functions à Développer**
 - [ ] `user-profile-management` - Gestion des profils
@@ -110,29 +103,10 @@ npm run lint
 node test-app-health.cjs
 ```
 
-### **Supabase**
-```bash
-# Démarrer Supabase local
-supabase start
-
-# Arrêter Supabase
-supabase stop
-
-# Vérifier le statut
-supabase status
-
-# Déployer les fonctions
-./deploy_edge_functions.sh
-```
-
 ### **Base de Données**
-```bash
-# Appliquer les migrations
-supabase db reset
-
-# Créer les tables manquantes
-psql -h localhost -p 55509 -U postgres -d postgres -f create_missing_tables.sql
-```
+Supabase a été retiré du projet (voir commit `e06ef13`). Voir
+`backend/README.md` pour le démarrage du backend Node/Express + MySQL et
+l'application des migrations.
 
 ## 📁 Structure du Projet
 
@@ -159,31 +133,15 @@ orientationpro/
 ## 🔧 Configuration Environnement
 
 ### **Variables d'Environnement (.env)**
-```env
-# Frontend
-VITE_API_URL=http://localhost:6465/api
-VITE_SUPABASE_URL=http://localhost:55508
-VITE_SUPABASE_ANON_KEY=your_anon_key
-
-# Backend
-NODE_ENV=development
-JWT_SECRET=your_jwt_secret
-
-# Base de données
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=postgres
-DB_PORT=55509
-```
+Supabase a été retiré du projet (voir commit `e06ef13`) : les variables
+`VITE_SUPABASE_*` n'ont plus lieu d'être. Voir `.env.example` (frontend)
+et `backend/.env.example` (backend, MySQL) pour la configuration actuelle.
 
 ## 🚀 Déploiement
 
 ### **Développement Local**
 ```bash
-# 1. Démarrer Supabase
-supabase start
-
+# 1. Démarrer le backend (voir backend/README.md)
 # 2. Démarrer l'application
 npm run dev
 
@@ -198,7 +156,6 @@ npm run build
 
 # 2. Déployer sur Vercel/Netlify
 # 3. Configurer les variables d'environnement
-# 4. Déployer Supabase en production
 ```
 
 ## 📞 Support et Ressources
@@ -210,9 +167,8 @@ npm run build
 - [EDGE_FUNCTIONS_GUIDE.md](./EDGE_FUNCTIONS_GUIDE.md) - Guide des Edge Functions
 
 ### **Outils de Développement**
-- **Supabase Studio**: http://localhost:55511
-- **API Supabase**: http://localhost:55508
-- **Base de données**: postgresql://postgres:postgres@localhost:55509/postgres
+Supabase a été retiré du projet (voir commit `e06ef13`) — voir
+`backend/README.md` pour les outils de développement backend actuels.
 
 ## 🎯 Objectifs à Court Terme
 
