@@ -288,6 +288,12 @@ const createAuthRouter = ({
       });
     }
 
+    try {
+      await email.sendWelcome({ email: account.email });
+    } catch (err) {
+      // Welcome email is best-effort; never block verification on it.
+    }
+
     return res.status(200).json({ account: publicAccount(account) });
   }));
 
@@ -459,6 +465,12 @@ const createAuthRouter = ({
           message: 'The reset token is invalid or expired.',
         },
       });
+    }
+
+    try {
+      await email.sendPasswordChanged({ email: account.email });
+    } catch (err) {
+      // Notification is best-effort; never block the reset on it.
     }
 
     return res.status(204).end();
