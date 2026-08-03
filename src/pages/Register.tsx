@@ -62,7 +62,7 @@ type RegisterValues = z.infer<typeof registerSchema>;
 export default function Register() {
   usePageMeta({
     title: 'Créer un compte',
-    description: 'Crée ton compte MAKOKI pour enregistrer tes résultats et poursuivre ton projet.',
+    description: 'Crée ton espace MAKOKI pour enregistrer ton résultat et poursuivre ton projet.',
     path: '/register',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -113,13 +113,13 @@ export default function Register() {
   return (
     <AuthLayout
       headline="Crée ton espace MAKOKI"
-      tagline="Enregistre tes résultats, retrouve ton projet et poursuis ton parcours sur tes différents appareils."
+      tagline="Enregistre ton résultat, retrouve ton parcours à tout moment et poursuis ton projet depuis tes différents appareils."
       imageName="orientation-etudiants"
       imageSide="right"
     >
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-slate-900">Créer un compte</h1>
-        <p className="mt-2 text-slate-600">Après vérification de ton adresse, tu retrouveras le parcours que tu as commencé.</p>
+        <p className="mt-2 text-slate-600">Crée ton espace pour enregistrer ton résultat et poursuivre le parcours que tu as commencé.</p>
       </div>
 
       {created ? (
@@ -128,9 +128,9 @@ export default function Register() {
             <CheckCircle2 className="h-7 w-7" />
           </div>
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            Ton compte est créé. Ouvre le message envoyé à ton adresse e-mail, confirme ton inscription, puis connecte-toi pour reprendre ton parcours.
+            Ton espace est presque prêt. Ouvre le message envoyé à ton adresse e-mail et confirme-la pour activer ton espace, retrouver ton résultat et poursuivre ton projet.
           </div>
-          <Button asChild size="lg" className="w-full"><Link to="/login" state={loginState}>Aller à la connexion</Link></Button>
+          <Button asChild size="lg" className="w-full"><Link to="/login" state={loginState}>Se connecter</Link></Button>
         </div>
       ) : (
         <>
