@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-03T15:51:00+01:00
-# application-base: 253be9572339a3e9bbc34d4ddebf046456d3a971
+# trigger: 2026-08-03T16:51:00+01:00
+# application-base: 20d1ed1f43c3fb38bcb2728e83cc7d008d263f2f
 # trigger-method: merged-internal-production-pr
-# capability-enabled: cv.analysis-v1
+# release-scope: public-copy-profile-cv
