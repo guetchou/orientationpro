@@ -66,10 +66,10 @@ const result: RiasecResult = {
   createdAt: '2026-07-31T18:00:00.000Z',
 };
 
-describe('life-project RIASEC profile', () => {
+describe('life-project interest profile', () => {
   beforeEach(() => localStorage.clear());
 
-  it('normalizes and persists the completed RIASEC result for the unified journey', () => {
+  it('normalise et conserve le résultat terminé pour le parcours unifié', () => {
     const profile = persistRiasecResult(result);
     const restored = readPersistedRiasecProfile();
 
@@ -80,18 +80,18 @@ describe('life-project RIASEC profile', () => {
     expect(localStorage.getItem(RIASEC_PROFILE_STORAGE_KEY)).toContain('result-1');
   });
 
-  it('returns the three dominant dimensions in report order', () => {
+  it('présente les trois tendances dominantes avec des noms compréhensibles', () => {
     const leading = topRiasecDimensions(persistRiasecResult(result));
 
     expect(leading.map((entry) => entry.dimension)).toEqual(['I', 'S', 'E']);
     expect(leading.map((entry) => entry.label)).toEqual([
-      'Investigateur',
-      'Social',
-      'Entreprenant',
+      'Analyse et recherche',
+      'Aide et transmission',
+      'Initiative et leadership',
     ]);
   });
 
-  it('rejects malformed local data instead of inventing a profile', () => {
+  it('rejette des données locales incomplètes au lieu d’inventer un profil', () => {
     localStorage.setItem(RIASEC_PROFILE_STORAGE_KEY, JSON.stringify({ resultId: 'partial' }));
 
     expect(readPersistedRiasecProfile()).toBeNull();
