@@ -1,0 +1,85 @@
+name: Probe makemba02 registration
+
+on:
+  push:
+    branches:
+      - agent/probe-makemba02-account
+    paths:
+      - ops/recipe/probe-makemba02-registration
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TARGET_EMAIL: makemba02@gmail.com
+      API_ROOT: https://makoki.org/api
+      PUBLIC_KEY_B64: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQm9qQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FZOEFNSUlCaWdLQ0FZRUE4UXR6a3RtNWJGbEcxWVlmakxSRgpPbTllbU9nTXIxaUlsOHc2ZENucWZ6MTk1ZmpCeWNjcHFpSmo1THRxMk5xVGlXcE1PODZJc1RTRlFpdGdUeDN2CjVPZVMwV3dRdmhwaFN0d3kyeE9ycUU4WHFRL3dMcHhidXZ5NlJOYzBLU0dsQ20rQkZsL0NiQmgzYXFUeFdCT2UKcENnQ1l6S2U5SDhmRDczcnVMNGs2SVZkMTRZak5JQ3EzeEVFei9MMUFIcDZoQTArK0R4ZDVtSCtxWTFDTG9ONgpNYlI5d1lJK3o2NTdlU2lZUGlDMVFVb0lWQmZuLyswWlpnQkZtVlkzTlhzUkd6MVd6NmNWb2lXSU1mU0JGb1o5CkZNcnN2R1ZzV1pCOUY0M0YwTDY5c2NpQVlzTkxCczhkSzNRczV0UzhoTEJSSFF6UWNNNk5lT1VLWmdITmthTzIKRG1nMGhianBuZnJQbUtDbUNTMW5sU0RIMGdmUHNaeEo0UDlyMS93TnNJT0p4ekVWWDhsa2liNjBrN2M5ZTJ2NApISC93c2hER25PU24ybmxIN2RyVEM1cktXRk5mUWFpeVV6UDcyZU9sbG5uQVp0SkdCWHVXbHNIa2tKTU1yTXpoCmhkaHZYZTZuMjgxT2d6Z0FYUXV2SEJHMUJGTzNlclJjZTU0U2JNZjhyeVp4QWdNQkFBRT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==
+    steps:
+      - name: Probe exact registration
+        id: register
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          password="$(openssl rand -base64 36 | tr -d '\n')"
+          echo "::add-mask::$password"
+
+          status=$(curl --silent --show-error --output /tmp/register-response.json --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "$(jq -nc --arg email "$TARGET_EMAIL" --arg password "$password" '{email:$email,password:$password}')" \
+            "$API_ROOT/v1/auth/register")
+
+          result="inconnu"
+          if [[ "$status" == "409" ]]; then
+            result="COMPTE_EXISTANT"
+          elif [[ "$status" == "201" ]]; then
+            result="COMPTE_CREE_EN_ATTENTE_DE_VERIFICATION"
+            printf '%s' "$PUBLIC_KEY_B64" | base64 -d >/tmp/public.pem
+            printf '%s' "$password" >/tmp/password.txt
+            openssl pkeyutl -encrypt \
+              -pubin -inkey /tmp/public.pem \
+              -in /tmp/password.txt \
+              -out /tmp/password.enc \
+              -pkeyopt rsa_padding_mode:oaep \
+              -pkeyopt rsa_oaep_md:sha256 \
+              -pkeyopt rsa_mgf1_md:sha256
+            base64 -w0 /tmp/password.enc >/tmp/password.enc.b64
+          fi
+
+          echo "status=$status" >>"$GITHUB_OUTPUT"
+          echo "result=$result" >>"$GITHUB_OUTPUT"
+
+          body=$(cat <<EOF
+          ## Preuve d’existence du compte exact
+
+          - Adresse : \`$TARGET_EMAIL\`
+          - Run ID : \`$GITHUB_RUN_ID\`
+          - HTTP inscription : \`$status\`
+          - Résultat : **$result**
+          - Sécurité : aucun mot de passe ni jeton n’est publié.
+          EOF
+          )
+          jq -n --arg body "$body" '{body:$body}' >/tmp/comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GITHUB_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/comment.json \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/184/comments" >/dev/null
+
+      - name: Upload encrypted password only if account was created
+        if: steps.register.outputs.status == '201'
+        uses: actions/upload-artifact@v4
+        with:
+          name: makemba02-registration-secret-${{ github.run_id }}
+          retention-days: 1
+          if-no-files-found: error
+          path: /tmp/password.enc.b64
