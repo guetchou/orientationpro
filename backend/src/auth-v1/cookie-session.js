@@ -34,8 +34,10 @@ const createCookieSessionMiddleware = ({
 
     const hasAuthCookie = Boolean(accessToken || readCookie(req, 'orientationpro_refresh'));
     if (!SAFE_METHODS.has(req.method) && hasAuthCookie) {
-      const origin = normalizeOrigin(req.headers.origin || '');
-      if (origin !== allowedOrigin) {
+      const rawOrigin = req.headers.origin || '';
+      const origin = normalizeOrigin(rawOrigin);
+      const originMissingOutsideProduction = !rawOrigin && !cookieSecure;
+      if (!originMissingOutsideProduction && origin !== allowedOrigin) {
         return res.status(403).json({
           error: {
             code: 'CSRF_ORIGIN_REJECTED',
