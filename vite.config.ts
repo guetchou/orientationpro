@@ -18,10 +18,10 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Orientation Pro Congo',
-        short_name: 'OrientationPro',
-        description: 'Plateforme leader d\'orientation professionnelle au Congo',
-        theme_color: '#3b82f6',
+        name: 'MAKOKI — Orientation, compétences et emploi',
+        short_name: 'MAKOKI',
+        description: 'Comprendre ses centres d’intérêt, explorer les métiers et construire ses prochaines étapes.',
+        theme_color: '#047857',
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
             type: 'image/png'
           },
           {
-            src: '/pwa-512x512.png', 
+            src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,svg}'],
         globIgnores: ['**/image*.png', '**/images/**/*.png'],
-        maximumFileSizeToCacheInBytes: 5000000, // 5MB
+        maximumFileSizeToCacheInBytes: 5000000,
         runtimeCaching: [{
           urlPattern: /\.(?:png|jpg|jpeg|svg)$/,
           handler: 'CacheFirst',
@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => ({
             cacheName: 'images',
             expiration: {
               maxEntries: 50,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              maxAgeSeconds: 60 * 60 * 24 * 30,
             },
           },
         }]
@@ -64,11 +64,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimisations pour réduire la taille du bundle
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Bibliothèques tierces majeures
           if (id.includes('node_modules')) {
             if (id.includes('framer-motion')) return 'framer-motion';
             if (id.includes('lucide-react')) return 'lucide-react';
@@ -76,37 +74,26 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('@radix-ui')) return 'radix-ui';
             if (id.includes('@tanstack/react-query')) return 'react-query';
             if (id.includes('recharts')) return 'recharts';
-            // Autres dépendances node_modules en un chunk séparé
             return 'vendor';
           }
-          
-          // Séparer les pages par routes
           if (id.includes('/pages/admin/')) return 'admin-pages';
           if (id.includes('/pages/conseiller/')) return 'conseiller-pages';
           if (id.includes('/pages/recruteur/')) return 'recruteur-pages';
           if (id.includes('/pages/coach/')) return 'coach-pages';
           if (id.includes('/pages/rh/')) return 'rh-pages';
           if (id.includes('/pages/superadmin/')) return 'superadmin-pages';
-          
-          // Composants d'animation lourds
           if (id.includes('/components/home/PremiumAnimations')) return 'premium-animations';
           if (id.includes('/components/home/AdvancedAnimations')) return 'advanced-animations';
           if (id.includes('/components/home/UltraUI')) return 'ultra-ui';
-          
-          // Composants UI de base
           if (id.includes('/components/ui/')) return 'ui-components';
         },
       },
     },
-    // Optimisations de performance
     target: 'esnext',
-    minify: 'esbuild', // Utiliser esbuild au lieu de terser
-    // Réduire la taille des chunks
+    minify: 'esbuild',
     chunkSizeWarningLimit: 500,
-    // Améliorer le tree-shaking
     sourcemap: false,
   },
-  // Optimisations de développement
   optimizeDeps: {
     include: [
       'react',
