@@ -18,30 +18,30 @@ const formatDate = (value: string | null) => {
 };
 
 const formatDuration = (scenario: AdvisorRecommendationScenario) => (
-  scenario.durationMonths === null ? 'À confirmer' : `${scenario.durationMonths} mois`
+  scenario.durationMonths === null ? 'Information encore inconnue' : `${scenario.durationMonths} mois`
 );
 
 const formatCost = (scenario: AdvisorRecommendationScenario) => {
-  if (scenario.cost.status === 'unknown' || scenario.cost.amount === null) return 'À confirmer';
+  if (scenario.cost.status === 'unknown' || scenario.cost.amount === null) return 'Information encore inconnue';
   const amount = new Intl.NumberFormat('fr-FR').format(scenario.cost.amount);
   const value = `${amount} ${scenario.cost.currency || 'FCFA'}`;
   return scenario.cost.status === 'range' ? `À partir de ${value}` : value;
 };
 
 const formatCalendar = (scenario: AdvisorRecommendationScenario) => {
-  if (scenario.calendar.status === 'closed') return 'Fermé pour la période connue';
-  if (scenario.calendar.status === 'unknown') return 'À confirmer';
+  if (scenario.calendar.status === 'closed') return 'Inscriptions fermées pour la période connue';
+  if (scenario.calendar.status === 'unknown') return 'Information encore inconnue';
 
-  const details = ['Ouvert'];
+  const details = ['Inscriptions ouvertes'];
   const deadline = formatDate(scenario.calendar.applicationDeadlineAt);
   const start = formatDate(scenario.calendar.nextStartAt);
   if (deadline) details.push(`candidature avant le ${deadline}`);
-  if (start) details.push(`démarrage le ${start}`);
+  if (start) details.push(`début le ${start}`);
   return details.join(' · ');
 };
 
 const formatModes = (scenario: AdvisorRecommendationScenario) => (
-  scenario.modes.length > 0 ? scenario.modes.join(', ') : 'À confirmer'
+  scenario.modes.length > 0 ? scenario.modes.join(', ') : 'Information encore inconnue'
 );
 
 const formatAccess = (scenario: AdvisorRecommendationScenario) => {
@@ -51,15 +51,15 @@ const formatAccess = (scenario: AdvisorRecommendationScenario) => {
       .map((opportunity) => opportunity.zone)
       .filter((zone): zone is string => Boolean(zone)),
   ])];
-  return values.join(', ') || 'À confirmer';
+  return values.join(', ') || 'Information encore inconnue';
 };
 
 const facts = (scenario: AdvisorRecommendationScenario) => [
   { label: 'Durée', value: formatDuration(scenario) },
   { label: 'Coût', value: formatCost(scenario) },
   { label: 'Calendrier', value: formatCalendar(scenario) },
-  { label: 'Modalités', value: formatModes(scenario) },
-  { label: 'Accès / zone', value: formatAccess(scenario) },
+  { label: 'Organisation', value: formatModes(scenario) },
+  { label: 'Lieu ou disponibilité', value: formatAccess(scenario) },
 ];
 
 export default function LifeProjectCompletionPanel() {
@@ -99,11 +99,11 @@ export default function LifeProjectCompletionPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-4 print:hidden" aria-labelledby="life-project-comparison-title">
+      <section className="space-y-4" aria-labelledby="life-project-comparison-title">
         <div>
-          <h2 id="life-project-comparison-title" className="text-2xl font-bold">Comparaison complète de tes pistes</h2>
+          <h2 id="life-project-comparison-title" className="text-2xl font-bold">Comparaison de tes pistes</h2>
           <p className="mt-2 text-muted-foreground">
-            Compare les informations connues. Une donnée non vérifiée reste indiquée « À confirmer ».
+            Compare les informations disponibles. Lorsqu’une information manque, elle reste clairement indiquée comme inconnue.
           </p>
         </div>
         <Card>
@@ -111,7 +111,7 @@ export default function LifeProjectCompletionPanel() {
             <table className="w-full min-w-[880px] border-collapse text-left text-sm">
               <thead className="bg-muted/60">
                 <tr>
-                  {['Option', 'Durée', 'Coût', 'Calendrier', 'Modalités', 'Accès / zone'].map((heading) => (
+                  {['Piste', 'Durée', 'Coût', 'Calendrier', 'Organisation', 'Lieu ou disponibilité'].map((heading) => (
                     <th key={heading} scope="col" className="border-b px-4 py-3 font-semibold">{heading}</th>
                   ))}
                 </tr>
@@ -122,7 +122,7 @@ export default function LifeProjectCompletionPanel() {
                     <th scope="row" className="border-b px-4 py-4 align-top font-semibold">
                       {scenario.title}
                       {scenario.id === current.project.activeScenarioId && (
-                        <Badge className="mt-2 block w-fit">Choix provisoire</Badge>
+                        <Badge className="mt-2 block w-fit">Piste retenue</Badge>
                       )}
                     </th>
                     <td className="border-b px-4 py-4 align-top">{formatDuration(scenario)}</td>
@@ -143,16 +143,16 @@ export default function LifeProjectCompletionPanel() {
           <Card className="border-emerald-300 bg-emerald-50/40 print:border-0 print:bg-white print:shadow-none">
             <CardHeader>
               <Badge className="w-fit">Synthèse de ton projet</Badge>
-              <CardTitle id="life-project-summary-title">Ton choix provisoire et ta prochaine action</CardTitle>
+              <CardTitle id="life-project-summary-title">Ta piste retenue et la première action</CardTitle>
               <CardDescription>
-                Cette synthèse aide à poursuivre les vérifications. Elle ne remplace pas la confirmation des admissions, coûts et dates auprès des organismes concernés.
+                Cette synthèse organise la suite de ta réflexion. Vérifie toujours les admissions, coûts et dates auprès des organismes concernés.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <p className="text-sm text-muted-foreground">Projet</p>
                 <p className="font-semibold">{current.project.title}</p>
-                <p className="mt-3 text-sm text-muted-foreground">Piste retenue provisoirement</p>
+                <p className="mt-3 text-sm text-muted-foreground">Piste retenue pour la suite</p>
                 <p className="text-lg font-bold">{selectedScenario.title}</p>
               </div>
 
@@ -178,7 +178,7 @@ export default function LifeProjectCompletionPanel() {
 
               {selectedScenario.conditions.length > 0 && (
                 <div>
-                  <h3 className="font-semibold">Points à vérifier</h3>
+                  <h3 className="font-semibold">Informations à vérifier</h3>
                   <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
                     {selectedScenario.conditions.slice(0, 4).map((condition) => <li key={condition}>• {condition}</li>)}
                   </ul>
@@ -189,13 +189,13 @@ export default function LifeProjectCompletionPanel() {
                 <div className="rounded-lg border border-emerald-300 bg-emerald-100/60 p-4 text-emerald-950">
                   <h3 className="font-semibold">Première action à réaliser</h3>
                   <p className="mt-2 font-medium">{selectedScenario.firstActions[0].title}</p>
-                  <p className="mt-1 text-sm">Délai conseillé : sous {selectedScenario.firstActions[0].deadlineDays} jour(s).</p>
-                  <p className="mt-1 text-sm">Preuve attendue : {selectedScenario.firstActions[0].expectedEvidence}</p>
+                  <p className="mt-1 text-sm">Délai conseillé : dans les {selectedScenario.firstActions[0].deadlineDays} prochain(s) jour(s).</p>
+                  <p className="mt-1 text-sm">Résultat attendu : {selectedScenario.firstActions[0].expectedEvidence}</p>
                 </div>
               )}
 
               <p className="text-sm text-muted-foreground">
-                Le choix reste provisoire jusqu’à vérification des conditions locales et des informations encore inconnues.
+                Tu peux changer de piste après avoir obtenu de nouvelles informations ou mieux compris ta situation.
               </p>
 
               <Button type="button" variant="outline" className="print:hidden" onClick={() => window.print()}>
