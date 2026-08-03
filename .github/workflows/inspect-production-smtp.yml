@@ -20,6 +20,29 @@ jobs:
       TARGET_SHA: 4cb3b7c61c973fc6861ab5d33881637081de8dfa
       TRACKING_ISSUE: '226'
     steps:
+      - name: Publish observer checkpoint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          body=$(cat <<EOF
+          ## Observateur du diagnostic SMTP démarré
+
+          - Run observateur : \`${GITHUB_RUN_ID}\`
+          - SHA production recherché : \`${TARGET_SHA}\`
+          - État : recherche du workflow Production Deploy correspondant
+          EOF
+          )
+          jq -n --arg body "${body}" '{body:$body}' >/tmp/checkpoint.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data-binary @/tmp/checkpoint.json \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${TRACKING_ISSUE}/comments" >/dev/null
+
       - name: Wait for matching production deployment
         id: deployment
         env:
@@ -75,7 +98,6 @@ jobs:
 
           evidence=$(grep -RhoE '\{"status":"(accepted_by_smtp|smtp_partial_or_rejected|smtp_error)"[^[:cntrl:]]*\}' /tmp/logs | tail -n 1 || true)
           [[ -n "${evidence}" ]] || evidence='{"status":"rapport_smtp_non_trouve"}'
-          printf '%s\n' "${evidence}" >/tmp/smtp-evidence.json
 
           body=$(cat <<EOF
           ## Diagnostic SMTP du déploiement production
