@@ -62,7 +62,7 @@ test.describe.serial('parcours critique — invité → compte → rapport (issu
     await page.getByLabel(/J.accepte les/).check();
     await page.getByRole('button', { name: 'Créer le compte' }).click();
 
-    await expect(page.getByText('Ton compte est créé.')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Ton espace est presque prêt.')).toBeVisible({ timeout: 15_000 });
 
     const { fetchLatestEmail, extractLink } = await import('./mail');
     const { E2E_SMTP_HTTP_PORT } = await import('./fixtures');
