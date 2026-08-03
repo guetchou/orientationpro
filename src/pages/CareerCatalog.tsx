@@ -91,7 +91,7 @@ export default function CareerCatalog() {
             </div>
             <label className="flex items-center gap-3 rounded-xl border p-4 text-sm text-slate-700">
               <input type="checkbox" checked={detailedOnly} onChange={(event) => { setOffset(0); setDetailedOnly(event.target.checked); }} className="h-4 w-4" />
-              Afficher uniquement les fiches qui contiennent le plus d’informations
+              Afficher uniquement les fiches les plus détaillées
             </label>
             <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-950">
               Ces fiches servent à explorer. Avant de choisir une voie, vérifie aussi les formations disponibles, les conditions d’accès et la réalité du métier auprès des organismes concernés.
