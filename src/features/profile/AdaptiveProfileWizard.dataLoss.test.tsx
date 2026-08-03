@@ -40,11 +40,9 @@ describe('AdaptiveProfileWizard — issue #151, brouillon local intra-étape', (
   });
 
   it("préserve une saisie non enregistrée quand le composant est démonté puis remonté (fermeture d'onglet simulée)", async () => {
-    // Premier montage : l'utilisateur arrive sur la page.
     const { unmount } = render(<AdaptiveProfileWizard />);
     await waitFor(() => expect(api.getAdaptiveProfile).toHaveBeenCalledTimes(1));
 
-    // Avance jusqu'à l'étape « Études » (3e étape pour une situation « student »).
     fireEvent.click(await screen.findByRole('button', { name: /enregistrer et continuer/i }));
     await waitFor(() => expect(api.saveProfileDetails).toHaveBeenCalledTimes(1));
     fireEvent.click(await screen.findByRole('button', { name: /enregistrer et continuer/i }));
@@ -56,21 +54,14 @@ describe('AdaptiveProfileWizard — issue #151, brouillon local intra-étape', (
     fireEvent.change(diplomaInput, { target: { value: 'Licence en informatique' } });
     expect(screen.getByLabelText('Diplôme')).toHaveValue('Licence en informatique');
 
-    // Laisse le temps à l'effet de brouillon (qui suit la saisie) de s'exécuter,
-    // puis ferme l'onglet sans jamais cliquer sur « Enregistrer et continuer »
-    // pour cette étape : aucun appel serveur n'a eu lieu.
     await waitFor(() => expect(localStorage.getItem('makoki.profile.draft.v1.anonymous')).toContain('Licence en informatique'));
     expect(api.saveEducationHistory).not.toHaveBeenCalled();
     unmount();
 
-    // L'utilisateur revient : le composant est remonté, exactement comme un
-    // rechargement d'onglet. Le serveur renvoie toujours le profil vide
-    // d'origine puisque rien n'a été enregistré côté backend — seul le
-    // brouillon local permet de retrouver la saisie.
     render(<AdaptiveProfileWizard />);
     await waitFor(() => expect(api.getAdaptiveProfile).toHaveBeenCalledTimes(2));
 
-    expect(await screen.findByText('Brouillon local repris sur cet appareil.')).toBeInTheDocument();
+    expect(await screen.findByText('Ta saisie non terminée a été restaurée sur cet appareil.')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Études' })).toBeInTheDocument();
     expect(await screen.findByDisplayValue('Licence en informatique')).toBeInTheDocument();
   });
@@ -80,14 +71,13 @@ describe('AdaptiveProfileWizard — issue #151, brouillon local intra-étape', (
     render(<AdaptiveProfileWizard />);
     await waitFor(() => expect(api.getAdaptiveProfile).toHaveBeenCalledTimes(1));
 
-    // identity -> objective -> education (passée, vide) -> skills (passée, vide)
     for (let step = 0; step < 4; step += 1) {
       fireEvent.click(await screen.findByRole('button', { name: /enregistrer et continuer|passer et continuer/i }));
       await waitFor(() => expect(screen.getByText(/étape \d sur \d/i)).toBeInTheDocument());
     }
     expect(localStorage.getItem('makoki.profile.draft.v1.anonymous')).not.toBeNull();
 
-    expect(await screen.findByRole('heading', { name: 'Synthèse' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Résumé' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /finaliser mon profil/i }));
     await waitFor(() => expect(api.saveProfileDetails).toHaveBeenCalled());
 

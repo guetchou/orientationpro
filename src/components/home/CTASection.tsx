@@ -16,8 +16,8 @@ export const CTASection = () => {
           className="flex flex-col items-center justify-between gap-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-lg transition-all duration-500 hover:shadow-xl md:flex-row"
         >
           <div className="md:w-2/3">
-            <h2 className="mb-3 font-heading text-2xl font-bold text-primary md:text-3xl">Construis ton Projet de vie maintenant</h2>
-            <p className="mb-4 text-gray-600">Un seul parcours autonome réunit ton profil RIASEC, ta situation, tes options et ton rapport final.</p>
+            <h2 className="mb-3 font-heading text-2xl font-bold text-primary md:text-3xl">Construis ton projet d’avenir maintenant</h2>
+            <p className="mb-4 text-gray-600">Un seul parcours réunit tes centres d’intérêt, ta situation, les métiers à explorer et tes prochaines actions.</p>
             <div className="flex flex-wrap gap-4">
               <Button asChild className="gap-2 shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5">
                 <Link to="/parcours">
@@ -44,7 +44,7 @@ export const CTASection = () => {
             >
               <img
                 src="/images/heureux-portrait-femme-affaires.jpg"
-                alt="Jeune préparant son Projet de vie"
+                alt="Jeune préparant son projet d’avenir"
                 className="h-full w-full object-cover"
               />
             </motion.div>

@@ -190,7 +190,7 @@ const buildSummary = ({ profile, education, skills, hypotheses, orientation, rec
   if (!profile?.primaryGoal) missingInformation.push('objectif principal');
   if (!profile?.mobilityScope || profile.mobilityScope === 'unknown') missingInformation.push('mobilité');
   if (education.length === 0) missingInformation.push('parcours d’études');
-  if (skills.length === 0) missingInformation.push('compétences ESCO confirmées');
+  if (skills.length === 0) missingInformation.push('compétences confirmées');
 
   const strengths = [...skills.slice(0, 5).map((skill) => skill.label), ...confirmed]
     .filter(Boolean)
@@ -200,17 +200,17 @@ const buildSummary = ({ profile, education, skills, hypotheses, orientation, rec
     ...missingInformation.map((label) => `Compléter ou préciser : ${label}.`),
   ].slice(0, 6);
   const nextActions = [];
-  if (topCareers.length > 0) nextActions.push(`Comparer les trois premières pistes : ${topCareers.join(', ')}.`);
-  if (skills.length < 3) nextActions.push('Ajouter des compétences ESCO confirmées pour enrichir les rapprochements métiers.');
+  if (topCareers.length > 0) nextActions.push(`Comparer les premières pistes : ${topCareers.join(', ')}.`);
+  if (skills.length < 3) nextActions.push('Ajouter quelques compétences pour mieux préciser les métiers à explorer.');
   if (hypotheses.some((item) => item.decision === 'rejected')) {
-    nextActions.push('Conserver les hypothèses rejetées comme décisions explicites lors des prochaines analyses.');
+    nextActions.push('Revoir les suggestions écartées si ta situation ou ton projet évolue.');
   }
-  nextActions.push('Recréer une synthèse après toute modification importante du profil ou du Résultat RIASEC.');
+  nextActions.push('Mettre à jour cette synthèse après une modification importante de ton profil ou de ton parcours.');
 
   const goal = GOAL_LABELS[profile?.primaryGoal] || GOAL_LABELS.other;
-  const code = orientation.displayCode || 'RIASEC non déterminé';
+  const code = orientation.displayCode || null;
   return {
-    headline: `Profil RIASEC ${code} orienté vers l’objectif : ${goal}.`,
+    headline: `Ton profil met en avant plusieurs pistes pour ${goal}.`,
     keySignals: {
       riasecDisplayCode: code,
       riasecPrimaryCode: orientation.primaryCode,
@@ -276,10 +276,10 @@ const buildProfileSynthesis = ({
         escoSources: sources.recommendations.escoSources,
       },
       limitations: [
-        'Cette synthèse organise des informations déclarées, confirmées ou déjà versionnées ; elle ne constitue ni un diagnostic ni une évaluation psychométrique validée.',
-        'Les hypothèses proposées mais non décidées sont exclues de la synthèse.',
-        'Les recommandations servent à explorer des pistes et ne garantissent ni emploi, ni salaire, ni admission, ni réussite.',
-        'Les repères O*NET et les relations ESCO ne remplacent pas les exigences réglementaires ou les vérifications propres à un métier.',
+        'Cette synthèse rassemble les informations de ton profil et de ton parcours. Elle ne constitue ni un diagnostic ni une décision à ta place.',
+        'Les suggestions que tu n’as pas encore confirmées ne sont pas incluses.',
+        'Les métiers proposés servent à explorer des possibilités et ne garantissent ni emploi, ni salaire, ni admission, ni réussite.',
+        'Vérifie toujours les formations, conditions d’accès et règles propres à chaque métier auprès des organismes concernés.',
       ],
     },
   };
