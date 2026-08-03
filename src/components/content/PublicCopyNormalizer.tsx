@@ -34,7 +34,7 @@ const normalizeTextNode = (node: Text) => {
   const trimmed = original.trim();
   if (!trimmed) return;
 
-  let next = exactReplacements[trimmed];
+  const next = exactReplacements[trimmed];
   if (next) {
     node.nodeValue = original.replace(trimmed, next);
     return;
