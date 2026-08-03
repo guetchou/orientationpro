@@ -68,6 +68,13 @@ export default defineConfig({
         ATS_WORKFLOW_V1_ENABLED: 'false',
         DATA_RIGHTS_API_ENABLED: 'false',
         JWT_SECRET: 'life-project-e2e-jwt-secret-at-least-32-characters',
+        // Les rate-limits (backend/src/server.js) protègent la production
+        // contre le brute force/l'abus — ils restent actifs ici, juste
+        // desserrés pour ce backend jetable de test qui enchaîne
+        // délibérément de nombreuses tentatives RIASEC (/api/v1/orientation,
+        // scope "expensive") et connexions/inscriptions (scope "auth") par run.
+        RATE_LIMIT_AUTH_MAX: '500',
+        RATE_LIMIT_EXPENSIVE_MAX: '2000',
         APP_WEB_URL: frontendUrl,
         CORS_ORIGINS: frontendUrl,
         SMTP_HOST: '127.0.0.1',

@@ -21,12 +21,17 @@ export const E2E_SMTP_PORT = 34083;
 export const E2E_SMTP_HTTP_PORT = 34084;
 
 // Garde-fou transverse (#216) : toute erreur console inattendue ou réponse
-// 5xx fait échouer le test, sans consommer un test dédié. `page.close()` et
-// les erreurs volontairement provoquées par un test (ex. réseau coupé) ne
-// doivent pas être des faux positifs — chaque test qui simule une panne
-// l'assume explicitement plutôt que de compter sur cette fixture pour filtrer.
-export const test = base.extend<{ page: Page }>({
-  page: async ({ page }, use) => {
+// 5xx fait échouer le test, sans consommer un test dédié. Un test qui simule
+// délibérément une panne (réseau coupé, e-mail déjà utilisé, session
+// expirée...) déclare les erreurs attendues via
+// `test.use({ allowedConsoleErrors: ['409'] })` plutôt que de les laisser
+// faire échouer la garde par erreur — le navigateur journalise en console
+// tout fetch en échec (4xx compris), que l'application le gère bien ou non.
+// Chaînes simples (pas de RegExp) : les options de fixture Playwright sont
+// sérialisées, et un RegExp ne survit pas à un aller-retour JSON.
+export const test = base.extend<{ page: Page; allowedConsoleErrors: string[] }>({
+  allowedConsoleErrors: [[], { option: true }],
+  page: async ({ page, allowedConsoleErrors }, use) => {
     const consoleErrors: string[] = [];
     const serverErrors: string[] = [];
 
@@ -55,7 +60,10 @@ export const test = base.extend<{ page: Page }>({
 
     await use(page);
 
-    expect(consoleErrors, `unexpected console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+    const unexpectedConsoleErrors = consoleErrors.filter(
+      (message) => !allowedConsoleErrors.some((pattern) => message.includes(pattern)),
+    );
+    expect(unexpectedConsoleErrors, `unexpected console errors: ${unexpectedConsoleErrors.join(' | ')}`).toEqual([]);
     expect(serverErrors, `unexpected 5xx responses: ${serverErrors.join(' | ')}`).toEqual([]);
   },
 });
