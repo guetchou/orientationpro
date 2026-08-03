@@ -1,13 +1,19 @@
-const ROLE_DESTINATIONS: Record<string, string> = {
-  super_admin: '/superadmin/dashboard',
-  admin: '/admin/dashboard',
-  conseiller: '/conseiller/dashboard',
-  recruteur: '/recruteur/dashboard',
-  recruiter: '/recruteur/dashboard',
-  recruitment_manager: '/recruteur/dashboard',
-  coach: '/coach/dashboard',
-  rh: '/rh/dashboard',
-  user: '/dashboard',
+export type AuthSpace = {
+  role: string;
+  label: string;
+  destination: string;
+};
+
+const ROLE_SPACES: Record<string, Omit<AuthSpace, 'role'>> = {
+  super_admin: { label: 'Superadministration', destination: '/superadmin/dashboard' },
+  admin: { label: 'Administration', destination: '/admin/dashboard' },
+  conseiller: { label: 'Espace conseiller', destination: '/conseiller/dashboard' },
+  recruteur: { label: 'Espace recruteur', destination: '/recruteur/dashboard' },
+  recruiter: { label: 'Espace recruteur', destination: '/recruteur/dashboard' },
+  recruitment_manager: { label: 'Espace recruteur', destination: '/recruteur/dashboard' },
+  coach: { label: 'Espace coach', destination: '/coach/dashboard' },
+  rh: { label: 'Espace RH', destination: '/rh/dashboard' },
+  user: { label: 'Espace jeune', destination: '/dashboard' },
 };
 
 const ROLE_PRIORITY = [
@@ -22,11 +28,27 @@ const ROLE_PRIORITY = [
   'user',
 ];
 
-export const destinationForRoles = (roles?: string | string[] | null): string => {
+export const normalizeAuthRoles = (roles?: string | string[] | null): string[] => {
   const normalized = (Array.isArray(roles) ? roles : [roles])
-    .filter((role): role is string => typeof role === 'string' && role.length > 0)
-    .map((role) => role.trim().toLowerCase());
+    .filter((role): role is string => typeof role === 'string' && role.trim().length > 0)
+    .map((role) => role.trim().toLowerCase())
+    .filter((role) => Boolean(ROLE_SPACES[role]));
 
-  const selected = ROLE_PRIORITY.find((role) => normalized.includes(role));
-  return selected ? ROLE_DESTINATIONS[selected] : '/dashboard';
+  return [...new Set(normalized)];
+};
+
+export const spacesForRoles = (roles?: string | string[] | null): AuthSpace[] => {
+  const normalized = normalizeAuthRoles(roles);
+  return ROLE_PRIORITY
+    .filter((role) => normalized.includes(role))
+    .map((role) => ({ role, ...ROLE_SPACES[role] }));
+};
+
+export const hasMultipleAuthSpaces = (roles?: string | string[] | null): boolean => (
+  new Set(spacesForRoles(roles).map((space) => space.destination)).size > 1
+);
+
+export const destinationForRoles = (roles?: string | string[] | null): string => {
+  const selected = spacesForRoles(roles)[0];
+  return selected?.destination || '/dashboard';
 };
