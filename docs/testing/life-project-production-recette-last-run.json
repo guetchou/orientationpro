@@ -1,0 +1,63 @@
+{
+  "webUrl": "https://makoki.org",
+  "apiRoot": "https://makoki.org/api",
+  "oracleProfileId": "dominant-r",
+  "steps": [
+    {
+      "name": "served-sha",
+      "gitSha": "b17afff2fa983a8117c1fe834bf7fff27cc2d647",
+      "uptime": 605.716439015
+    },
+    {
+      "name": "capability-registry",
+      "lifeProjectCapability": {
+        "id": "life-project.core-v1",
+        "domain": "life-project",
+        "version": "makoki-life-project-api-v1",
+        "status": "experimental",
+        "configured": true,
+        "configuration": {
+          "kind": "environment",
+          "key": "LIFE_PROJECT_API_ENABLED"
+        },
+        "dependencies": [
+          "identity.auth-v1",
+          "orientation.riasec"
+        ],
+        "publicLimitations": [
+          "Le jeune commence sans compte et voit son profil d’intérêts avant toute inscription.",
+          "La personnalisation, la sauvegarde permanente, le choix, l’action et le rapport complet exigent un compte.",
+          "Le projet de vie organise des scénarios et actions sans garantir admission, emploi ou réussite.",
+          "Les déclarations utilisateur ne deviennent pas automatiquement des faits vérifiés."
+        ]
+      }
+    },
+    {
+      "name": "public-instrument",
+      "itemCount": 60,
+      "instrumentId": "riasec-makoki-fr-draft-v2"
+    },
+    {
+      "name": "attempt-created",
+      "attemptId": "c73be7a8-d760-4f81-944a-a4c9d5979286",
+      "instrumentId": "riasec-makoki-fr-draft-v2"
+    },
+    {
+      "name": "scoring-match",
+      "resultId": "158a67f5-af8c-4993-a329-3da922380060",
+      "primaryCode": "RIA",
+      "displayCode": "R-I-A",
+      "scores": {
+        "R": 80,
+        "I": 65,
+        "A": 50,
+        "S": 35,
+        "E": 35,
+        "C": 35
+      },
+      "mismatches": []
+    }
+  ],
+  "success": true,
+  "completedAt": "2026-08-03T04:31:28.327Z"
+}
