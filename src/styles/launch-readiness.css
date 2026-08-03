@@ -1,0 +1,28 @@
+@media print {
+  [aria-labelledby="life-project-comparison-title"] {
+    display: block !important;
+    break-inside: avoid;
+  }
+
+  [aria-labelledby="life-project-comparison-title"] .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  [aria-labelledby="life-project-comparison-title"] table {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: fixed;
+    font-size: 9px;
+  }
+
+  [aria-labelledby="life-project-comparison-title"] th,
+  [aria-labelledby="life-project-comparison-title"] td {
+    padding: 6px !important;
+    overflow-wrap: anywhere;
+  }
+
+  #life-project-summary {
+    display: block !important;
+    break-before: page;
+  }
+}
