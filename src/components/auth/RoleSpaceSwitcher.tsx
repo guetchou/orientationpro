@@ -18,9 +18,14 @@ const PROMPT_KEY = 'makoki:space-selector-shown';
 type RoleSpaceSwitcherProps = {
   autoPrompt?: boolean;
   className?: string;
+  showTrigger?: boolean;
 };
 
-export const RoleSpaceSwitcher = ({ autoPrompt = false, className }: RoleSpaceSwitcherProps) => {
+export const RoleSpaceSwitcher = ({
+  autoPrompt = false,
+  className,
+  showTrigger = true,
+}: RoleSpaceSwitcherProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -43,12 +48,14 @@ export const RoleSpaceSwitcher = ({ autoPrompt = false, className }: RoleSpaceSw
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="ghost" className={className || 'w-full justify-start'}>
-          <ArrowRightLeft className="mr-2 h-4 w-4" />
-          Changer d’espace
-        </Button>
-      </DialogTrigger>
+      {showTrigger ? (
+        <DialogTrigger asChild>
+          <Button type="button" variant="ghost" className={className || 'w-full justify-start'}>
+            <ArrowRightLeft className="mr-2 h-4 w-4" />
+            Changer d’espace
+          </Button>
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Continuer dans quel espace ?</DialogTitle>
