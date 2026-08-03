@@ -85,19 +85,21 @@ const renderResult = () =>
   );
 
 describe('AtsAnalysisResult', () => {
-  it('emploie explicitement le registre ATS', () => {
+  it('présente le résultat dans un langage compréhensible', () => {
     renderResult();
-    expect(screen.getByText(/Compatibilité ATS selon les règles MAKOKI/i)).toBeInTheDocument();
-    expect(screen.getByText(/Règles ATS réussies/i)).toBeInTheDocument();
-    expect(screen.getByText(/Problèmes détectés/i)).toBeInTheDocument();
+    expect(screen.getByText(/Niveau de préparation de ton CV/i)).toBeInTheDocument();
+    expect(screen.getByText(/Points satisfaisants/i)).toBeInTheDocument();
+    expect(screen.getByText(/Points à améliorer/i)).toBeInTheDocument();
     expect(screen.getByText(/Éléments à vérifier/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/optimisation ATS/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Adéquation avec le poste ciblé/i)).toBeInTheDocument();
   });
 
-  it('associe le score au moteur versionné makoki-cv-rules-v1', () => {
-    renderResult();
-    expect(screen.getAllByText(/makoki-cv-rules-v1/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Version du moteur d’analyse/i)).toBeInTheDocument();
+  it('ne montre pas les identifiants et versions techniques du moteur', () => {
+    const { container } = renderResult();
+    const text = container.textContent || '';
+    expect(text).not.toContain('makoki-cv-rules-v1');
+    expect(text).not.toMatch(/Version du moteur/iu);
+    expect(text).not.toMatch(/algorithmVersion/iu);
   });
 
   it('affiche les composantes avec leurs maximums réels, jamais /100', () => {
@@ -110,24 +112,17 @@ describe('AtsAnalysisResult', () => {
     expect(screen.queryByText('20 / 100')).not.toBeInTheDocument();
   });
 
-  it("n'affiche aucune affirmation interdite", () => {
+  it("n'affiche aucune promesse de recrutement", () => {
     const { container } = renderResult();
     const text = (container.textContent || '').toLowerCase();
     expect(text).not.toMatch(/probabilité d.entretien\s*:\s*\d/);
     expect(text).not.toMatch(/85\s*[-–]\s*95\s*%/);
     expect(text).not.toMatch(/taux de recrutement/);
     expect(text).not.toMatch(/score de base/);
-    // Aucune formulation POSITIVE de garantie de passage des ATS.
-    expect(text).not.toMatch(/garantit\s+(le\s+)?passage/);
-    expect(text).not.toMatch(/passe(z|ra)?\s+les\s+ats/);
-    // La reproduction de tous les ATS ne doit apparaitre que niee.
-    expect(text).not.toMatch(/reproduit\s+tous\s+les\s+ats/);
-    // Le disclaimer nie explicitement la garantie et la reproduction.
-    expect(text).toMatch(/ni d.une garantie de\s*passage des ats/);
-    expect(text).toMatch(/ni d.une reproduction de tous les ats/);
+    expect(text).toMatch(/ne garantit ni entretien, ni sélection automatique, ni recrutement/);
   });
 
-  it('restitue les preuves et les recommandations', () => {
+  it('restitue les observations et les recommandations', () => {
     renderResult();
     expect(screen.getByText(/Résultats peu quantifiés/)).toBeInTheDocument();
     expect(screen.getByText(/résultats réels et vérifiables/)).toBeInTheDocument();
