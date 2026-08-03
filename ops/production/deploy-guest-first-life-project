@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-03T13:59:00+01:00
-# application-base: a2d29de2f67467af919ec5acdc7c50a70a17ba9f
+# trigger: 2026-08-03T15:51:00+01:00
+# application-base: 253be9572339a3e9bbc34d4ddebf046456d3a971
 # trigger-method: merged-internal-production-pr
-# incident-fixed: docker-space-project-scoped-cleanup
+# capability-enabled: cv.analysis-v1
