@@ -31,7 +31,7 @@ const payload: ProfileSynthesisEnvelope = {
         confirmedHypothesisCount: 1, rejectedHypothesisCount: 0, recommendationCount: 1,
       },
       strengths: ['analyser des données'], explorationPriorities: [], missingInformation: [],
-      nextActions: ['Comparer les pistes.'],
+      nextActions: ['Ajouter des compétences ESCO confirmées.', 'Recréer après le Résultat RIASEC.'],
     },
     sources: { recommendations: { topMatches: [{
       occupationId: 'occupation-1', preferredLabel: 'Analyste de données',
@@ -43,7 +43,7 @@ const payload: ProfileSynthesisEnvelope = {
       preparationAdapterVersion: 'onet-job-zone-adapter-v1',
       onetSources: [{ version: '30.3' }], escoSources: [{ version: '1.2.1' }],
     },
-    limitations: ['Synthèse exploratoire.'],
+    limitations: ['Synthèse exploratoire O*NET et ESCO.'],
   },
 };
 
@@ -53,20 +53,37 @@ describe('ProfileSynthesisPanel', () => {
     vi.mocked(createProfileSynthesis).mockReset();
   });
 
-  it('affiche la synthèse immutable la plus récente', async () => {
+  it('affiche la synthèse la plus récente sans exposer les termes internes historiques', async () => {
     vi.mocked(listProfileSyntheses).mockResolvedValue({ syntheses: [payload] });
-    render(<ProfileSynthesisPanel />);
-    expect(await screen.findByText(payload.synthesis.summary.headline)).toBeInTheDocument();
-    expect(screen.getByText(/Analyste de données/)).toBeInTheDocument();
-    expect(screen.getByText('immutable')).toBeInTheDocument();
+    const view = render(<ProfileSynthesisPanel />);
+
+    expect(await screen.findByText(/principaux éléments de ton profil/u)).toBeInTheDocument();
+    expect(screen.getByText(/Analyste de données/u)).toBeInTheDocument();
+    expect(screen.getByText(/résultat de ton parcours/iu)).toBeInTheDocument();
+
+    const copy = view.container.textContent || '';
+    for (const forbidden of ['RIASEC', 'ESCO', 'O*NET', 'immutable', 'profile-synthesis-engine-v1']) {
+      expect(copy).not.toContain(forbidden);
+    }
   });
 
   it('crée une synthèse lorsque le compte n’en possède pas', async () => {
     vi.mocked(listProfileSyntheses).mockResolvedValue({ syntheses: [] });
-    vi.mocked(createProfileSynthesis).mockResolvedValue({ ...payload, created: true });
+    vi.mocked(createProfileSynthesis).mockResolvedValue({
+      ...payload,
+      created: true,
+      synthesis: {
+        ...payload.synthesis,
+        summary: {
+          ...payload.synthesis.summary,
+          headline: 'Ton profil met en avant plusieurs pistes pour rechercher un emploi.',
+          nextActions: ['Comparer les premières pistes.'],
+        },
+      },
+    });
     render(<ProfileSynthesisPanel />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Créer la synthèse' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Créer ma synthèse' }));
     await waitFor(() => expect(createProfileSynthesis).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText(payload.synthesis.summary.headline)).toBeInTheDocument();
+    expect(await screen.findByText(/Ton profil met en avant plusieurs pistes/u)).toBeInTheDocument();
   });
 });
