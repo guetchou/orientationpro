@@ -83,7 +83,7 @@ export default function OccupationDetail() {
           <CardHeader className="space-y-4 p-6 md:p-8">
             <div className="flex flex-wrap gap-2">
               <Badge>Fiche métier</Badge>
-              <Badge variant="outline">{fallback ? 'Informations disponibles en anglais' : 'Fiche en français'}</Badge>
+              {fallback ? <Badge variant="outline">Informations disponibles en anglais</Badge> : null}
               <Badge variant="outline">{localRelevanceLabel(occupation.localRelevanceStatus)}</Badge>
             </div>
             <h1 className="break-words text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{occupation.preferredLabel}</h1>
@@ -120,7 +120,7 @@ export default function OccupationDetail() {
             <CardHeader><CardTitle>À vérifier avant de choisir</CardTitle></CardHeader>
             <CardContent className="space-y-4 text-sm leading-6 text-slate-700">
               <div className="rounded-xl bg-emerald-50 p-4 text-emerald-950"><MapPin className="mb-2 h-5 w-5" /><p className="font-medium">Présence locale</p><p className="mt-1">{localRelevanceLabel(occupation.localRelevanceStatus)}</p></div>
-              <div className="rounded-xl bg-blue-50 p-4 text-blue-950"><Languages className="mb-2 h-5 w-5" /><p className="font-medium">Langue des informations</p><p className="mt-1">{fallback ? 'Certaines informations ne sont disponibles qu’en anglais.' : 'Les informations principales sont disponibles en français.'}</p></div>
+              {fallback ? <div className="rounded-xl bg-blue-50 p-4 text-blue-950"><Languages className="mb-2 h-5 w-5" /><p className="font-medium">Langue des informations</p><p className="mt-1">Certaines informations ne sont disponibles qu’en anglais.</p></div> : null}
               <div className="rounded-xl bg-slate-100 p-4 text-slate-900"><ShieldCheck className="mb-2 h-5 w-5" /><p className="font-medium">Formations et conditions d’exercice</p><p className="mt-1">Vérifie les diplômes, autorisations et conditions d’exercice auprès des écoles, employeurs ou organismes compétents.</p></div>
             </CardContent>
           </Card>
