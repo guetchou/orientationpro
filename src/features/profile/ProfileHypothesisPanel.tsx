@@ -19,6 +19,19 @@ const valueOf = (hypothesis: ProfileHypothesis) => (
     : {}
 );
 
+const publicSuggestionText = (text: string | undefined, fallback: string) => {
+  if (!text) return fallback;
+  return text
+    .replace(/Ajouter des compétences ESCO/giu, 'Ajouter des compétences')
+    .replace(/compétences ESCO/giu, 'compétences')
+    .replace(/Préciser votre mobilité/giu, 'Où souhaites-tu étudier ou travailler ?')
+    .replace(/Préciser ton objectif principal/giu, 'Quel est ton objectif aujourd’hui ?')
+    .replace(/Préciser votre objectif principal/giu, 'Quel est ton objectif aujourd’hui ?')
+    .replace(/ESCO/giu, '')
+    .replace(/\s{2,}/gu, ' ')
+    .trim();
+};
+
 export default function ProfileHypothesisPanel() {
   const [payload, setPayload] = useState<AdaptiveProfilePayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +97,7 @@ export default function ProfileHypothesisPanel() {
               <Lightbulb className="h-5 w-5 text-amber-600" /> Suggestions à confirmer
             </h2>
             <CardDescription className="mt-2 max-w-3xl">
-              Makoki peut te proposer des éléments à vérifier à partir de ton profil. Confirme seulement ce qui est juste pour toi.
+              Makoki peut te proposer des informations à vérifier pour mieux personnaliser ton parcours. Confirme seulement ce qui est juste pour toi.
             </CardDescription>
           </div>
           <Button type="button" onClick={() => void generate()} disabled={generating}>
@@ -102,20 +115,26 @@ export default function ProfileHypothesisPanel() {
 
         {proposed.length === 0 ? (
           <p className="text-sm text-slate-600">
-            Aucune suggestion en attente. Complète ton profil puis relance la mise à jour lorsque tu le souhaites.
+            Aucune suggestion en attente. Complète ton profil puis actualise les suggestions lorsque tu le souhaites.
           </p>
         ) : null}
 
         {proposed.map((hypothesis) => {
           const value = valueOf(hypothesis);
+          const title = publicSuggestionText(value.title, 'Suggestion à examiner');
+          const question = publicSuggestionText(value.question || hypothesis.rationale, 'Cette information te correspond-elle ?');
+          const rationale = value.question && hypothesis.rationale
+            ? publicSuggestionText(hypothesis.rationale, '')
+            : '';
+
           return (
             <div key={hypothesis.id} className="rounded-xl border border-amber-200 bg-white p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-slate-900">{value.title || 'Suggestion à examiner'}</p>
-                  <p className="mt-1 text-sm text-slate-800">{value.question || hypothesis.rationale}</p>
-                  {value.question && hypothesis.rationale ? (
-                    <p className="mt-2 text-xs leading-relaxed text-slate-600">{hypothesis.rationale}</p>
+                  <p className="font-semibold text-slate-900">{title}</p>
+                  <p className="mt-1 text-sm text-slate-800">{question}</p>
+                  {rationale ? (
+                    <p className="mt-2 text-xs leading-relaxed text-slate-600">{rationale}</p>
                   ) : null}
                 </div>
                 <div className="flex gap-2">
