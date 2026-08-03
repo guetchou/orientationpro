@@ -92,7 +92,7 @@ export default function OccupationDetail() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3 p-6 pt-0 md:p-8 md:pt-0">
-            <Button asChild><Link to="/parcours">Comparer ce métier à mon projet</Link></Button>
+            <Button asChild><Link to="/parcours">Voir si ce métier me correspond</Link></Button>
             <Button asChild variant="outline"><Link to="/careers">Explorer d’autres métiers</Link></Button>
           </CardContent>
         </Card>
@@ -100,7 +100,7 @@ export default function OccupationDetail() {
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <Card className="border-0 shadow-lg">
             <CardHeader>
-              <CardTitle>Les activités souvent présentes dans ce métier</CardTitle>
+              <CardTitle>Ce que ce métier mobilise souvent</CardTitle>
               <CardDescription>Voici les trois types d’activités qui ressortent le plus dans cette fiche. Elles servent de repères, pas de verdict.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
