@@ -16,6 +16,10 @@ const payload = {
     id: 'hyp-1', hypothesis_type: 'goal_clarification', status: 'proposed' as const, confidence: 0.99,
     rationale: 'Un objectif explicite évite une supposition.',
     value_json: { title: 'Préciser ton objectif principal', question: 'Quel résultat concret attends-tu ?' },
+  }, {
+    id: 'hyp-2', hypothesis_type: 'skill_suggestion', status: 'proposed' as const, confidence: 0.95,
+    rationale: 'Des compétences ESCO confirmées améliorent les recommandations.',
+    value_json: { title: 'Ajouter des compétences ESCO', question: 'Souhaites-tu confirmer ces compétences ESCO ?' },
   }],
 };
 
@@ -26,18 +30,21 @@ describe('ProfileHypothesisPanel', () => {
       ...payload,
       hypothesisGeneration: {
         generatorVersion: 'profile-hypotheses-v1', profileFingerprint: 'a'.repeat(64),
-        candidateCount: 1, createdCount: 1, reusedCount: 0, preservedDecisionCount: 0, removedObsoleteCount: 0,
+        candidateCount: 2, createdCount: 2, reusedCount: 0, preservedDecisionCount: 0, removedObsoleteCount: 0,
       },
     });
     vi.mocked(api.decideProfileHypothesis).mockResolvedValue({ ...payload, hypotheses: [] });
   });
 
-  it('met à jour les suggestions puis permet une décision humaine explicite', async () => {
+  it('présente les suggestions dans un langage utilisateur puis permet une décision explicite', async () => {
     const view = render(<ProfileHypothesisPanel />);
-    expect(await screen.findByText('Préciser ton objectif principal')).toBeInTheDocument();
+    expect(await screen.findByText('Quel est ton objectif aujourd’hui ?')).toBeInTheDocument();
+    expect(screen.getByText('Ajouter des compétences')).toBeInTheDocument();
+    expect(view.container.textContent).not.toContain('ESCO');
+
     fireEvent.click(screen.getByRole('button', { name: /mettre à jour les suggestions/i }));
     await waitFor(() => expect(api.generateProfileHypotheses).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByRole('button', { name: /confirmer/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /confirmer/i })[0]);
     await waitFor(() => expect(api.decideProfileHypothesis).toHaveBeenCalledWith('hyp-1', 'confirmed'));
 
     const copy = view.container.textContent || '';
