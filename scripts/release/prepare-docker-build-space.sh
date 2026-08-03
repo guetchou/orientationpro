@@ -55,7 +55,7 @@ successful_release_is_preserved() {
   awk -F'\t' 'NF >= 2 { print $2 }' "${deployments_file}" \
     | tac \
     | awk '!seen[$0]++' \
-    | head -n "${keep_successful_releases}" \
+    | sed -n "1,${keep_successful_releases}p" \
     | grep -Fxq "${candidate_sha}"
 }
 
