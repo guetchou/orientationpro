@@ -4,12 +4,12 @@ import type { AdvisorRiasecDimension, AdvisorRiasecProfile } from './advisor-typ
 export const RIASEC_PROFILE_STORAGE_KEY = 'makoki.life-project.riasec-profile.v1';
 
 export const riasecDimensionLabels: Record<AdvisorRiasecDimension, string> = {
-  R: 'Réaliste',
-  I: 'Investigateur',
-  A: 'Artistique',
-  S: 'Social',
-  E: 'Entreprenant',
-  C: 'Conventionnel',
+  R: 'Pratique et technique',
+  I: 'Analyse et recherche',
+  A: 'Création et expression',
+  S: 'Aide et transmission',
+  E: 'Initiative et leadership',
+  C: 'Organisation et précision',
 };
 
 const dimensions: AdvisorRiasecDimension[] = ['R', 'I', 'A', 'S', 'E', 'C'];
