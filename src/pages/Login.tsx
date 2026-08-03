@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError, oauthStartUrl, refreshAuthSession } from '@/lib/apiClient';
+import { destinationForRoles } from '@/lib/authDestination';
 import {
   clearAuthReturnPath,
   normalizeAuthReturnPath,
@@ -18,13 +19,6 @@ import { SocialProviderIcon } from '@/components/auth/SocialProviderIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-
-const destinationForRole = (role?: string) => {
-  if (role === 'super_admin') return '/admin/super-admin';
-  if (role === 'admin') return '/admin/dashboard';
-  if (role === 'conseiller') return '/conseiller/dashboard';
-  return '/dashboard';
-};
 
 const messageForError = (error: unknown) => {
   if (error instanceof ApiError) {
@@ -75,7 +69,7 @@ export default function Login() {
   };
 
   useEffect(() => {
-    if (user) finishAuthentication(destinationForRole(user.role));
+    if (user) finishAuthentication(destinationForRoles(user.role));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -102,7 +96,7 @@ export default function Login() {
       .then((payload) => {
         if (!active) return;
         if (!payload) throw new Error('session unavailable');
-        finishAuthentication(destinationForRole(payload.account.roles[0]));
+        finishAuthentication(destinationForRoles(payload.account.roles));
       })
       .catch(() => {
         if (active) setServerError('La connexion n’a pas pu être finalisée. Recommence depuis cette page.');
@@ -118,7 +112,7 @@ export default function Login() {
     setServerError(null);
     try {
       const result = await signIn(values.email, values.password);
-      finishAuthentication(destinationForRole(result.user?.role));
+      finishAuthentication(destinationForRoles(result.user?.role));
     } catch (caught) {
       setServerError(messageForError(caught));
     }
