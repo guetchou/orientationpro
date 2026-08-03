@@ -30,6 +30,22 @@ export const test = base.extend<{ page: Page }>({
     const consoleErrors: string[] = [];
     const serverErrors: string[] = [];
 
+    // Pré-accepte le choix cookies (comme un visiteur revenant) pour que la
+    // bannière n'intercepte jamais un clic pendant le parcours testé — le
+    // consentement lui-même n'est pas ce que cette suite vérifie.
+    await page.addInitScript(() => {
+      const now = new Date();
+      const expires = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+      window.localStorage.setItem('makoki_consent_v1', JSON.stringify({
+        necessary: true,
+        analytics: false,
+        marketing: false,
+        support: false,
+        updatedAt: now.toISOString(),
+        expiresAt: expires.toISOString(),
+      }));
+    });
+
     page.on('console', (message) => {
       if (message.type() === 'error') consoleErrors.push(message.text());
     });
