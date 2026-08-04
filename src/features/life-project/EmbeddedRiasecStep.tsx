@@ -138,6 +138,17 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     }
   };
 
+  const restart = () => {
+    const confirmed = window.confirm('Recommencer effacera toutes les réponses de ce questionnaire. Continuer ?');
+    if (!confirmed) return;
+    localStorage.removeItem(DRAFT_KEY);
+    setAttempt(null);
+    setAnswers({});
+    setCurrentIndex(0);
+    setError(null);
+    setPhase('intro');
+  };
+
   const submit = async () => {
     if (!attempt || !instrument) return;
     const responses = instrument.items
@@ -190,7 +201,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
     return (
       <Card className="overflow-hidden border-primary/20 print:hidden" data-testid="unified-riasec-intro">
         <div className="h-1.5 bg-primary" />
-        <CardHeader>
+        <CardHeader className="pb-4">
           <Badge className="w-fit">Première étape</Badge>
           <CardTitle className="text-2xl">Découvre ce qui t’intéresse</CardTitle>
           <CardDescription className="text-base">
@@ -198,15 +209,13 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border bg-muted/30 p-4"><strong>{instrument.itemCount}</strong><span className="block text-sm text-muted-foreground">affirmations</span></div>
-            <div className="rounded-lg border bg-muted/30 p-4"><strong>Prévois 10 à 15 minutes</strong><span className="block text-sm text-muted-foreground">tu peux reprendre plus tard</span></div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-lg border bg-muted/30 p-4 text-sm">
+            <span><strong>{instrument.itemCount}</strong> affirmations</span>
+            <span><strong>10 à 15 minutes</strong></span>
+            <span className="flex items-center gap-1.5 text-muted-foreground"><Save className="h-4 w-4" />Reprise possible sur cet appareil</span>
           </div>
           <p className="text-sm text-muted-foreground">
             Il n’y a pas de bonne ou de mauvaise réponse. Choisis ce qui te ressemble le plus, sans chercher la réponse idéale.
-          </p>
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
-            Tes réponses restent sur cet appareil pendant le questionnaire afin que tu puisses reprendre après une interruption.
           </p>
           <Button type="button" size="lg" onClick={() => void startNewAttempt()}>
             Commencer le questionnaire <ArrowRight className="ml-2 h-5 w-5" />
@@ -223,7 +232,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <Badge>Questionnaire en cours</Badge>
-          <span className="text-sm text-muted-foreground">{answeredCount}/{instrument.itemCount}</span>
+          <span className="text-sm text-muted-foreground">{progress}% complété</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
@@ -233,7 +242,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
       </CardHeader>
       <CardContent className="space-y-5">
         {error && <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        <div className="grid gap-2 sm:grid-cols-5" role="radiogroup" aria-label="À quel point cette affirmation te ressemble-t-elle ?">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5" role="radiogroup" aria-label="À quel point cette affirmation te ressemble-t-elle ?">
           {instrument.responseScale.map((option) => {
             const selected = selectedValue === option.value;
             return (
@@ -243,25 +252,19 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
                 role="radio"
                 aria-checked={selected}
                 onClick={() => setAnswers((previous) => ({ ...previous, [currentItem.id]: option.value }))}
-                className={`rounded-lg border p-3 text-sm transition ${selected ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:border-primary/50'}`}
+                className={`min-h-12 rounded-lg border p-3 text-sm transition ${selected ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:border-primary/50'}`}
               >
                 {option.label}
               </button>
             );
           })}
         </div>
-        <div className="flex flex-wrap justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <Button type="button" variant="outline" disabled={currentIndex === 0} onClick={() => setCurrentIndex((index) => Math.max(0, index - 1))}>
             <ArrowLeft className="mr-2 h-4 w-4" />Précédent
           </Button>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="ghost" onClick={() => {
-              localStorage.removeItem(DRAFT_KEY);
-              setAttempt(null);
-              setAnswers({});
-              setCurrentIndex(0);
-              setPhase('intro');
-            }}>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={restart}>
               <RotateCcw className="mr-2 h-4 w-4" />Recommencer
             </Button>
             <Button type="button" disabled={selectedValue === undefined} onClick={() => {
@@ -272,7 +275,7 @@ export default function EmbeddedRiasecStep({ onComplete }: EmbeddedRiasecStepPro
             </Button>
           </div>
         </div>
-        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5" />Tes réponses sont enregistrées sur cet appareil pendant le questionnaire.</p>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground" aria-live="polite"><Save className="h-3.5 w-3.5" />{answeredCount} réponse(s) enregistrée(s) sur cet appareil.</p>
       </CardContent>
     </Card>
   );

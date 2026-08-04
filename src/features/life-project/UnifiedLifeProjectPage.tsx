@@ -138,6 +138,8 @@ export default function UnifiedLifeProjectPage() {
   const [riasecProfile, setRiasecProfile] = useState<AdvisorRiasecProfile | null>(null);
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
+  const activeStep = riasecProfile ? 1 : 0;
+
   const handleRiasecComplete = useCallback((profile: AdvisorRiasecProfile) => {
     setRiasecProfile(profile);
     requestAnimationFrame(() => {
@@ -148,21 +150,44 @@ export default function UnifiedLifeProjectPage() {
   return (
     <div className="min-h-screen bg-muted/20">
       <section className="border-b bg-background print:hidden">
-        <div className="container max-w-7xl py-10">
+        <div className="container max-w-7xl py-8 md:py-10">
           <Badge variant="outline">Mon parcours</Badge>
           <h1 className="mt-3 flex items-center gap-3 text-3xl font-bold tracking-tight md:text-4xl">
             <Route className="h-8 w-8 text-primary" />Construis ton projet d’avenir
           </h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            Commence par 60 affirmations sur ce qui t’intéresse. Tu ajouteras ensuite quelques informations sur ta situation pour comparer des pistes adaptées.
+            Commence par 60 affirmations sur ce qui t’intéresse, puis précise ta situation pour comparer des pistes et choisir ta prochaine action.
           </p>
-          <div className="mt-6 grid gap-2 md:grid-cols-5">
-            {journeySteps.map((step, index) => (
-              <div key={step} className="rounded-lg border bg-muted/30 p-3 text-sm">
-                <span className="font-semibold text-primary">{index + 1}.</span> {step}
-              </div>
-            ))}
-          </div>
+          <ol className="mt-6 grid gap-2 md:grid-cols-5" aria-label="Étapes de ton parcours">
+            {journeySteps.map((step, index) => {
+              const completed = index < activeStep;
+              const active = index === activeStep;
+              return (
+                <li
+                  key={step}
+                  aria-current={active ? 'step' : undefined}
+                  className={`flex items-center gap-3 rounded-lg border p-3 text-sm transition ${
+                    active
+                      ? 'border-primary bg-primary/10 font-medium text-foreground'
+                      : completed
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
+                        : 'bg-muted/20 text-muted-foreground'
+                  }`}
+                >
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                    active
+                      ? 'bg-primary text-primary-foreground'
+                      : completed
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {completed ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </section>
 
@@ -181,6 +206,19 @@ export default function UnifiedLifeProjectPage() {
         {!authLoading && riasecProfile ? (
           <>
             <div id="life-project-continuation" />
+            <Card className="border-emerald-200 bg-emerald-50 print:hidden">
+              <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="flex items-center gap-2 font-semibold text-emerald-950">
+                    <CheckCircle2 className="h-5 w-5" />Ton premier résultat est prêt
+                  </p>
+                  <p className="mt-1 text-sm text-emerald-900/80">
+                    Découvre ce qui ressort de tes réponses, puis poursuis avec ta situation.
+                  </p>
+                </div>
+                <Badge variant="outline" className="w-fit border-emerald-300 bg-white text-emerald-900">Étape 1 terminée</Badge>
+              </CardContent>
+            </Card>
             {user ? (
               <>
                 <section aria-labelledby="unified-profile-title">
