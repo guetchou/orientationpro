@@ -17,7 +17,6 @@ const successfulResponse = (payload: unknown) => ({
 
 describe('profileApi', () => {
   beforeEach(() => {
-    localStorage.setItem('userToken', 'jwt-profile-test');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(successfulResponse({
       profile: null,
       education: [],
@@ -31,12 +30,13 @@ describe('profileApi', () => {
     vi.unstubAllGlobals();
   });
 
-  it('charge le profil Auth V1 avec le bearer token', async () => {
+  it('charge le profil Auth V1 avec la session HttpOnly', async () => {
     await getAdaptiveProfile();
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain('/v1/profile');
-    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer jwt-profile-test');
+    expect(new Headers(init.headers).get('Authorization')).toBeNull();
+    expect(init.credentials).toBe('include');
   });
 
   it('enregistre les sections, génère et décide les hypothèses', async () => {
