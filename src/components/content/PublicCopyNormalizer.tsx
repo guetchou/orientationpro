@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 
 const exactReplacements: Record<string, string> = {
   'Les formations ou les écoles à choisir.': 'Les formations et les écoles à explorer et comparer.',
-  'Découvre les métiers qui te correspondent,': 'Commence à construire un projet qui te ressemble,',
-  'en 15 minutes.': 'étape par étape.',
   'Pas du tout d’accord': 'Ça ne me ressemble pas du tout',
   'Plutôt pas d’accord': 'Ça me ressemble peu',
   'Ni d’accord ni pas d’accord': 'Cela dépend',
