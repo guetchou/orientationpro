@@ -160,11 +160,13 @@ export default function Home() {
             className="relative min-h-[360px] overflow-hidden rounded-[2rem] bg-emerald-50 lg:min-h-[520px]"
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_28%_76%,rgba(245,158,11,0.12),transparent_28%)]" />
-            <Photo
-              name="makoki-hero-youth-transparent"
+            <img
+              src="/images/hero/makoki-hero-youth-transparent.png"
               alt="Deux jeunes consultent ensemble un ordinateur portable."
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="absolute inset-0 h-full w-full object-cover object-center"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              className="absolute inset-0 h-full w-full object-contain object-bottom"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-white/10" />
           </motion.div>
