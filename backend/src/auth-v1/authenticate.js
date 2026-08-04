@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { ACCESS_COOKIE, readCookie } = require('./cookie-session');
 
 const publicAccount = (account) => ({
   id: account.id,
@@ -6,6 +7,12 @@ const publicAccount = (account) => ({
   status: account.status,
   roles: account.roles || (account.role ? [account.role] : []),
 });
+
+const accessTokenFromRequest = (req) => {
+  const authorization = req.headers.authorization || '';
+  if (authorization.startsWith('Bearer ')) return authorization.slice(7);
+  return readCookie(req, ACCESS_COOKIE);
+};
 
 const createSessionResolver = ({ store, jwtSecret }) => {
   if (!store || typeof store.findActiveSession !== 'function') {
@@ -16,12 +23,12 @@ const createSessionResolver = ({ store, jwtSecret }) => {
   }
 
   return async (req) => {
-    const authorization = req.headers.authorization || '';
-    if (!authorization.startsWith('Bearer ')) return { status: 'missing' };
+    const accessToken = accessTokenFromRequest(req);
+    if (!accessToken) return { status: 'missing' };
 
     let claims;
     try {
-      claims = jwt.verify(authorization.slice(7), jwtSecret, {
+      claims = jwt.verify(accessToken, jwtSecret, {
         issuer: 'orientationpro-api',
         audience: 'orientationpro-clients',
         algorithms: ['HS256'],
@@ -90,6 +97,7 @@ const createOptionalSessionAuthenticator = ({ store, jwtSecret }) => {
 };
 
 module.exports = {
+  accessTokenFromRequest,
   createOptionalSessionAuthenticator,
   createSessionAuthenticator,
   createSessionResolver,
