@@ -264,6 +264,7 @@ test('ordered migrations roll back completely and can be applied again', async (
       '016_ats_job_events_v1',
       '015_ats_roles_v1',
       '014_ats_workflow_v1',
+      '013a_auth_session_timeouts',
       '013_life_project_diagnostic_recommendation',
       '012_life_project_action_tracking',
       '011_life_projects',

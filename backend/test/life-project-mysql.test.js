@@ -293,6 +293,8 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(atsRolesVersion, '015_ats_roles_v1');
     const atsWorkflowVersion = await migrateDown(pool, directory);
     assert.equal(atsWorkflowVersion, '014_ats_workflow_v1');
+    const authSessionTimeoutVersion = await migrateDown(pool, directory);
+    assert.equal(authSessionTimeoutVersion, '013a_auth_session_timeouts');
     const diagnosticVersion = await migrateDown(pool, directory);
     assert.equal(diagnosticVersion, '013_life_project_diagnostic_recommendation');
     const [diagnosticColumnsAfterDown] = await pool.query(

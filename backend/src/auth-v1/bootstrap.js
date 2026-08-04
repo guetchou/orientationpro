@@ -1,9 +1,11 @@
+const express = require('express');
 const { createDatabasePool } = require('../db/pool');
 const { createAuthRouter } = require('./index');
 const {
   createOptionalSessionAuthenticator,
   createSessionAuthenticator,
 } = require('./authenticate');
+const { createCookieSessionMiddleware } = require('./cookie-session');
 const { createMySqlAuthStore } = require('./mysql-store');
 const { createPermissionChecker } = require('./permissions');
 const { createConfiguredOAuthProviders } = require('./oauth-providers');
@@ -19,21 +21,25 @@ const createConfiguredAuthV1 = (env = process.env) => {
   }
   const pool = createDatabasePool(env);
   const store = createMySqlAuthStore(pool);
+  const frontendUrl = env.APP_WEB_URL || 'http://localhost:5173';
+  const cookieSecure = env.NODE_ENV === 'production';
   const guestSessions = createGuestSessionManager({
     store: createGuestSessionStore(pool),
-    cookieSecure: env.NODE_ENV === 'production',
+    cookieSecure,
     ttlMs: env.GUEST_ORIENTATION_TTL_MS,
   });
-  const router = createAuthRouter({
+  const router = express.Router();
+  router.use(createCookieSessionMiddleware({ frontendUrl, cookieSecure }));
+  router.use(createAuthRouter({
     store,
     email: createSmtpEmailAdapter(env),
     jwtSecret: env.JWT_SECRET,
-    cookieSecure: env.NODE_ENV === 'production',
+    cookieSecure,
     oauthProviders: createConfiguredOAuthProviders(env),
-    frontendUrl: env.APP_WEB_URL || 'http://localhost:5173',
-    oauthCallbackBaseUrl: env.OAUTH_CALLBACK_BASE_URL || env.APP_WEB_URL || 'http://localhost:5173',
+    frontendUrl,
+    oauthCallbackBaseUrl: env.OAUTH_CALLBACK_BASE_URL || frontendUrl,
     guestSessions,
-  });
+  }));
   const authenticate = createSessionAuthenticator({
     store,
     jwtSecret: env.JWT_SECRET,

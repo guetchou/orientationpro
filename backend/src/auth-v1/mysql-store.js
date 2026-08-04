@@ -1,5 +1,8 @@
 const crypto = require('node:crypto');
 
+const SESSION_IDLE_TTL_MS = 30 * 60 * 1000;
+const SESSION_ABSOLUTE_TTL_MS = 12 * 60 * 60 * 1000;
+
 const accountSelect = `
   SELECT
     a.id,
@@ -46,6 +49,12 @@ const transaction = async (pool, work) => {
     connection.release();
   }
 };
+
+const sessionDeadlines = (now = new Date()) => ({
+  lastActivityAt: now,
+  idleExpiresAt: new Date(now.getTime() + SESSION_IDLE_TTL_MS),
+  absoluteExpiresAt: new Date(now.getTime() + SESSION_ABSOLUTE_TTL_MS),
+});
 
 const createMySqlAuthStore = (pool) => ({
   async findAccountByEmail(email) {
@@ -140,6 +149,7 @@ const createMySqlAuthStore = (pool) => ({
       return { status: 'authenticated', account: await findAccountById(connection, accountId) };
     });
   },
+
   async saveVerificationToken({ accountId, tokenHash, expiresAt }) {
     await pool.query(
       'INSERT INTO auth_email_verification_tokens (token_hash, account_id, expires_at) VALUES (?, ?, ?)',
@@ -157,7 +167,6 @@ const createMySqlAuthStore = (pool) => ({
         [email],
       );
       if (!row) return null;
-
       const now = new Date();
       await connection.query(
         `UPDATE auth_email_verification_tokens
@@ -199,24 +208,39 @@ const createMySqlAuthStore = (pool) => ({
     });
   },
 
-  async createSession({ accountId, refreshTokenHash, expiresAt }) {
+  async createSession({ accountId, refreshTokenHash }) {
     return transaction(pool, async (connection) => {
       const sessionId = crypto.randomUUID();
+      const deadlines = sessionDeadlines();
       await connection.query(
-        `INSERT INTO auth_sessions (id, family_id, account_id, expires_at)
-         VALUES (?, ?, ?, ?)`,
-        [sessionId, sessionId, accountId, expiresAt],
+        `INSERT INTO auth_sessions
+         (id, family_id, account_id, last_activity_at, idle_expires_at, absolute_expires_at, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          sessionId,
+          sessionId,
+          accountId,
+          deadlines.lastActivityAt,
+          deadlines.idleExpiresAt,
+          deadlines.absoluteExpiresAt,
+          deadlines.absoluteExpiresAt,
+        ],
       );
       await connection.query(
         `INSERT INTO auth_refresh_tokens (token_hash, session_id, expires_at)
          VALUES (?, ?, ?)`,
-        [refreshTokenHash, sessionId, expiresAt],
+        [refreshTokenHash, sessionId, deadlines.absoluteExpiresAt],
       );
-      return { id: sessionId, familyId: sessionId, accountId, expiresAt };
+      return {
+        id: sessionId,
+        familyId: sessionId,
+        accountId,
+        expiresAt: deadlines.absoluteExpiresAt,
+      };
     });
   },
 
-  async rotateSession({ refreshTokenHash, nextRefreshTokenHash, expiresAt, now }) {
+  async rotateSession({ refreshTokenHash, nextRefreshTokenHash, now }) {
     return transaction(pool, async (connection) => {
       const [[row]] = await connection.query(
         `SELECT
@@ -225,7 +249,8 @@ const createMySqlAuthStore = (pool) => ({
            s.id AS session_id,
            s.family_id,
            s.account_id,
-           s.expires_at AS session_expires_at,
+           s.idle_expires_at,
+           s.absolute_expires_at,
            s.revoked_at,
            a.email,
            a.password_hash,
@@ -251,57 +276,85 @@ const createMySqlAuthStore = (pool) => ({
         return { status: 'reused' };
       }
       if (
-        row.revoked_at ||
-        row.status !== 'active' ||
-        row.token_expires_at <= now ||
-        row.session_expires_at <= now
+        row.revoked_at
+        || row.status !== 'active'
+        || row.token_expires_at <= now
+        || row.idle_expires_at <= now
+        || row.absolute_expires_at <= now
       ) {
         return { status: 'invalid' };
       }
 
+      const nextIdleExpiresAt = new Date(Math.min(
+        now.getTime() + SESSION_IDLE_TTL_MS,
+        new Date(row.absolute_expires_at).getTime(),
+      ));
       await connection.query(
         'UPDATE auth_refresh_tokens SET used_at = ? WHERE token_hash = ?',
         [now, refreshTokenHash],
       );
       await connection.query(
         'INSERT INTO auth_refresh_tokens (token_hash, session_id, expires_at) VALUES (?, ?, ?)',
-        [nextRefreshTokenHash, row.session_id, expiresAt],
+        [nextRefreshTokenHash, row.session_id, row.absolute_expires_at],
       );
       await connection.query(
-        'UPDATE auth_sessions SET expires_at = ? WHERE id = ?',
-        [expiresAt, row.session_id],
+        `UPDATE auth_sessions
+         SET last_activity_at = ?, idle_expires_at = ?
+         WHERE id = ?`,
+        [now, nextIdleExpiresAt, row.session_id],
       );
       return {
         status: 'rotated',
-        session: { id: row.session_id, familyId: row.family_id, accountId: row.account_id, expiresAt },
+        session: {
+          id: row.session_id,
+          familyId: row.family_id,
+          accountId: row.account_id,
+          expiresAt: row.absolute_expires_at,
+        },
         account: mapAccount({ ...row, id: row.account_id }),
       };
     });
   },
 
   async findActiveSession({ sessionId, accountId, now }) {
-    const [[row]] = await pool.query(
-      `SELECT
-         s.id AS session_id,
-         a.id,
-         a.email,
-         a.password_hash,
-         a.status,
-         (
-           SELECT GROUP_CONCAT(ar.role_id ORDER BY ar.role_id SEPARATOR ',')
-           FROM auth_account_roles ar
-           WHERE ar.account_id = a.id
-         ) AS roles_csv
-       FROM auth_sessions s
-       JOIN auth_accounts a ON a.id = s.account_id
-       WHERE s.id = ?
-         AND s.account_id = ?
-         AND s.revoked_at IS NULL
-         AND s.expires_at > ?
-         AND a.status = 'active'`,
-      [sessionId, accountId, now],
-    );
-    return row ? { session: { id: row.session_id }, account: mapAccount(row) } : null;
+    return transaction(pool, async (connection) => {
+      const [[row]] = await connection.query(
+        `SELECT
+           s.id AS session_id,
+           s.absolute_expires_at,
+           a.id,
+           a.email,
+           a.password_hash,
+           a.status,
+           (
+             SELECT GROUP_CONCAT(ar.role_id ORDER BY ar.role_id SEPARATOR ',')
+             FROM auth_account_roles ar
+             WHERE ar.account_id = a.id
+           ) AS roles_csv
+         FROM auth_sessions s
+         JOIN auth_accounts a ON a.id = s.account_id
+         WHERE s.id = ?
+           AND s.account_id = ?
+           AND s.revoked_at IS NULL
+           AND s.idle_expires_at > ?
+           AND s.absolute_expires_at > ?
+           AND a.status = 'active'
+         FOR UPDATE`,
+        [sessionId, accountId, now, now],
+      );
+      if (!row) return null;
+      const nextIdleExpiresAt = new Date(Math.min(
+        now.getTime() + SESSION_IDLE_TTL_MS,
+        new Date(row.absolute_expires_at).getTime(),
+      ));
+      await connection.query(
+        `UPDATE auth_sessions
+         SET last_activity_at = ?, idle_expires_at = ?
+         WHERE id = ?`,
+        [now, nextIdleExpiresAt, row.session_id],
+      );
+      return { session: { id: row.session_id }, account: mapAccount(row) };
+    });
   },
 
   async revokeSessionByRefreshHash({ refreshTokenHash, revokedAt }) {
@@ -311,6 +364,15 @@ const createMySqlAuthStore = (pool) => ({
        SET s.revoked_at = COALESCE(s.revoked_at, ?)
        WHERE rt.token_hash = ?`,
       [revokedAt, refreshTokenHash],
+    );
+  },
+
+  async revokeSessionsForAccount({ accountId, revokedAt = new Date() }) {
+    await pool.query(
+      `UPDATE auth_sessions
+       SET revoked_at = COALESCE(revoked_at, ?)
+       WHERE account_id = ?`,
+      [revokedAt, accountId],
     );
   },
 
