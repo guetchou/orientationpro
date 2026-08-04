@@ -156,7 +156,7 @@ export default function UnifiedLifeProjectPage() {
             <Route className="h-8 w-8 text-primary" />Construis ton projet d’avenir
           </h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            Commence par ce qui t’intéresse, puis précise ta situation pour comparer des pistes et choisir ta prochaine action.
+            Commence par 60 affirmations sur ce qui t’intéresse, puis précise ta situation pour comparer des pistes et choisir ta prochaine action.
           </p>
           <ol className="mt-6 grid gap-2 md:grid-cols-5" aria-label="Étapes de ton parcours">
             {journeySteps.map((step, index) => {
