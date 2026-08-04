@@ -71,7 +71,7 @@ export const useAuthMethods = (
     persistAuthSession(payload);
     const user = applyAccount(payload.account);
     toast.success('Connexion réussie.');
-    return { user, token: payload.accessToken, account: payload.account };
+    return { user, account: payload.account };
   };
 
   const signUp = async (email: string, password?: string) => {
