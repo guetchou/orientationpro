@@ -58,6 +58,7 @@ export const submitRiasecAttempt = async (
 };
 
 export const listRiasecResults = async (limit = 20, offset = 0) => {
+  if (!hasSessionHint()) return [];
   const payload = await apiFetch<{ results: RiasecResult[] }>(
     `/v1/orientation/results?limit=${limit}&offset=${offset}`,
   );
