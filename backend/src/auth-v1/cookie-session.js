@@ -23,6 +23,13 @@ const normalizeOrigin = (value) => {
   }
 };
 
+const normalizeAllowedOrigins = (frontendUrl, allowedOrigins = []) => {
+  const origins = [frontendUrl, ...allowedOrigins]
+    .map(normalizeOrigin)
+    .filter(Boolean);
+  return new Set(origins);
+};
+
 const clearAuthCookies = (res) => {
   res.clearCookie(ACCESS_COOKIE, { path: '/' });
   res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
@@ -30,12 +37,15 @@ const clearAuthCookies = (res) => {
 
 const createCookieSessionMiddleware = ({
   frontendUrl,
+  allowedOrigins = [],
   cookieSecure = true,
   accessTokenTtlSeconds = 15 * 60,
   absoluteSessionTtlSeconds = 12 * 60 * 60,
 }) => {
-  const allowedOrigin = normalizeOrigin(frontendUrl);
-  if (!allowedOrigin) throw new Error('A valid frontend URL is required for cookie authentication.');
+  const acceptedOrigins = normalizeAllowedOrigins(frontendUrl, allowedOrigins);
+  if (acceptedOrigins.size === 0) {
+    throw new Error('At least one valid frontend origin is required for cookie authentication.');
+  }
 
   return (req, res, next) => {
     const accessToken = readCookie(req, ACCESS_COOKIE);
@@ -47,7 +57,7 @@ const createCookieSessionMiddleware = ({
       const rawOrigin = req.headers.origin || '';
       const origin = normalizeOrigin(rawOrigin);
       const originMissingOutsideProduction = !rawOrigin && !cookieSecure;
-      if (!originMissingOutsideProduction && origin !== allowedOrigin) {
+      if (!originMissingOutsideProduction && !acceptedOrigins.has(origin)) {
         return res.status(403).json({
           error: {
             code: 'CSRF_ORIGIN_REJECTED',
@@ -108,5 +118,6 @@ module.exports = {
   REFRESH_COOKIE,
   clearAuthCookies,
   createCookieSessionMiddleware,
+  normalizeAllowedOrigins,
   readCookie,
 };
