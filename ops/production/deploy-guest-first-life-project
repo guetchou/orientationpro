@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-03T18:53:00+01:00
-# application-base: 485648a62fa46328ab86c4863bd544fc6625e4af
+# trigger: 2026-08-03T23:58:00+01:00
+# application-base: 1ad041ea95591657576fad32fa88e779e1760637
 # trigger-method: merged-internal-production-pr
-# release-scope: life-project-questionnaire-and-form
+# release-scope: oauth-dashboard-redirection-and-multi-role-space-switcher
