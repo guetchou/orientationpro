@@ -1,5 +1,10 @@
 const ACCESS_COOKIE = 'orientationpro_access';
+const REFRESH_COOKIE = 'orientationpro_refresh';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const TERMINAL_SESSION_ERRORS = new Set([
+  'INVALID_SESSION',
+  'SESSION_REVOKED',
+]);
 
 const readCookie = (req, name) => {
   const header = req.headers.cookie || '';
@@ -18,10 +23,16 @@ const normalizeOrigin = (value) => {
   }
 };
 
+const clearAuthCookies = (res) => {
+  res.clearCookie(ACCESS_COOKIE, { path: '/' });
+  res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+};
+
 const createCookieSessionMiddleware = ({
   frontendUrl,
   cookieSecure = true,
   accessTokenTtlSeconds = 15 * 60,
+  absoluteSessionTtlSeconds = 12 * 60 * 60,
 }) => {
   const allowedOrigin = normalizeOrigin(frontendUrl);
   if (!allowedOrigin) throw new Error('A valid frontend URL is required for cookie authentication.');
@@ -32,8 +43,7 @@ const createCookieSessionMiddleware = ({
       req.headers.authorization = `Bearer ${accessToken}`;
     }
 
-    const hasAuthCookie = Boolean(accessToken || readCookie(req, 'orientationpro_refresh'));
-    if (!SAFE_METHODS.has(req.method) && hasAuthCookie) {
+    if (!SAFE_METHODS.has(req.method)) {
       const rawOrigin = req.headers.origin || '';
       const origin = normalizeOrigin(rawOrigin);
       const originMissingOutsideProduction = !rawOrigin && !cookieSecure;
@@ -47,8 +57,26 @@ const createCookieSessionMiddleware = ({
       }
     }
 
+    res.set('Cache-Control', 'no-store');
+
+    const originalCookie = res.cookie.bind(res);
+    res.cookie = (name, value, options = {}) => {
+      if (name === REFRESH_COOKIE) {
+        const maximumLifetime = absoluteSessionTtlSeconds * 1000;
+        const requestedLifetime = Number(options.maxAge);
+        const maxAge = Number.isFinite(requestedLifetime)
+          ? Math.min(requestedLifetime, maximumLifetime)
+          : maximumLifetime;
+        return originalCookie(name, value, { ...options, maxAge });
+      }
+      return originalCookie(name, value, options);
+    };
+
     const originalJson = res.json.bind(res);
     res.json = (payload) => {
+      if (TERMINAL_SESSION_ERRORS.has(payload?.error?.code)) {
+        clearAuthCookies(res);
+      }
       if (payload?.accessToken) {
         res.cookie(ACCESS_COOKIE, payload.accessToken, {
           httpOnly: true,
@@ -66,7 +94,7 @@ const createCookieSessionMiddleware = ({
     const originalEnd = res.end.bind(res);
     res.end = (...args) => {
       if (req.path.endsWith('/logout')) {
-        res.clearCookie(ACCESS_COOKIE, { path: '/' });
+        clearAuthCookies(res);
       }
       return originalEnd(...args);
     };
@@ -77,6 +105,8 @@ const createCookieSessionMiddleware = ({
 
 module.exports = {
   ACCESS_COOKIE,
+  REFRESH_COOKIE,
+  clearAuthCookies,
   createCookieSessionMiddleware,
   readCookie,
 };
