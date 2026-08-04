@@ -161,7 +161,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_28%_76%,rgba(245,158,11,0.12),transparent_28%)]" />
             <Photo
-              name="hero-orientation-campus"
+              name="makoki-hero-youth-transparent"
               alt="Deux jeunes consultent ensemble un ordinateur portable."
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="absolute inset-0 h-full w-full object-cover object-center"
