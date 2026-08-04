@@ -40,7 +40,6 @@ describe('describeCvError', () => {
 
 describe('appels API ATS', () => {
   beforeEach(() => {
-    localStorage.setItem('userToken', 'jwt-test');
     vi.stubGlobal('fetch', vi.fn());
   });
   afterEach(() => {
@@ -48,7 +47,7 @@ describe('appels API ATS', () => {
     localStorage.clear();
   });
 
-  it('createAtsAnalysis envoie un multipart FormData (pas de JSON)', async () => {
+  it('createAtsAnalysis envoie un multipart FormData avec la session HttpOnly', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValue({
       ok: true,
@@ -63,9 +62,10 @@ describe('appels API ATS', () => {
     const [, init] = fetchMock.mock.calls[0];
     expect(init.method).toBe('POST');
     expect(init.body).toBeInstanceOf(FormData);
+    expect(init.credentials).toBe('include');
     const headers = new Headers(init.headers);
     expect(headers.get('Content-Type')).toBeNull();
-    expect(headers.get('Authorization')).toBe('Bearer jwt-test');
+    expect(headers.get('Authorization')).toBeNull();
     const body = init.body as FormData;
     expect(body.get('cv')).toBeInstanceOf(File);
     expect(body.get('jobTitle')).toBe('Comptable');
