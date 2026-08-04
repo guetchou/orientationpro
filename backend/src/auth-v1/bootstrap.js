@@ -15,6 +15,11 @@ const {
   createGuestSessionStore,
 } = require('../orientation/guest-sessions');
 
+const parseOriginList = (value) => String(value || '')
+  .split(',')
+  .map((entry) => entry.trim())
+  .filter(Boolean);
+
 const createConfiguredAuthV1 = (env = process.env) => {
   if (!env.JWT_SECRET || env.JWT_SECRET.length < 32) {
     throw new Error('JWT_SECRET must contain at least 32 characters when AUTH_V1_ENABLED=true');
@@ -22,6 +27,7 @@ const createConfiguredAuthV1 = (env = process.env) => {
   const pool = createDatabasePool(env);
   const store = createMySqlAuthStore(pool);
   const frontendUrl = env.APP_WEB_URL || 'http://localhost:5173';
+  const allowedOrigins = parseOriginList(env.CORS_ORIGINS);
   const cookieSecure = env.NODE_ENV === 'production';
   const guestSessions = createGuestSessionManager({
     store: createGuestSessionStore(pool),
@@ -29,7 +35,11 @@ const createConfiguredAuthV1 = (env = process.env) => {
     ttlMs: env.GUEST_ORIENTATION_TTL_MS,
   });
   const router = express.Router();
-  router.use(createCookieSessionMiddleware({ frontendUrl, cookieSecure }));
+  router.use(createCookieSessionMiddleware({
+    frontendUrl,
+    allowedOrigins,
+    cookieSecure,
+  }));
   router.use(createAuthRouter({
     store,
     email: createSmtpEmailAdapter(env),
@@ -60,4 +70,7 @@ const createConfiguredAuthV1 = (env = process.env) => {
   };
 };
 
-module.exports = { createConfiguredAuthV1 };
+module.exports = {
+  createConfiguredAuthV1,
+  parseOriginList,
+};
