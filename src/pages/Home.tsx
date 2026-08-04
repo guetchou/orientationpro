@@ -122,34 +122,23 @@ export default function Home() {
 
   return (
     <main className="bg-white">
-      <section className="relative isolate overflow-hidden bg-emerald-950">
-        <div className="absolute inset-0 -z-10">
-          <Photo
-            name="hero-orientation-campus"
-            alt="Groupe de jeunes réunis autour d’un ordinateur portable."
-            sizes="100vw"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/85 to-emerald-950/55" />
-          <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/70 via-transparent to-transparent" />
-        </div>
-
-        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28 lg:py-36">
+      <section className="relative overflow-hidden bg-white">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14 lg:py-20">
           <motion.div
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 28 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, ease: 'easeOut' }}
-            className="max-w-2xl text-white"
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.65, ease: 'easeOut' }}
+            className="max-w-2xl"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-900/80 px-4 py-1.5 text-sm font-medium text-amber-100">
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-sm font-medium text-emerald-800">
               <Sparkles className="h-4 w-4" />
               Orientation • Compétences • Emploi
             </span>
-            <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.06] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
               Découvre les métiers qui te correspondent,
-              <span className="block text-amber-200">en 15 minutes.</span>
+              <span className="block text-emerald-700">en 15 minutes.</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-emerald-50">
+            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
               Makoki t’aide à comprendre tes intérêts, explorer des métiers et identifier les prochaines étapes pour avancer.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -158,22 +147,33 @@ export default function Home() {
                   Commencer mon projet <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                asChild
-                className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
-              >
+              <Button size="lg" variant="outline" asChild>
                 <a href="#comment-makoki-vous-aide">Voir comment ça marche</a>
               </Button>
             </div>
           </motion.div>
+
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, ease: 'easeOut', delay: 0.08 }}
+            className="relative min-h-[360px] overflow-hidden rounded-[2rem] bg-emerald-50 lg:min-h-[520px]"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_28%_76%,rgba(245,158,11,0.12),transparent_28%)]" />
+            <Photo
+              name="hero-orientation-campus"
+              alt="Deux jeunes consultent ensemble un ordinateur portable."
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-white/10" />
+          </motion.div>
         </div>
 
-        <div className="relative border-t border-white/10 bg-emerald-950/75 backdrop-blur-sm">
-          <div className="mx-auto grid max-w-7xl gap-px px-6 py-7 sm:grid-cols-3">
+        <div className="border-y border-slate-200 bg-slate-50">
+          <div className="mx-auto grid max-w-7xl gap-px px-6 py-6 sm:grid-cols-3">
             {situations.map((situation) => (
-              <p key={situation} className="border-white/10 px-4 py-2 text-sm leading-6 text-emerald-50 sm:border-l sm:first:border-l-0">
+              <p key={situation} className="border-slate-200 px-4 py-2 text-sm leading-6 text-slate-700 sm:border-l sm:first:border-l-0">
                 {situation}
               </p>
             ))}
