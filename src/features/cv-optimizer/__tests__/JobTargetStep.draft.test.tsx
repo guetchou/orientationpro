@@ -26,26 +26,26 @@ describe('JobTargetStep — issue #152, brouillon local de la description d’of
     expect(screen.getByLabelText('Description de l’offre')).toHaveValue('Gestion de la comptabilité générale et suivi de trésorerie.');
   });
 
-  it('efface le brouillon une fois la cible soumise ("Comparer à cette offre")', () => {
+  it('efface le brouillon une fois la cible soumise ("Comparer mon CV à cette offre")', () => {
     const onSubmit = vi.fn();
     render(<JobTargetStep onSubmit={onSubmit} onBack={vi.fn()} submitting={false} />);
 
     fireEvent.change(screen.getByLabelText('Description de l’offre'), { target: { value: 'Offre de test.' } });
     expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /comparer à cette offre/i }));
+    fireEvent.click(screen.getByRole('button', { name: /comparer mon cv à cette offre/i }));
     expect(onSubmit).toHaveBeenCalledWith({ jobTitle: undefined, jobDescription: 'Offre de test.' });
     expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
   });
 
-  it('efface aussi le brouillon quand on soumet sans offre ("Analyser sans offre")', () => {
+  it('efface aussi le brouillon quand on soumet sans offre ("Analyser mon CV sans offre")', () => {
     const onSubmit = vi.fn();
     render(<JobTargetStep onSubmit={onSubmit} onBack={vi.fn()} submitting={false} />);
 
     fireEvent.change(screen.getByLabelText('Intitulé du poste'), { target: { value: 'Comptable' } });
     expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /analyser sans offre/i }));
+    fireEvent.click(screen.getByRole('button', { name: /analyser mon cv sans offre/i }));
     expect(onSubmit).toHaveBeenCalledWith({});
     expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
   });
@@ -105,7 +105,7 @@ describe('JobTargetStep — issue #152, brouillon local de la description d’of
       })).not.toThrow();
       expect(screen.getByLabelText('Description de l’offre')).toHaveValue('Saisie malgré un stockage local indisponible.');
 
-      expect(() => fireEvent.click(screen.getByRole('button', { name: /comparer à cette offre/i }))).not.toThrow();
+      expect(() => fireEvent.click(screen.getByRole('button', { name: /comparer mon cv à cette offre/i }))).not.toThrow();
       expect(onSubmit).toHaveBeenCalledWith({ jobTitle: undefined, jobDescription: 'Saisie malgré un stockage local indisponible.' });
     } finally {
       getItemSpy.mockRestore();
