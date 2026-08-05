@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-03T23:58:00+01:00
-# application-base: 1ad041ea95591657576fad32fa88e779e1760637
+# trigger: 2026-08-05T17:04:00+01:00
+# application-base: 3e6ba31fe34c7c5def8e4cef0a36891e6b6cd4b9
 # trigger-method: merged-internal-production-pr
-# release-scope: oauth-dashboard-redirection-and-multi-role-space-switcher
+# release-scope: social-oauth-origin-and-cookie-auth-protected-routes
