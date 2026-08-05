@@ -4,12 +4,17 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const test = require('node:test');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 
 const {
   createCookieSessionMiddleware,
   normalizeAllowedOrigins,
 } = require('../src/auth-v1/cookie-session');
 const { parseOriginList } = require('../src/auth-v1/bootstrap');
+const {
+  accessTokenFromRequest,
+  createSessionResolver,
+} = require('../src/auth-v1/authenticate');
 
 const request = async (app, options = {}) => {
   const server = http.createServer(app);
@@ -35,6 +40,29 @@ const createApp = () => {
   }));
   app.post('/api/v1/auth/refresh', (_req, res) => res.status(200).json({ ok: true }));
   return app;
+};
+
+const jwtSecret = 'test-jwt-secret-with-at-least-32-characters';
+const accessToken = jwt.sign(
+  { sid: 'session-1' },
+  jwtSecret,
+  {
+    subject: 'account-1',
+    issuer: 'orientationpro-api',
+    audience: 'orientationpro-clients',
+    algorithm: 'HS256',
+    expiresIn: '15m',
+  },
+);
+
+const activeSession = {
+  account: {
+    id: 'account-1',
+    email: 'person@example.test',
+    status: 'active',
+    roles: ['user'],
+  },
+  session: { id: 'session-1' },
 };
 
 test('normalizes and deduplicates explicitly configured frontend origins', () => {
@@ -80,4 +108,60 @@ test('rejects a production mutation without Origin', async () => {
   const response = await request(createApp());
   assert.equal(response.status, 403);
   assert.equal((await response.json()).error.code, 'CSRF_ORIGIN_REJECTED');
+});
+
+test('reads the access token directly from the HttpOnly cookie for protected routes', () => {
+  const req = {
+    headers: {
+      cookie: `other=value; orientationpro_access=${encodeURIComponent(accessToken)}`,
+    },
+  };
+  assert.equal(accessTokenFromRequest(req), accessToken);
+});
+
+test('keeps bearer authentication for API clients and gives it precedence', () => {
+  const bearer = jwt.sign(
+    { sid: 'session-bearer' },
+    jwtSecret,
+    {
+      subject: 'account-1',
+      issuer: 'orientationpro-api',
+      audience: 'orientationpro-clients',
+      algorithm: 'HS256',
+      expiresIn: '15m',
+    },
+  );
+  const req = {
+    headers: {
+      authorization: `Bearer ${bearer}`,
+      cookie: `orientationpro_access=${encodeURIComponent(accessToken)}`,
+    },
+  };
+  assert.equal(accessTokenFromRequest(req), bearer);
+});
+
+test('resolves an authenticated protected API session from the access cookie', async () => {
+  const calls = [];
+  const resolver = createSessionResolver({
+    jwtSecret,
+    store: {
+      findActiveSession: async (input) => {
+        calls.push(input);
+        return activeSession;
+      },
+    },
+  });
+
+  const result = await resolver({
+    headers: {
+      cookie: `orientationpro_access=${encodeURIComponent(accessToken)}`,
+    },
+  });
+
+  assert.equal(result.status, 'authenticated');
+  assert.deepEqual(result.auth.account.roles, ['user']);
+  assert.equal(result.auth.sessionId, 'session-1');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].accountId, 'account-1');
+  assert.equal(calls[0].sessionId, 'session-1');
 });
