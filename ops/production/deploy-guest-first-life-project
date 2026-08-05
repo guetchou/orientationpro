@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-05T17:18:00+01:00
-# application-base: 8f2a488f50254f31d77ba4b6c6814ea9fcdee604
-# trigger-method: direct-main-production-trigger
-# release-scope: social-oauth-origin-and-cookie-auth-protected-routes
+# trigger: 2026-08-05T19:00:00+01:00
+# application-base: 323b1be3a41f8e98dc177fbefe1ba79c3ce5f810
+# trigger-method: release-production-pr
+# release-scope: cv-optimizer-complete-ux
