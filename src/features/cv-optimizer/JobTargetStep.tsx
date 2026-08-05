@@ -1,15 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Target } from 'lucide-react';
+import { ArrowLeft, FileText, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-// Issue #152 : un rafraîchissement à cette étape faisait perdre le fichier
-// importé ET la description d'offre saisie. Le fichier binaire lui-même reste
-// hors périmètre (nécessiterait un stockage IndexedDB dédié) ; l'utilisateur
-// devra de toute façon le réimporter. On persiste au minimum le texte saisi,
-// pour qu'il n'ait pas à le retaper une fois revenu à cette étape.
 const DRAFT_KEY = 'makoki.cv-optimizer.job-target-draft.v1';
 
 interface JobTargetDraft {
@@ -17,13 +12,11 @@ interface JobTargetDraft {
   jobDescription: string;
 }
 
-// localStorage peut lever (navigation privée, quota dépassé, politique de
-// sécurité) : ces accès ne doivent jamais faire échouer la saisie utilisateur.
 const clearDraft = () => {
   try {
     localStorage.removeItem(DRAFT_KEY);
   } catch {
-    // Stockage local indisponible : rien à nettoyer.
+    // Le stockage local peut être indisponible sans bloquer le parcours.
   }
 };
 
@@ -37,13 +30,13 @@ const readDraft = (): JobTargetDraft | null => {
   }
 };
 
-// Etape 2 (facultative) : cibler une offre. Sans description d'offre, aucune
-// pertinence ciblee n'est calculee (le serveur renvoie targetRelevance = null).
 export const JobTargetStep = ({
+  fileName,
   onSubmit,
   onBack,
   submitting,
 }: {
+  fileName: string;
   onSubmit: (target: { jobTitle?: string; jobDescription?: string }) => void;
   onBack: () => void;
   submitting: boolean;
@@ -59,7 +52,7 @@ export const JobTargetStep = ({
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ jobTitle, jobDescription }));
     } catch {
-      // Stockage local indisponible : la saisie reste fonctionnelle en mémoire.
+      // La saisie reste disponible en mémoire.
     }
   }, [jobTitle, jobDescription]);
 
@@ -67,14 +60,28 @@ export const JobTargetStep = ({
   const trimmedDescription = jobDescription.trim();
 
   return (
-    <div className="mx-auto max-w-xl space-y-5">
+    <section className="mx-auto max-w-xl space-y-5" aria-labelledby="job-target-title">
+      <div>
+        <p className="text-sm font-medium text-emerald-700">Étape 2 sur 3</p>
+        <h2 id="job-target-title" className="mt-1 text-xl font-semibold text-stone-900">
+          Précise le poste que tu vises
+        </h2>
+        <p className="mt-1 text-sm text-stone-600">
+          Cette étape est facultative. Avec une offre, Makoki peut comparer ton CV aux missions et compétences demandées.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-sm text-stone-700">
+        <FileText className="h-4 w-4 shrink-0 text-emerald-700" />
+        <span className="truncate">CV sélectionné : <strong>{fileName}</strong></span>
+      </div>
+
       <div className="rounded-2xl border border-stone-200 bg-white p-6">
         <p className="flex items-center gap-2 font-semibold text-stone-900">
-          <Target className="h-5 w-5 text-emerald-700" /> Cibler une offre — mots-clés ATS (facultatif)
+          <Target className="h-5 w-5 text-emerald-700" /> Comparer ton CV à une offre
         </p>
         <p className="mt-1 text-sm text-stone-600">
-          Renseignez une offre pour comparer la compatibilité ATS de votre CV avec ses attentes. Sans description, l’analyse
-          reste générale.
+          Colle la description de l’offre pour vérifier si les éléments importants apparaissent dans ton CV. Ajoute uniquement des compétences que tu maîtrises réellement.
         </p>
 
         <div className="mt-5 space-y-4">
@@ -84,19 +91,22 @@ export const JobTargetStep = ({
               id="job-title"
               value={jobTitle}
               maxLength={255}
-              placeholder="Ex. Comptable, Conseiller clientèle…"
+              placeholder="Ex. Comptable, conseiller clientèle…"
               onChange={(event) => setJobTitle(event.target.value)}
               className="mt-1"
             />
           </div>
           <div>
-            <Label htmlFor="job-description">Description de l’offre</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="job-description">Description de l’offre</Label>
+              <span className="text-xs text-stone-400">{jobDescription.length} / 20 000</span>
+            </div>
             <Textarea
               id="job-description"
               value={jobDescription}
               maxLength={20000}
-              rows={6}
-              placeholder="Collez ici les missions et compétences demandées par l’offre."
+              rows={7}
+              placeholder="Colle ici les missions, les compétences et les critères demandés."
               onChange={(event) => setJobDescription(event.target.value)}
               className="mt-1"
             />
@@ -104,18 +114,7 @@ export const JobTargetStep = ({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Button variant="outline" onClick={onBack} disabled={submitting} className="sm:w-auto">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Retour
-        </Button>
-        <Button
-          variant="outline"
-          disabled={submitting}
-          onClick={() => { clearDraft(); onSubmit({}); }}
-          className="flex-1"
-        >
-          Analyser sans offre
-        </Button>
+      <div className="space-y-3">
         <Button
           disabled={submitting || trimmedDescription.length === 0}
           onClick={() => {
@@ -125,11 +124,25 @@ export const JobTargetStep = ({
               jobDescription: trimmedDescription || undefined,
             });
           }}
-          className="flex-1 bg-emerald-700 hover:bg-emerald-800"
+          className="w-full bg-emerald-700 hover:bg-emerald-800"
+          size="lg"
         >
-          Comparer à cette offre
+          Comparer mon CV à cette offre
+        </Button>
+
+        <Button
+          variant="outline"
+          disabled={submitting}
+          onClick={() => { clearDraft(); onSubmit({}); }}
+          className="w-full"
+        >
+          Analyser mon CV sans offre
+        </Button>
+
+        <Button variant="ghost" onClick={onBack} disabled={submitting} className="w-full text-stone-600">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Choisir un autre CV
         </Button>
       </div>
-    </div>
+    </section>
   );
 };

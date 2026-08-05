@@ -1,6 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { History, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  CheckCircle2,
+  FileText,
+  History,
+  ShieldCheck,
+  Sparkles,
+  Target,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CvUploadStep } from './CvUploadStep';
 import { JobTargetStep } from './JobTargetStep';
@@ -11,11 +18,23 @@ import type { AtsAnalysis } from './types';
 
 type Phase = 'upload' | 'target' | 'analyzing' | 'result' | 'error';
 
+const steps = [
+  { label: 'Ton CV', icon: FileText },
+  { label: 'Le poste visé', icon: Target },
+  { label: 'Ton analyse', icon: Sparkles },
+];
+
 export const CvOptimizerPage = () => {
   const [phase, setPhase] = useState<Phase>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<AtsAnalysis | null>(null);
   const [error, setError] = useState<CvErrorView | null>(null);
+
+  const activeStep = useMemo(() => {
+    if (phase === 'upload') return 0;
+    if (phase === 'target') return 1;
+    return 2;
+  }, [phase]);
 
   const runAnalysis = async (
     selected: File,
@@ -46,22 +65,22 @@ export const CvOptimizerPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-10">
+    <main className="min-h-screen bg-stone-50 px-4 py-8 md:py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
               <Sparkles className="h-4 w-4" /> Analyse de CV
             </span>
-            <h1 className="mt-3 font-heading text-3xl font-bold text-stone-900">
+            <h1 className="mt-3 font-heading text-3xl font-bold text-stone-900 md:text-4xl">
               Vérifie et améliore ton CV
             </h1>
-            <p className="mt-2 max-w-xl text-stone-600">
-              Importe ton CV pour repérer ce qui est clair, ce qui manque et ce qui peut être amélioré pour le poste que tu vises.
+            <p className="mt-2 text-stone-600">
+              Importe ton CV, indique le poste que tu vises et reçois des recommandations concrètes pour le rendre plus clair et plus adapté.
             </p>
-            <p className="mt-2 flex items-start gap-2 text-sm text-stone-500">
+            <p className="mt-3 flex items-start gap-2 text-sm text-stone-500">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-              L’analyse s’appuie sur des règles de lisibilité et de compatibilité avec les logiciels de tri de candidatures. Elle ne garantit ni entretien ni recrutement.
+              L’analyse vérifie la lisibilité, la structure et la présence d’éléments souvent recherchés par les logiciels de tri de candidatures. Elle ne garantit ni entretien ni recrutement.
             </p>
           </div>
           <Button variant="outline" asChild>
@@ -70,6 +89,38 @@ export const CvOptimizerPage = () => {
             </Link>
           </Button>
         </div>
+
+        <ol className="mb-7 grid gap-2 sm:grid-cols-3" aria-label="Étapes de l’analyse de CV">
+          {steps.map((step, index) => {
+            const completed = index < activeStep;
+            const active = index === activeStep;
+            const Icon = step.icon;
+            return (
+              <li
+                key={step.label}
+                aria-current={active ? 'step' : undefined}
+                className={`flex items-center gap-3 rounded-xl border p-3 text-sm ${
+                  active
+                    ? 'border-emerald-600 bg-emerald-50 font-medium text-emerald-950'
+                    : completed
+                      ? 'border-emerald-200 bg-white text-emerald-900'
+                      : 'border-stone-200 bg-white text-stone-500'
+                }`}
+              >
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                  active
+                    ? 'bg-emerald-700 text-white'
+                    : completed
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-stone-100 text-stone-500'
+                }`}>
+                  {completed ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                </span>
+                <span>Étape {index + 1} · {step.label}</span>
+              </li>
+            );
+          })}
+        </ol>
 
         {phase === 'upload' ? (
           <CvUploadStep
@@ -82,6 +133,7 @@ export const CvOptimizerPage = () => {
 
         {phase === 'target' && file ? (
           <JobTargetStep
+            fileName={file.name}
             submitting={false}
             onBack={() => setPhase('upload')}
             onSubmit={(target) => void runAnalysis(file, target)}
