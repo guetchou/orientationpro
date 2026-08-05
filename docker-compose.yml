@@ -1,35 +1,25 @@
-version: '3.8'
-
 services:
-  # Frontend (React/Vite)
+  # Frontend public Makoki. Nginx hôte relaie makoki.org vers 127.0.0.1:8088.
   web:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        - VITE_BACKEND_URL=http://5.196.22.149:6464
-        - VITE_API_URL=http://5.196.22.149:6464/api
-    # Ports supprimés - accès uniquement via nginx-proxy
-    expose:
-      - "80"
-    environment:
-      - VITE_API_URL=http://5.196.22.149:6464/api
-      - VITE_BACKEND_URL=http://5.196.22.149:6464
-    depends_on:
-      - api
-    volumes:
-      - ./public:/app/public
+        VITE_BACKEND_URL: https://makoki.org
+        VITE_API_URL: https://makoki.org/api
+    ports:
+      - "127.0.0.1:8088:80"
     networks:
       - proxy-net
       - default
     restart: unless-stopped
 
-  # Backend API (Node.js/Express)
+  # Backend historique de développement. Le frontend de production ne dépend
+  # pas de ce service : /api est routé vers l'alias riasec-api sur proxy-net.
   api:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    # Ports supprimés - accès uniquement via nginx-proxy
     expose:
       - "6464"
     environment:
@@ -50,7 +40,6 @@ services:
       - default
     restart: unless-stopped
 
-  # Base de données MySQL
   db:
     image: mysql:8.0
     ports:
@@ -66,7 +55,6 @@ services:
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
 
-  # phpMyAdmin pour la gestion de la base de données
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
@@ -86,4 +74,4 @@ volumes:
 networks:
   proxy-net:
     external: true
-    name: proxy-net 
+    name: proxy-net
