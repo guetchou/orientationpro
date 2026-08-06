@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-05T19:00:00+01:00
-# application-base: 323b1be3a41f8e98dc177fbefe1ba79c3ce5f810
-# trigger-method: release-production-pr
-# release-scope: cv-optimizer-complete-ux
+# trigger: 2026-08-06T22:10:00+01:00
+# application-base: b07f546e3cad081958d4743e648deeefb3b4c37d
+# trigger-method: direct-main-production-trigger
+# release-scope: production-oauth-routing-riasec-api
