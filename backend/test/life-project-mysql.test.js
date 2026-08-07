@@ -275,7 +275,11 @@ test('life project persists transactionally with scoped reads and append-only hi
     assert.equal(rolledBack, undefined);
 
     await pool.query('DELETE FROM auth_accounts WHERE id IN (?, ?)', [accountA, accountB]);
-    const reasonCodeVersion = await migrateDown(pool, directory);
+    // A migration above the ATS stack (e.g. 023) may sit on top; drain down to the ATS ceiling (022) first.
+    let reasonCodeVersion = await migrateDown(pool, directory);
+    while (reasonCodeVersion && reasonCodeVersion !== '022_ats_rejection_reason_codes') {
+      reasonCodeVersion = await migrateDown(pool, directory);
+    }
     assert.equal(reasonCodeVersion, '022_ats_rejection_reason_codes');
     const evaluationsVersion = await migrateDown(pool, directory);
     assert.equal(evaluationsVersion, '021_ats_application_evaluations_v1');
