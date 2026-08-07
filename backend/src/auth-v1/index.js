@@ -39,7 +39,7 @@ const createAuthRouter = ({
   frontendUrl = 'http://localhost:5173',
   oauthCallbackBaseUrl = frontendUrl,
   sessionResolver = null,
-  oauthLinkReturnPath = '/parametres',
+  oauthLinkReturnPath = '/profile',
 }) => {
   if (!store || !email) {
     throw new Error('Auth store and email adapter are required');

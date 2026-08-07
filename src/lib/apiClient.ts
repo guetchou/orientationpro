@@ -197,6 +197,34 @@ export const confirmPasswordReset = async (token: string, password: string): Pro
   }, { auth: false });
 };
 
+export interface LinkedIdentity {
+  provider: string;
+  emailAtLink: string;
+  linkedAt: string;
+}
+
+/** Fournisseurs sociaux deja lies au compte connecte. */
+export const listOAuthIdentities = async (): Promise<LinkedIdentity[]> => {
+  const payload = await apiFetch<{ identities: LinkedIdentity[] }>('/v1/auth/oauth/identities', {
+    method: 'GET',
+  });
+  return payload.identities || [];
+};
+
+/** Demarre la liaison d'un fournisseur ; renvoie l'URL d'autorisation a suivre. */
+export const startOAuthLink = async (provider: 'google' | 'meta'): Promise<string> => {
+  const payload = await apiFetch<{ authorizationUrl: string }>(
+    `/v1/auth/oauth/${provider}/link/start`,
+    { method: 'POST' },
+  );
+  return payload.authorizationUrl;
+};
+
+/** Delie un fournisseur social du compte connecte. */
+export const unlinkOAuthProvider = async (provider: 'google' | 'meta'): Promise<void> => {
+  await apiFetch(`/v1/auth/oauth/${provider}/link`, { method: 'DELETE' });
+};
+
 export const apiUpload = async <T>(
   path: string,
   formData: FormData,

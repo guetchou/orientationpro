@@ -50,7 +50,7 @@ const createConfiguredAuthV1 = (env = process.env) => {
     frontendUrl,
     oauthCallbackBaseUrl: env.OAUTH_CALLBACK_BASE_URL || frontendUrl,
     sessionResolver: createSessionResolver({ store, jwtSecret: env.JWT_SECRET }),
-    oauthLinkReturnPath: env.OAUTH_LINK_RETURN_PATH || '/parametres',
+    oauthLinkReturnPath: env.OAUTH_LINK_RETURN_PATH || '/profile',
     guestSessions,
   }));
   const authenticate = createSessionAuthenticator({
