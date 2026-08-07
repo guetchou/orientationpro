@@ -61,7 +61,11 @@ test('ATS migrations 014-022 cycle up -> down -> up and create the expected ATS 
     assert.equal(await columnExists(pool, 'ats_application_events_v1', 'organization_id'), true);
     assert.equal(await columnExists(pool, 'ats_application_events_v1', 'reason_code'), true);
 
-    const reasonCodeVersion = await migrateDown(pool, directory);
+    // A migration above the ATS stack (e.g. 023) may sit on top; drain down to the ATS ceiling (022) first.
+    let reasonCodeVersion = await migrateDown(pool, directory);
+    while (reasonCodeVersion && reasonCodeVersion !== '022_ats_rejection_reason_codes') {
+      reasonCodeVersion = await migrateDown(pool, directory);
+    }
     assert.equal(reasonCodeVersion, '022_ats_rejection_reason_codes');
     assert.equal(await columnExists(pool, 'ats_application_events_v1', 'reason_code'), false);
 

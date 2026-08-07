@@ -4,6 +4,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import AdaptiveProfileWizard from '@/features/profile/AdaptiveProfileWizard';
 import ProfileHypothesisPanel from '@/features/profile/ProfileHypothesisPanel';
 import ProfileSynthesisPanel from '@/features/profile/ProfileSynthesisPanel';
+import ConnectedAccounts from '@/features/profile/ConnectedAccounts';
 
 export default function Profile() {
   usePageMeta({
@@ -42,6 +43,7 @@ export default function Profile() {
         <AdaptiveProfileWizard />
         <ProfileHypothesisPanel />
         <ProfileSynthesisPanel />
+        <ConnectedAccounts />
       </div>
     </main>
   );

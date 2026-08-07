@@ -38,6 +38,8 @@ const createAuthRouter = ({
   oauthProviders = {},
   frontendUrl = 'http://localhost:5173',
   oauthCallbackBaseUrl = frontendUrl,
+  sessionResolver = null,
+  oauthLinkReturnPath = '/profile',
 }) => {
   if (!store || !email) {
     throw new Error('Auth store and email adapter are required');
@@ -54,6 +56,23 @@ const createAuthRouter = ({
     target.searchParams.set('code', code);
     return res.redirect(302, target.toString());
   };
+
+  // Retour du flux de LIAISON de compte (vers la page parametres).
+  const oauthLinkRedirect = (res, provider, status) => {
+    const target = new URL(oauthLinkReturnPath, frontendUrl);
+    if (status === 'linked') {
+      target.searchParams.set('link', 'success');
+      target.searchParams.set('provider', provider);
+    } else {
+      target.searchParams.set('link', 'error');
+      target.searchParams.set('code', status === 'identity_taken'
+        ? 'IDENTITY_TAKEN'
+        : (status === 'account_unavailable' ? 'ACCOUNT_UNAVAILABLE' : 'LINK_FAILED'));
+    }
+    return res.redirect(302, target.toString());
+  };
+
+  const requireSession = async (req) => (sessionResolver ? sessionResolver(req) : { status: 'missing' });
 
   router.get('/oauth/:provider/start', route(async (req, res) => {
     const providerName = String(req.params.provider || '');
@@ -132,6 +151,18 @@ const createAuthRouter = ({
       return oauthRedirect(res, 'OAUTH_PROVIDER_REJECTED');
     }
 
+    // Flux de LIAISON : la transaction porte un compte deja authentifie ->
+    // on rattache l'identite sociale a ce compte (jamais de connexion/creation).
+    if (transaction.accountId) {
+      const linkResult = await store.linkOAuthIdentity({
+        provider: providerName,
+        subject: identity.subject,
+        accountId: transaction.accountId,
+        email: normalizeEmail(identity.email),
+      });
+      return oauthLinkRedirect(res, providerName, linkResult.status);
+    }
+
     const passwordHash = await bcrypt.hash(
       crypto.randomBytes(48).toString('base64url'),
       12,
@@ -161,6 +192,76 @@ const createAuthRouter = ({
     target.searchParams.set('oauth', 'success');
     return res.redirect(302, target.toString());
   }));
+  // Demarre la LIAISON d'un fournisseur social au compte connecte.
+  // Authentifie (Bearer/cookie) ; renvoie l'URL d'autorisation, le frontend redirige.
+  router.post('/oauth/:provider/link/start', route(async (req, res) => {
+    const providerName = String(req.params.provider || '');
+    const provider = oauthProviders[providerName];
+    if (!provider) {
+      return res.status(404).json({
+        error: { code: 'OAUTH_PROVIDER_UNAVAILABLE', message: 'This login provider is unavailable.' },
+      });
+    }
+    const session = await requireSession(req);
+    if (session.status !== 'authenticated') {
+      return res.status(401).json({
+        error: { code: 'SESSION_REQUIRED', message: 'Authentication is required to link a social account.' },
+      });
+    }
+
+    const state = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const nonce = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
+    const codeVerifier = crypto.randomBytes(48).toString('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    const redirectUri = new URL(
+      `/api/v1/auth/oauth/${providerName}/callback`,
+      oauthCallbackBaseUrl,
+    ).toString();
+    await store.saveOAuthTransaction({
+      stateHash: hashToken(state),
+      provider: providerName,
+      nonce,
+      codeVerifier,
+      expiresAt: new Date(Date.now() + OAUTH_TRANSACTION_TTL_MS),
+      accountId: session.auth.account.id,
+    });
+    res.cookie(OAUTH_STATE_COOKIE, state, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      maxAge: OAUTH_TRANSACTION_TTL_MS,
+      path: `/api/v1/auth/oauth/${providerName}/callback`,
+    });
+    return res.status(200).json({
+      authorizationUrl: provider.authorizationUrl({ state, nonce, codeChallenge, redirectUri }),
+    });
+  }));
+
+  // Liste les fournisseurs sociaux lies au compte connecte.
+  router.get('/oauth/identities', route(async (req, res) => {
+    const session = await requireSession(req);
+    if (session.status !== 'authenticated') {
+      return res.status(401).json({
+        error: { code: 'SESSION_REQUIRED', message: 'Authentication is required.' },
+      });
+    }
+    const identities = await store.listOAuthIdentities({ accountId: session.auth.account.id });
+    return res.status(200).json({ identities });
+  }));
+
+  // Delie un fournisseur social du compte connecte.
+  router.delete('/oauth/:provider/link', route(async (req, res) => {
+    const providerName = String(req.params.provider || '');
+    const session = await requireSession(req);
+    if (session.status !== 'authenticated') {
+      return res.status(401).json({
+        error: { code: 'SESSION_REQUIRED', message: 'Authentication is required.' },
+      });
+    }
+    await store.unlinkOAuthIdentity({ provider: providerName, accountId: session.auth.account.id });
+    return res.status(204).end();
+  }));
+
   router.post('/register', route(async (req, res) => {
     const normalizedEmail = normalizeEmail(req.body?.email);
     const password = String(req.body?.password || '');

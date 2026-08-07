@@ -77,19 +77,19 @@ const createMySqlAuthStore = (pool) => ({
     });
   },
 
-  async saveOAuthTransaction({ stateHash, provider, nonce, codeVerifier, expiresAt }) {
+  async saveOAuthTransaction({ stateHash, provider, nonce, codeVerifier, expiresAt, accountId = null }) {
     await pool.query(
       `INSERT INTO auth_oauth_transactions
-       (state_hash, provider, nonce, code_verifier, expires_at)
-       VALUES (?, ?, ?, ?, ?)`,
-      [stateHash, provider, nonce, codeVerifier, expiresAt],
+       (state_hash, provider, account_id, nonce, code_verifier, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [stateHash, provider, accountId, nonce, codeVerifier, expiresAt],
     );
   },
 
   async consumeOAuthTransaction({ stateHash, provider, now }) {
     return transaction(pool, async (connection) => {
       const [[row]] = await connection.query(
-        `SELECT nonce, code_verifier
+        `SELECT account_id, nonce, code_verifier
          FROM auth_oauth_transactions
          WHERE state_hash = ?
            AND provider = ?
@@ -103,8 +103,58 @@ const createMySqlAuthStore = (pool) => ({
         'UPDATE auth_oauth_transactions SET consumed_at = ? WHERE state_hash = ?',
         [now, stateHash],
       );
-      return { nonce: row.nonce, codeVerifier: row.code_verifier };
+      return { accountId: row.account_id, nonce: row.nonce, codeVerifier: row.code_verifier };
     });
+  },
+
+  // Rattache une identite sociale a un compte DEJA authentifie (flux de liaison).
+  // Gardes anti-usurpation : identite deja liee a ce compte -> idempotent ;
+  // liee a un AUTRE compte -> refus.
+  async linkOAuthIdentity({ provider, subject, accountId, email }) {
+    return transaction(pool, async (connection) => {
+      const [[existing]] = await connection.query(
+        `SELECT account_id
+         FROM auth_external_identities
+         WHERE provider = ? AND provider_subject = ?
+         FOR UPDATE`,
+        [provider, subject],
+      );
+      if (existing) {
+        return existing.account_id === accountId ? { status: 'linked' } : { status: 'identity_taken' };
+      }
+      const account = await findAccountById(connection, accountId);
+      if (!account || account.status !== 'active') return { status: 'account_unavailable' };
+      await connection.query(
+        `INSERT INTO auth_external_identities
+         (provider, provider_subject, account_id, email_at_link)
+         VALUES (?, ?, ?, ?)`,
+        [provider, subject, accountId, String(email || '').trim().toLowerCase()],
+      );
+      return { status: 'linked', account };
+    });
+  },
+
+  async listOAuthIdentities({ accountId }) {
+    const [rows] = await pool.query(
+      `SELECT provider, email_at_link, created_at
+       FROM auth_external_identities
+       WHERE account_id = ?
+       ORDER BY created_at`,
+      [accountId],
+    );
+    return rows.map((row) => ({
+      provider: row.provider,
+      emailAtLink: row.email_at_link,
+      linkedAt: row.created_at,
+    }));
+  },
+
+  async unlinkOAuthIdentity({ provider, accountId }) {
+    const [result] = await pool.query(
+      'DELETE FROM auth_external_identities WHERE provider = ? AND account_id = ?',
+      [provider, accountId],
+    );
+    return { removed: result.affectedRows };
   },
 
   async resolveOAuthIdentity({ provider, subject, email, emailVerified, passwordHash }) {
