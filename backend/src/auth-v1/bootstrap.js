@@ -4,6 +4,7 @@ const { createAuthRouter } = require('./index');
 const {
   createOptionalSessionAuthenticator,
   createSessionAuthenticator,
+  createSessionResolver,
 } = require('./authenticate');
 const { createCookieSessionMiddleware } = require('./cookie-session');
 const { createMySqlAuthStore } = require('./mysql-store');
@@ -48,6 +49,8 @@ const createConfiguredAuthV1 = (env = process.env) => {
     oauthProviders: createConfiguredOAuthProviders(env),
     frontendUrl,
     oauthCallbackBaseUrl: env.OAUTH_CALLBACK_BASE_URL || frontendUrl,
+    sessionResolver: createSessionResolver({ store, jwtSecret: env.JWT_SECRET }),
+    oauthLinkReturnPath: env.OAUTH_LINK_RETURN_PATH || '/parametres',
     guestSessions,
   }));
   const authenticate = createSessionAuthenticator({
