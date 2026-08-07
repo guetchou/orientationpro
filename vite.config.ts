@@ -44,6 +44,10 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,svg}'],
         globIgnores: ['**/image*.png', '**/images/**/*.png'],
         maximumFileSizeToCacheInBytes: 5000000,
+        // Ne PAS servir la coquille SPA (index.html) pour les routes serveur /api/*.
+        // Sinon le service worker intercepte les redirections OAuth (/api/v1/auth/oauth/*)
+        // et affiche un 404 SPA au lieu de laisser le navigateur suivre la redirection.
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [{
           urlPattern: /\.(?:png|jpg|jpeg|svg)$/,
           handler: 'CacheFirst',
