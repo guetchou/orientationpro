@@ -275,6 +275,7 @@ app.get('/', (req, res) => {
   }
   if (process.env.CV_API_V1_ENABLED === 'true') {
     Object.assign(endpoints, {
+      cvPreview: 'POST /api/v1/cv/preview',
       cvAnalyses: 'POST /api/v1/cv/analyses',
       cvAnalysisHistory: 'GET /api/v1/cv/analyses',
       cvAnalysisDetail: 'GET /api/v1/cv/analyses/:analysisId',

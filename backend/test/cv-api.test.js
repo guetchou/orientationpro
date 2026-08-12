@@ -147,6 +147,53 @@ const sampleAnalysis = {
 };
 
 test(
+  'POST preview accepte un visiteur, renvoie seulement un apercu et nettoie le fichier',
+  async (t) => {
+    let received;
+    let authenticateCalled = false;
+    const service = {
+      createPreview: async (input) => {
+        received = input;
+        await fs.access(input.file.path);
+        return {
+          kind: 'cv-preview-v1',
+          score: 75,
+          targetScore: null,
+          sectionsPresent: 5,
+          sectionsTotal: 6,
+          highlights: ['Coordonnees detectees'],
+          priorityAction: 'Preciser les resultats obtenus.',
+          authenticationRequiredFor: ['full_report', 'export', 'save'],
+        };
+      },
+    };
+    const { app, uploadDirectory } = createApp(
+      service,
+      async () => { throw new Error('permission check must not run for a guest preview'); },
+      (req, res) => {
+        authenticateCalled = true;
+        res.status(401).json({ error: { code: 'AUTHENTICATION_REQUIRED' } });
+      },
+    );
+    t.after(() => fs.rm(uploadDirectory, { recursive: true, force: true }));
+    const form = new FormData();
+    form.set(
+      'cv',
+      new Blob([Buffer.from('%PDF-1.7\nCV synthetique suffisamment long pour le test public.')], { type: 'application/pdf' }),
+      'cv-public.pdf',
+    );
+    const response = await request(app, '/api/v1/cv/preview', { method: 'POST', body: form });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(authenticateCalled, false);
+    assert.equal(body.preview.kind, 'cv-preview-v1');
+    assert.equal(received.accountId, undefined);
+    assert.equal(received.file.originalname, 'cv-public.pdf');
+    await assert.rejects(fs.access(received.file.path), (error) => error?.code === 'ENOENT');
+  },
+);
+
+test(
   'POST analyses utilise le compte authentifie et nettoie le fichier',
   async (t) => {
     let received;

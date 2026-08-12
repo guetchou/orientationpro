@@ -248,6 +248,56 @@ const createCvService = ({
   }
 
   return {
+    async createPreview({
+      file,
+      body = {},
+    }) {
+      const target = normalizeTargetInput(body);
+      const extracted = await extractor(file);
+      const analyzed = analyzer({
+        text: extracted.text,
+        jobTitle: target.jobTitle,
+        jobDescription: target.jobDescription,
+        requiredSkills: target.requiredSkills,
+        fileName: extracted.document.fileName,
+        mimeType: extracted.document.mimeType,
+        fileSize: extracted.document.fileSize,
+      });
+      const sections = Array.isArray(analyzed.sections)
+        ? analyzed.sections
+        : [];
+      const strengths = Array.isArray(analyzed.strengths)
+        ? analyzed.strengths
+        : [];
+      const issues = Array.isArray(analyzed.issues)
+        ? analyzed.issues
+        : [];
+      const priorityIssue = issues.find((issue) =>
+        issue?.severity === 'critique'
+        || issue?.severity === 'important'
+      );
+
+      return {
+        kind: 'cv-preview-v1',
+        score: analyzed.scores?.generalReadiness ?? null,
+        targetScore: analyzed.scores?.targetRelevance ?? null,
+        sectionsPresent: sections.filter((section) => section?.present).length,
+        sectionsTotal: sections.length,
+        highlights: strengths
+          .map((strength) => strength?.title)
+          .filter((title) => typeof title === 'string' && title.trim())
+          .slice(0, 2),
+        priorityAction:
+          priorityIssue?.recommendation
+          || 'Connecte-toi pour consulter les recommandations detaillees.',
+        authenticationRequiredFor: [
+          'full_report',
+          'export',
+          'save',
+        ],
+      };
+    },
+
     async createAnalysis({
       accountId,
       file,

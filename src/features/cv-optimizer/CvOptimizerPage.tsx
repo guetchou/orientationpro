@@ -9,11 +9,19 @@ import {
   Target,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { CvUploadStep } from './CvUploadStep';
 import { JobTargetStep } from './JobTargetStep';
 import { AtsAnalysisResult } from './AtsAnalysisResult';
+import { CvGuestPreview } from './CvGuestPreview';
 import { CvLoading, CvErrorState } from './states';
-import { createAtsAnalysis, describeCvError, type CvErrorView } from './cvApi';
+import {
+  createAtsAnalysis,
+  createAtsPreview,
+  describeCvError,
+  type CvErrorView,
+  type CvPreview,
+} from './cvApi';
 import type { AtsAnalysis } from './types';
 
 type Phase = 'upload' | 'target' | 'analyzing' | 'result' | 'error';
@@ -25,9 +33,11 @@ const steps = [
 ];
 
 export const CvOptimizerPage = () => {
+  const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<AtsAnalysis | null>(null);
+  const [preview, setPreview] = useState<CvPreview | null>(null);
   const [error, setError] = useState<CvErrorView | null>(null);
 
   const activeStep = useMemo(() => {
@@ -43,13 +53,23 @@ export const CvOptimizerPage = () => {
     setPhase('analyzing');
     setError(null);
     try {
-      const result = await createAtsAnalysis({ file: selected, ...target });
-      if (!result?.snapshot?.scores) {
-        setError({ kind: 'unknown', message: "L'analyse du CV est incomplète. Réessaie." });
-        setPhase('error');
-        return;
+      if (user) {
+        const result = await createAtsAnalysis({ file: selected, ...target });
+        if (!result?.snapshot?.scores) {
+          setError({ kind: 'unknown', message: "L'analyse du CV est incomplète. Réessaie." });
+          setPhase('error');
+          return;
+        }
+        setAnalysis(result);
+      } else {
+        const result = await createAtsPreview({ file: selected, ...target });
+        if (result?.kind !== 'cv-preview-v1') {
+          setError({ kind: 'unknown', message: "L'aperçu du CV est incomplet. Réessaie." });
+          setPhase('error');
+          return;
+        }
+        setPreview(result);
       }
-      setAnalysis(result);
       setPhase('result');
     } catch (caught) {
       setError(describeCvError(caught));
@@ -60,6 +80,7 @@ export const CvOptimizerPage = () => {
   const restart = () => {
     setFile(null);
     setAnalysis(null);
+    setPreview(null);
     setError(null);
     setPhase('upload');
   };
@@ -83,11 +104,13 @@ export const CvOptimizerPage = () => {
               L’analyse vérifie la lisibilité, la structure et la présence d’éléments souvent recherchés par les logiciels de tri de candidatures. Elle ne garantit ni entretien ni recrutement.
             </p>
           </div>
-          <Button variant="outline" asChild>
-            <Link to="/cv-history">
-              <History className="mr-2 h-4 w-4" /> Mes analyses
-            </Link>
-          </Button>
+          {user ? (
+            <Button variant="outline" asChild>
+              <Link to="/cv-history">
+                <History className="mr-2 h-4 w-4" /> Mes analyses
+              </Link>
+            </Button>
+          ) : null}
         </div>
 
         <ol className="mb-7 grid gap-2 sm:grid-cols-3" aria-label="Étapes de l’analyse de CV">
@@ -144,6 +167,10 @@ export const CvOptimizerPage = () => {
 
         {phase === 'result' && analysis ? (
           <AtsAnalysisResult analysis={analysis} onRestart={restart} />
+        ) : null}
+
+        {phase === 'result' && preview ? (
+          <CvGuestPreview preview={preview} onRestart={restart} />
         ) : null}
 
         {phase === 'error' && error ? (

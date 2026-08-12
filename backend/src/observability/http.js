@@ -24,6 +24,7 @@ const V1_ROUTE_TEMPLATES = Object.freeze([
   '/api/v1/orientation/results',
   '/api/v1/career/occupations',
   '/api/v1/career/matches/:resultId',
+  '/api/v1/cv/preview',
   '/api/v1/cv/analyses',
   '/api/v1/cv/analyses/:analysisId',
   '/api/v1/capabilities',
