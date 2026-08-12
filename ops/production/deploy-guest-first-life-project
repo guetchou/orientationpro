@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-06T22:10:00+01:00
-# application-base: b07f546e3cad081958d4743e648deeefb3b4c37d
-# trigger-method: direct-main-production-trigger
-# release-scope: production-oauth-routing-riasec-api
+# trigger: 2026-08-12T20:50:00+01:00
+# application-base: 346471666b891cd6d85dbecbbfc85c8c626c5ec3
+# trigger-method: release-pr-production-trigger
+# release-scope: parcours-content-discipline
