@@ -121,7 +121,7 @@ const FullCareerValue = ({ profile }: { profile: AdvisorRiasecProfile }) => {
               <Badge variant="outline">Piste à explorer</Badge>
               <h3 className="mt-3 font-semibold">{family.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">Exemples : {family.examples.join(', ')}.</p>
-              <Button asChild variant="outline" className="mt-4 w-full">
+              <Button asChild variant="outline" className="mt-4 w-full sm:w-auto">
                 <Link to={`/careers?q=${encodeURIComponent(family.searchQuery)}`}>
                   Explorer les métiers <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
