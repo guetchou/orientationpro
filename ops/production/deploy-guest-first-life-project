@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-12T20:50:00+01:00
-# application-base: 346471666b891cd6d85dbecbbfc85c8c626c5ec3
+# trigger: 2026-08-12T21:09:00+01:00
+# application-base: 2d5677ad8f02438cdf11c9cf03e2252f33050ab1
 # trigger-method: release-pr-production-trigger
-# release-scope: parcours-content-discipline
+# release-scope: cv-report-premium-v2
