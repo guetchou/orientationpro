@@ -188,7 +188,10 @@ if (process.env.CV_API_V1_ENABLED === 'true') {
   }
 
   app.use('/api/v1/cv', expensiveLimiter, createCvRouter({
-    service: createCvService({ store: createCvStore(authV1.pool) }),
+    service: createCvService({
+      store: createCvStore(authV1.pool),
+      profileReader: createProfileStore(authV1.pool).getProfile,
+    }),
     authenticate: authV1.authenticate,
     hasPermission: authV1.hasPermission,
     uploadDirectory: process.env.CV_UPLOAD_DIR,

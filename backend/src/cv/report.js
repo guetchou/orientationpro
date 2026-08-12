@@ -245,7 +245,7 @@ const mimeTypeLabel = (mimeType) => {
   return 'Document';
 };
 
-const normalizeCvReportData = (analysis) => {
+const normalizeCvReportData = (analysis, context = {}) => {
   if (
     !analysis
     || typeof analysis !== 'object'
@@ -497,6 +497,14 @@ const normalizeCvReportData = (analysis) => {
         ),
 
     limitations,
+    beneficiary: context.beneficiary
+      ? {
+          firstName: cleanText(context.beneficiary.firstName, 100),
+          lastName: cleanText(context.beneficiary.lastName, 100),
+          currentSituation: cleanText(context.beneficiary.currentSituation, 64),
+          primaryGoal: cleanText(context.beneficiary.primaryGoal, 64),
+        }
+      : null,
   };
 };
 
@@ -680,6 +688,63 @@ const addScore = (
   document.y = y + 22;
 };
 
+const addSkillDomainChart = (document, skills) => {
+  const counts = new Map();
+  for (const skill of skills) {
+    const domain = skill.domain || 'Autres compétences';
+    counts.set(domain, (counts.get(domain) || 0) + 1);
+  }
+  const rows = [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'fr'))
+    .slice(0, 6);
+  if (!rows.length) return;
+
+  ensureSpace(document, 52 + rows.length * 25);
+  document.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.dark)
+    .text('Cartographie des compétences');
+  document.font('Helvetica').fontSize(8.5).fillColor(COLORS.muted)
+    .text('Répartition par domaine. Une barre plus longue indique davantage de compétences repérées.');
+
+  const left = document.page.margins.left;
+  const chartWidth = document.page.width - left - document.page.margins.right - 205;
+  const maximum = Math.max(...rows.map(([, count]) => count));
+  document.moveDown(0.4);
+  for (const [domain, count] of rows) {
+    const y = document.y;
+    document.font('Helvetica').fontSize(8.5).fillColor(COLORS.dark)
+      .text(domain, left, y, { width: 165, ellipsis: true });
+    document.roundedRect(left + 170, y + 1, chartWidth, 8, 3).fill(COLORS.light);
+    document.roundedRect(left + 170, y + 1, chartWidth * count / maximum, 8, 3).fill(COLORS.primary);
+    document.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.dark)
+      .text(String(count), left + 178 + chartWidth, y, { width: 20, lineBreak: false });
+    document.y = y + 21;
+  }
+  document.x = document.page.margins.left;
+  document.moveDown(0.3);
+};
+
+const addContinuationHeader = (document, title) => {
+  const left = document.page.margins.left;
+  const width = document.page.width - left - document.page.margins.right;
+  document
+    .font('Helvetica-Bold')
+    .fontSize(9)
+    .fillColor(COLORS.primary)
+    .text('MAKOKI', left, document.page.margins.top, { width: 90, lineBreak: false });
+  document
+    .font('Helvetica')
+    .fontSize(9)
+    .fillColor(COLORS.muted)
+    .text(title, left + 100, document.page.margins.top, { width: width - 100, align: 'right', lineBreak: false });
+  document
+    .strokeColor(COLORS.border)
+    .moveTo(left, document.page.margins.top + 18)
+    .lineTo(left + width, document.page.margins.top + 18)
+    .stroke();
+  document.x = left;
+  document.y = document.page.margins.top + 30;
+};
+
 const renderCvReport = (
   document,
   data,
@@ -727,6 +792,80 @@ const renderCvReport = (
 
   document.y =
     document.page.margins.top + 102;
+
+  const beneficiaryName = [
+    data.beneficiary?.firstName,
+    data.beneficiary?.lastName,
+  ].filter(Boolean).join(' ') || 'Votre profil professionnel';
+
+  const initials = [
+    data.beneficiary?.firstName?.[0],
+    data.beneficiary?.lastName?.[0],
+  ].filter(Boolean).join('').toUpperCase() || 'M';
+
+  document
+    .circle(document.page.width - document.page.margins.right - 28, document.page.margins.top + 41, 21)
+    .fill(COLORS.white)
+    .font('Helvetica-Bold')
+    .fontSize(13)
+    .fillColor(COLORS.primary)
+    .text(initials, document.page.width - document.page.margins.right - 49, document.page.margins.top + 35, {
+      width: 42,
+      align: 'center',
+      lineBreak: false,
+    });
+
+  document.y = document.page.margins.top + 102;
+
+  document
+    .font('Helvetica-Bold')
+    .fontSize(18)
+    .fillColor(COLORS.dark)
+    .text(
+      beneficiaryName,
+      document.page.margins.left,
+      document.y,
+      { width: contentWidth - 70 },
+    );
+
+  document.x = document.page.margins.left;
+
+  addSectionTitle(document, 'Synthèse exécutive');
+
+  const generalScore = data.scores.generalReadiness;
+  const summary = generalScore >= 80
+    ? 'Votre CV possède une base solide. Les prochaines améliorations doivent surtout renforcer la preuve de votre impact.'
+    : generalScore >= 60
+      ? 'Votre CV présente des acquis convaincants. Quelques améliorations ciblées peuvent nettement renforcer sa lisibilité.'
+      : 'Votre CV contient des éléments utiles. Un travail progressif sur sa structure et ses preuves le rendra plus convaincant.';
+
+  document
+    .roundedRect(document.page.margins.left, document.y, contentWidth, 62, 8)
+    .fill(COLORS.light)
+    .font('Helvetica-Bold')
+    .fontSize(22)
+    .fillColor(COLORS.primary)
+    .text(`${generalScore ?? '-'} / 100`, document.page.margins.left + 14, document.y + 13, { width: 92 })
+    .font('Helvetica')
+    .fontSize(10)
+    .fillColor(COLORS.dark)
+    .text(summary, document.page.margins.left + 112, document.y - 28, { width: contentWidth - 126 });
+
+  document.y += 22;
+
+  addSectionTitle(document, "Plan d'action prioritaire");
+  document
+    .font('Helvetica-Bold')
+    .fontSize(11)
+    .fillColor(COLORS.dark)
+    .text(data.issues[0]?.title || 'Conserver cette base et adapter le CV à chaque candidature.');
+  if (data.issues[0]?.recommendation) {
+    document
+      .font('Helvetica')
+      .fontSize(10)
+      .fillColor(COLORS.muted)
+      .text(data.issues[0].recommendation, { paragraphGap: 4 });
+  }
 
   addSectionTitle(
     document,
@@ -788,6 +927,17 @@ const renderCvReport = (
     );
   }
 
+  document.moveDown(0.3).font('Helvetica-Bold').fontSize(10).fillColor(COLORS.dark)
+    .text('Lecture des indicateurs');
+  document.font('Helvetica').fontSize(9).fillColor(COLORS.muted)
+    .text(
+      "La structure mesure l'organisation des rubriques. La clarté évalue la précision et la lisibilité du contenu. L'impact repère les résultats concrets. L'utilisabilité technique estime la lecture par les outils de tri. La pertinence compare les éléments fournis pour le poste ciblé.",
+      { paragraphGap: 4 },
+    );
+
+  document.addPage();
+  addContinuationHeader(document, 'Diagnostic du document');
+
   addSectionTitle(
     document,
     'Éléments détectés',
@@ -827,6 +977,8 @@ const renderCvReport = (
     'Compétences détectées',
   );
 
+  addSkillDomainChart(document, data.skills);
+
   addBulletList(
     document,
     data.skills.map((skill) =>
@@ -847,6 +999,9 @@ const renderCvReport = (
     data.strengths,
     'Aucun point fort spécifique identifié.',
   );
+
+  document.addPage();
+  addContinuationHeader(document, "Recommandations et plan d'action");
 
   addSectionTitle(
     document,
@@ -1017,7 +1172,9 @@ const addPageFooters = (
       .text(
         `MAKOKI - Rapport d'analyse de CV - Page ${pageNumber}/${range.count}`,
         document.page.margins.left,
-        document.page.height - 30,
+        document.page.height
+          - document.page.margins.bottom
+          - 16,
         {
           width:
             document.page.width
@@ -1032,9 +1189,10 @@ const addPageFooters = (
 
 const generateCvReportPdf = async (
   analysis,
+  context = {},
 ) => {
   const data =
-    normalizeCvReportData(analysis);
+    normalizeCvReportData(analysis, context);
 
   return new Promise(
     (resolve, reject) => {
@@ -1128,21 +1286,9 @@ const generateCvReportPdf = async (
 };
 
 const buildCvReportFileName = (
-  analysisId,
+  _analysisId,
 ) => {
-  const safeId = cleanText(
-    analysisId,
-    64,
-  )
-    .replace(
-      /[^a-zA-Z0-9_-]/gu,
-      '',
-    )
-    .slice(0, 64);
-
-  return safeId
-    ? `rapport-cv-makoki-${safeId}.pdf`
-    : 'rapport-cv-makoki.pdf';
+  return 'mon-rapport-cv-makoki.pdf';
 };
 
 module.exports = {

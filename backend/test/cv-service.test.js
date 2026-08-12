@@ -562,7 +562,53 @@ test(
 
     assert.equal(
       report.fileName,
-      'rapport-cv-makoki-analysis-1.pdf',
+      'mon-rapport-cv-makoki.pdf',
     );
+  },
+);
+
+test(
+  'le rapport enrichit le PDF avec le Profil du proprietaire sans changer ownership',
+  async () => {
+    let generatedContext = null;
+    const service = createCvService({
+      store: {
+        createAnalysis: async () => null,
+        listAnalyses: async () => ({ analyses: [], pagination: {} }),
+        getAnalysis: async ({ accountId, analysisId }) => ({
+          id: analysisId,
+          accountId,
+          snapshot: {},
+        }),
+        deleteAnalysis: async () => false,
+      },
+      profileReader: async (accountId) => ({
+        profile: {
+          account_id: accountId,
+          first_name: 'Gess',
+          last_name: 'Nguie',
+          current_situation: 'entrepreneur',
+          primary_goal: 'improve_skills',
+        },
+      }),
+      reportGenerator: async (_analysis, context) => {
+        generatedContext = context;
+        return Buffer.from('%PDF-test');
+      },
+    });
+
+    await service.getReport({
+      accountId: 'account-owner',
+      analysisId: 'analysis-1',
+    });
+
+    assert.deepEqual(generatedContext, {
+      beneficiary: {
+        firstName: 'Gess',
+        lastName: 'Nguie',
+        currentSituation: 'entrepreneur',
+        primaryGoal: 'improve_skills',
+      },
+    });
   },
 );

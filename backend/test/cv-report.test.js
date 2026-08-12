@@ -170,7 +170,7 @@ test(
       buildCvReportFileName(
         '../identifiant dangereux',
       ),
-      'rapport-cv-makoki-identifiantdangereux.pdf',
+      'mon-rapport-cv-makoki.pdf',
     );
   },
 );
@@ -183,6 +183,14 @@ test(
     const buffer =
       await generateCvReportPdf(
         analysis,
+        {
+          beneficiary: {
+            firstName: 'Gess',
+            lastName: 'Nguie',
+            currentSituation: 'entrepreneur',
+            primaryGoal: 'improve_skills',
+          },
+        },
       );
 
     assert.ok(
@@ -208,6 +216,18 @@ test(
     const parsed =
       await pdfParse(buffer);
 
+    assert.ok(parsed.numpages >= 2 && parsed.numpages <= 6);
+
+    const footerTotals = [
+      ...parsed.text.matchAll(/Page \d+\/(\d+)/gu),
+    ].map((match) => Number(match[1]));
+
+    assert.equal(footerTotals.length, parsed.numpages);
+    assert.ok(
+      footerTotals.every((total) => total === parsed.numpages),
+      'chaque pied de page doit annoncer le nombre reel de pages',
+    );
+
     assert.match(
       parsed.text,
       /MAKOKI/u,
@@ -217,6 +237,14 @@ test(
       parsed.text,
       /Rapport d'analyse de CV/u,
     );
+
+    assert.match(parsed.text, /Gess Nguie/u);
+    assert.match(parsed.text, /Synthèse exécutive/u);
+    assert.match(parsed.text, /Plan d'action prioritaire/u);
+    assert.match(parsed.text, /Lecture des indicateurs/u);
+    assert.match(parsed.text, /Cartographie des compétences/u);
+    assert.match(parsed.text, /mesure l'organisation des rubriques/iu);
+    assert.match(parsed.text, /Excel - Bureautique/u);
 
     assert.match(
       parsed.text,

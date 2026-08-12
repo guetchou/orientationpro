@@ -234,6 +234,7 @@ const createCvService = ({
   analyzer = analyzeCv,
   createId = randomUUID,
   reportGenerator = generateCvReportPdf,
+  profileReader = async () => ({ profile: null }),
 } = {}) => {
   if (
     !store
@@ -394,6 +395,17 @@ const createCvService = ({
       const buffer =
         await reportGenerator(
           analysis,
+          {
+            beneficiary: await profileReader(accountId)
+              .then(({ profile } = {}) => profile
+                ? ({
+                    firstName: profile.first_name,
+                    lastName: profile.last_name,
+                    currentSituation: profile.current_situation,
+                    primaryGoal: profile.primary_goal,
+                  })
+                : null),
+          },
         );
 
       return {
