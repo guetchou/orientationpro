@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { ApiError } from '@/lib/apiClient';
-import { describeCvError, createAtsAnalysis, listAtsAnalyses } from '../cvApi';
+import { createAtsPreview, describeCvError, createAtsAnalysis, listAtsAnalyses } from '../cvApi';
 
 describe('describeCvError', () => {
   it('404 sans code metier => service ATS non active (flag desactive)', () => {
@@ -69,6 +69,24 @@ describe('appels API ATS', () => {
     const body = init.body as FormData;
     expect(body.get('cv')).toBeInstanceOf(File);
     expect(body.get('jobTitle')).toBe('Comptable');
+  });
+
+  it('createAtsPreview utilise la route publique et renvoie seulement l apercu', async () => {
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ preview: { kind: 'cv-preview-v1', score: 72 } }),
+    });
+
+    const file = new File(['%PDF-1.4 contenu'], 'cv.pdf', { type: 'application/pdf' });
+    const preview = await createAtsPreview({ file, jobTitle: 'Comptable' });
+
+    expect(preview.kind).toBe('cv-preview-v1');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/v1/cv/preview');
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeInstanceOf(FormData);
   });
 
   it('listAtsAnalyses passe limit et offset', async () => {

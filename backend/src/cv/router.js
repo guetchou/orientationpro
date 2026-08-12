@@ -258,6 +258,31 @@ const createCvRouter = ({
       resolvedUploadDirectory,
     );
 
+  router.post(
+    '/preview',
+    receiveCvUpload,
+    route(async (req, res) => {
+      try {
+        const preview =
+          await service.createPreview({
+            file: req.file,
+            body: req.body,
+          });
+
+        res.setHeader(
+          'Cache-Control',
+          'private, no-store, max-age=0',
+        );
+
+        return res.status(200).json({
+          preview,
+        });
+      } finally {
+        await cleanupUploadedFile(req.file);
+      }
+    }),
+  );
+
   router.use(authenticate);
 
   router.post(

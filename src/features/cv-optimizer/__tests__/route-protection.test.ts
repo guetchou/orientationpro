@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Verifie que les routes CV sensibles sont protegees par UserRoute, de maniere
-// coherente avec /cv-history. C'est une garantie structurelle : le parcours
-// public ne doit jamais etre accessible sans session.
+// Le demarrage de l'analyse est public. Les donnees sauvegardees restent, elles,
+// protegees par UserRoute.
 const routerSource = fs.readFileSync(
   path.join(__dirname, '..', '..', '..', 'router', 'AppRouter.tsx'),
   'utf8',
@@ -18,8 +17,9 @@ const isProtected = (route: string) => {
 };
 
 describe('protection des routes CV', () => {
-  it('/cv-optimizer est protege par UserRoute', () => {
-    expect(isProtected('/cv-optimizer')).toBe(true);
+  it('/cv-optimizer est accessible sans session', () => {
+    expect(isProtected('/cv-optimizer')).toBe(false);
+    expect(routerSource).toMatch(/path="\/cv-optimizer"[^\n]*element=\{<CVOptimizer \/>\}/);
   });
 
   it('/cv-history est protege par UserRoute', () => {

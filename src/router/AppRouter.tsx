@@ -146,7 +146,7 @@ export const AppRouter = () => (
             <Route path="/jobs" element={<ProfessionalJobsPage />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/cv-optimizer" element={<UserRoute><CVOptimizer /></UserRoute>} />
+            <Route path="/cv-optimizer" element={<CVOptimizer />} />
             <Route path="/cv-history" element={<UserRoute><CVHistory /></UserRoute>} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/guide-congo-2024" element={<GuideEtudesCongo2024 />} />

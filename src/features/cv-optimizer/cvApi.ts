@@ -5,6 +5,18 @@ import type { AtsAnalysis, AtsAnalysisPage } from './types';
 // Aucun score n'est calcule cote frontend ; en cas d'echec, on affiche un etat
 // honnete, jamais un resultat simule.
 const BASE = '/v1/cv/analyses';
+const PREVIEW_PATH = '/v1/cv/preview';
+
+export interface CvPreview {
+  kind: 'cv-preview-v1';
+  score: number;
+  targetScore: number | null;
+  sectionsPresent: number;
+  sectionsTotal: number;
+  highlights: string[];
+  priorityAction: string;
+  authenticationRequiredFor: Array<'full_report' | 'export' | 'save'>;
+}
 
 export interface CvErrorView {
   kind:
@@ -113,6 +125,18 @@ export const createAtsAnalysis = async (
 
   const payload = await apiUpload<{ analysis: AtsAnalysis }>(BASE, form);
   return payload.analysis;
+};
+
+export const createAtsPreview = async (
+  input: CreateAtsAnalysisInput,
+): Promise<CvPreview> => {
+  const form = new FormData();
+  form.append('cv', input.file);
+  if (input.jobTitle) form.append('jobTitle', input.jobTitle);
+  if (input.jobDescription) form.append('jobDescription', input.jobDescription);
+
+  const payload = await apiUpload<{ preview: CvPreview }>(PREVIEW_PATH, form);
+  return payload.preview;
 };
 
 export const listAtsAnalyses = async (

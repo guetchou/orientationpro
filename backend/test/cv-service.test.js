@@ -168,6 +168,74 @@ test(
 );
 
 test(
+  'l apercu visiteur est limite et ne persiste aucune analyse',
+  async () => {
+    let persistenceCalls = 0;
+    const store = {
+      createAnalysis: async () => {
+        persistenceCalls += 1;
+        throw new Error('guest preview must not persist');
+      },
+      listAnalyses: async () => ({}),
+      getAnalysis: async () => null,
+      deleteAnalysis: async () => false,
+    };
+    const snapshot = createSnapshot();
+    snapshot.sections = [
+      { key: 'contact', present: true },
+      { key: 'summary', present: true },
+      { key: 'experience', present: false },
+    ];
+    snapshot.strengths = [
+      { code: 'contact', title: 'Coordonnees detectees' },
+      { code: 'summary', title: 'Resume present' },
+      { code: 'extra', title: 'Ne doit pas etre public' },
+    ];
+    snapshot.issues = [
+      {
+        code: 'impact',
+        severity: 'important',
+        title: 'Impact a renforcer',
+        observation: 'Detail complet prive',
+        recommendation: 'Preciser les resultats obtenus.',
+      },
+    ];
+    const service = createCvService({
+      store,
+      extractor: async () => ({
+        text: 'CONTENU BRUT PRIVE DU CV VISITEUR',
+        document: {
+          fileName: 'cv-public.pdf',
+          mimeType: 'application/pdf',
+          fileSize: 1024,
+          pageCount: 1,
+          sha256: 'e'.repeat(64),
+        },
+      }),
+      analyzer: () => snapshot,
+    });
+    const preview = await service.createPreview({
+      file: { path: '/tmp/cv-public.pdf' },
+      body: {},
+    });
+    assert.equal(persistenceCalls, 0);
+    assert.deepEqual(preview, {
+      kind: 'cv-preview-v1',
+      score: 76,
+      targetScore: 63,
+      sectionsPresent: 2,
+      sectionsTotal: 3,
+      highlights: ['Coordonnees detectees', 'Resume present'],
+      priorityAction: 'Preciser les resultats obtenus.',
+      authenticationRequiredFor: ['full_report', 'export', 'save'],
+    });
+    assert.equal(JSON.stringify(preview).includes('CONTENU BRUT'), false);
+    assert.equal(JSON.stringify(preview).includes('Detail complet prive'), false);
+    assert.equal(JSON.stringify(preview).includes('Ne doit pas etre public'), false);
+  },
+);
+
+test(
   'les competences requises sont bornees et dedupliquees',
   () => {
     assert.deepEqual(
