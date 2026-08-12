@@ -3,17 +3,57 @@ import type { CapabilityRegistry } from './types';
 import type {
   AdvisorDiagnosticInput,
   AdvisorEnvelope,
+  AdvisorObjective,
   AdvisorProjectSummary,
+  AdvisorRecommendationScenario,
 } from './advisor-types';
 import { readPersistedRiasecProfile } from './riasec-profile';
 
 export const LIFE_PROJECT_UPDATED_EVENT = 'makoki:life-project-updated';
 
-const publishProjectUpdate = (envelope: AdvisorEnvelope) => {
-  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
-    window.dispatchEvent(new CustomEvent<AdvisorEnvelope>(LIFE_PROJECT_UPDATED_EVENT, { detail: envelope }));
+const scenarioMatchesObjective = (
+  scenario: AdvisorRecommendationScenario,
+  objective: AdvisorObjective | undefined,
+) => {
+  if (!objective) return true;
+
+  if (scenario.category === 'entrepreneurship') {
+    return objective === 'entrepreneurship';
   }
-  return envelope;
+
+  if (scenario.category === 'bridge') {
+    return ['insertion', 'reentry', 'work_and_training'].includes(objective);
+  }
+
+  return true;
+};
+
+const keepOnlyContextualRecommendations = (envelope: AdvisorEnvelope): AdvisorEnvelope => {
+  const recommendation = envelope.project.recommendation;
+  const objective = envelope.project.diagnostic?.objective;
+  if (!recommendation || !objective) return envelope;
+
+  const scenarios = recommendation.scenarios.filter((scenario) => scenarioMatchesObjective(scenario, objective));
+  if (scenarios.length === recommendation.scenarios.length) return envelope;
+
+  return {
+    ...envelope,
+    project: {
+      ...envelope.project,
+      recommendation: {
+        ...recommendation,
+        scenarios,
+      },
+    },
+  };
+};
+
+const publishProjectUpdate = (envelope: AdvisorEnvelope) => {
+  const contextualEnvelope = keepOnlyContextualRecommendations(envelope);
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+    window.dispatchEvent(new CustomEvent<AdvisorEnvelope>(LIFE_PROJECT_UPDATED_EVENT, { detail: contextualEnvelope }));
+  }
+  return contextualEnvelope;
 };
 
 const commandId = () => globalThis.crypto?.randomUUID?.()
