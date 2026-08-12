@@ -1,4 +1,4 @@
-import { apiFetch, getStoredAccessToken } from '@/lib/apiClient';
+import { apiFetch, hasSessionHint } from '@/lib/apiClient';
 import type { RiasecAttempt, RiasecInstrument, RiasecResult } from '@/types/riasec';
 
 export interface RiasecAnswer {
@@ -20,7 +20,7 @@ export const getRiasecInstrument = async () => {
 };
 
 export const claimGuestOrientation = async (): Promise<GuestOrientationClaim | null> => {
-  if (!getStoredAccessToken()) return null;
+  if (!hasSessionHint()) return null;
   const payload = await apiFetch<{ claim: GuestOrientationClaim }>(
     '/v1/orientation/guest/claim',
     { method: 'POST' },
@@ -58,6 +58,7 @@ export const submitRiasecAttempt = async (
 };
 
 export const listRiasecResults = async (limit = 20, offset = 0) => {
+  if (!hasSessionHint()) return [];
   const payload = await apiFetch<{ results: RiasecResult[] }>(
     `/v1/orientation/results?limit=${limit}&offset=${offset}`,
   );
