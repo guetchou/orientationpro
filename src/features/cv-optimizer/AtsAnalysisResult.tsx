@@ -96,7 +96,7 @@ export const AtsAnalysisResult = ({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `rapport-analyse-cv-makoki-${analysis.id}.pdf`;
+      link.download = 'mon-rapport-cv-makoki.pdf';
       document.body.appendChild(link);
       link.click();
       link.remove();
