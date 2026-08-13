@@ -79,7 +79,7 @@ export default function Login() {
     const code = params.get('code');
     if (oauth === 'error') {
       const messages: Record<string, string> = {
-        ACCOUNT_LINK_REQUIRED: 'Un compte existe déjà avec cette adresse. Connecte-toi avec ton mot de passe.',
+        ACCOUNT_LINK_REQUIRED: 'Cette adresse e-mail est déjà associée à un compte Makoki. Connecte-toi une fois avec ton mot de passe, puis lie Google ou Facebook depuis ton profil.',
         OAUTH_CANCELLED: 'La connexion a été annulée.',
         OAUTH_STATE_INVALID: 'La tentative de connexion a expiré. Recommence depuis cette page.',
         OAUTH_PROVIDER_REJECTED: 'Ton identité n’a pas pu être confirmée.',
@@ -163,7 +163,7 @@ export default function Login() {
               <FormControl>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <Input id="login-email" type="email" autoComplete="email" placeholder="prenom@exemple.cg" className="pl-10" {...field} />
+                  <Input id="login-email" type="email" autoComplete="email" className="pl-10" {...field} />
                 </div>
               </FormControl>
               <FormMessage />
