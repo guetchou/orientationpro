@@ -1,5 +1,5 @@
 DEPLOY_PRODUCTION
-# trigger: 2026-08-12T21:09:00+01:00
-# application-base: 2d5677ad8f02438cdf11c9cf03e2252f33050ab1
+# trigger: 2026-08-13T13:51:00+01:00
+# application-base: 24a909b0dff5cf89f648c61281bacbc166a72688
 # trigger-method: release-pr-production-trigger
-# release-scope: cv-report-premium-v2
+# release-scope: cv-optimizer-intelligent-flow
