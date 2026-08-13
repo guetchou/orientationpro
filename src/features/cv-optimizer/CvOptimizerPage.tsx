@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  ArrowRight,
+  BriefcaseBusiness,
   CheckCircle2,
-  FileText,
+  FileSearch,
   History,
-  ShieldCheck,
+  Search,
   Sparkles,
   Target,
 } from 'lucide-react';
@@ -24,12 +26,24 @@ import {
 } from './cvApi';
 import type { AtsAnalysis } from './types';
 
-type Phase = 'upload' | 'target' | 'analyzing' | 'result' | 'error';
+type Phase = 'upload' | 'analyzing' | 'result' | 'target' | 'error';
 
 const steps = [
-  { label: 'Ton CV', icon: FileText },
-  { label: 'Le poste visé', icon: Target },
-  { label: 'Ton analyse', icon: Sparkles },
+  {
+    label: 'Analyse ton CV',
+    description: 'Comprends ce qui est solide et ce qui doit être amélioré.',
+    icon: FileSearch,
+  },
+  {
+    label: 'Cible ton poste',
+    description: 'Compare ensuite ton CV à une offre ou à un métier précis.',
+    icon: Target,
+  },
+  {
+    label: 'Trouve des opportunités',
+    description: 'Passe de ton profil aux offres d’emploi qui te correspondent.',
+    icon: BriefcaseBusiness,
+  },
 ];
 
 export const CvOptimizerPage = () => {
@@ -41,14 +55,15 @@ export const CvOptimizerPage = () => {
   const [error, setError] = useState<CvErrorView | null>(null);
 
   const activeStep = useMemo(() => {
-    if (phase === 'upload') return 0;
+    if (phase === 'upload' || phase === 'analyzing') return 0;
     if (phase === 'target') return 1;
-    return 2;
-  }, [phase]);
+    if (analysis?.snapshot?.targetMatch) return 2;
+    return 0;
+  }, [analysis, phase]);
 
   const runAnalysis = async (
     selected: File,
-    target: { jobTitle?: string; jobDescription?: string },
+    target: { jobTitle?: string; jobDescription?: string } = {},
   ) => {
     setPhase('analyzing');
     setError(null);
@@ -61,6 +76,7 @@ export const CvOptimizerPage = () => {
           return;
         }
         setAnalysis(result);
+        setPreview(null);
       } else {
         const result = await createAtsPreview({ file: selected, ...target });
         if (result?.kind !== 'cv-preview-v1') {
@@ -69,6 +85,7 @@ export const CvOptimizerPage = () => {
           return;
         }
         setPreview(result);
+        setAnalysis(null);
       }
       setPhase('result');
     } catch (caught) {
@@ -85,98 +102,171 @@ export const CvOptimizerPage = () => {
     setPhase('upload');
   };
 
+  const beginWithFile = (selected: File) => {
+    setFile(selected);
+    void runAnalysis(selected);
+  };
+
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-8 md:py-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
-              <Sparkles className="h-4 w-4" /> Analyse de CV
-            </span>
-            <h1 className="mt-3 font-heading text-3xl font-bold text-stone-900 md:text-4xl">
-              Vérifie et améliore ton CV
+    <main className="min-h-screen bg-[#f8faf8] px-4 py-7 md:py-10">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold text-emerald-700">CV Optimizer</p>
+            <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-stone-950 md:text-4xl">
+              Fais de ton CV un vrai point de départ
             </h1>
-            <p className="mt-2 text-stone-600">
-              Importe ton CV, indique le poste que tu vises et reçois des recommandations concrètes pour le rendre plus clair et plus adapté.
-            </p>
-            <p className="mt-3 flex items-start gap-2 text-sm text-stone-500">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-              L’analyse vérifie la lisibilité, la structure et la présence d’éléments souvent recherchés par les logiciels de tri de candidatures. Elle ne garantit ni entretien ni recrutement.
+            <p className="mt-2 max-w-2xl text-stone-600">
+              Analyse d’abord ton CV, améliore ce qui compte, puis cible un poste et explore les opportunités adaptées à ton profil.
             </p>
           </div>
           {user ? (
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-fit bg-white">
               <Link to="/cv-history">
                 <History className="mr-2 h-4 w-4" /> Mes analyses
               </Link>
             </Button>
           ) : null}
-        </div>
+        </header>
 
-        <ol className="mb-7 grid gap-2 sm:grid-cols-3" aria-label="Étapes de l’analyse de CV">
+        <section className="mb-6 grid overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm md:grid-cols-3" aria-label="Parcours CV vers emploi">
           {steps.map((step, index) => {
             const completed = index < activeStep;
             const active = index === activeStep;
             const Icon = step.icon;
             return (
-              <li
+              <div
                 key={step.label}
-                aria-current={active ? 'step' : undefined}
-                className={`flex items-center gap-3 rounded-xl border p-3 text-sm ${
-                  active
-                    ? 'border-emerald-600 bg-emerald-50 font-medium text-emerald-950'
-                    : completed
-                      ? 'border-emerald-200 bg-white text-emerald-900'
-                      : 'border-stone-200 bg-white text-stone-500'
-                }`}
+                className={`relative p-5 ${index > 0 ? 'border-t border-stone-200 md:border-l md:border-t-0' : ''} ${active ? 'bg-emerald-50/70' : ''}`}
               >
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                  active
-                    ? 'bg-emerald-700 text-white'
-                    : completed
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-stone-100 text-stone-500'
-                }`}>
-                  {completed ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-                </span>
-                <span>Étape {index + 1} · {step.label}</span>
-              </li>
+                <div className="flex items-center gap-3">
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
+                    active || completed ? 'bg-emerald-700 text-white' : 'bg-stone-100 text-stone-500'
+                  }`}>
+                    {completed ? <CheckCircle2 className="h-5 w-5" /> : index + 1}
+                  </span>
+                  <Icon className={`h-5 w-5 ${active ? 'text-emerald-700' : 'text-stone-400'}`} />
+                </div>
+                <h2 className="mt-4 font-semibold text-stone-900">{step.label}</h2>
+                <p className="mt-1 text-sm leading-5 text-stone-500">{step.description}</p>
+              </div>
             );
           })}
-        </ol>
+        </section>
+
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-950">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+          <p><strong>Logique Makoki :</strong> analyser → améliorer → cibler → rechercher. Le poste vient après le diagnostic du CV, pas avant.</p>
+        </div>
 
         {phase === 'upload' ? (
-          <CvUploadStep
-            onSelected={(selected) => {
-              setFile(selected);
-              setPhase('target');
-            }}
-          />
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm md:p-7">
+              <CvUploadStep onSelected={beginWithFile} />
+            </div>
+            <aside className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+              <h3 className="font-semibold text-stone-900">Pourquoi commencer ici ?</h3>
+              <ul className="mt-4 space-y-4 text-sm text-stone-600">
+                {[
+                  'Comprendre la qualité actuelle du CV.',
+                  'Repérer les forces et les faiblesses avant de le personnaliser.',
+                  'Éviter d’adapter un document qui doit d’abord être corrigé.',
+                  'Construire une base réutilisable pour plusieurs candidatures.',
+                ].map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          </div>
         ) : null}
 
         {phase === 'target' && file ? (
-          <JobTargetStep
-            fileName={file.name}
-            submitting={false}
-            onBack={() => setPhase('upload')}
-            onSubmit={(target) => void runAnalysis(file, target)}
-          />
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm md:p-7">
+              <JobTargetStep
+                fileName={file.name}
+                submitting={false}
+                onBack={() => setPhase('result')}
+                onSubmit={(target) => void runAnalysis(file, target)}
+              />
+            </div>
+            <aside className="space-y-4">
+              <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+                <h3 className="font-semibold text-stone-900">Tu n’as pas encore d’offre ?</h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  Explore les offres publiées sur Makoki, puis reviens comparer ton CV à celle qui t’intéresse.
+                </p>
+                <Button variant="outline" asChild className="mt-4 w-full">
+                  <Link to="/jobs"><Search className="mr-2 h-4 w-4" /> Rechercher un emploi</Link>
+                </Button>
+              </div>
+            </aside>
+          </div>
         ) : null}
 
         {phase === 'analyzing' ? <CvLoading label="Analyse de ton CV en cours…" /> : null}
 
         {phase === 'result' && analysis ? (
-          <AtsAnalysisResult analysis={analysis} onRestart={restart} />
+          <div className="space-y-6">
+            <AtsAnalysisResult analysis={analysis} onRestart={restart} />
+            {!analysis.snapshot.targetMatch && file ? (
+              <section className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 md:p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="max-w-2xl">
+                    <p className="text-sm font-semibold text-emerald-700">Étape suivante</p>
+                    <h3 className="mt-1 font-heading text-xl font-bold text-stone-900">Ton diagnostic est prêt. Maintenant, donne-lui une cible.</h3>
+                    <p className="mt-1 text-sm text-stone-600">
+                      Corrige les priorités du rapport, puis compare ce CV à une offre précise. Tu peux aussi commencer par rechercher une opportunité.
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                    <Button variant="outline" asChild className="bg-white">
+                      <Link to="/jobs"><Search className="mr-2 h-4 w-4" /> Rechercher un poste</Link>
+                    </Button>
+                    <Button className="bg-emerald-700 hover:bg-emerald-800" onClick={() => setPhase('target')}>
+                      Cibler une offre <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+            {analysis.snapshot.targetMatch ? (
+              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm md:p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-700">Étape 3 · Opportunités</p>
+                    <h3 className="mt-1 font-heading text-xl font-bold text-stone-900">Passe de l’analyse à la candidature.</h3>
+                    <p className="mt-1 text-sm text-stone-600">Explore les offres et utilise l’analyse d’adéquation pour décider où concentrer tes candidatures.</p>
+                  </div>
+                  <Button asChild className="shrink-0 bg-emerald-700 hover:bg-emerald-800">
+                    <Link to="/jobs"><Search className="mr-2 h-4 w-4" /> Voir les offres</Link>
+                  </Button>
+                </div>
+              </section>
+            ) : null}
+          </div>
         ) : null}
 
         {phase === 'result' && preview ? (
-          <CvGuestPreview preview={preview} onRestart={restart} />
+          <div className="space-y-6">
+            <CvGuestPreview preview={preview} onRestart={restart} />
+            <section className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 text-center md:p-6">
+              <h3 className="font-heading text-xl font-bold text-stone-900">Continue ton parcours CV vers emploi</h3>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-stone-600">
+                Connecte-toi pour conserver tes analyses, cibler une offre et télécharger le rapport complet.
+              </p>
+              <Button asChild className="mt-4 bg-emerald-700 hover:bg-emerald-800">
+                <Link to="/login">Continuer <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </section>
+          </div>
         ) : null}
 
         {phase === 'error' && error ? (
-          <div className="space-y-6">
-            <CvErrorState error={error} onRetry={restart} />
-          </div>
+          <div className="space-y-6"><CvErrorState error={error} onRetry={restart} /></div>
         ) : null}
       </div>
     </main>
