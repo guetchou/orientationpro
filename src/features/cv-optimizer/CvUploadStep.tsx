@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { FileText, Info, ShieldCheck, UploadCloud, X } from 'lucide-react';
+import { FileText, UploadCloud, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CV_ACCEPTED_EXTENSIONS, CV_MAX_FILE_SIZE } from './scoreDefs';
 
@@ -16,15 +16,9 @@ export const CvUploadStep = ({
   const [error, setError] = useState<string | null>(null);
 
   const validate = (candidate: File): string | null => {
-    if (!hasAcceptedExtension(candidate.name)) {
-      return 'Format non accepté. Choisis un fichier PDF ou DOCX.';
-    }
-    if (candidate.size <= 0) {
-      return 'Le fichier semble vide.';
-    }
-    if (candidate.size > CV_MAX_FILE_SIZE) {
-      return 'Fichier trop volumineux. La taille maximale est de 5 Mo.';
-    }
+    if (!hasAcceptedExtension(candidate.name)) return 'Format non accepté. Choisis un fichier PDF ou DOCX.';
+    if (candidate.size <= 0) return 'Le fichier semble vide.';
+    if (candidate.size > CV_MAX_FILE_SIZE) return 'Fichier trop volumineux. La taille maximale est de 5 Mo.';
     return null;
   };
 
@@ -41,34 +35,29 @@ export const CvUploadStep = ({
   };
 
   return (
-    <section className="mx-auto max-w-xl space-y-4" aria-labelledby="cv-upload-title">
+    <section className="space-y-4" aria-labelledby="cv-upload-title">
       <div>
-        <p className="text-sm font-medium text-emerald-700">Étape 1 sur 3</p>
-        <h2 id="cv-upload-title" className="mt-1 text-xl font-semibold text-stone-900">
-          Ajoute ton CV
+        <p className="text-sm font-semibold text-emerald-700">Étape 1 · Analyse de ton CV</p>
+        <h2 id="cv-upload-title" className="mt-1 font-heading text-2xl font-bold text-stone-900">
+          Commence par ton CV
         </h2>
-        <p className="mt-1 text-sm text-stone-600">
-          Choisis la version que tu souhaites vérifier. Tu pourras ensuite préciser le poste que tu vises.
+        <p className="mt-1 max-w-2xl text-sm text-stone-600">
+          Makoki vérifie d’abord sa structure, sa clarté et son impact. Tu cibleras ensuite un poste à partir d’une base solide.
         </p>
       </div>
 
       <div
-        className="rounded-2xl border-2 border-dashed border-stone-300 bg-white p-8 text-center transition hover:border-emerald-400"
+        className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-7 text-center transition hover:border-emerald-500 hover:bg-emerald-50/20"
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault();
           choose(event.dataTransfer.files?.[0]);
         }}
       >
-        <UploadCloud className="mx-auto mb-3 h-10 w-10 text-emerald-700" />
-        <p className="font-medium text-stone-900">Dépose ton CV ici</p>
-        <p className="mt-1 text-sm text-stone-500">ou sélectionne-le depuis ton appareil</p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4"
-          onClick={() => inputRef.current?.click()}
-        >
+        <UploadCloud className="mx-auto h-8 w-8 text-emerald-700" />
+        <p className="mt-3 font-semibold text-stone-900">Dépose ton CV ici</p>
+        <p className="mt-1 text-sm text-stone-500">PDF ou DOCX · 5 Mo maximum</p>
+        <Button type="button" variant="outline" className="mt-4" onClick={() => inputRef.current?.click()}>
           Choisir mon CV
         </Button>
         <input
@@ -79,17 +68,14 @@ export const CvUploadStep = ({
           aria-label="Choisir un CV au format PDF ou DOCX"
           onChange={(event) => choose(event.target.files?.[0])}
         />
-        <p className="mt-3 text-xs text-stone-500">PDF ou DOCX · 5 Mo maximum</p>
       </div>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
-          {error}
-        </p>
+        <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>
       ) : null}
 
       {file ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3">
           <span className="flex min-w-0 items-center gap-2 text-sm text-stone-800">
             <FileText className="h-4 w-4 shrink-0 text-emerald-700" />
             <span className="truncate font-medium">{file.name}</span>
@@ -109,25 +95,19 @@ export const CvUploadStep = ({
         </div>
       ) : null}
 
-      <div className="space-y-2 rounded-xl border border-stone-200 bg-white p-4 text-xs text-stone-600">
-        <p className="flex items-start gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-          Ton fichier est transmis au serveur uniquement pour réaliser l’analyse. Ton historique affiche le résultat structuré de cette analyse.
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-stone-500">
+          Le fichier sert uniquement à réaliser l’analyse. Il devra être resélectionné si la page est actualisée avant l’analyse.
         </p>
-        <p className="flex items-start gap-2">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-stone-500" />
-          Le fichier sélectionné reste dans cette session. Si tu actualises la page avant l’analyse, tu devras le choisir de nouveau.
-        </p>
+        <Button
+          className="shrink-0 bg-emerald-700 px-7 hover:bg-emerald-800"
+          size="lg"
+          disabled={!file}
+          onClick={() => file && onSelected(file)}
+        >
+          Analyser mon CV
+        </Button>
       </div>
-
-      <Button
-        className="w-full bg-emerald-700 hover:bg-emerald-800"
-        size="lg"
-        disabled={!file}
-        onClick={() => file && onSelected(file)}
-      >
-        Ajouter le poste visé
-      </Button>
     </section>
   );
 };
