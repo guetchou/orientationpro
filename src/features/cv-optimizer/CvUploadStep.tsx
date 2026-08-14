@@ -97,7 +97,7 @@ export const CvUploadStep = ({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-stone-500">
-          Le fichier sert uniquement à réaliser l’analyse. Il devra être resélectionné si la page est actualisée avant l’analyse.
+          Si tu continues vers la connexion, ce CV est conservé temporairement dans ce navigateur pour reprendre l’analyse sans le sélectionner à nouveau.
         </p>
         <Button
           className="shrink-0 bg-emerald-700 px-7 hover:bg-emerald-800"
