@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -24,9 +24,22 @@ import {
   type CvErrorView,
   type CvPreview,
 } from './cvApi';
+import {
+  clearCvGuestDraft,
+  loadCvGuestDraft,
+  saveCvGuestDraft,
+} from './cvGuestDraftStore';
 import type { AtsAnalysis } from './types';
 
 type Phase = 'upload' | 'analyzing' | 'result' | 'target' | 'error';
+
+const cvOptimizerReturnState = {
+  from: {
+    pathname: '/cv-optimizer',
+    search: '',
+    hash: '',
+  },
+};
 
 const steps = [
   {
@@ -53,6 +66,8 @@ export const CvOptimizerPage = () => {
   const [analysis, setAnalysis] = useState<AtsAnalysis | null>(null);
   const [preview, setPreview] = useState<CvPreview | null>(null);
   const [error, setError] = useState<CvErrorView | null>(null);
+  const guestRestoreAttempted = useRef(false);
+  const authenticatedResumeAttempted = useRef(false);
 
   const activeStep = useMemo(() => {
     if (phase === 'upload' || phase === 'analyzing') return 0;
@@ -61,7 +76,7 @@ export const CvOptimizerPage = () => {
     return 0;
   }, [analysis, phase]);
 
-  const runAnalysis = async (
+  const runAnalysis = useCallback(async (
     selected: File,
     target: { jobTitle?: string; jobDescription?: string } = {},
   ) => {
@@ -77,7 +92,9 @@ export const CvOptimizerPage = () => {
         }
         setAnalysis(result);
         setPreview(null);
+        await clearCvGuestDraft();
       } else {
+        await saveCvGuestDraft({ file: selected });
         const result = await createAtsPreview({ file: selected, ...target });
         if (result?.kind !== 'cv-preview-v1') {
           setError({ kind: 'unknown', message: "L'aperçu du CV est incomplet. Réessaie." });
@@ -86,13 +103,45 @@ export const CvOptimizerPage = () => {
         }
         setPreview(result);
         setAnalysis(null);
+        await saveCvGuestDraft({ file: selected, preview: result });
       }
       setPhase('result');
     } catch (caught) {
       setError(describeCvError(caught));
       setPhase('error');
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (user) {
+      if (authenticatedResumeAttempted.current) return undefined;
+      authenticatedResumeAttempted.current = true;
+
+      void loadCvGuestDraft().then((draft) => {
+        if (!active || !draft) return;
+        setFile(draft.file);
+        void runAnalysis(draft.file);
+      });
+    } else {
+      if (guestRestoreAttempted.current) return undefined;
+      guestRestoreAttempted.current = true;
+
+      void loadCvGuestDraft().then((draft) => {
+        if (!active || !draft?.preview) return;
+        setFile(draft.file);
+        setAnalysis(null);
+        setPreview(draft.preview);
+        setError(null);
+        setPhase('result');
+      });
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [runAnalysis, user]);
 
   const restart = () => {
     setFile(null);
@@ -100,6 +149,7 @@ export const CvOptimizerPage = () => {
     setPreview(null);
     setError(null);
     setPhase('upload');
+    void clearCvGuestDraft();
   };
 
   const beginWithFile = (selected: File) => {
@@ -259,7 +309,7 @@ export const CvOptimizerPage = () => {
                 Connecte-toi pour conserver tes analyses, cibler une offre et télécharger le rapport complet.
               </p>
               <Button asChild className="mt-4 bg-emerald-700 hover:bg-emerald-800">
-                <Link to="/login">Continuer <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/login" state={cvOptimizerReturnState}>Continuer <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </section>
           </div>
