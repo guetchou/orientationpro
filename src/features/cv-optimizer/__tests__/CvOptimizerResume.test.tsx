@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CvOptimizerPage } from '../CvOptimizerPage';
-import { createAtsAnalysis } from '../cvApi';
+import { createAtsAnalysis, type CvPreview } from '../cvApi';
 import { clearCvGuestDraft, loadCvGuestDraft } from '../cvGuestDraftStore';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -46,7 +46,9 @@ describe('CvOptimizerPage resume flow', () => {
 
   it('reprend automatiquement le CV invité après authentification', async () => {
     const file = new File(['cv content'], 'cv.pdf', { type: 'application/pdf' });
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'account-1' } } as ReturnType<typeof useAuth>);
+    vi.mocked(useAuth).mockReturnValue(
+      { user: { id: 'account-1' } } as unknown as ReturnType<typeof useAuth>,
+    );
     vi.mocked(loadCvGuestDraft).mockResolvedValue({
       file,
       createdAt: Date.now(),
@@ -71,17 +73,19 @@ describe('CvOptimizerPage resume flow', () => {
 
   it('restaure l’aperçu invité après un rechargement sans renvoyer le fichier au serveur', async () => {
     const file = new File(['cv content'], 'cv.pdf', { type: 'application/pdf' });
-    const preview = {
-      kind: 'cv-preview-v1' as const,
+    const preview: CvPreview = {
+      kind: 'cv-preview-v1',
       score: 72,
       targetScore: null,
       sectionsPresent: 4,
       sectionsTotal: 6,
       highlights: ['Coordonnées détectées'],
       priorityAction: 'Renforcer les expériences.',
-      authenticationRequiredFor: ['full_report', 'export', 'save'] as const,
+      authenticationRequiredFor: ['full_report', 'export', 'save'],
     };
-    vi.mocked(useAuth).mockReturnValue({ user: null } as ReturnType<typeof useAuth>);
+    vi.mocked(useAuth).mockReturnValue(
+      { user: null } as unknown as ReturnType<typeof useAuth>,
+    );
     vi.mocked(loadCvGuestDraft).mockResolvedValue({
       file,
       preview,
