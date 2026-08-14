@@ -8,6 +8,14 @@ interface CvGuestPreviewProps {
   onRestart: () => void;
 }
 
+const cvOptimizerReturnState = {
+  from: {
+    pathname: '/cv-optimizer',
+    search: '',
+    hash: '',
+  },
+};
+
 export const CvGuestPreview = ({ preview, onRestart }: CvGuestPreviewProps) => (
   <section className="space-y-5" aria-labelledby="cv-preview-title">
     <div className="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
@@ -65,10 +73,10 @@ export const CvGuestPreview = ({ preview, onRestart }: CvGuestPreviewProps) => (
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button asChild className="bg-emerald-500 text-stone-950 hover:bg-emerald-400">
-              <Link to="/register">Créer mon compte</Link>
+              <Link to="/register" state={cvOptimizerReturnState}>Créer mon compte</Link>
             </Button>
             <Button asChild variant="outline" className="border-stone-500 bg-transparent text-white hover:bg-stone-800 hover:text-white">
-              <Link to="/login">Me connecter</Link>
+              <Link to="/login" state={cvOptimizerReturnState}>Me connecter</Link>
             </Button>
           </div>
         </div>
