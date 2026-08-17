@@ -56,6 +56,8 @@ test(
         [
           'id',
           'account_id',
+          'idempotency_key',
+          'request_fingerprint',
           'algorithm_version',
           'file_name',
           'mime_type',
@@ -83,6 +85,21 @@ test(
           false,
         );
       }
+
+      const [[idempotencyIndex]] = await pool.query(
+        `SELECT
+           COUNT(*) AS column_count,
+           SUM(CASE WHEN NON_UNIQUE = 0 THEN 1 ELSE 0 END) AS unique_column_count,
+           GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS columns_list
+         FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = 'cv_analyses'
+           AND index_name = 'uq_cv_analyses_account_idempotency'`,
+      );
+
+      assert.equal(Number(idempotencyIndex.column_count), 2);
+      assert.equal(Number(idempotencyIndex.unique_column_count), 2);
+      assert.equal(idempotencyIndex.columns_list, 'account_id,idempotency_key');
 
       const [permissions] = await pool.query(
         `SELECT id
@@ -156,6 +173,8 @@ test(
         `INSERT INTO cv_analyses (
            id,
            account_id,
+           idempotency_key,
+           request_fingerprint,
            algorithm_version,
            file_name,
            mime_type,
@@ -167,10 +186,12 @@ test(
            target_relevance,
            target_title,
            analysis_snapshot
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           analysisId,
           accountId,
+          'cv-test-operation',
+          'c'.repeat(64),
           'makoki-cv-rules-v1',
           'cv-fictif.pdf',
           'application/pdf',
@@ -185,9 +206,44 @@ test(
         ],
       );
 
+      await assert.rejects(
+        pool.execute(
+          `INSERT INTO cv_analyses (
+             id,
+             account_id,
+             idempotency_key,
+             request_fingerprint,
+             algorithm_version,
+             file_name,
+             mime_type,
+             file_size,
+             source_sha256,
+             detected_language,
+             general_readiness,
+             analysis_snapshot
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            randomUUID(),
+            accountId,
+            'cv-test-operation',
+            'c'.repeat(64),
+            'makoki-cv-rules-v1',
+            'cv-fictif.pdf',
+            'application/pdf',
+            2048,
+            'd'.repeat(64),
+            'fr',
+            78,
+            JSON.stringify(snapshot),
+          ],
+        ),
+      );
+
       const [[stored]] = await pool.query(
         `SELECT
            account_id,
+           idempotency_key,
+           request_fingerprint,
            algorithm_version,
            general_readiness,
            target_relevance,
@@ -198,6 +254,8 @@ test(
       );
 
       assert.equal(stored.account_id, accountId);
+      assert.equal(stored.idempotency_key, 'cv-test-operation');
+      assert.equal(stored.request_fingerprint, 'c'.repeat(64));
       assert.equal(
         stored.algorithm_version,
         'makoki-cv-rules-v1',

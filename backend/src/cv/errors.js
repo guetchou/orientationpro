@@ -17,6 +17,8 @@ const MESSAGES = {
   CV_TEXT_EXTRACTION_FAILED: "Le texte du document n'a pas pu etre extrait.",
   CV_UPLOAD_INVALID: 'Le televersement du fichier CV est invalide.',
   CV_TARGET_INVALID: 'Les parametres de ciblage de l analyse CV sont invalides.',
+  CV_IDEMPOTENCY_INVALID: "La cle d'idempotence de l'analyse CV est invalide.",
+  CV_IDEMPOTENCY_CONFLICT: "Cette cle d'idempotence a deja ete utilisee pour une autre analyse CV.",
 };
 
 class CvInputError extends Error {

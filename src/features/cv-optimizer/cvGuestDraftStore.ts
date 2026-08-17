@@ -1,14 +1,15 @@
 import type { CvPreview } from './cvApi';
 
 const DB_NAME = 'makoki-cv-drafts';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'drafts';
 const ACTIVE_DRAFT_KEY = 'active';
 const DRAFT_TTL_MS = 2 * 60 * 60 * 1000;
 
 interface StoredCvGuestDraft {
   id: typeof ACTIVE_DRAFT_KEY;
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
+  operationId?: string;
   file: File;
   preview?: CvPreview;
   createdAt: number;
@@ -16,11 +17,19 @@ interface StoredCvGuestDraft {
 }
 
 export interface CvGuestDraft {
+  operationId: string;
   file: File;
   preview?: CvPreview;
   createdAt: number;
   expiresAt: number;
 }
+
+export const createCvOperationId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `cv_${crypto.randomUUID()}`;
+  }
+  return `cv_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`;
+};
 
 const indexedDbAvailable = () =>
   typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
@@ -30,16 +39,13 @@ const openDatabase = () => new Promise<IDBDatabase>((resolve, reject) => {
     reject(new Error('IndexedDB unavailable'));
     return;
   }
-
   const request = window.indexedDB.open(DB_NAME, DB_VERSION);
-
   request.onupgradeneeded = () => {
     const database = request.result;
     if (!database.objectStoreNames.contains(STORE_NAME)) {
       database.createObjectStore(STORE_NAME, { keyPath: 'id' });
     }
   };
-
   request.onsuccess = () => resolve(request.result);
   request.onerror = () => reject(request.error || new Error('IndexedDB open failed'));
 });
@@ -63,24 +69,25 @@ const withStore = async <T>(
 };
 
 export const saveCvGuestDraft = async ({
+  operationId,
   file,
   preview,
 }: {
+  operationId: string;
   file: File;
   preview?: CvPreview;
 }): Promise<boolean> => {
   if (!indexedDbAvailable()) return false;
-
   const now = Date.now();
   const draft: StoredCvGuestDraft = {
     id: ACTIVE_DRAFT_KEY,
-    schemaVersion: 1,
+    schemaVersion: 2,
+    operationId,
     file,
     preview,
     createdAt: now,
     expiresAt: now + DRAFT_TTL_MS,
   };
-
   try {
     await withStore('readwrite', (store) => store.put(draft));
     return true;
@@ -91,16 +98,13 @@ export const saveCvGuestDraft = async ({
 
 export const loadCvGuestDraft = async (): Promise<CvGuestDraft | null> => {
   if (!indexedDbAvailable()) return null;
-
   try {
     const stored = await withStore<StoredCvGuestDraft | undefined>(
       'readonly',
       (store) => store.get(ACTIVE_DRAFT_KEY),
     );
-
     if (
       !stored
-      || stored.schemaVersion !== 1
       || !(stored.file instanceof File)
       || !Number.isFinite(stored.expiresAt)
       || stored.expiresAt <= Date.now()
@@ -108,8 +112,12 @@ export const loadCvGuestDraft = async (): Promise<CvGuestDraft | null> => {
       await clearCvGuestDraft();
       return null;
     }
-
+    const operationId = stored.operationId || createCvOperationId();
+    if (stored.schemaVersion !== 2 || !stored.operationId) {
+      await withStore('readwrite', (store) => store.put({ ...stored, schemaVersion: 2, operationId }));
+    }
     return {
+      operationId,
       file: stored.file,
       preview: stored.preview,
       createdAt: stored.createdAt,
@@ -122,7 +130,6 @@ export const loadCvGuestDraft = async (): Promise<CvGuestDraft | null> => {
 
 export const clearCvGuestDraft = async (): Promise<void> => {
   if (!indexedDbAvailable()) return;
-
   try {
     await withStore('readwrite', (store) => store.delete(ACTIVE_DRAFT_KEY));
   } catch {
