@@ -255,6 +255,7 @@ test('ordered migrations roll back completely and can be applied again', async (
 
     assert.deepEqual(rolledBack, expectedRollbackOrder);
     assert.deepEqual(rolledBack, [
+      '024_cv_analysis_idempotency',
       '023_oauth_transaction_account',
       '022_ats_rejection_reason_codes',
       '021_ats_application_evaluations_v1',
