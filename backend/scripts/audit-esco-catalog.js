@@ -11,10 +11,8 @@ const auditEscoCatalog = async (pool) => {
     `SELECT id, source_version, locale, title, content_sha256, record_count,
             imported_at, metadata_json
      FROM career_catalog_sources
-     WHERE source_kind = 'esco'
-       AND locale = 'fr'
-     ORDER BY imported_at DESC
-     LIMIT 1`,
+     WHERE source_kind = 'esco' AND locale = 'fr'
+     ORDER BY imported_at DESC LIMIT 1`,
   );
   if (!escoSource) throw new Error('No French ESCO catalog source is installed.');
 
@@ -22,10 +20,8 @@ const auditEscoCatalog = async (pool) => {
     `SELECT id, source_version, locale, title, content_sha256, record_count,
             imported_at
      FROM career_catalog_sources
-     WHERE source_kind = 'onet'
-       AND locale = 'en'
-     ORDER BY imported_at DESC
-     LIMIT 1`,
+     WHERE source_kind = 'onet' AND locale = 'en'
+     ORDER BY imported_at DESC LIMIT 1`,
   );
   if (!onetSource) throw new Error('No English O*NET catalog source is installed.');
 
@@ -33,23 +29,19 @@ const auditEscoCatalog = async (pool) => {
     `SELECT status, COUNT(*) AS count
      FROM career_occupations
      WHERE catalog_source_id = ?
-     GROUP BY status
-     ORDER BY status`,
+     GROUP BY status ORDER BY status`,
     [escoSource.id],
   );
 
   const [[skillCount]] = await pool.query(
-    `SELECT COUNT(*) AS count
-     FROM career_skills
-     WHERE catalog_source_id = ?`,
+    'SELECT COUNT(*) AS count FROM career_skills WHERE catalog_source_id = ?',
     [escoSource.id],
   );
 
   const [[skillRelationCount]] = await pool.query(
     `SELECT COUNT(*) AS count
      FROM career_occupation_skill_links link
-     JOIN career_occupations occupation
-       ON occupation.id = link.occupation_id
+     JOIN career_occupations occupation ON occupation.id = link.occupation_id
      WHERE occupation.catalog_source_id = ?
        AND JSON_UNQUOTE(JSON_EXTRACT(link.provenance_json, '$.sourceId')) = ?`,
     [escoSource.id, escoSource.id],
@@ -69,7 +61,18 @@ const auditEscoCatalog = async (pool) => {
     `SELECT COUNT(*) AS total,
             COUNT(DISTINCT crosswalk.source_occupation_id) AS source_occupations,
             COUNT(DISTINCT crosswalk.target_occupation_id) AS target_occupations,
-            COUNT(DISTINCT CASE WHEN target.status = 'active' THEN crosswalk.source_occupation_id END) AS sources_with_active_target,
+            COUNT(DISTINCT CASE
+              WHEN source.locale = 'en'
+               AND source.status = 'active'
+               AND source.riasec_profile_status IN ('direct', 'mapped', 'reviewed')
+              THEN crosswalk.source_occupation_id END) AS eligible_source_occupations,
+            COUNT(DISTINCT CASE
+              WHEN source.locale = 'en'
+               AND source.status = 'active'
+               AND source.riasec_profile_status IN ('direct', 'mapped', 'reviewed')
+               AND target.locale = 'fr'
+               AND target.status = 'active'
+              THEN crosswalk.source_occupation_id END) AS eligible_sources_with_active_target,
             COUNT(DISTINCT CASE WHEN target.status = 'active' THEN crosswalk.target_occupation_id END) AS active_targets,
             SUM(CASE WHEN target.status <> 'active' THEN 1 ELSE 0 END) AS mappings_to_non_active_targets
      FROM career_occupation_crosswalks crosswalk
@@ -81,43 +84,30 @@ const auditEscoCatalog = async (pool) => {
     [onetSource.id, escoSource.id],
   );
 
-  const [mappingKindRows] = await pool.query(
-    `SELECT crosswalk.mapping_kind, COUNT(*) AS count
-     FROM career_occupation_crosswalks crosswalk
-     JOIN career_occupations source ON source.id = crosswalk.source_occupation_id
-     JOIN career_occupations target ON target.id = crosswalk.target_occupation_id
-     WHERE source.catalog_source_id = ?
-       AND target.catalog_source_id = ?
-       AND crosswalk.review_status IN ('official', 'reviewed')
-     GROUP BY crosswalk.mapping_kind
-     ORDER BY crosswalk.mapping_kind`,
-    [onetSource.id, escoSource.id],
-  );
+  const distribution = async (column, includeReviewFilter = true) => {
+    const reviewClause = includeReviewFilter
+      ? "AND crosswalk.review_status IN ('official', 'reviewed')"
+      : '';
+    const [rows] = await pool.query(
+      `SELECT crosswalk.${column} AS value, COUNT(*) AS count
+       FROM career_occupation_crosswalks crosswalk
+       JOIN career_occupations source ON source.id = crosswalk.source_occupation_id
+       JOIN career_occupations target ON target.id = crosswalk.target_occupation_id
+       WHERE source.catalog_source_id = ?
+         AND target.catalog_source_id = ?
+         ${reviewClause}
+       GROUP BY crosswalk.${column}
+       ORDER BY crosswalk.${column}`,
+      [onetSource.id, escoSource.id],
+    );
+    return rowsToObject(rows, 'value');
+  };
 
-  const [confidenceRows] = await pool.query(
-    `SELECT crosswalk.confidence_level, COUNT(*) AS count
-     FROM career_occupation_crosswalks crosswalk
-     JOIN career_occupations source ON source.id = crosswalk.source_occupation_id
-     JOIN career_occupations target ON target.id = crosswalk.target_occupation_id
-     WHERE source.catalog_source_id = ?
-       AND target.catalog_source_id = ?
-       AND crosswalk.review_status IN ('official', 'reviewed')
-     GROUP BY crosswalk.confidence_level
-     ORDER BY crosswalk.confidence_level`,
-    [onetSource.id, escoSource.id],
-  );
-
-  const [reviewRows] = await pool.query(
-    `SELECT crosswalk.review_status, COUNT(*) AS count
-     FROM career_occupation_crosswalks crosswalk
-     JOIN career_occupations source ON source.id = crosswalk.source_occupation_id
-     JOIN career_occupations target ON target.id = crosswalk.target_occupation_id
-     WHERE source.catalog_source_id = ?
-       AND target.catalog_source_id = ?
-     GROUP BY crosswalk.review_status
-     ORDER BY crosswalk.review_status`,
-    [onetSource.id, escoSource.id],
-  );
+  const [mappingKinds, confidenceLevels, reviewStatuses] = await Promise.all([
+    distribution('mapping_kind'),
+    distribution('confidence_level'),
+    distribution('review_status', false),
+  ]);
 
   const [crosswalkSources] = await pool.query(
     `SELECT crosswalk.source_version, crosswalk.source_reference,
@@ -136,9 +126,16 @@ const auditEscoCatalog = async (pool) => {
   );
 
   const occupationStatus = rowsToObject(occupationStatusRows, 'status');
+  const persistedOccupationCount = Object.values(occupationStatus)
+    .reduce((sum, value) => sum + value, 0);
+  const rawOccupationRows = Number(escoSource.record_count || 0);
   const eligibleOnet = Number(onetEligible.count || 0);
-  const sourcesWithActiveTarget = Number(crosswalkSummary.sources_with_active_target || 0);
-  const fallbackCount = Math.max(eligibleOnet - sourcesWithActiveTarget, 0);
+  const crosswalkOnetSources = Number(crosswalkSummary.source_occupations || 0);
+  const eligibleCrosswalkSources = Number(crosswalkSummary.eligible_source_occupations || 0);
+  const eligibleWithActivePresentation = Number(
+    crosswalkSummary.eligible_sources_with_active_target || 0,
+  );
+  const fallbackCount = Math.max(eligibleOnet - eligibleWithActivePresentation, 0);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -148,9 +145,11 @@ const auditEscoCatalog = async (pool) => {
       locale: escoSource.locale,
       contentSha256: escoSource.content_sha256,
       importedAt: escoSource.imported_at,
-      declaredRecordCount: Number(escoSource.record_count || 0),
+      rawOccupationRows,
+      persistedDistinctOccupations: persistedOccupationCount,
+      rawToPersistedOccupationDelta: rawOccupationRows - persistedOccupationCount,
       occupations: {
-        total: Object.values(occupationStatus).reduce((sum, value) => sum + value, 0),
+        total: persistedOccupationCount,
         byStatus: occupationStatus,
       },
       skills: Number(skillCount.count || 0),
@@ -166,14 +165,15 @@ const auditEscoCatalog = async (pool) => {
     },
     crosswalk: {
       totalOfficialOrReviewed: Number(crosswalkSummary.total || 0),
-      distinctOnetSources: Number(crosswalkSummary.source_occupations || 0),
+      distinctOnetSources: crosswalkOnetSources,
+      eligibleRiasecOnetSourcesInCrosswalk: eligibleCrosswalkSources,
+      nonEligibleOnetSourcesInCrosswalk: Math.max(crosswalkOnetSources - eligibleCrosswalkSources, 0),
       distinctEscoTargets: Number(crosswalkSummary.target_occupations || 0),
-      onetSourcesWithActiveEscoTarget: sourcesWithActiveTarget,
       activeEscoTargets: Number(crosswalkSummary.active_targets || 0),
       mappingsToNonActiveTargets: Number(crosswalkSummary.mappings_to_non_active_targets || 0),
-      byMappingKind: rowsToObject(mappingKindRows, 'mapping_kind'),
-      byConfidenceLevel: rowsToObject(confidenceRows, 'confidence_level'),
-      byReviewStatus: rowsToObject(reviewRows, 'review_status'),
+      byMappingKind: mappingKinds,
+      byConfidenceLevel: confidenceLevels,
+      byReviewStatus: reviewStatuses,
       sources: crosswalkSources.map((row) => ({
         version: row.source_version,
         reference: row.source_reference,
@@ -184,13 +184,15 @@ const auditEscoCatalog = async (pool) => {
     },
     presentationCoverage: {
       eligibleOnetOccupations: eligibleOnet,
-      withActiveFrenchEscoPresentation: sourcesWithActiveTarget,
+      eligibleOnetOccupationsPresentInCrosswalk: eligibleCrosswalkSources,
+      withActiveFrenchEscoPresentation: eligibleWithActivePresentation,
       fallbackToEnglish: fallbackCount,
       percentWithFrenchEscoPresentation: eligibleOnet > 0
-        ? Math.round((sourcesWithActiveTarget / eligibleOnet) * 100000) / 1000
+        ? Math.round((eligibleWithActivePresentation / eligibleOnet) * 100000) / 1000
         : 0,
     },
     interpretation: {
+      coverageNumeratorAndDenominatorUseSameEligibleOnetPopulation: true,
       confidenceUnknownMeansMissingNumericSourceScore: true,
       crosswalkReviewStatusUsedForPresentation: ['official', 'reviewed'],
       nonActiveEscoTargetsUsedForPresentation: false,
