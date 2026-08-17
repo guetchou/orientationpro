@@ -1,5 +1,7 @@
 'use strict';
 
+const { CvInputError } = require('./errors');
+
 const parseJson = (value) => {
   if (value === null || value === undefined) return value;
   return typeof value === 'string' ? JSON.parse(value) : value;
@@ -146,8 +148,11 @@ const createCvStore = (pool) => {
       } catch (error) {
         if (error?.code !== 'ER_DUP_ENTRY' || !idempotencyKey) throw error;
         const existing = await getAnalysisByIdempotencyKey({ accountId, idempotencyKey });
-        if (existing) return existing.analysis;
-        throw error;
+        if (!existing) throw error;
+        if (existing.requestFingerprint !== requestFingerprint) {
+          throw new CvInputError('CV_IDEMPOTENCY_CONFLICT');
+        }
+        return existing.analysis;
       }
 
       return getAnalysis({ accountId, analysisId: id });
