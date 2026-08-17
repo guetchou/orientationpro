@@ -60,7 +60,7 @@ const createUploadReceiver = (uploadDirectory) => {
   });
   const upload = multer({
     storage,
-    limits: { fileSize: CV_MAX_FILE_SIZE, files: 1, fields: 3, parts: 4, fieldNameSize: 100, fieldSize: 96 * 1024 },
+    limits: { fileSize: CV_MAX_FILE_SIZE, files: 1, fields: 5, parts: 6, fieldNameSize: 100, fieldSize: 96 * 1024 },
     fileFilter: (req, file, callback) => {
       if (!isAllowedCvFile(file)) {
         callback(new CvInputError('CV_FILE_TYPE_UNSUPPORTED'));
@@ -111,8 +111,8 @@ const createCvRouter = ({ service, authenticate, hasPermission, uploadDirectory 
         accountId: req.auth.account.id,
         file: req.file,
         body: req.body,
-        idempotencyKey: req.get('Idempotency-Key'),
-        requestFingerprint: req.get('X-Idempotency-Fingerprint'),
+        idempotencyKey: req.get('Idempotency-Key') || req.body?.idempotencyKey,
+        requestFingerprint: req.get('X-Idempotency-Fingerprint') || req.body?.requestFingerprint,
       });
       return res.status(201).json({ analysis });
     } finally {
