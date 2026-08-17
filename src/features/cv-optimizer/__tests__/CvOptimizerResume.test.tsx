@@ -6,9 +6,7 @@ import { createAtsAnalysis, type CvPreview } from '../cvApi';
 import { clearCvGuestDraft, loadCvGuestDraft } from '../cvGuestDraftStore';
 import { useAuth } from '@/hooks/useAuth';
 
-vi.mock('@/hooks/useAuth', () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: vi.fn() }));
 
 vi.mock('../cvApi', () => ({
   createAtsAnalysis: vi.fn(),
@@ -20,6 +18,11 @@ vi.mock('../cvGuestDraftStore', () => ({
   loadCvGuestDraft: vi.fn(),
   saveCvGuestDraft: vi.fn(),
   clearCvGuestDraft: vi.fn(),
+  createCvOperationId: vi.fn(() => 'cv_generated_operation_123456'),
+}));
+
+vi.mock('../cvAnalysisCoordinator', () => ({
+  withCvAnalysisLock: vi.fn(async (_operationId: string, work: () => Promise<unknown>) => work()),
 }));
 
 vi.mock('../CvUploadStep', () => ({ CvUploadStep: () => <div>upload-step</div> }));
@@ -33,37 +36,32 @@ vi.mock('../states', () => ({
 
 const authenticatedAnalysis = {
   id: 'analysis-1',
-  snapshot: {
-    scores: { global: 80 },
-    targetMatch: null,
-  },
+  snapshot: { scores: { global: 80 }, targetMatch: null },
 };
 
 describe('CvOptimizerPage resume flow', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => { vi.clearAllMocks(); });
 
-  it('reprend automatiquement le CV invité après authentification', async () => {
+  it('reprend automatiquement le CV invité après authentification avec la même clé opérationnelle', async () => {
     const file = new File(['cv content'], 'cv.pdf', { type: 'application/pdf' });
     vi.mocked(useAuth).mockReturnValue(
       { user: { id: 'account-1' } } as unknown as ReturnType<typeof useAuth>,
     );
     vi.mocked(loadCvGuestDraft).mockResolvedValue({
+      operationId: 'cv_resume_operation_123456',
       file,
       createdAt: Date.now(),
       expiresAt: Date.now() + 60_000,
     });
     vi.mocked(createAtsAnalysis).mockResolvedValue(authenticatedAnalysis as never);
 
-    render(
-      <MemoryRouter>
-        <CvOptimizerPage />
-      </MemoryRouter>,
-    );
+    render(<MemoryRouter><CvOptimizerPage /></MemoryRouter>);
 
     await waitFor(() => {
-      expect(createAtsAnalysis).toHaveBeenCalledWith({ file });
+      expect(createAtsAnalysis).toHaveBeenCalledWith({
+        file,
+        idempotencyKey: 'cv_resume_operation_123456',
+      });
     });
     await waitFor(() => {
       expect(clearCvGuestDraft).toHaveBeenCalled();
@@ -87,17 +85,14 @@ describe('CvOptimizerPage resume flow', () => {
       { user: null } as unknown as ReturnType<typeof useAuth>,
     );
     vi.mocked(loadCvGuestDraft).mockResolvedValue({
+      operationId: 'cv_guest_operation_123456',
       file,
       preview,
       createdAt: Date.now(),
       expiresAt: Date.now() + 60_000,
     });
 
-    render(
-      <MemoryRouter>
-        <CvOptimizerPage />
-      </MemoryRouter>,
-    );
+    render(<MemoryRouter><CvOptimizerPage /></MemoryRouter>);
 
     expect(await screen.findByText('guest-preview')).toBeInTheDocument();
     expect(createAtsAnalysis).not.toHaveBeenCalled();
