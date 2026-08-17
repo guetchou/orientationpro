@@ -86,18 +86,20 @@ test(
         );
       }
 
-      const [idempotencyIndexes] = await pool.query(
-        `SELECT index_name, non_unique, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS columns_list
+      const [[idempotencyIndex]] = await pool.query(
+        `SELECT
+           COUNT(*) AS column_count,
+           SUM(CASE WHEN NON_UNIQUE = 0 THEN 1 ELSE 0 END) AS unique_column_count,
+           GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS columns_list
          FROM information_schema.statistics
          WHERE table_schema = DATABASE()
            AND table_name = 'cv_analyses'
-           AND index_name = 'uq_cv_analyses_account_idempotency'
-         GROUP BY index_name, non_unique`,
+           AND index_name = 'uq_cv_analyses_account_idempotency'`,
       );
 
-      assert.equal(idempotencyIndexes.length, 1);
-      assert.equal(Number(idempotencyIndexes[0].non_unique), 0);
-      assert.equal(idempotencyIndexes[0].columns_list, 'account_id,idempotency_key');
+      assert.equal(Number(idempotencyIndex.column_count), 2);
+      assert.equal(Number(idempotencyIndex.unique_column_count), 2);
+      assert.equal(idempotencyIndex.columns_list, 'account_id,idempotency_key');
 
       const [permissions] = await pool.query(
         `SELECT id
