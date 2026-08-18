@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "productionUsableStatuses": ["reviewed"],
+    "allowedMappingKinds": ["exact", "close", "narrow", "broad"],
+    "requiredEvidenceForReviewed": ["targetEscoUri", "mappingKind", "evidenceUrl", "reviewedBy", "reviewedAt", "justification"],
+    "officialCrosswalkRemainsSeparate": true
+  },
+  "entries": [
+    {"onetCode":"11-9131.00","title":"Postmasters and Mail Superintendents","status":"pending"},
+    {"onetCode":"11-9199.11","title":"Brownfield Redevelopment Specialists and Site Managers","status":"pending"},
+    {"onetCode":"13-1022.00","title":"Wholesale and Retail Buyers, Except Farm Products","status":"pending"},
+    {"onetCode":"13-1074.00","title":"Farm Labor Contractors","status":"pending"},
+    {"onetCode":"17-1022.01","title":"Geodetic Surveyors","status":"pending"},
+    {"onetCode":"23-1022.00","title":"Arbitrators, Mediators, and Conciliators","status":"pending"},
+    {"onetCode":"25-9021.00","title":"Farm and Home Management Educators","status":"pending"},
+    {"onetCode":"29-2099.08","title":"Patient Representatives","status":"pending"},
+    {"onetCode":"31-9099.02","title":"Endoscopy Technicians","status":"pending"},
+    {"onetCode":"33-9099.02","title":"Retail Loss Prevention Specialists","status":"pending"},
+    {"onetCode":"35-9011.00","title":"Dining Room and Cafeteria Attendants and Bartender Helpers","status":"pending"},
+    {"onetCode":"39-1022.00","title":"First-Line Supervisors of Personal Service Workers","status":"pending"},
+    {"onetCode":"47-2082.00","title":"Tapers","status":"pending"},
+    {"onetCode":"49-2097.00","title":"Audiovisual Equipment Installers and Repairers","status":"pending"},
+    {"onetCode":"49-9098.00","title":"Helpers--Installation, Maintenance, and Repair Workers","status":"pending"},
+    {"onetCode":"51-4192.00","title":"Layout Workers, Metal and Plastic","status":"pending"},
+    {"onetCode":"51-8099.01","title":"Biofuels Processing Technicians","status":"pending"},
+    {"onetCode":"53-6041.00","title":"Traffic Technicians","status":"pending"},
+    {"onetCode":"53-7011.00","title":"Conveyor Operators and Tenders","status":"pending"}
+  ]
+}
